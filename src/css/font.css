@@ -1,0 +1,40 @@
+@layer font {
+  body {
+    -webkit-text-size-adjust: 100%;
+    tab-size: 4;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    scroll-behavior: smooth;
+    font-family:
+      system-ui,
+      -apple-system,
+      Segoe UI,
+      Roboto,
+      Emoji,
+      Helvetica,
+      Arial,
+      sans-serif;
+    font-feature-settings: normal;
+    font-variation-settings: normal;
+    color: var(--foreground);
+    background-color: var(--background);
+  }
+  @font-face {
+    font-family: Emoji;
+    src:
+      local('Apple Color Emoji'), local('Segoe UI Emoji'), local('Segoe UI Symbol'),
+      local('Noto Color Emoji');
+    unicode-range: U+1F000-1F644, U+203C-3299;
+  }
+  .font-serif {
+    font-family: Georgia, Cambria, 'Times New Roman', Times, serif;
+  }
+  .font-mono {
+    font-family: Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  }
+  .font-math {
+    font-family:
+      Cambria Math,
+      Latin Modern Math;
+  }
+}

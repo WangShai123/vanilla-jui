@@ -1,0 +1,73 @@
+@layer components {
+  .j-accordion {
+    --accordion-border: var(--border-sm);
+    --accordion-icon-size: var(--font-size-lg);
+  }
+
+  .j-accordion .accordion-header {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    padding: var(--accordion-header-padding, calc(var(--space) * 2) calc(var(--space) * 3));
+    margin: var(--accordion-header-margin, 0);
+    border-bottom: var(--accordion-border);
+    font-size: var(--accordion-header-font-size, var(--font-size));
+    font-weight: var(--font-medium);
+    user-select: none;
+  }
+
+  .j-accordion .accordion-header:hover:not(.is-active) {
+    background: var(--accordion-header-hover-background, var(--gray-a2));
+  }
+
+  .j-accordion .accordion-header.is-active {
+    border-color: transparent;
+  }
+
+  .j-accordion .accordion-header .header-title {
+    flex: 1;
+    text-align: left;
+    font-size: var(--accordion-title-font-size, var(--font-size));
+  }
+
+  .j-accordion .accordion-header.is-active .header-title {
+    font-weight: var(--font-bold);
+  }
+
+  .j-accordion .accordion-header .header-arrow {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: var(--accordion-icon-size);
+    height: var(--accordion-icon-size);
+    transition: transform 0.3s ease-out;
+    transform: rotate(0deg);
+  }
+
+  .j-accordion .accordion-header.is-active .header-arrow {
+    transform: rotate(180deg);
+  }
+
+  .j-accordion .accordion-panel {
+    overflow: hidden;
+    height: 0;
+    transition: height 0.3s ease-out;
+    margin: 0;
+  }
+
+  .j-accordion .accordion-panel .panel-content {
+    margin: var(--accordion-panel-content-margin, 0);
+    padding: var(--accordion-panel-content-padding,
+        0 calc(var(--space) * 3) calc(var(--space) * 2));
+    border-bottom: var(--accordion-border);
+    font-size: var(--accordion-font-size, var(--font-size));
+  }
+
+  .j-accordion .accordion-panel.is-active {
+    height: auto;
+  }
+
+  .j-accordion .accordion-panel:last-child .panel-content {
+    border-bottom: none;
+  }
+}

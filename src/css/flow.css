@@ -1,0 +1,86 @@
+@layer components {
+  .j-flow {
+    --flow-gap: calc(var(--space) * 2);
+    --flow-step-size: 28px;
+    --flow-border: 1px solid var(--border-color-sm);
+
+    display: grid;
+    gap: var(--flow-gap);
+  }
+
+  .j-flow .flow-header {
+    display: grid;
+    gap: calc(var(--space) / 2);
+  }
+
+  .j-flow .flow-title {
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+  }
+
+  .j-flow .flow-description {
+    color: var(--gray-11);
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-paragraph);
+  }
+
+  .j-flow .flow-steps {
+    display: flex;
+    gap: var(--flow-gap);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .j-flow .flow-step {
+    min-width: 0;
+  }
+
+  .j-flow .flow-step-button {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space);
+    border: 0;
+    background: transparent;
+    color: var(--gray-11);
+    cursor: pointer;
+    padding: 0;
+  }
+
+  .j-flow .flow-step-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+
+  .j-flow .flow-step-index {
+    align-items: center;
+    background: var(--gray-4);
+    border-radius: 999px;
+    display: inline-flex;
+    height: var(--flow-step-size);
+    justify-content: center;
+    min-width: var(--flow-step-size);
+  }
+
+  .j-flow .flow-step.is-active .flow-step-button {
+    color: var(--primary);
+  }
+
+  .j-flow .flow-step.is-active .flow-step-index,
+  .j-flow .flow-step.is-complete .flow-step-index {
+    background: var(--primary);
+    color: var(--primary-foreground);
+  }
+
+  .j-flow .flow-body {
+    min-width: 0;
+  }
+
+  .j-flow .flow-footer {
+    border-top: var(--flow-border);
+    display: flex;
+    gap: var(--space);
+    justify-content: flex-end;
+    padding-top: var(--flow-gap);
+  }
+}

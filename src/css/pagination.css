@@ -1,0 +1,21 @@
+@layer components {
+  .j-pagination {
+    font-size: var(--pagination-font-size, var(--font-size));
+  }
+  .j-pagination a {
+    text-decoration: none;
+    color: var(--pagination-link-color, var(--foreground));
+  }
+  .pagination {
+    list-style: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: var(--pagination-gap, calc(var(--space) * 1));
+    margin: 0;
+    padding: 0;
+  }
+  .pagination .more span:active {
+    outline: none;
+  }
+}

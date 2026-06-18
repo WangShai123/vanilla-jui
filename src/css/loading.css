@@ -1,0 +1,38 @@
+@layer components {
+  .j-loading {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--loading-background, var(--gray-1));
+    display: none;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: var(--loading-backdrop-filter, blur(var(--drop-blur-sm)));
+  }
+
+  .j-loading.is-active {
+    display: flex;
+    z-index: var(--loading-index, inherit);
+  }
+
+  .loading-spinner {
+    width: var(--loading-spinner-size, 3rem);
+    height: var(--loading-spinner-size, 3rem);
+    /* border: var(--loading-spinner-width, 4px) solid var(--loading-spinner-background, var(--primary-foreground)); */
+    border: var(--loading-spinner-width, 4px) solid var(--loading-spinner-background, var(--secondary));
+    border-top: var(--loading-spinner-width, 4px) solid var(--loading-spinner-color, var(--primary));
+    border-radius: 50%;
+    animation: animate-spin 1s linear infinite;
+  }
+
+  .j-loading.is-bold .loading-spinner {
+    border: none;
+    aspect-ratio: 1;
+    background:
+      radial-gradient(farthest-side, var(--primary) 94%, #0000) top/8px 8px no-repeat,
+      conic-gradient(#0000 30%, var(--primary));
+    mask: radial-gradient(farthest-side, #0000 calc(100% - 8px), #000 0);
+  }
+}

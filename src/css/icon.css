@@ -1,0 +1,63 @@
+@layer icon {
+	svg {
+		display: block;
+	}
+
+	/* loader icon */
+	.icon-loader {
+		display: inline-block;
+		width: var(--font-size-xl);
+		height: var(--font-size-xl);
+		border: 1px solid currentcolor;
+		border-right-color: transparent;
+		border-radius: 50%;
+		animation: var(--speed-xl) linear infinite animate-spin;
+	}
+
+	/* close icon */
+	.icon-close {
+		box-sizing: border-box;
+		position: relative;
+		display: block;
+		transform: scale(1);
+		width: var(--font-size-xl);
+		height: var(--font-size-xl);
+		border: 1px solid;
+		border-radius: 50%;
+		color: inherit;
+		cursor: pointer;
+	}
+	.icon-close::after,
+	.icon-close::before {
+		content: "";
+		position: absolute;
+		box-sizing: border-box;
+		top: 50%;
+		left: 50%;
+		width: 12px;
+		height: 2px;
+		background: currentColor;
+		border-radius: 1px;
+		transform-origin: center center;
+	}
+	.icon-close::before {
+		transform: translate(-50%, -50%) rotate(45deg);
+	}
+	.icon-close::after {
+		transform: translate(-50%, -50%) rotate(-45deg);
+	}
+	.icon-close:active {
+		transform: translateY(1px);
+	}
+	.icon-close:focus-within {
+		background-color: var(--accent);
+	}
+
+	/* icon element status */
+	.el-icon[data-action-close] {
+		cursor: pointer;
+	}
+	.el-icon[data-action-close]:active {
+		transform: scale(0.85);
+	}
+}

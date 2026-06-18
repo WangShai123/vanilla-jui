@@ -1,0 +1,52 @@
+@layer components {
+  .j-table-container {
+    max-width: 100%;
+    overflow: auto;
+    overflow-y: hidden;
+  }
+
+  table.j-table {
+    text-indent: 0;
+    border-color: inherit;
+    border-collapse: collapse;
+    border-spacing: 0;
+  }
+  table.j-table tr.is-selected {
+    background-color: var(--table-selected-background, var(--secondary));
+  }
+
+  table.j-table td,
+  table.j-table th {
+    border-width: var(--table-border-width, 0 0 1px);
+    border-style: var(--table-border-style, solid);
+    border-color: var(--table-border-color, var(--border-color));
+    padding: var(--table-padding, 0.5em 0.75em);
+  }
+
+  table.j-table th:not([align]) {
+    text-align: var(--table-cell-text-align, left);
+  }
+
+  table.j-table td:not([align]),
+  table.j-table th:not([align]) {
+    text-align: inherit;
+  }
+
+  table.j-table a {
+    text-decoration: var(--table-link-decoration, inherit);
+    color: var(--table-link-color, var(--primary));
+  }
+
+  table.j-table.is-striped thead tr,
+  table.j-table.is-striped tbody tr:not(.is-selected):nth-child(2n) {
+    background-color: var(--table-striped-background, var(--secondary));
+  }
+  table.j-table.is-hoverable tbody tr:hover {
+    background-color: var(--table-hover-background, var(--secondary));
+  }
+
+  table.j-table.is-bordered td,
+  table.j-table.is-bordered th {
+    border-width: var(--table-border-width, var(--border-width, 1px));
+  }
+}

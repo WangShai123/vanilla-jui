@@ -1,0 +1,425 @@
+@layer content {
+  .j-content {
+    --content-block-margin: 1.5em;
+    --content-block-margin-bottom: 1em;
+    --content-heading-margin: 1.75em;
+    --content-heading-margin-bottom: 1em;
+    line-height: 1.5;
+  }
+
+  .j-content,
+  .j-content.is-md {
+    font-size: var(--font-size-lg);
+  }
+
+  .j-content.is-sm {
+    font-size: var(--font-size);
+  }
+
+  .j-content.is-lg {
+    font-size: var(--font-size-xl);
+  }
+
+  .j-content.is-xl {
+    font-size: var(--font-size-2xl);
+  }
+
+  /* 通用重置 */
+  .j-content *,
+  .j-content *::before,
+  .j-content *::after {
+    box-sizing: border-box;
+  }
+
+  /* 段落与通用块级元素 */
+  .j-content p,
+  .j-content div {
+    margin: 0 0 var(--content-block-margin-bottom);
+  }
+
+  .j-content h1,
+  .j-content h2,
+  .j-content h3,
+  .j-content h4,
+  .j-content h5,
+  .j-content h6 {
+    margin: var(--content-heading-margin) 0 var(--content-heading-margin-bottom);
+    font-weight: 600;
+    line-height: 1.25;
+  }
+
+  .j-content h1 {
+    font-size: 2em;
+  }
+
+  .j-content h2 {
+    font-size: 1.75em;
+  }
+
+  .j-content h3 {
+    font-size: 1.5em;
+  }
+
+  .j-content h4 {
+    font-size: 1.25em;
+  }
+
+  .j-content h5 {
+    font-size: 1.125em;
+  }
+
+  .j-content h6 {
+    font-size: 1em;
+  }
+
+  /* 强调文本 */
+  .j-content strong,
+  .j-content b {
+    font-weight: 700;
+  }
+
+  .j-content em,
+  .j-content i {
+    font-style: italic;
+  }
+
+  .j-content u {
+    text-decoration: underline;
+  }
+
+  .j-content s,
+  .j-content del {
+    text-decoration: line-through;
+  }
+
+  .j-content mark {
+    background-color: var(--yellow-9);
+    padding: 0 0.2em;
+    border-radius: 0.2em;
+  }
+
+  .j-content small {
+    font-size: 0.875em;
+  }
+
+  .j-content sub {
+    vertical-align: sub;
+    font-size: 0.75em;
+  }
+
+  .j-content sup {
+    vertical-align: super;
+    font-size: 0.75em;
+  }
+
+  /* 链接 */
+  .j-content a {
+    color: var(--link);
+    text-decoration: none;
+  }
+
+  .j-content a:hover {
+    color: var(--link-hover);
+    text-decoration: underline;
+  }
+
+  .j-content a:focus {
+    color: var(--link-focus);
+    text-decoration: underline;
+  }
+
+  /* 列表 */
+  .j-content ul,
+  .j-content ol {
+    margin: 0 0 var(--content-block-margin-bottom);
+    padding-left: 1.5em;
+  }
+
+  .j-content ul li,
+  .j-content ol li {
+    margin-bottom: 0.25em;
+  }
+
+  .j-content ul {
+    list-style-type: disc;
+  }
+
+  .j-content ol {
+    list-style-type: decimal;
+  }
+
+  .j-content ul ul,
+  .j-content ol ul {
+    list-style-type: circle;
+  }
+
+  .j-content ol ol,
+  .j-content ul ol {
+    list-style-type: lower-alpha;
+  }
+
+  .j-content ul p,
+  .j-content ol p {
+    margin: 0;
+  }
+
+  /* 定义列表 —— 新增支持 */
+  .j-content dl {
+    margin: 0 0 var(--content-block-margin);
+  }
+
+  .j-content dt {
+    font-weight: 600;
+    margin-top: 0.8em;
+    margin-bottom: 0.2em;
+  }
+
+  .j-content dt:first-child {
+    margin-top: 0;
+  }
+
+  .j-content dd {
+    margin: 0 0 0.8em;
+    padding-left: 0;
+    color: var(--gray-11);
+  }
+
+  .j-content dd+dt {
+    margin-top: 1em;
+  }
+
+  /* 引用与引用块 */
+  .j-content blockquote {
+    margin: 1.5em 4em;
+    padding: 1.2em;
+    border-left: 0.25em solid var(--gray-6);
+    color: var(--gray-11);
+    background-color: var(--gray-3);
+    font-style: italic;
+  }
+
+  @media screen and (max-width: 768px) {
+    .j-content blockquote {
+      margin: 1.5em 0;
+      padding: 0.5em 1em;
+      font-size: 0.85em;
+    }
+  }
+
+  .j-content blockquote p {
+    margin: 0;
+  }
+
+  .j-content cite {
+    display: block;
+    margin-top: 0.5em;
+    font-style: normal;
+    font-size: 0.9em;
+    color: var(--gray-9);
+  }
+
+  /* 代码相关 */
+  .j-content code {
+    font-family: Consolas, Monaco, 'Andale Mono', monospace;
+    font-size: 0.9em;
+    background-color: var(--accent);
+    border: 1px solid var(--secondary);
+    padding: 0.15em 0.3em;
+    border-radius: 0.2em;
+    color: var(--primary);
+  }
+
+  .j-content kbd {
+    font-family: inherit;
+    background-color: var(--gray-3);
+    border: 1px solid var(--gray-6);
+    border-radius: 0.2em;
+    padding: 0.1em 0.3em;
+    font-size: 0.9em;
+  }
+
+  .j-content pre {
+    margin: var(--content-block-margin) 0;
+    padding: 0.8em;
+    background-color: var(--gray-a3);
+    border-radius: var(--border-radius);
+    overflow-x: auto;
+    font-family: Consolas, Monaco, 'Andale Mono', monospace;
+    font-size: 0.9em;
+    line-height: 1.4;
+  }
+
+  .j-content pre code {
+    background: none;
+    padding: 0;
+    color: inherit;
+    font-size: inherit;
+    border: none;
+  }
+
+  /* 内联语义元素 */
+  .j-content q {
+    quotes: '“' '”' '‘' '’';
+    text-decoration: underline;
+    text-underline-offset: var(--space);
+    text-decoration-color: var(--amber-9);
+  }
+
+  .j-content abbr[title] {
+    border-bottom: 1px dotted var(--border-color);
+    cursor: help;
+  }
+
+  .j-content time {
+    white-space: nowrap;
+  }
+
+  .j-content address {
+    font-style: normal;
+    margin: 0 0 var(--content-block-margin-bottom);
+    color: var(--gray-9);
+  }
+
+  .j-content ruby {
+    font-size: 0.95em;
+  }
+
+  .j-content rt {
+    font-size: 0.7em;
+    color: var(--gray-9);
+  }
+
+  .j-content progress {
+    max-width: 100%;
+    height: 0.8em;
+    margin: 0.125em 0;
+  }
+
+  .j-content meter {
+    max-width: 100%;
+    height: 0.8em;
+    margin: 0.125em 0;
+  }
+
+  /* 图片与媒体容器 */
+  .j-content img {
+    max-width: 100%;
+    height: auto;
+    margin: 0.5em 0;
+  }
+
+  /* figure / figcaption */
+  .j-content figure {
+    margin: var(--content-block-margin) 0;
+    text-align: center;
+  }
+
+  .j-content figure img,
+  .j-content figure video,
+  .j-content figure iframe {
+    margin: 0;
+  }
+
+  .j-content figcaption {
+    margin-top: 0.5em;
+    font-size: 0.9em;
+    color: var(--gray-9);
+    text-align: center;
+  }
+
+  /* 表格 */
+  .j-content table {
+    min-width: 240px;
+    max-width: 100%;
+    margin: var(--content-block-margin) 0;
+    border-collapse: collapse;
+    font-size: 0.95em;
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .j-content th,
+  .j-content td {
+    padding: 0.5em 0.75em;
+    border: 1px solid var(--border-color);
+    text-align: left;
+  }
+
+  .j-content th {
+    background-color: var(--gray-a3);
+    font-weight: 600;
+  }
+
+  .j-content tbody tr:nth-child(even) {
+    background-color: var(--gray-a2);
+  }
+
+  /* 水平线 */
+  .j-content hr {
+    margin: var(--content-block-margin) 0;
+    border: 0;
+    border-top: 1px solid var(--gray-3);
+  }
+
+  /* 折叠内容 */
+  .j-content details {
+    margin: var(--content-block-margin) 0;
+    padding: 0.8em;
+    background-color: var(--accent);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color-sm);
+  }
+
+  .j-content summary {
+    cursor: pointer;
+    font-weight: 600;
+    outline: none;
+  }
+
+  .j-content details[open]>summary {
+    margin-bottom: 0.6em;
+  }
+
+  /* 嵌入内容：iframe / video / audio */
+  .j-content iframe,
+  .j-content video,
+  .j-content audio {
+    max-width: 100%;
+  }
+
+  .j-content video,
+  .j-content audio {
+    display: block;
+    border-radius: var(--border-radius);
+  }
+
+  .j-content video {
+    background-color: var(--foreground);
+  }
+
+  .j-content figure:has(audio) {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .j-content .j-loading,
+  .j-content .j-loading>* {
+    margin: 0;
+  }
+
+  /* 默认行高与间距控制 */
+  .j-content>*:first-child {
+    margin-top: 0;
+  }
+
+  .j-content>*:last-child {
+    margin-bottom: 0;
+  }
+
+  .j-content .block-item {
+    margin: var(--content-block-margin) 0;
+  }
+}

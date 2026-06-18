@@ -1,0 +1,95 @@
+@layer components {
+  .j-tag {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    gap: var(--tag-gap, var(--space));
+    padding: 0 var(--tag-padding, calc(var(--space) * 1.5));
+    height: var(--tag-height, calc(var(--space) * 6));
+    line-height: var(--tag-line-height, var(--line-height-self));
+    font-size: var(--tag-font-size, var(--font-size-sm));
+    font-weight: var(--font-normal);
+    border-radius: var(--tag-radius, var(--border-radius));
+    border: 1px solid var(--tag-border-color, var(--border-color));
+    color: var(--tag-foreground, var(--foreground));
+    background-color: var(--tag-background, var(--background));
+    box-shadow: var(--tag-box-shadow, var(--box-shadow-sm));
+  }
+
+  .j-font-md .j-tag {
+    --tag-padding: calc(var(--space) * 2);
+    --tag-height: calc(var(--space) * 8);
+  }
+
+  .j-tag.is-contrast {
+    --tag-background: var(--foreground);
+    --tag-foreground: var(--background);
+  }
+
+  .j-tag.is-primary {
+    --tag-background: var(--primary);
+    --tag-foreground: var(--primary-foreground);
+    --tag-border-color: var(--primary);
+  }
+
+  .j-tag.is-secondary {
+    --tag-background: var(--secondary);
+    --tag-foreground: var(--secondary-foreground);
+    --tag-border-color: transparent;
+  }
+
+  .j-tag.is-outline {
+    --tag-background: transparent;
+    --tag-foreground: var(--primary);
+    --tag-border-color: var(--primary);
+  }
+
+  .j-tag.is-ghost {
+    --tag-border-color: transparent;
+    --tag-shadow: none;
+  }
+
+  .j-tag span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .j-tag img,
+  .j-tag svg {
+    width: var(--tag-icon-size, var(--font-size-sm));
+    height: var(--tag-icon-size, var(--font-size-sm));
+  }
+
+  .j-tag:hover {
+    opacity: var(--opacity-hover, 0.9);
+  }
+
+  .j-tag.is-default:hover {
+    background-color: var(--gray-a2);
+  }
+  .j-tag.is-outline:hover,
+  .j-tag.is-ghost:hover {
+    background-color: var(--accent);
+  }
+
+  .j-tag .el-icon[data-action='close']:hover {
+    color: var(--primary-foreground);
+    background-color: var(--primary);
+    border-radius: 50%;
+  }
+
+  .j-tag.is-default .el-icon[data-action='close']:hover,
+  .j-tag.is-ghost .el-icon[data-action='close']:hover {
+    background-color: var(--gray-a12);
+    color: var(--gray-2);
+  }
+  .j-tag.is-contrast .el-icon[data-action='close']:hover {
+    color: var(--foreground);
+    background-color: var(--background);
+  }
+  .j-tag.is-primary .el-icon[data-action='close']:hover {
+    color: var(--primary);
+    background-color: var(--primary-foreground);
+  }
+}

@@ -1,0 +1,52 @@
+/* 
+ * status.css
+ * - sad mode
+ * - disabled
+ * - readonly
+ * - data-action
+ * - shape status
+ * - drag status
+ */
+@layer status {
+  /* sad mode */
+  .is-sad {
+    filter: grayscale(100%);
+  }
+
+  /* disabled */
+  [disabled],
+  :disabled,
+  .is-disabled {
+    cursor: not-allowed;
+    user-select: none;
+  }
+
+  /* readonly */
+  [readonly] {
+    opacity: var(--opacity-readonly);
+    cursor: default;
+  }
+
+  /* data-action */
+  [data-action] {
+    cursor: pointer;
+  }
+  
+  /* shape status */
+  .is-circle {
+    border-radius: var(--circle);
+  }
+  .is-round {
+    border-radius: var(--round);
+  }
+  
+  /* drag status */
+  .dragging {
+    cursor: move;
+    cursor: grab;
+  }
+  .dragging:active {
+    cursor: grabbing;
+  }
+
+}

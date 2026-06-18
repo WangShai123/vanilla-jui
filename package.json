@@ -1,0 +1,64 @@
+{
+  "name": "vanilla-jui",
+  "version": "0.5.0",
+  "private": false,
+  "description": "A lightweight vanilla JavaScript UI plugin library.",
+  "keywords": [
+    "accordion",
+    "components",
+    "drop",
+    "jui",
+    "menu",
+    "modal",
+    "offcanvas",
+    "parabola",
+    "tabs",
+    "theme",
+    "toast",
+    "tooltip",
+    "validator",
+    "vanilla"
+  ],
+  "homepage": "https://github.com/WangShai123/vanilla-jui",
+  "bugs": {
+    "url": "https://github.com/WangShai123/vanilla-jui/issues"
+  },
+  "license": "ISC",
+  "author": "Wang Shai <hiwangshai@gmail.com>",
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "browser": "dist/index.umd.js",
+  "unpkg": "dist/index.umd.js",
+  "exports": {
+    ".": "./dist/index.js",
+    "./package.json": "./package.json",
+    "./style.css": "./dist/style.css"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "pack": "vp pack",
+    "dev": "vp dev",
+    "test": "vp test",
+    "check": "vp check",
+    "lint": "vp lint",
+    "prepublishOnly": "vp run build"
+  },
+  "dependencies": {
+    "vanilla-signal": "1.1.0",
+    "vanilla-signal-i18n": "1.1.0"
+  },
+  "devDependencies": {
+    "@tsdown/css": "^0.22.2",
+    "vite-plus": "latest"
+  },
+  "registry": {
+    "type": "git",
+    "url": "git+https://github.com/WangShai123/vanilla-jui.git"
+  }
+}

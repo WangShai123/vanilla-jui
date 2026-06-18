@@ -1,0 +1,780 @@
+@layer layout {
+  ::-webkit-backdrop {
+    box-sizing: border-box;
+  }
+
+  *,
+  ::after,
+  ::backdrop,
+  ::before,
+  ::file-selector-button {
+    box-sizing: border-box;
+  }
+
+  html:not(.wp-toolbar) {
+    -webkit-text-size-adjust: 100%;
+    tab-size: 4;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    scroll-behavior: smooth;
+
+    /* font-family:
+      ui-sans-serif, system-ui, apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue',
+      Helvetica, 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', Arial, sans-serif,
+      'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'; */
+
+    font-family:
+      system-ui,
+      -apple-system,
+      Segoe UI,
+      Roboto,
+      Emoji,
+      Helvetica,
+      Arial,
+      sans-serif;
+
+    font-feature-settings: normal;
+    font-variation-settings: normal;
+    color: var(--foreground);
+    background-color: var(--background);
+  }
+
+  html.light,
+  html.theme-light {
+    color-scheme: light;
+  }
+
+  html.dark,
+  html.theme-dark {
+    color-scheme: dark;
+  }
+
+  body {
+    min-width: var(--screen-xs, 320px);
+    min-height: 100vh;
+    font-size: var(--font-size);
+    text-rendering: optimizeSpeed;
+    margin: 0;
+  }
+
+  img,
+  video {
+    max-width: 100%;
+    height: auto;
+  }
+
+  img {
+    object-fit: cover;
+  }
+
+  /* reset */
+  .is-reset:where(a) {
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+    outline: none;
+  }
+
+  .is-reset:where(button) {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    cursor: default;
+    background-color: transparent;
+    border: none;
+    font-size: inherit;
+    font-family: inherit;
+    line-height: inherit;
+    letter-spacing: inherit;
+    outline: none;
+    color: inherit;
+    padding: 0;
+    margin: 0;
+    text-align: initial;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .is-reset:where(h1, h2, h3, h4, h5, h6) {
+    font-size: inherit;
+    font-weight: inherit;
+    margin: 0;
+  }
+
+  .is-reset:where(ol, ul) {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .is-reset:where(p) {
+    margin: 0;
+  }
+
+  .is-reset:where(pre) {
+    font-family: inherit;
+    margin: 0;
+  }
+
+  /* background layout */
+  .j-background-grid {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    /* z-index: -1; */
+    background-image:
+      linear-gradient(to right, var(--gray-a3) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--gray-a3) 1px, transparent 1px);
+    background-size: 24px 36px;
+    mask-image: radial-gradient(ellipse 70% 20% at 50% 0%, #000 60%, transparent 300%);
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .dark .j-background-grid {
+    background-image:
+      linear-gradient(to right, var(--gray-a2) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--gray-a2) 1px, transparent 1px);
+  }
+
+  /* ==============================
+    * 响应式 Flex 布局系统
+    * 列类名 flex-col-* 避免与 Tailwind 冲突
+    * 建议：Flex 更适合一维排列（如导航、表单）
+    * ============================ */
+
+  /* 容器：居中 + 最大宽度 */
+  .container {
+    width: 100%;
+    max-width: var(--screen-xl, 1200px);
+    margin-inline: auto;
+    padding-inline: var(--container-padding-inline, 1rem);
+  }
+
+  .auto-container {
+    max-width: 100%;
+    overflow: auto;
+    overflow-y: hidden;
+    padding: 1px;
+  }
+
+  .block-center {
+    margin-inline: auto;
+    height: fit-content;
+  }
+
+  /* 行容器 */
+  .flex-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--flex-container-gap, 1rem);
+  }
+
+  /* 默认列：弹性填充 */
+  .flex-col {
+    flex: 1 1 0%;
+    min-width: 0;
+  }
+
+  /* 自适应内容宽度 */
+  .flex-col-auto {
+    flex: 0 0 auto;
+    width: auto;
+  }
+
+  /* 基础列宽（1～12）*/
+  .flex-col-1 {
+    width: calc((100% - 0 * var(--flex-container-gap, 1rem)) / 1);
+  }
+
+  .flex-col-2 {
+    width: calc((100% - 1 * var(--flex-container-gap, 1rem)) / 2);
+  }
+
+  .flex-col-3 {
+    width: calc((100% - 2 * var(--flex-container-gap, 1rem)) / 3);
+  }
+
+  .flex-col-4 {
+    width: calc((100% - 3 * var(--flex-container-gap, 1rem)) / 4);
+  }
+
+  .flex-col-5 {
+    width: calc((100% - 4 * var(--flex-container-gap, 1rem)) / 5);
+  }
+
+  .flex-col-6 {
+    width: calc((100% - 5 * var(--flex-container-gap, 1rem)) / 6);
+  }
+
+  .flex-col-7 {
+    width: calc((100% - 6 * var(--flex-container-gap, 1rem)) / 7);
+  }
+
+  .flex-col-8 {
+    width: calc((100% - 7 * var(--flex-container-gap, 1rem)) / 8);
+  }
+
+  .flex-col-9 {
+    width: calc((100% - 8 * var(--flex-container-gap, 1rem)) / 9);
+  }
+
+  .flex-col-10 {
+    width: calc((100% - 9 * var(--flex-container-gap, 1rem)) / 10);
+  }
+
+  .flex-col-11 {
+    width: calc((100% - 10 * var(--flex-container-gap, 1rem)) / 11);
+  }
+
+  .flex-col-12 {
+    width: calc((100% - 11 * var(--flex-container-gap, 1rem)) / 12);
+  }
+
+  /* 关键：禁用 flex-basis 的自动收缩/拉伸，仅用 width 控制 */
+  [class*='flex-col-'] {
+    flex: 0 0 auto;
+    /* 必须设为 auto，否则 width 被忽略 */
+  }
+
+  @media (min-width: 576px) {
+    .flex-col-sm-1 {
+      width: calc((100% - 0 * var(--flex-container-gap, 1rem)) / 1);
+    }
+
+    .flex-col-sm-2 {
+      width: calc((100% - 1 * var(--flex-container-gap, 1rem)) / 2);
+    }
+
+    .flex-col-sm-3 {
+      width: calc((100% - 2 * var(--flex-container-gap, 1rem)) / 3);
+    }
+
+    .flex-col-sm-4 {
+      width: calc((100% - 3 * var(--flex-container-gap, 1rem)) / 4);
+    }
+
+    .flex-col-sm-5 {
+      width: calc((100% - 4 * var(--flex-container-gap, 1rem)) / 5);
+    }
+
+    .flex-col-sm-6 {
+      width: calc((100% - 5 * var(--flex-container-gap, 1rem)) / 6);
+    }
+
+    .flex-col-sm-7 {
+      width: calc((100% - 6 * var(--flex-container-gap, 1rem)) / 7);
+    }
+
+    .flex-col-sm-8 {
+      width: calc((100% - 7 * var(--flex-container-gap, 1rem)) / 8);
+    }
+
+    .flex-col-sm-9 {
+      width: calc((100% - 8 * var(--flex-container-gap, 1rem)) / 9);
+    }
+
+    .flex-col-sm-10 {
+      width: calc((100% - 9 * var(--flex-container-gap, 1rem)) / 10);
+    }
+
+    .flex-col-sm-11 {
+      width: calc((100% - 10 * var(--flex-container-gap, 1rem)) / 11);
+    }
+
+    .flex-col-sm-12 {
+      width: calc((100% - 11 * var(--flex-container-gap, 1rem)) / 12);
+    }
+  }
+
+  @media (min-width: 768px) {
+    .flex-col-md-1 {
+      width: calc((100% - 0 * var(--flex-container-gap, 1rem)) / 1);
+    }
+
+    .flex-col-md-2 {
+      width: calc((100% - 1 * var(--flex-container-gap, 1rem)) / 2);
+    }
+
+    .flex-col-md-3 {
+      width: calc((100% - 2 * var(--flex-container-gap, 1rem)) / 3);
+    }
+
+    .flex-col-md-4 {
+      width: calc((100% - 3 * var(--flex-container-gap, 1rem)) / 4);
+    }
+
+    .flex-col-md-5 {
+      width: calc((100% - 4 * var(--flex-container-gap, 1rem)) / 5);
+    }
+
+    .flex-col-md-6 {
+      width: calc((100% - 5 * var(--flex-container-gap, 1rem)) / 6);
+    }
+
+    .flex-col-md-7 {
+      width: calc((100% - 6 * var(--flex-container-gap, 1rem)) / 7);
+    }
+
+    .flex-col-md-8 {
+      width: calc((100% - 7 * var(--flex-container-gap, 1rem)) / 8);
+    }
+
+    .flex-col-md-9 {
+      width: calc((100% - 8 * var(--flex-container-gap, 1rem)) / 9);
+    }
+
+    .flex-col-md-10 {
+      width: calc((100% - 9 * var(--flex-container-gap, 1rem)) / 10);
+    }
+
+    .flex-col-md-11 {
+      width: calc((100% - 10 * var(--flex-container-gap, 1rem)) / 11);
+    }
+
+    .flex-col-md-12 {
+      width: calc((100% - 11 * var(--flex-container-gap, 1rem)) / 12);
+    }
+  }
+
+  @media (min-width: 992px) {
+    .flex-col-lg-1 {
+      width: calc((100% - 0 * var(--flex-container-gap, 1rem)) / 1);
+    }
+
+    .flex-col-lg-2 {
+      width: calc((100% - 1 * var(--flex-container-gap, 1rem)) / 2);
+    }
+
+    .flex-col-lg-3 {
+      width: calc((100% - 2 * var(--flex-container-gap, 1rem)) / 3);
+    }
+
+    .flex-col-lg-4 {
+      width: calc((100% - 3 * var(--flex-container-gap, 1rem)) / 4);
+    }
+
+    .flex-col-lg-5 {
+      width: calc((100% - 4 * var(--flex-container-gap, 1rem)) / 5);
+    }
+
+    .flex-col-lg-6 {
+      width: calc((100% - 5 * var(--flex-container-gap, 1rem)) / 6);
+    }
+
+    .flex-col-lg-7 {
+      width: calc((100% - 6 * var(--flex-container-gap, 1rem)) / 7);
+    }
+
+    .flex-col-lg-8 {
+      width: calc((100% - 7 * var(--flex-container-gap, 1rem)) / 8);
+    }
+
+    .flex-col-lg-9 {
+      width: calc((100% - 8 * var(--flex-container-gap, 1rem)) / 9);
+    }
+
+    .flex-col-lg-10 {
+      width: calc((100% - 9 * var(--flex-container-gap, 1rem)) / 10);
+    }
+
+    .flex-col-lg-11 {
+      width: calc((100% - 10 * var(--flex-container-gap, 1rem)) / 11);
+    }
+
+    .flex-col-lg-12 {
+      width: calc((100% - 11 * var(--flex-container-gap, 1rem)) / 12);
+    }
+  }
+
+  @media (min-width: 1200px) {
+    .flex-col-xl-1 {
+      width: calc((100% - 0 * var(--flex-container-gap, 1rem)) / 1);
+    }
+
+    .flex-col-xl-2 {
+      width: calc((100% - 1 * var(--flex-container-gap, 1rem)) / 2);
+    }
+
+    .flex-col-xl-3 {
+      width: calc((100% - 2 * var(--flex-container-gap, 1rem)) / 3);
+    }
+
+    .flex-col-xl-4 {
+      width: calc((100% - 3 * var(--flex-container-gap, 1rem)) / 4);
+    }
+
+    .flex-col-xl-5 {
+      width: calc((100% - 4 * var(--flex-container-gap, 1rem)) / 5);
+    }
+
+    .flex-col-xl-6 {
+      width: calc((100% - 5 * var(--flex-container-gap, 1rem)) / 6);
+    }
+
+    .flex-col-xl-7 {
+      width: calc((100% - 6 * var(--flex-container-gap, 1rem)) / 7);
+    }
+
+    .flex-col-xl-8 {
+      width: calc((100% - 7 * var(--flex-container-gap, 1rem)) / 8);
+    }
+
+    .flex-col-xl-9 {
+      width: calc((100% - 8 * var(--flex-container-gap, 1rem)) / 9);
+    }
+
+    .flex-col-xl-10 {
+      width: calc((100% - 9 * var(--flex-container-gap, 1rem)) / 10);
+    }
+
+    .flex-col-xl-11 {
+      width: calc((100% - 10 * var(--flex-container-gap, 1rem)) / 11);
+    }
+
+    .flex-col-xl-12 {
+      width: calc((100% - 11 * var(--flex-container-gap, 1rem)) / 12);
+    }
+  }
+
+  /* ==============================
+    * 响应式 Grid 布局系统
+    * 类名前缀 grid- 避免命名冲突
+    * 建议：Grid 更适合二维布局（如卡片网格、仪表盘）
+    * ============================== */
+
+  /* Grid 容器：自动 gap + 响应式列 */
+  .grid-container {
+    display: grid;
+    gap: var(--grid-container-gap, calc(var(--space) * 2));
+    width: 100%;
+    /* 默认：单列（移动端友好） */
+    grid-template-columns: 1fr;
+  }
+
+  /* 固定列数：1～12 列 */
+  .grid-col-1 {
+    grid-template-columns: repeat(1, 1fr);
+  }
+
+  .grid-col-2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .grid-col-3 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .grid-col-4 {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .grid-col-5 {
+    grid-template-columns: repeat(5, 1fr);
+  }
+
+  .grid-col-6 {
+    grid-template-columns: repeat(6, 1fr);
+  }
+
+  .grid-col-7 {
+    grid-template-columns: repeat(7, 1fr);
+  }
+
+  .grid-col-8 {
+    grid-template-columns: repeat(8, 1fr);
+  }
+
+  .grid-col-9 {
+    grid-template-columns: repeat(9, 1fr);
+  }
+
+  .grid-col-10 {
+    grid-template-columns: repeat(10, 1fr);
+  }
+
+  .grid-col-11 {
+    grid-template-columns: repeat(11, 1fr);
+  }
+
+  .grid-col-12 {
+    grid-template-columns: repeat(12, 1fr);
+  }
+
+  /*
+     * 自动填充：最小宽度 + 自适应列数
+     * 建议：grid-cols-auto-* 用于自适应卡片布局（如商品列表），非常实用。
+     */
+  .grid-col-auto-150 {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+
+  .grid-col-auto-200 {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  }
+
+  .grid-col-auto-250 {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  }
+
+  .grid-col-auto-300 {
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  }
+
+  /* 响应式断点 */
+  @media (min-width: 576px) {
+    .grid-col-sm-1 {
+      grid-template-columns: repeat(1, 1fr);
+    }
+
+    .grid-col-sm-2 {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .grid-col-sm-3 {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .grid-col-sm-4 {
+      grid-template-columns: repeat(4, 1fr);
+    }
+
+    .grid-col-sm-5 {
+      grid-template-columns: repeat(5, 1fr);
+    }
+
+    .grid-col-sm-6 {
+      grid-template-columns: repeat(6, 1fr);
+    }
+
+    .grid-col-sm-7 {
+      grid-template-columns: repeat(7, 1fr);
+    }
+
+    .grid-col-sm-8 {
+      grid-template-columns: repeat(8, 1fr);
+    }
+
+    .grid-col-sm-9 {
+      grid-template-columns: repeat(9, 1fr);
+    }
+
+    .grid-col-sm-10 {
+      grid-template-columns: repeat(10, 1fr);
+    }
+
+    .grid-col-sm-11 {
+      grid-template-columns: repeat(11, 1fr);
+    }
+
+    .grid-col-sm-12 {
+      grid-template-columns: repeat(12, 1fr);
+    }
+  }
+
+  /**
+	 * 为减少体积，md/lg/xl 断点只保留常用列数（如 1/2/3/4/6/12）
+	 */
+  @media (min-width: 768px) {
+    .grid-col-md-1 {
+      grid-template-columns: repeat(1, 1fr);
+    }
+
+    .grid-col-md-2 {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    /* ... 可按需补充 md-3 ～ md-12 */
+    .grid-col-md-3 {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .grid-col-md-4 {
+      grid-template-columns: repeat(4, 1fr);
+    }
+
+    .grid-col-md-6 {
+      grid-template-columns: repeat(6, 1fr);
+    }
+
+    .grid-col-md-12 {
+      grid-template-columns: repeat(12, 1fr);
+    }
+  }
+
+  @media (min-width: 992px) {
+    .grid-col-lg-1 {
+      grid-template-columns: repeat(1, 1fr);
+    }
+
+    .grid-col-lg-2 {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .grid-col-lg-3 {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .grid-col-lg-4 {
+      grid-template-columns: repeat(4, 1fr);
+    }
+
+    .grid-col-lg-6 {
+      grid-template-columns: repeat(6, 1fr);
+    }
+
+    .grid-col-lg-12 {
+      grid-template-columns: repeat(12, 1fr);
+    }
+  }
+
+  @media (min-width: 1200px) {
+    .grid-col-xl-1 {
+      grid-template-columns: repeat(1, 1fr);
+    }
+
+    .grid-col-xl-2 {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .grid-col-xl-3 {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .grid-col-xl-4 {
+      grid-template-columns: repeat(4, 1fr);
+    }
+
+    .grid-col-xl-6 {
+      grid-template-columns: repeat(6, 1fr);
+    }
+
+    .grid-col-xl-12 {
+      grid-template-columns: repeat(12, 1fr);
+    }
+  }
+
+  /* iOS Safe Area */
+  .ios-safe-x {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+
+  .ios-safe-y {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .ios-safe-left {
+    padding-left: env(safe-area-inset-left);
+  }
+
+  .ios-safe-right {
+    padding-right: env(safe-area-inset-right);
+  }
+
+  .ios-safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .ios-safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* Aspect Ratio */
+  .aspect-square {
+    aspect-ratio: 1 / 1;
+  }
+
+  .aspect-video {
+    aspect-ratio: 16 / 9;
+  }
+
+  .aspect-auto {
+    aspect-ratio: auto;
+  }
+
+  /* columns */
+  .columns-auto {
+    -moz-columns: auto;
+    columns: auto;
+  }
+
+  .columns-3xs {
+    -moz-columns: var(--columns-3xs);
+    columns: var(--columns-3xs);
+  }
+
+  .columns-2xs {
+    -moz-columns: var(--columns-2xs);
+    columns: var(--columns-2xs);
+  }
+
+  .columns-xs {
+    -moz-columns: var(--columns-xs);
+    columns: var(--columns-xs);
+  }
+
+  .columns-sm {
+    -moz-columns: var(--columns-sm);
+    columns: var(--columns-sm);
+  }
+
+  .columns-md {
+    -moz-columns: var(--columns-md);
+    columns: var(--columns-md);
+  }
+
+  .columns-lg {
+    -moz-columns: var(--columns-lg);
+    columns: var(--columns-lg);
+  }
+
+  .columns-xl {
+    -moz-columns: var(--columns-xl);
+    columns: var(--columns-xl);
+  }
+
+  .columns-2xl {
+    -moz-columns: var(--columns-2xl);
+    columns: var(--columns-2xl);
+  }
+
+  .columns-3xl {
+    -moz-columns: var(--columns-3xl);
+    columns: var(--columns-3xl);
+  }
+
+  .columns-4xl {
+    -moz-columns: var(--columns-4xl);
+    columns: var(--columns-4xl);
+  }
+
+  .columns-5xl {
+    -moz-columns: var(--columns-5xl);
+    columns: var(--columns-5xl);
+  }
+
+  .columns-6xl {
+    -moz-columns: var(--columns-6xl);
+    columns: var(--columns-6xl);
+  }
+
+  .columns-7xl {
+    -moz-columns: var(--columns-7xl);
+    columns: var(--columns-7xl);
+  }
+
+  .w-full {
+    width: 100%;
+  }
+
+  .w-half {
+    width: 50%;
+  }
+
+  .w-screen {
+    width: 100vw;
+  }
+}

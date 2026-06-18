@@ -1,0 +1,60 @@
+@layer components {
+  .j-popup-layout {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--popup-background);
+    backdrop-filter: var(--popup-backdrop-filter, blur(var(--drop-blur)));
+    display: flex;
+    padding: var(--popup-layout-padding, calc(var(--space) * 4));
+    z-index: var(--z-index-popup);
+  }
+  .j-popup-layout,
+  .j-popup-layout.is-center,
+  .j-popup-layout.is-center-center {
+    justify-content: center;
+    align-items: center;
+  }
+  .j-popup-layout.is-top,
+  .j-popup-layout.is-top-center {
+    justify-content: center;
+    align-items: flex-start;
+  }
+  .j-popup-layout.is-bottom,
+  .j-popup-layout.is-bottom-center {
+    justify-content: center;
+    align-items: flex-end;
+  }
+  .j-popup-layout.is-left,
+  .j-popup-layout.is-left-center {
+    justify-content: flex-start;
+    align-items: center;
+  }
+  .j-popup-layout.is-right,
+  .j-popup-layout.is-right-center {
+    justify-content: flex-end;
+    align-items: center;
+  }
+  .j-popup-layout.is-top-left,
+  .j-popup-layout.is-left-top {
+    justify-content: flex-start;
+    align-items: flex-start;
+  }
+  .j-popup-layout.is-top-right,
+  .j-popup-layout.is-right-top {
+    justify-content: flex-end;
+    align-items: flex-start;
+  }
+  .j-popup-layout.is-bottom-left,
+  .j-popup-layout.is-left-bottom {
+    justify-content: flex-start;
+    align-items: flex-end;
+  }
+  .j-popup-layout.is-bottom-right,
+  .j-popup-layout.is-right-bottom {
+    justify-content: flex-end;
+    align-items: flex-end;
+  }
+}

@@ -1,0 +1,81 @@
+@layer components {
+  .j-tip {
+    position: relative;
+    display: grid;
+    width: var(--tip-width, 100%);
+    grid-template-columns: 0 1fr;
+    align-items: flex-start;
+    row-gap: var(--tip-gap, calc(var(--space, 0.25rem) * 2));
+    border-radius: var(--tip-border-radius, var(--border-radius));
+    border-style: var(--tip-border-style, solid);
+    border-width: var(--tip-border-width, 1px);
+    border-color: var(--tip-border-color, var(--border-color));
+    padding-inline: calc(var(--space, 0.25rem) * 4);
+    padding-block: calc(var(--space, 0.25rem) * 3);
+    font-size: var(--tip-font-size, var(--font-size));
+    color: var(--tip-color, var(--foreground));
+    background-color: var(--tip-background, var(--background));
+    box-shadow: var(--tip-box-shadow, var(--box-shadow-sm));
+  }
+
+  .j-tip:has(.tip-icon) {
+    column-gap: calc(var(--space, 0.25rem) * 3);
+    grid-template-columns: calc(var(--space) * 4) 1fr;
+  }
+
+  .j-font-md .j-tip:has(.tip-icon) {
+    column-gap: calc(var(--space, 0.25rem) * 5);
+  }
+
+  .j-tip .tip-icon,
+  .j-tip .tip-icon svg {
+    width: var(--tip-icon-size, var(--font-size-xl));
+    height: var(--tip-icon-size, var(--font-size-xl));
+  }
+
+  .j-tip .tip-icon {
+    color: var(--tip-icon-color, var(--tip-color));
+    transform: translateY(calc(var(--space, 0.25rem) * 0.5));
+    margin: 0;
+  }
+
+  .j-tip .tip-title {
+    grid-column-start: 2;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+    line-clamp: 1;
+    line-height: var(--tip-title-line-height, var(--line-height-paragraph));
+    font-weight: var(--font-medium, 500);
+    margin: 0;
+  }
+
+  .j-tip .tip-content {
+    grid-column-start: 2;
+    display: grid;
+    justify-items: start;
+    gap: calc(var(--space, 0.25rem) * 2);
+    line-height: var(--line-height-paragraph);
+    margin: 0;
+  }
+
+  .j-tip .tip-content > * {
+    margin: 0;
+  }
+
+  .j-tip.is-success {
+    --tip-border-color: var(--success);
+    --tip-icon-color: var(--success);
+  }
+
+  .j-tip.is-warning {
+    --tip-border-color: var(--warning);
+    --tip-icon-color: var(--warning);
+  }
+
+  .j-tip.is-danger {
+    --tip-border-color: var(--danger);
+    --tip-icon-color: var(--danger);
+  }
+}

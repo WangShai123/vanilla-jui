@@ -1,0 +1,28 @@
+@layer components {
+  .j-drop {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: var(--z-index-drop);
+  }
+
+  .j-drop.is-active {
+    display: block;
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .drop-container {
+    border-width: var(--drop-border-width, 1px);
+    border-style: var(--drop-border-style, solid);
+    border-color: var(--drop-border-color, var(--border-color));
+    border-radius: var(--border-radius, var(--border-radius));
+    background-color: var(--drop-background, var(--background));
+    color: var(--drop-foreground, var(--foreground));
+    box-shadow: var(--drop-box-shadow, var(--box-shadow-sm));
+  }
+}

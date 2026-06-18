@@ -1,0 +1,9 @@
+@layer components {
+  .divider {
+    align-self: stretch;
+    border-color: currentColor;
+    border-left-width: 1px;
+    border-top-width: 1px;
+    opacity: 0.1;
+  }
+}

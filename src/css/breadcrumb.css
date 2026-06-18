@@ -1,0 +1,102 @@
+@layer components {
+  .j-breadcrumb,
+  .j-breadcrumb.is-md {
+    font-size: var(--breadcrumb-font-size, var(--font-size));
+    color: var(--breadcrumb-color, var(--gray-10));
+    white-space: nowrap;
+    user-select: none;
+  }
+  .j-breadcrumb.is-sm {
+    --breadcrumb-font-size: var(--font-size-sm);
+  }
+  .j-breadcrumb.is-lg {
+    --breadcrumb-font-size: var(--font-size-lg);
+  }
+
+  .j-breadcrumb svg,
+  .j-breadcrumb.is-md svg {
+    width: var(--breadcrumb-icon-size, var(--font-size));
+    height: var(--breadcrumb-icon-size, var(--font-size));
+  }
+  .j-breadcrumb.is-sm svg {
+    --breadcrumb-icon-size: var(--font-size-sm);
+  }
+  .j-breadcrumb.is-lg svg {
+    --breadcrumb-icon-size: var(--font-size-lg);
+  }
+
+  .j-breadcrumb > ol,
+  .j-breadcrumb > ul {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    align-items: flex-start;
+    margin: 0;
+    padding: 0;
+  }
+
+  .j-breadcrumb > ol li,
+  .j-breadcrumb > ul li {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .j-breadcrumb li:first-child a {
+    padding-inline-start: 0;
+  }
+
+  .j-breadcrumb li + li::before {
+    color: var(--breadcrumb-item-separator-color, var(--gray-9));
+    content: '/';
+  }
+
+  .j-breadcrumb.is-dot li + li::before {
+    content: '•';
+  }
+
+  .j-breadcrumb.is-arrow li + li::before {
+    content: '>';
+  }
+
+  .j-breadcrumb.is-dash li + li::before {
+    content: '–';
+  }
+
+  .j-breadcrumb a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space);
+    color: var(--breadcrumb-link-color, var(--primary));
+    padding: var(--breadcrumb-item-padding-vertical, 0)
+      var(--breadcrumb-item-padding-horizontal, calc(var(--space) * 2));
+    text-decoration: none;
+  }
+
+  .j-breadcrumb a span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .j-breadcrumb li.is-active a {
+    --breadcrumb-link-color: var(--gray-9);
+    cursor: default;
+    pointer-events: none;
+  }
+
+  .j-breadcrumb.is-center ul,
+  .j-breadcrumb.is-center ol {
+    justify-content: center;
+  }
+
+  .j-breadcrumb.is-right ul,
+  .j-breadcrumb.is-right ol {
+    justify-content: flex-end;
+  }
+
+  /* .j-breadcrumb .el-icon {
+    margin-inline-end: var(--space);
+  } */
+}

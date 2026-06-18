@@ -1,0 +1,574 @@
+@layer config {
+
+  /* other variables */
+  :root {
+    /* z-index */
+    --z-index-0: 0;
+    --z-index-1: 1;
+    --z-index-badge: 2;
+    --z-index-toolbar-container: 2;
+    --z-index-submenu: 5;
+    --z-index-drop: 9900;
+    --z-index-overlay: 9950;
+    --z-index-offcanvas: 9960;
+    --z-index-popup: 9970;
+    --z-index-toast: 9980;
+
+    /** Space Theme */
+    --space: 0.25rem;
+
+    /** Transition Duration */
+    --speed-sm: 0.15s;
+    --speed: 0.25s;
+    --speed-md: 0.25s;
+    --speed-lg: 0.5s;
+    --speed-xl: 0.75s;
+
+    /** Font Size */
+    --text-xs: 0.75rem;
+    --text-sm: 0.875rem;
+    --text: 1rem;
+    --text-md: 1rem;
+    --text-lg: 1.125rem;
+    --text-xl: 1.25rem;
+    --text-2xl: 1.5rem;
+    --text-3xl: 1.875rem;
+    --text-4xl: 2.25rem;
+    --text-5xl: 3rem;
+    --text-6xl: 3.75rem;
+    --text-7xl: 4.5rem;
+    --text-8xl: 6rem;
+    --text-9xl: 8rem;
+
+    /** Font Weight */
+    --font-thin: 100;
+    --font-extraLight: 200;
+    --font-light: 300;
+    --font-normal: 400;
+    --font-medium: 500;
+    --font-semiBold: 600;
+    --font-bold: 700;
+    --font-extraBold: 800;
+    --font-black: 900;
+
+    /* Line Height */
+    --line-height: 1.5;
+    --line-height-paragraph: 1.5;
+    --line-height-pre: 1.4;
+    --line-height-heading: 1.25;
+    --line-height-self: 1;
+
+    /** Screen Size */
+    --screen-sm: 576px;
+    --screen-md: 768px;
+    --screen-lg: 992px;
+    --screen-xl: 1200px;
+
+    /** Columns */
+    --columns-3xs: 16rem;
+    /* 256px */
+    --columns-2xs: 18rem;
+    /* 288px */
+    --columns-xs: 20rem;
+    /* 320px */
+    --columns-sm: 24rem;
+    /* 384px */
+    --columns: 28rem;
+    --columns-md: 28rem;
+    /* 448px */
+    --columns-lg: 32rem;
+    /* 512px */
+    --columns-xl: 36rem;
+    /* 576px */
+    --columns-2xl: 42rem;
+    /* 672px */
+    --columns-3xl: 48rem;
+    /* 768px */
+    --columns-4xl: 56rem;
+    /* 896px */
+    --columns-5xl: 64rem;
+    /* 1024px */
+    --columns-6xl: 72rem;
+    /* 1152px */
+    --columns-7xl: 80rem;
+    /* 1280px */
+
+    /** Blur */
+    --blur-xs: 4px;
+    --blur-sm: 8px;
+    --blur: 12px;
+    --blur-md: 12px;
+    --blur-lg: 16px;
+    --blur-xl: 24px;
+    --blur-2xl: 40px;
+    --blur-3xl: 64px;
+
+    /* Drop Blur */
+    --drop-blur-sm: 2px;
+    --drop-blur: 4px;
+    --drop-blur-md: 4px;
+    --drop-blur-lg: 6px;
+    --drop-blur-xl: 8px;
+
+    /** opacity */
+    --opacity-disabled: 0.5;
+    --opacity-readonly: 0.75;
+    --opacity-hover: 0.85;
+    --opacity-active: 1;
+
+    /** readonly */
+    --readonly-background: var(--gray-a3);
+
+    /** disabled */
+    --disabled-background: var(--gray-a6);
+
+    /** Border */
+    --border-color-sm: var(--gray-a3);
+    --border-color: var(--gray-a6);
+    --border-color-md: var(--gray-a6);
+    --border-color-lg: var(--gray-a9);
+
+    --border-sm: 1px solid var(--border-color-sm);
+    --border: 1px solid var(--border-color);
+    --border-md: 1px solid var(--border-color-md);
+    --border-lg: 1px solid var(--border-color-lg);
+
+    /** Border Radius */
+    --radius-xs: 0.125rem;
+    /* 2px */
+    --radius-sm: 0.25rem;
+    /* 4px */
+    --radius: 0.375rem;
+    /* 6px */
+    --radius-md: 0.375rem;
+    /* 6px */
+    --radius-lg: 0.5rem;
+    /* 8px */
+    --radius-xl: 0.75rem;
+    /* 12px */
+    --radius-2xl: 1rem;
+    /* 16px */
+    --radius-3xl: 1.5rem;
+    /* 24px */
+    --radius-4xl: 2rem;
+    /* 32px */
+
+    /* radius alia */
+    --circle: 50%;
+    --round: 0.5rem;
+
+    /** Box Shadow */
+    --shadow-2xs: 0 1px rgb(0 0 0 / 0.05);
+    --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+    --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+    --shadow-inner: 0 0 0 1px var(--border-color);
+
+    /** Text Shadow */
+    --text-shadow-2xs: 0px 1px 0px rgb(0 0 0 / 0.15);
+    --text-shadow-xs: 0px 1px 1px rgb(0 0 0 / 0.2);
+    --text-shadow-sm:
+      0px 1px 0px rgb(0 0 0 / 0.075), 0px 1px 1px rgb(0 0 0 / 0.075), 0px 2px 2px rgb(0 0 0 / 0.075);
+    --text-shadow:
+      0px 1px 1px rgb(0 0 0 / 0.1), 0px 1px 2px rgb(0 0 0 / 0.1), 0px 2px 4px rgb(0 0 0 / 0.1);
+    --text-shadow-md:
+      0px 1px 1px rgb(0 0 0 / 0.1), 0px 1px 2px rgb(0 0 0 / 0.1), 0px 2px 4px rgb(0 0 0 / 0.1);
+    --text-shadow-lg:
+      0px 1px 2px rgb(0 0 0 / 0.1), 0px 3px 2px rgb(0 0 0 / 0.1), 0px 4px 8px rgb(0 0 0 / 0.1);
+
+    /* drop-shadow */
+    --drop-shadow-color-xs: rgb(0 0 0 / 0.05);
+    --drop-shadow-color-sm: rgb(0 0 0 / 0.15);
+    --drop-shadow-color-md: rgb(0 0 0 / 0.12);
+    --drop-shadow-color-lg: rgb(0 0 0 / 0.15);
+    --drop-shadow-color-xl: rgb(0 0 0 / 0.1);
+    --drop-shadow-color-2xl: rgb(0 0 0 / 0.15);
+    --drop-shadow-xs: 0 1px 1px var(--drop-shadow-color-xs);
+    --drop-shadow-sm: 0 1px 2px var(--drop-shadow-color-sm);
+    --drop-shadow: 0 3px 3px var(--drop-shadow-color-md);
+    --drop-shadow-md: 0 3px 3px var(--drop-shadow-color-md);
+    --drop-shadow-lg: 0 4px 4px var(--drop-shadow-color-lg);
+    --drop-shadow-xl: 0 9px 7px var(--drop-shadow-color-xl);
+    --drop-shadow-2xl: 0 25px 25px var(--drop-shadow-color-2xl);
+    --drop-shadow-none: 0 0 #0000;
+
+    /** Base Colors */
+    --foreground: var(--gray-12);
+    --background: var(--gray-1);
+
+    /** Global Theme Config */
+    --primary: var(--indigo-9);
+    --primary-foreground: var(--indigo-contrast);
+    --primary-a: var(--indigo-9a);
+    --secondary: var(--indigo-a3);
+    --secondary-foreground: var(--indigo-a11);
+    --nautral: var(--indigo-a5);
+    --accent: var(--indigo-a2);
+
+    /** business color */
+    --danger: var(--red-10);
+    --danger-foreground: var(--red-contrast);
+    --success: var(--green-10);
+    --success-foreground: var(--green-contrast);
+    --warning: var(--amber-10);
+    --warning-foreground: var(--amber-contrast);
+
+    --surface-sm: var(--gray-2);
+    --surface: var(--gray-3);
+    --surface-md: var(--gray-3);
+    --surface-lg: var(--gray-4);
+
+    --focus: var(--indigo-6);
+    --link: var(--indigo-9);
+    --link-hover: var(--indigo-10);
+    --link-visited: var(--indigo-11);
+
+    --placeholder: var(--gray-a6);
+
+    --code: var(--indigo-a3);
+    --code-foreground: var(--indigo-a11);
+
+    /** Global Components Colors */
+    --popup-background: var(--gray-a11);
+
+    --input-color: var(--gray-a6);
+  }
+
+  .j-theme-gray {
+    --primary: var(--gray-12);
+    --primary-foreground: var(--gray-1);
+    --primary-a-sm: var(--gray-a3);
+    --primary-a: var(--gray-a6);
+    --primary-a-lg: var(--gray-a9);
+    --secondary: var(--gray-a3);
+    --secondary-foreground: var(--gray-a11);
+    --nautral: var(--gray-a5);
+    --accent: var(--gray-a2);
+  }
+
+  .j-theme-olive {
+    --primary: var(--olive-11);
+    --primary-foreground: var(--olive-2);
+    --primary-a-sm: var(--olive-a3);
+    --primary-a: var(--olive-a6);
+    --primary-a-lg: var(--olive-a9);
+    --secondary: var(--olive-a3);
+    --secondary-foreground: var(--olive-a11);
+    --nautral: var(--olive-a5);
+    --accent: var(--olive-a2);
+  }
+
+  .j-theme-tomato {
+    --primary: var(--tomato-9);
+    --primary-foreground: var(--tomato-contrast);
+    --primary-a-sm: var(--tomato-a3);
+    --primary-a: var(--tomato-a6);
+    --primary-a-lg: var(--tomato-a9);
+    --secondary: var(--tomato-a3);
+    --secondary-foreground: var(--tomato-a11);
+    --nautral: var(--tomato-a5);
+    --accent: var(--tomato-a2);
+    --code: var(--tomato-a3);
+    --code-foreground: var(--tomato-a11);
+  }
+
+  .j-theme-ruby {
+    --primary: var(--ruby-9);
+    --primary-foreground: var(--ruby-contrast);
+    --primary-a-sm: var(--ruby-a3);
+    --primary-a: var(--ruby-a6);
+    --primary-a-lg: var(--ruby-a9);
+    --secondary: var(--ruby-a3);
+    --secondary-foreground: var(--ruby-a11);
+    --nautral: var(--ruby-a5);
+    --accent: var(--ruby-a2);
+    --code: var(--ruby-a3);
+    --code-foreground: var(--ruby-a11);
+  }
+
+  .j-theme-pink {
+    --primary: var(--pink-9);
+    --primary-foreground: var(--pink-contrast);
+    --primary-a-sm: var(--pink-a3);
+    --primary-a: var(--pink-a6);
+    --primary-a-lg: var(--pink-a9);
+    --secondary: var(--pink-a3);
+    --secondary-foreground: var(--pink-a11);
+    --nautral: var(--pink-a5);
+    --accent: var(--pink-a2);
+    --code: var(--pink-a3);
+    --code-foreground: var(--pink-a11);
+  }
+
+  .j-theme-violet {
+    --primary: var(--violet-9);
+    --primary-foreground: var(--violet-contrast);
+    --primary-a-sm: var(--violet-a3);
+    --primary-a: var(--violet-a6);
+    --primary-a-lg: var(--violet-a9);
+    --secondary: var(--violet-a3);
+    --secondary-foreground: var(--violet-a11);
+    --nautral: var(--violet-a5);
+    --accent: var(--violet-a2);
+    --code: var(--violet-a3);
+    --code-foreground: var(--violet-a11);
+  }
+
+  .j-theme-indigo {
+    --primary: var(--indigo-9);
+    --primary-foreground: var(--indigo-contrast);
+    --primary-a-sm: var(--indigo-a3);
+    --primary-a: var(--indigo-a6);
+    --primary-a-lg: var(--indigo-a9);
+    --secondary: var(--indigo-a3);
+    --secondary-foreground: var(--indigo-a11);
+    --nautral: var(--indigo-a5);
+    --accent: var(--indigo-a2);
+    --code: var(--indigo-a3);
+    --code-foreground: var(--indigo-a11);
+  }
+
+  .j-theme-blue {
+    --primary: var(--blue-9);
+    --primary-foreground: var(--blue-contrast);
+    --primary-a-sm: var(--blue-a3);
+    --primary-a: var(--blue-a6);
+    --primary-a-lg: var(--blue-a9);
+    --secondary: var(--blue-a3);
+    --secondary-foreground: var(--blue-a11);
+    --nautral: var(--blue-a5);
+    --accent: var(--blue-a2);
+    --code: var(--blue-a3);
+    --code-foreground: var(--blue-a11);
+  }
+
+  .j-theme-teal {
+    --primary: var(--teal-9);
+    --primary-foreground: var(--teal-contrast);
+    --primary-a-sm: var(--teal-a3);
+    --primary-a: var(--teal-a6);
+    --primary-a-lg: var(--teal-a9);
+    --secondary: var(--teal-a3);
+    --secondary-foreground: var(--teal-a11);
+    --nautral: var(--teal-a5);
+    --accent: var(--teal-a2);
+    --code: var(--teal-a3);
+    --code-foreground: var(--teal-a11);
+  }
+
+  .j-theme-grass {
+    --primary: var(--grass-9);
+    --primary-foreground: var(--grass-contrast);
+    --primary-a-sm: var(--grass-a3);
+    --primary-a: var(--grass-a6);
+    --primary-a-lg: var(--grass-a9);
+    --secondary: var(--grass-a3);
+    --secondary-foreground: var(--grass-a11);
+    --nautral: var(--grass-a5);
+    --accent: var(--grass-a2);
+    --code: var(--grass-a3);
+    --code-foreground: var(--grass-a11);
+  }
+
+  .j-theme-mint {
+    --primary: var(--mint-9);
+    --primary-foreground: var(--mint-contrast);
+    --primary-a-sm: var(--mint-a3);
+    --primary-a: var(--mint-a6);
+    --primary-a-lg: var(--mint-a9);
+    --secondary: var(--mint-a3);
+    --secondary-foreground: var(--mint-a11);
+    --nautral: var(--mint-a5);
+    --accent: var(--mint-a2);
+    --code: var(--mint-a3);
+    --code-foreground: var(--mint-a11);
+  }
+
+  .j-theme-lime {
+    --primary: var(--lime-9);
+    --primary-foreground: var(--lime-contrast);
+    --secondary: var(--lime-a3);
+    --secondary-foreground: var(--lime-a11);
+    --nautral: var(--lime-a5);
+    --accent: var(--lime-a2);
+    --code: var(--lime-a3);
+    --code-foreground: var(--lime-a11);
+  }
+
+  .j-theme-yellow {
+    --primary: var(--yellow-9);
+    --primary-foreground: var(--yellow-contrast);
+    --primary-a-sm: var(--yellow-a3);
+    --primary-a: var(--yellow-a6);
+    --primary-a-lg: var(--yellow-a9);
+    --secondary: var(--yellow-a3);
+    --secondary-foreground: var(--yellow-a11);
+    --nautral: var(--yellow-a5);
+    --accent: var(--yellow-a2);
+    --code: var(--yellow-a3);
+    --code-foreground: var(--yellow-a11);
+  }
+
+  .j-theme-orange {
+    --primary: var(--orange-9);
+    --primary-foreground: var(--orange-contrast);
+    --primary-a-sm: var(--orange-a3);
+    --primary-a: var(--orange-a6);
+    --primary-a-lg: var(--orange-a9);
+    --secondary: var(--orange-a3);
+    --secondary-foreground: var(--orange-a11);
+    --nautral: var(--orange-a5);
+    --accent: var(--orange-a2);
+    --code: var(--orange-a3);
+    --code-foreground: var(--orange-a11);
+  }
+
+  .j-theme-gold {
+    --primary: var(--gold-9);
+    --primary-foreground: var(--gold-contrast);
+    --primary-a-sm: var(--gold-a3);
+    --primary-a: var(--gold-a6);
+    --primary-a-lg: var(--gold-a9);
+    --secondary: var(--gold-a3);
+    --secondary-foreground: var(--gold-a11);
+    --nautral: var(--gold-a5);
+    --accent: var(--gold-a2);
+    --code: var(--gold-a3);
+    --code-foreground: var(--gold-a11);
+  }
+
+  .dark {
+    --popup-background: var(--gray-a2);
+
+    /* Dark Mode Shadows */
+    --shadow-2xs: 0 1px rgb(0 0 0 / 0.2);
+    --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.2);
+    --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.25), 0 1px 2px -1px rgb(0 0 0 / 0.2);
+    --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.2);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.2);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.35), 0 4px 6px -4px rgb(0 0 0 / 0.25);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.4), 0 8px 10px -6px rgb(0 0 0 / 0.3);
+    --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.5);
+  }
+
+  /** Fonts Theme */
+  .j-font-sm {
+    --font-size-2xl: 1.5rem;
+    --font-size-xl: 1.125rem;
+    --font-size-lg: 1rem;
+    --font-size: 0.875rem;
+    --font-size-md: 0.875rem;
+    --font-size-sm: 0.75rem;
+
+    /* --el-height-2xs: calc(var(--space) * 4); */
+    /* 16px */
+    /* --el-height-xs: calc(var(--space) * 5); */
+    /* 20px */
+    /* --el-height-sm: calc(var(--space) * 7); */
+    /* 28px */
+    /* --el-height: calc(var(--space) * 9); */
+    /* 36px */
+    /* --el-height-md: calc(var(--space) * 9); */
+    /* 36px */
+    /* --el-height-lg: calc(var(--space) * 11); */
+    /* 44px */
+
+    --el-height-2xs: calc(var(--space) * 3);
+    /* 16px */
+    --el-height-xs: calc(var(--space) * 4);
+    /* 20px */
+    --el-height-sm: calc(var(--space) * 6);
+    /* 28px */
+    --el-height: calc(var(--space) * 8);
+    /* 36px */
+    --el-height-md: calc(var(--space) * 8);
+    /* 36px */
+    --el-height-lg: calc(var(--space) * 10);
+    /* 44px */
+  }
+
+  .j-font-md {
+    --font-size-2xl: 2.25rem;
+    --font-size-xl: 1.5rem;
+    --font-size-lg: 1.25rem;
+    --font-size: 1rem;
+    --font-size-md: 1rem;
+    --font-size-sm: 0.875rem;
+
+    /* --el-height-2xs: calc(var(--space) * 5); */
+    /* 20px */
+    /* --el-height-xs: calc(var(--space) * 7); */
+    /* 28px */
+    /* --el-height-sm: calc(var(--space) * 9); */
+    /* 36px */
+    /* --el-height: calc(var(--space) * 11); */
+    /* 44px */
+    /* --el-height-md: calc(var(--space) * 11); */
+    /* 44px */
+    /* --el-height-lg: calc(var(--space) * 13); */
+    /* 52 */
+
+    --el-height-2xs: calc(var(--space) * 4);
+    --el-height-xs: calc(var(--space) * 6);
+    --el-height-sm: calc(var(--space) * 8);
+    --el-height: calc(var(--space) * 10);
+    --el-height-md: calc(var(--space) * 10);
+    --el-height-lg: calc(var(--space) * 12);
+  }
+
+  /** Shadow Theme */
+  .j-shadow-sm {
+    --box-shadow-sm: var(--shadow-xs);
+    --box-shadow: var(--shadow-sm);
+  }
+
+  .j-shadow-md {
+    --box-shadow-sm: var(--shadow-sm);
+    --box-shadow: var(--shadow-md);
+  }
+
+  .j-shadow-lg {
+    --box-shadow-sm: var(--shadow-md);
+    --box-shadow: var(--shadow-lg);
+  }
+
+  .j-shadow-none {
+    --box-shadow-sm: 0 0 0 0;
+    --box-shadow: 0 0 0 0;
+  }
+
+  /** Radius Theme */
+  .j-radius-sm {
+    --border-radius: 3px;
+    --border-radius-sm: 2px;
+  }
+
+  .j-radius-md {
+    --border-radius: 6px;
+    --border-radius-sm: 4px;
+  }
+
+  .j-radius-lg {
+    --border-radius: 9px;
+    --border-radius-sm: 6px;
+  }
+
+  .j-radius-xl {
+    --border-radius: 15px;
+    --border-radius-sm: 12px;
+  }
+
+  .j-radius-round {
+    --border-radius: 9999px;
+    --border-radius-sm: 9999px;
+  }
+
+  .j-radius-none {
+    --border-radius: 0;
+    --border-radius-sm: 0;
+  }
+}
