@@ -14,6 +14,12 @@ export default defineConfig({
       css: {
         minify: true,
       },
+      outputOptions: {
+        globals: {
+          'vanilla-signal': 'vanillaSignal',
+          'vanilla-signal-i18n': 'vanillaSignalI18n',
+        },
+      },
       outExtensions({ format }) {
         return {
           js: format === 'es' ? '.js' : '.js',
