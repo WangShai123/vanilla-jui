@@ -557,7 +557,7 @@ class Modal {
           type: () => (this.isFormMode() ? 'submit' : 'button'),
           form: () => (this.isFormMode() ? this.cache.formId : null),
           className: 'j-button is-primary modal-confirm',
-          'data-action': 'confirm',
+          'data-action': this.isFormMode() ? 'submit' : 'confirm',
           disabled: () => this.isBusy(),
           children: () => this.state.confirmText,
         }),
