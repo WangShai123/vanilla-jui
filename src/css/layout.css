@@ -172,7 +172,7 @@
   }
 
   /* 默认列：弹性填充 */
-  .flex-col {
+  .flex-cols {
     flex: 1 1 0%;
     min-width: 0;
   }
