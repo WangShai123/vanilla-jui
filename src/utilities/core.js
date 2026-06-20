@@ -1,4 +1,5 @@
-const hasOwn = (obj, key) => Object.prototype.hasOwnProperty.call(obj, key);
+export const hasOwn = (obj, key) =>
+  Object.prototype.hasOwnProperty.call(obj, key);
 
 /**
  * 定时器管理器
@@ -80,7 +81,7 @@ export const isClass = (fn) => {
   );
 };
 
-function isPlainObject(value) {
+export function isPlainObject(value) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
   const proto = Object.getPrototypeOf(value);
   return proto === Object.prototype || proto === null;

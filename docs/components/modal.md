@@ -13,10 +13,12 @@ import 'vanilla-jui/style.css';
 
 ```js
 const dialog = new Modal({
-  title: 'Delete item',
+  text: {
+    title: 'Delete item',
+    confirm: 'Delete',
+    cancel: 'Cancel',
+  },
   content: 'Are you sure you want to delete this item?',
-  confirmText: 'Delete',
-  cancelText: 'Cancel',
   bgClose: true,
   escClose: true,
   onConfirm: async () => {
@@ -35,12 +37,12 @@ dialog.state.visible = true;
 
 ```js
 const modal = new Modal({
-  title: 'Preview',
+  text: { title: 'Preview' },
   content: 'Draft',
 });
 
 modal.state.visible = true;
-modal.state.title = 'Published';
+modal.state.text.title = 'Published';
 modal.state.content = 'Saved';
 modal.state.fullscreen = true;
 modal.state.loading = true;
@@ -50,15 +52,16 @@ modal.state.visible = false;
 
 `state.visible` 是显示/隐藏的唯一状态源。`show()` 和 `hide()` 只是写入 `state.visible` 的便捷方法，因此可以按组件状态、业务 store 或事件回调直接驱动 Modal。
 
-需要统一入口或链式写法时，使用 `setState(key, value)`：
+需要统一入口时，使用 `setState(patch)`：
 
 ```js
-modal
-  .setState('title', 'Saved')
-  .setState('loading', true)
-  .setState('visible', true);
+modal.setState({
+  text: { title: 'Saved' },
+  loading: true,
+  visible: true,
+});
 
-modal.setState('loading', false);
+modal.setState({ loading: false });
 ```
 
 ## 表单弹窗
@@ -67,7 +70,7 @@ modal.setState('loading', false);
 
 ```js
 const editor = new Modal({
-  title: 'User',
+  text: { title: 'User' },
   fields: [
     { label: 'Name', name: 'name', required: true },
     { label: 'Email', name: 'email', type: 'email' },
@@ -83,9 +86,9 @@ const editor = new Modal({
     },
   ],
   onSubmit: async (data) => {
-    editor.setState('loading', true);
+    editor.setState({ loading: true });
     await saveUser(data);
-    editor.setState('loading', false);
+    editor.setState({ loading: false });
     editor.hide();
   },
   onCancel: () => {
@@ -102,21 +105,20 @@ editor.show();
 
 ```js
 dialog.update({
-  title: 'Preview',
+  text: { title: 'Preview', confirm: 'Done' },
   content: 'Updated content',
   fullscreen: true,
   showCancel: false,
-  confirmText: 'Done',
 });
 ```
 
-`update()` 会批量写入 `state`，适合一次性更新多个字段；直接写 `modal.state.title`、`modal.state.content`、`modal.state.fields`、`modal.state.visible` 等状态也会触发响应式渲染。`id`、`lazy` 只在初始化阶段生效，运行时通过 `update()` 更新会抛错。
+`update()` 会批量写入 `state`，适合一次性更新多个字段；直接写 `modal.state.text.title`、`modal.state.content`、`modal.state.fields`、`modal.state.visible` 等状态也会触发响应式渲染。`id`、`lazy` 只在初始化阶段生效，运行时通过 `update()` 更新会抛错。
 
-`setState(key, value)` 只更新单个字段并返回当前实例，适合事件链路中逐步修改状态。`id`、`lazy` 同样不能通过 `setState()` 修改。
+`setState(patch)` 会批量写入状态对象并返回当前实例。`id`、`lazy` 同样不能通过 `setState()` 修改。
 
 ## Flow 适配层
 
-传入 `flow` 后，Modal 会把内部或内容区里的 `data-action="next"`、`data-action="back"` 自动映射到 `flow.next(payload)` 和 `flow.back(payload)`。如果当前是表单模式，Modal 会先执行浏览器原生校验，再把表单数据作为 payload 缓存到 Flow；切换完成后会读取 `flow.currentStep.view` 并调用 `update()` 同步标题、内容、字段和按钮状态。
+传入 `flow` 后，Modal 会把内容区里的 `data-action="next"`、`data-action="back"` 自动映射到 `flow.next(payload)` 和 `flow.back(payload)`。如果当前是表单模式，Modal 会先执行浏览器原生校验，再把表单数据作为 payload 缓存到 Flow；切换完成后会根据步骤的 `title`、`content` 和 `modal` 配置调用 `update()` 同步当前弹窗 UI。
 
 ```js
 import { Flow, Modal } from 'vanilla-jui';
@@ -126,20 +128,28 @@ const flow = new Flow({
   steps: [
     {
       id: 'account',
-      view: {
-        title: 'Account',
+      title: 'Account',
+      modal: {
         fields: [{ label: 'Email', name: 'email', type: 'email' }],
-        showBack: false,
-        showNext: true,
       },
+      content: () => `
+        <div class="j-stack is-gap-16">
+          <div>Fill your account info.</div>
+          <button type="button" class="j-button is-primary" data-action="next">
+            Next
+          </button>
+        </div>
+      `,
     },
     {
       id: 'confirm',
-      view: {
-        title: 'Confirm',
-        content: (modal) => `Email: ${modal.state.flow.state.data.email}`,
-        showBack: true,
-        showNext: false,
+      title: 'Confirm',
+      content: ({ flow }) => {
+        const email = flow.snapshot().data.email;
+        return [`Email: ${email}`, document.createElement('hr')];
+      },
+      modal: {
+        showCancel: false,
       },
     },
   ],
@@ -147,77 +157,63 @@ const flow = new Flow({
 
 const modal = new Modal({
   flow,
-  ...flow.currentStep.view,
-  backText: 'Back',
-  nextText: 'Next',
+  text: { title: flow.currentStep.title },
+  content: flow.currentStep.content,
+  ...(flow.currentStep.modal || {}),
 });
 
 modal.show();
 ```
 
-返回到表单步骤时，Modal 会使用 Flow 的当前步骤缓存回填同名字段。`step.view` 仍然是普通 Modal 配置，因此可以按步骤控制 `title`、`content`、`fields`、`showBack`、`showNext`、`confirmText` 等 UI。需要完全自定义 next/back UI 时，把 `backText` 或 `nextText` 设为 `false`，再在内容区渲染自己的 `data-action="back"` / `data-action="next"` 控件。
+返回到表单步骤时，Modal 会使用 Flow 的当前步骤缓存回填同名字段。推荐把步骤标题放在 `step.title`，把步骤内容放在 `step.content`，把 Modal 专属配置放在 `step.modal`。`next/back` 按钮不再由 Modal 内建渲染，而是始终由步骤内容自行输出，并通过 `data-action="back"` / `data-action="next"` 触发。
 
 ## 实例属性
 
-| 属性             | 说明                                     |
-| ---------------- | ---------------------------------------- |
-| `state`          | 响应式状态对象，也是运行时配置的唯一来源 |
-| `visible`        | `state.visible` 的便捷属性，可读可写     |
-| `initialOptions` | 初始配置快照                             |
-| `initialFields`  | 初始表单字段快照                         |
-| `initialContent` | 初始普通内容                             |
-| `content`        | `state.content` 的只读便捷属性           |
-| `data`           | 最近一次表单提交或 Flow payload 缓存     |
+| 属性    | 说明                                     |
+| ------- | ---------------------------------------- |
+| `state` | 响应式状态对象，也是运行时配置的唯一来源 |
 
 ## 实例方法
 
-| 方法                   | 说明                                 |
-| ---------------------- | ------------------------------------ |
-| `show()`               | 显示弹窗                             |
-| `hide()`               | 隐藏弹窗                             |
-| `setState(key, value)` | 设置单个响应式状态字段并返回当前实例 |
-| `setContent(content)`  | 设置普通内容，表单模式下会抛错       |
-| `setFields(fields)`    | 设置表单字段；传 `null` 退出表单模式 |
-| `addFields(data)`      | 下一次表单提交时额外合并字段         |
-| `reset()`              | 恢复初始配置、内容和字段             |
-| `resetContent()`       | 恢复初始普通内容                     |
-| `resetFields()`        | 恢复初始表单字段                     |
-| `destroy()`            | 销毁实例，释放 DOM、事件和响应式渲染 |
+| 方法                  | 说明                                 |
+| --------------------- | ------------------------------------ |
+| `show()`              | 显示弹窗                             |
+| `hide()`              | 隐藏弹窗                             |
+| `setState(patch)`     | 批量设置响应式状态字段并返回当前实例 |
+| `setContent(content)` | 设置普通内容，表单模式下会抛错       |
+| `setFields(fields)`   | 设置表单字段；传 `null` 退出表单模式 |
+| `addFields(data)`     | 下一次表单提交时额外合并字段         |
+| `reset()`             | 恢复初始配置、内容和字段             |
+| `resetContent()`      | 恢复初始普通内容                     |
+| `resetFields()`       | 恢复初始表单字段                     |
+| `destroy()`           | 销毁实例，释放 DOM、事件和响应式渲染 |
 
 ## 参数
 
-| 参数          | 类型                                           | 默认值      | 说明                                     |
-| ------------- | ---------------------------------------------- | ----------- | ---------------------------------------- |
-| `title`       | `string`                                       | `'Tip'`     | 弹窗标题                                 |
-| `content`     | `string \| Node \| Node[] \| Function \| null` | `''`        | 非表单模式内容                           |
-| `position`    | `string`                                       | `'center'`  | 对应 `.j-popup-layout.is-*`              |
-| `confirmText` | `string`                                       | `'Confirm'` | 确认按钮文本                             |
-| `cancelText`  | `string`                                       | `'Cancel'`  | 取消按钮文本                             |
-| `backText`    | `string \| false`                              | `'Back'`    | 返回按钮文本；`false` 时不渲染内置按钮   |
-| `nextText`    | `string \| false`                              | `'Next'`    | 下一步按钮文本；`false` 时不渲染内置按钮 |
-| `showCancel`  | `boolean`                                      | `true`      | 是否显示取消按钮                         |
-| `showClose`   | `boolean`                                      | `true`      | 是否显示右上角关闭按钮                   |
-| `showBack`    | `boolean`                                      | `false`     | 是否显示返回按钮                         |
-| `showNext`    | `boolean`                                      | `false`     | 是否显示下一步按钮                       |
-| `fullscreen`  | `boolean`                                      | `false`     | 是否全屏                                 |
-| `flow`        | `Flow \| null`                                 | `null`      | Flow 实例；存在时接管 next/back          |
-| `fields`      | `Array<object> \| null`                        | `null`      | 表单字段配置                             |
-| `header`      | `boolean`                                      | `true`      | 是否显示头部                             |
-| `footer`      | `boolean`                                      | `true`      | 是否显示底部                             |
-| `style`       | `string \| object \| null`                     | `null`      | `.j-modal` 内联样式                      |
-| `id`          | `string \| null`                               | `null`      | 弹窗 id，为空时自动生成                  |
-| `escClose`    | `boolean`                                      | `false`     | 是否允许 Esc 关闭                        |
-| `bgClose`     | `boolean`                                      | `false`     | 是否允许点击遮罩关闭                     |
-| `lazy`        | `boolean`                                      | `false`     | 是否延迟到首次 `show()` 创建 DOM         |
-| `onShow`      | `Function \| null`                             | `null`      | 开始显示时触发                           |
-| `onShown`     | `Function \| null`                             | `null`      | 显示完成后触发                           |
-| `onHide`      | `Function \| null`                             | `null`      | 开始隐藏时触发                           |
-| `onHidden`    | `Function \| null`                             | `null`      | 隐藏并移除 DOM 后触发                    |
-| `onConfirm`   | `Function \| null`                             | `null`      | 非表单模式点击确认时触发                 |
-| `onSubmit`    | `Function \| null`                             | `null`      | 表单模式提交时触发                       |
-| `onCancel`    | `Function \| null`                             | `null`      | 点击取消按钮或右上角关闭按钮时触发       |
-| `onBack`      | `Function \| null`                             | `null`      | 无 `flow` 时点击返回触发，不会自动关闭   |
-| `onNext`      | `Function \| null`                             | `null`      | 无 `flow` 时点击下一步触发，不会自动关闭 |
+| 参数         | 类型                                           | 默认值     | 说明                                            |
+| ------------ | ---------------------------------------------- | ---------- | ----------------------------------------------- |
+| `text`       | `object`                                       | `{}`       | 文本配置对象，支持 `title`、`confirm`、`cancel` |
+| `content`    | `string \| Node \| Node[] \| Function \| null` | `''`       | 非表单模式内容                                  |
+| `position`   | `string`                                       | `'center'` | 对应 `.j-popup-layout.is-*`                     |
+| `showCancel` | `boolean`                                      | `true`     | 是否显示取消按钮                                |
+| `showClose`  | `boolean`                                      | `true`     | 是否显示右上角关闭按钮                          |
+| `fullscreen` | `boolean`                                      | `false`    | 是否全屏                                        |
+| `flow`       | `Flow \| null`                                 | `null`     | Flow 实例；内容区的 `data-action` 会映射到 Flow |
+| `fields`     | `Array<object> \| null`                        | `null`     | 表单字段配置                                    |
+| `header`     | `boolean`                                      | `true`     | 是否显示头部                                    |
+| `footer`     | `boolean`                                      | `true`     | 是否显示底部                                    |
+| `style`      | `string \| object \| null`                     | `null`     | `.j-modal` 内联样式                             |
+| `id`         | `string \| null`                               | `null`     | 弹窗 id，为空时自动生成                         |
+| `escClose`   | `boolean`                                      | `false`    | 是否允许 Esc 关闭                               |
+| `bgClose`    | `boolean`                                      | `false`    | 是否允许点击遮罩关闭                            |
+| `lazy`       | `boolean`                                      | `false`    | 是否延迟到首次 `show()` 创建 DOM                |
+| `onShow`     | `Function \| null`                             | `null`     | 开始显示时触发                                  |
+| `onShown`    | `Function \| null`                             | `null`     | 显示完成后触发                                  |
+| `onHide`     | `Function \| null`                             | `null`     | 开始隐藏时触发                                  |
+| `onHidden`   | `Function \| null`                             | `null`     | 隐藏并移除 DOM 后触发                           |
+| `onConfirm`  | `Function \| null`                             | `null`     | 非表单模式点击确认时触发                        |
+| `onSubmit`   | `Function \| null`                             | `null`     | 表单模式提交时触发                              |
+| `onCancel`   | `Function \| null`                             | `null`     | 点击取消按钮或右上角关闭按钮时触发              |
 
 ## Field 配置
 

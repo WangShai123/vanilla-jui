@@ -7,7 +7,12 @@ import {
   render,
 } from 'vanilla-signal';
 
-import { randomId, resolveOptions, validateParam } from '../utilities/core.js';
+import {
+  isPlainObject,
+  randomId,
+  resolveOptions,
+  validateParam,
+} from '../utilities/core.js';
 import { canRenderDOM, isElement } from '../utilities/dom.js';
 
 function isFlowRenderContent(content) {
@@ -43,6 +48,7 @@ function cloneSteps(steps) {
   return steps.map((step) => ({
     ...step,
     data: clonePlainObject(step.data),
+    modal: clonePlainObject(step.modal),
     view: clonePlainObject(step.view),
   }));
 }
@@ -79,6 +85,22 @@ const FLOW_RENDER_SLOT_RULE = {
   message: 'expects function, false or null.',
 };
 
+const FLOW_TEXT_RULE = {
+  default: {},
+  validate: (value) => isPlainObject(value),
+  message: 'expects an object with text fields.',
+  normalize: (value) => {
+    const text = isPlainObject(value) ? value : {};
+    return {
+      ...text,
+      back: typeof text.back === 'string' ? text.back : 'Back',
+      next: typeof text.next === 'string' ? text.next : 'Next',
+      finish: typeof text.finish === 'string' ? text.finish : 'Finish',
+      reset: typeof text.reset === 'string' ? text.reset : 'Reset',
+    };
+  },
+};
+
 const FLOW_OPTIONS_SCHEMA = {
   id: {
     default: null,
@@ -107,10 +129,7 @@ const FLOW_OPTIONS_SCHEMA = {
   showBack: { default: true, type: 'boolean' },
   showNext: { default: true, type: 'boolean' },
   showReset: { default: false, type: 'boolean' },
-  backText: { default: 'Back', type: 'string' },
-  nextText: { default: 'Next', type: 'string' },
-  finishText: { default: 'Finish', type: 'string' },
-  resetText: { default: 'Reset', type: 'string' },
+  text: FLOW_TEXT_RULE,
   className: { default: '', type: 'string' },
   renderHeader: { default: null, ...FLOW_RENDER_SLOT_RULE },
   renderSteps: { default: null, ...FLOW_RENDER_SLOT_RULE },
@@ -131,6 +150,7 @@ const FLOW_OPTIONS_SCHEMA = {
  * @property {string} [description] 步骤描述。
  * @property {string|Node|Node[]|Function|null} [content] 默认 UI 内容。
  * @property {object} [data] 步骤初始缓存数据。
+ * @property {object|Function|null} [modal] 供 Modal 消费的显式 UI 配置；可返回 Partial<ModalOptions>。
  * @property {object} [view] 供外部组件消费的视图配置，如 modal 配置。
  * @property {Function|null} [onEnter] 进入步骤时触发。
  * @property {Function|null} [onLeave] 离开步骤前触发。
@@ -156,10 +176,7 @@ const FLOW_OPTIONS_SCHEMA = {
  * @property {boolean} [showBack=true] 是否显示返回按钮。
  * @property {boolean} [showNext=true] 是否显示下一步按钮。
  * @property {boolean} [showReset=false] 是否显示重置按钮。
- * @property {string} [backText="Back"] 返回按钮文本。
- * @property {string} [nextText="Next"] 下一步按钮文本。
- * @property {string} [finishText="Finish"] 完成按钮文本。
- * @property {string} [resetText="Reset"] 重置按钮文本。
+ * @property {object} [text={}] 文案配置，支持 `back`、`next`、`finish`、`reset`。
  * @property {string} [className=""] 根节点附加类名。
  * @property {Function|null|false} [renderHeader] 自定义头部渲染。
  * @property {Function|null|false} [renderSteps] 自定义步骤条渲染。
@@ -1066,7 +1083,7 @@ class Flow {
               onClick: () => this.reset(),
               disabled: snapshot.loading,
               'aria-disabled': snapshot.loading ? 'true' : 'false',
-              children: this.options.resetText,
+              children: this.options.text.reset,
             })
           : null,
         this.options.showBack
@@ -1077,7 +1094,7 @@ class Flow {
               onClick: () => void this.back(),
               disabled: !snapshot.canBack,
               'aria-disabled': !snapshot.canBack ? 'true' : 'false',
-              children: this.options.backText,
+              children: this.options.text.back,
             })
           : null,
         this.options.showNext
@@ -1089,8 +1106,8 @@ class Flow {
               disabled: snapshot.loading,
               'aria-disabled': snapshot.loading ? 'true' : 'false',
               children: snapshot.isLast
-                ? this.options.finishText
-                : this.options.nextText,
+                ? this.options.text.finish
+                : this.options.text.next,
             })
           : null,
       ],

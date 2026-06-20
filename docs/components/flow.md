@@ -183,7 +183,7 @@ Flow 销毁时会取消当前 action 的 `AbortController`，`signal` 可传给 
 
 ## 在 Modal 中使用
 
-Modal 已提供轻量适配层。传入 `flow` 后，Modal 会把 `data-action="next"`、`data-action="back"` 自动映射到 Flow，并把当前步骤的 `view` 同步为 Modal 配置。
+Modal 已提供轻量适配层。传入 `flow` 后，Modal 会把内容区里的 `data-action="next"`、`data-action="back"` 自动映射到 Flow，并把当前步骤的 `title`、`content`、`modal` 配置同步为当前弹窗 UI。
 
 ```js
 const flow = new Flow({
@@ -191,20 +191,37 @@ const flow = new Flow({
   steps: [
     {
       id: 'base',
-      view: {
-        title: 'Base Info',
+      title: 'Base Info',
+      modal: {
         fields: [{ label: 'Name', name: 'name', required: true }],
-        showBack: false,
-        showNext: true,
       },
+      content: () => `
+        <div class="j-stack is-gap-16">
+          <div>Please enter your name.</div>
+          <button type="button" class="j-button is-primary" data-action="next">
+            Next
+          </button>
+        </div>
+      `,
     },
     {
       id: 'confirm',
-      view: {
-        title: 'Confirm',
-        content: (modal) => `Name: ${modal.options.flow.state.data.name}`,
-        showBack: true,
-        showNext: false,
+      title: 'Confirm',
+      content: ({ flow }) => {
+        const name = flow.snapshot().data.name;
+        return `
+          <div class="j-stack is-gap-16">
+            <div>Name: ${name}</div>
+            <div class="j-flex is-gap-8">
+              <button type="button" class="j-button is-ghost" data-action="back">Back</button>
+              <button type="button" class="j-button is-primary" data-action="confirm">Submit</button>
+            </div>
+          </div>
+        `;
+      },
+      modal: {
+        showCancel: false,
+        text: { confirm: 'Submit' },
       },
     },
   ],
@@ -212,13 +229,21 @@ const flow = new Flow({
 
 const modal = new Modal({
   flow,
-  ...flow.currentStep.view,
-  nextText: 'Next',
-  backText: 'Back',
+  text: { title: flow.currentStep.title },
+  content: flow.currentStep.content,
+  ...(flow.currentStep.modal || {}),
 });
 ```
 
-当当前步骤是表单模式时，Modal 会先执行原生表单校验，再把表单数据作为 payload 传给 `flow.next()` 或 `flow.back()`。Flow 负责缓存数据；Modal 返回表单步骤时会用当前步骤缓存回填同名字段。Flow 本身不依赖 Modal，仍然可以直接在页面或其他组件中使用。
+当当前步骤是表单模式时，Modal 会先执行原生表单校验，再把表单数据作为 payload 传给 `flow.next()` 或 `flow.back()`。Flow 负责缓存数据；Modal 返回表单步骤时会用当前步骤缓存回填同名字段。
+
+推荐约定：
+
+- `step.title`：步骤标题，也是 Modal 默认标题来源
+- `step.content`：步骤主体内容，也是 Modal 默认内容来源
+- `step.modal`：只放 Modal 专属配置，例如 `fields`、`text.confirm`、`showCancel`、`fullscreen`
+
+`step.view` 仍然保留兼容，但不再推荐作为 Modal 的主协议。Flow 本身不依赖 Modal，仍然可以直接在页面或其他组件中使用。
 
 ## Step 配置
 
@@ -229,7 +254,8 @@ const modal = new Modal({
 | `description` | `string`                                       | 步骤描述                                |
 | `content`     | `string \| Node \| Node[] \| Function \| null` | 默认 UI 内容                            |
 | `data`        | `object`                                       | 步骤初始缓存数据                        |
-| `view`        | `object`                                       | 供外部组件消费的视图配置                |
+| `modal`       | `object \| Function \| null`                   | 供 Modal 消费的显式 UI 配置             |
+| `view`        | `object`                                       | 旧的通用视图配置，建议仅用于兼容        |
 | `onEnter`     | `Function`                                     | 进入步骤后触发                          |
 | `onLeave`     | `Function`                                     | 离开步骤前触发                          |
 | `onNext`      | `Function`                                     | 当前步骤 next 时触发，可返回目标步骤 id |
@@ -239,37 +265,34 @@ const modal = new Modal({
 
 ## Options
 
-| 参数              | 类型                        | 默认值     | 说明                               |
-| ----------------- | --------------------------- | ---------- | ---------------------------------- |
-| `id`              | `string \| null`            | `null`     | 根节点 id，为空时自动生成          |
-| `steps`           | `FlowStep[]`                | `[]`       | 步骤列表                           |
-| `initial`         | `string \| number \| null`  | `null`     | 初始步骤 id 或索引                 |
-| `cache`           | `boolean`                   | `true`     | 是否把步骤 payload 合并到全局 data |
-| `linear`          | `boolean`                   | `true`     | 默认 UI 是否限制跳到未来步骤       |
-| `render`          | `boolean`                   | `true`     | 是否启用默认 UI                    |
-| `rollbackOnError` | `boolean`                   | `true`     | transition 失败时是否回滚状态      |
-| `busyStrategy`    | `'ignore' \| 'throw'`       | `'ignore'` | loading 中重复动作的处理策略       |
-| `showHeader`      | `boolean`                   | `true`     | 是否显示默认头部                   |
-| `showFooter`      | `boolean`                   | `true`     | 是否显示默认底部                   |
-| `showSteps`       | `boolean`                   | `true`     | 是否显示默认步骤条                 |
-| `showBack`        | `boolean`                   | `true`     | 是否显示默认返回按钮               |
-| `showNext`        | `boolean`                   | `true`     | 是否显示默认下一步按钮             |
-| `showReset`       | `boolean`                   | `false`    | 是否显示默认重置按钮               |
-| `backText`        | `string`                    | `'Back'`   | 返回按钮文本                       |
-| `nextText`        | `string`                    | `'Next'`   | 下一步按钮文本                     |
-| `finishText`      | `string`                    | `'Finish'` | 最后一步按钮文本                   |
-| `resetText`       | `string`                    | `'Reset'`  | 重置按钮文本                       |
-| `className`       | `string`                    | `''`       | 根节点附加类名                     |
-| `renderHeader`    | `Function \| false \| null` | `null`     | 自定义头部渲染                     |
-| `renderSteps`     | `Function \| false \| null` | `null`     | 自定义步骤条渲染                   |
-| `renderBody`      | `Function \| false \| null` | `null`     | 自定义内容区渲染                   |
-| `renderFooter`    | `Function \| false \| null` | `null`     | 自定义底部渲染                     |
-| `onChange`        | `Function \| null`          | `null`     | 步骤切换后触发                     |
-| `onNext`          | `Function \| null`          | `null`     | 全局 next 时触发                   |
-| `onBack`          | `Function \| null`          | `null`     | 全局 back 时触发                   |
-| `onFinish`        | `Function \| null`          | `null`     | 完成时触发                         |
-| `onError`         | `Function \| null`          | `null`     | 生命周期错误时触发                 |
-| `onBusy`          | `Function \| null`          | `null`     | 重复动作被拦截时触发               |
+| 参数              | 类型                        | 默认值     | 说明                                    |
+| ----------------- | --------------------------- | ---------- | --------------------------------------- |
+| `id`              | `string \| null`            | `null`     | 根节点 id，为空时自动生成               |
+| `steps`           | `FlowStep[]`                | `[]`       | 步骤列表                                |
+| `initial`         | `string \| number \| null`  | `null`     | 初始步骤 id 或索引                      |
+| `cache`           | `boolean`                   | `true`     | 是否把步骤 payload 合并到全局 data      |
+| `linear`          | `boolean`                   | `true`     | 默认 UI 是否限制跳到未来步骤            |
+| `render`          | `boolean`                   | `true`     | 是否启用默认 UI                         |
+| `rollbackOnError` | `boolean`                   | `true`     | transition 失败时是否回滚状态           |
+| `busyStrategy`    | `'ignore' \| 'throw'`       | `'ignore'` | loading 中重复动作的处理策略            |
+| `showHeader`      | `boolean`                   | `true`     | 是否显示默认头部                        |
+| `showFooter`      | `boolean`                   | `true`     | 是否显示默认底部                        |
+| `showSteps`       | `boolean`                   | `true`     | 是否显示默认步骤条                      |
+| `showBack`        | `boolean`                   | `true`     | 是否显示默认返回按钮                    |
+| `showNext`        | `boolean`                   | `true`     | 是否显示默认下一步按钮                  |
+| `showReset`       | `boolean`                   | `false`    | 是否显示默认重置按钮                    |
+| `text`            | `object`                    | `{}`       | 文案配置，支持 `back/next/finish/reset` |
+| `className`       | `string`                    | `''`       | 根节点附加类名                          |
+| `renderHeader`    | `Function \| false \| null` | `null`     | 自定义头部渲染                          |
+| `renderSteps`     | `Function \| false \| null` | `null`     | 自定义步骤条渲染                        |
+| `renderBody`      | `Function \| false \| null` | `null`     | 自定义内容区渲染                        |
+| `renderFooter`    | `Function \| false \| null` | `null`     | 自定义底部渲染                          |
+| `onChange`        | `Function \| null`          | `null`     | 步骤切换后触发                          |
+| `onNext`          | `Function \| null`          | `null`     | 全局 next 时触发                        |
+| `onBack`          | `Function \| null`          | `null`     | 全局 back 时触发                        |
+| `onFinish`        | `Function \| null`          | `null`     | 完成时触发                              |
+| `onError`         | `Function \| null`          | `null`     | 生命周期错误时触发                      |
+| `onBusy`          | `Function \| null`          | `null`     | 重复动作被拦截时触发                    |
 
 ## 实例属性
 
