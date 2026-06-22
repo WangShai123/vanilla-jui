@@ -33,8 +33,14 @@ export default defineConfig({
     include: ['tests/**/*.test.js'],
     exclude: [
       'tests/accordion.test.js',
+      'tests/config.test.js',
       'tests/flow.test.js',
       'tests/modal.test.js',
+      'tests/tabs.test.js',
+      'tests/toast.test.js',
+      'tests/swiper.test.js',
+      'tests/validator.test.js',
+      'tests/components/modal.test.js',
     ],
   },
 

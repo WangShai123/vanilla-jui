@@ -10,7 +10,7 @@ import {
 import {
   isPlainObject,
   randomId,
-  resolveOptions,
+  resolveProps,
   validateParam,
 } from '../utilities/core.js';
 import { canRenderDOM, isElement } from '../utilities/dom.js';
@@ -201,7 +201,7 @@ class Flow {
    * @param {FlowOptions} [options={}] Flow 配置。
    */
   constructor(options = {}) {
-    this.options = resolveOptions(options, FLOW_OPTIONS_SCHEMA, 'Flow.options');
+    this.options = resolveProps(options, FLOW_OPTIONS_SCHEMA, 'Flow.options');
     this._init(this.options);
   }
 

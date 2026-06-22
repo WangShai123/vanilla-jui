@@ -1,6 +1,6 @@
 # Modal
 
-Modal 是基于 `vanilla-signal` 渲染的弹窗组件，源码位于 `src/components/modal.js`。运行时 UI 状态集中在 `modal.state`，实例方法只是对响应式状态的薄封装，适合在响应式项目里以 `new Modal(options)` 创建、复用和动态更新。
+Modal 继承 `Component`，基于 `vanilla-signal` 渲染的弹窗组件，源码位于 `src/components/modal.js`。运行时 UI 状态集中在 `modal.state`，实例方法只是对响应式状态的薄封装，适合在响应式项目里以 `new Modal(props)` 创建、复用和动态更新。
 
 ## 导入
 
@@ -169,24 +169,32 @@ modal.show();
 
 ## 实例属性
 
+继承自 `Component` 的属性：`props`、`state`、`root`、`destroyed`。
+
 | 属性    | 说明                                     |
 | ------- | ---------------------------------------- |
+| `props` | 归一化后的初始配置                       |
 | `state` | 响应式状态对象，也是运行时配置的唯一来源 |
+
+`state` 包含以下常用响应式字段：`visible`、`loading`、`submitting`、`content`、`fields`、`data`（表单提交数据）、`extraData`（额外合并字段）、`text`、`fullscreen` 等。
 
 ## 实例方法
 
-| 方法                  | 说明                                 |
-| --------------------- | ------------------------------------ |
-| `show()`              | 显示弹窗                             |
-| `hide()`              | 隐藏弹窗                             |
-| `setState(patch)`     | 批量设置响应式状态字段并返回当前实例 |
-| `setContent(content)` | 设置普通内容，表单模式下会抛错       |
-| `setFields(fields)`   | 设置表单字段；传 `null` 退出表单模式 |
-| `addFields(data)`     | 下一次表单提交时额外合并字段         |
-| `reset()`             | 恢复初始配置、内容和字段             |
-| `resetContent()`      | 恢复初始普通内容                     |
-| `resetFields()`       | 恢复初始表单字段                     |
-| `destroy()`           | 销毁实例，释放 DOM、事件和响应式渲染 |
+| 方法                          | 说明                                 |
+| ----------------------------- | ------------------------------------ |
+| `show()`                      | 显示弹窗                             |
+| `hide()`                      | 隐藏弹窗                             |
+| `setState(patch)`             | 批量设置响应式状态字段并返回当前实例 |
+| `update(patch, force?)`       | 合并 props 并批量更新 state          |
+| `setContent(content, force?)` | 设置普通内容，表单模式下会抛错       |
+| `setFields(fields, force?)`   | 设置表单字段；传 `null` 退出表单模式 |
+| `addFields(data)`             | 下一次表单提交时额外合并字段         |
+| `reset()`                     | 恢复初始配置、内容和字段             |
+| `resetContent()`              | 恢复初始普通内容                     |
+| `resetFields()`               | 恢复初始表单字段                     |
+| `destroy()`                   | 销毁实例，释放 DOM、事件和响应式渲染 |
+
+继承自 `Component` 的方法也可使用：`on()`、`off()`、`emit()`、`use()`。
 
 ## 参数
 

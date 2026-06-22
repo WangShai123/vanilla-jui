@@ -18,6 +18,11 @@ export * from './utilities/storage.js';
 export * from './components/icons.js';
 
 /**
+ * Core
+ */
+export { default as Component } from './core/Component.js';
+
+/**
  * Components
  */
 export { default as Accordion } from './components/accordion.js';

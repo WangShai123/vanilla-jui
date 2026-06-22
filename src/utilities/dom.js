@@ -38,6 +38,25 @@ export function isElement(value) {
 }
 
 /**
+ * 解析并验证容器元素
+ * @param {HTMLElement|string} container - CSS 选择器字符串或 DOM 元素
+ * @param {string} namespace - 组件名称，用于错误提示
+ * @returns {HTMLElement} 有效的 DOM 元素
+ * @throws {Error} 当容器无效时抛出错误
+ */
+export const resolveContainer = (container, namespace = 'Component') => {
+  let el;
+
+  el = typeof container === 'string' ? q(container) : container;
+
+  if (!el || typeof el.appendChild !== 'function') {
+    throw new Error(`${namespace}: container expects a valid Element.`);
+  }
+
+  return el;
+};
+
+/**
  * 判断是否为组件可渲染内容。
  * @param {*} value 需要判断的值。
  * @returns {boolean}

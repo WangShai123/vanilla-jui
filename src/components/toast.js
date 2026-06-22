@@ -1,6 +1,6 @@
 import { jsx } from 'vanilla-signal';
 
-import { randomId, validateParam } from '../utilities/core.js';
+import { randomId, timer, validateParam } from '../utilities/core.js';
 import { canRenderDOM, q } from '../utilities/dom.js';
 import { listen } from '../utilities/events.js';
 import { icon } from './icons.js';
@@ -29,14 +29,12 @@ const LITE_DURATION_RULE = {
  */
 class Toast {
   /**
-   * 当前由 Toast 创建的定时器集合。
-   * @type {Set<number>}
+   * 当前 Toast 使用的 timer key 集合，用于统一清理。
+   * @type {Set<string>}
    */
   static timers = new Set();
 
   static disposers = new Map();
-
-  _z() {}
   /**
    * 展示一条 Toast 消息。
    * @param {string} [message=""] 消息内容。
@@ -49,44 +47,51 @@ class Toast {
       throw new Error('Toast: DOM render environment is required.');
     }
 
-    // 校验参数。
-    validateToastParams(message, duration, type);
+    validateParam('message', message, 'string', 'Toast.show');
+    validateParam('duration', duration, TOAST_DURATION_RULE, 'Toast.show');
+    validateParam('type', type, TOAST_TYPE_RULE, 'Toast.show');
 
-    // 创建 Toast 容器。
     let toastContainer = q('.j-toast-container');
     if (!toastContainer) {
-      toastContainer = jsx('div', {
-        className: 'j-toast-container',
-      });
+      toastContainer = jsx('div', { className: 'j-toast-container' });
       document.body.appendChild(toastContainer);
     }
 
-    // 创建 Toast 节点。
-    const _icon = icon(type === 'primary' ? 'info' : type);
+    const id = randomId();
     const toast = jsx('div', {
       className: `j-toast is-${type}`,
-      'data-toast': randomId(),
+      'data-toast': id,
       children: [
-        jsx('span', { className: 'toast-icon', children: _icon }),
+        jsx('span', {
+          className: 'toast-icon',
+          children: icon(type === 'primary' ? 'info' : type),
+        }),
         jsx('span', { className: 'toast-message', children: message }),
       ],
     });
 
     toastContainer.appendChild(toast);
 
-    // 触发展示动画。
-    Toast._setTimer(() => {
-      toast.classList.add('toast-show');
-    }, 10);
+    Toast._setTimer(
+      id,
+      'show',
+      () => {
+        toast.classList.add('toast-show');
+      },
+      10
+    );
 
-    // 到达展示时长后自动隐藏。
     if (duration > 0) {
-      Toast._setTimer(() => {
-        Toast.hide(toast);
-      }, duration);
+      Toast._setTimer(
+        id,
+        'hide',
+        () => {
+          Toast.hide(toast);
+        },
+        duration
+      );
     }
 
-    // 点击 Toast 时关闭。
     const disposeClick = listen(toast, 'click', () => {
       Toast.hide(toast);
     });
@@ -158,18 +163,22 @@ class Toast {
       toast.classList.remove('toast-show');
       toast.classList.add('toast-hide');
 
-      // 动画结束后移除节点。
-      Toast._setTimer(() => {
-        if (toast.parentNode) {
-          toast.parentNode.removeChild(toast);
-        }
+      const id = toast.dataset.toast;
+      Toast._setTimer(
+        id,
+        'remove',
+        () => {
+          if (toast.parentNode) {
+            toast.parentNode.removeChild(toast);
+          }
 
-        // 容器为空时一并移除。
-        const container = q('.j-toast-container');
-        if (container && container.children.length === 0) {
-          container.parentNode.removeChild(container);
-        }
-      }, 300);
+          const container = q('.j-toast-container');
+          if (container && container.children.length === 0) {
+            container.parentNode.removeChild(container);
+          }
+        },
+        300
+      );
     }
   }
 
@@ -189,23 +198,29 @@ class Toast {
     validateParam('message', message, 'string', 'Toast.lite');
     validateParam('duration', duration, LITE_DURATION_RULE, 'Toast.lite');
 
-    // lite 模式只保留一个实例。
     const existing = q('.j-toast-lite');
     if (existing) existing.remove();
 
+    const id = randomId();
     const lite = jsx('div', {
       className: 'j-toast-lite',
+      'data-toast': id,
       children: message,
     });
     document.body.appendChild(lite);
 
-    Toast._setTimer(() => lite.classList.add('is-shown'), 10);
+    Toast._setTimer(id, 'show', () => lite.classList.add('is-shown'), 10);
 
-    Toast._setTimer(() => {
-      lite.classList.remove('is-shown');
-      lite.classList.add('is-hidden');
-      Toast._setTimer(() => lite.remove(), 300);
-    }, duration);
+    Toast._setTimer(
+      id,
+      'hide',
+      () => {
+        lite.classList.remove('is-shown');
+        lite.classList.add('is-hidden');
+        Toast._setTimer(id, 'remove', () => lite.remove(), 300);
+      },
+      duration
+    );
 
     return lite;
   }
@@ -215,15 +230,16 @@ class Toast {
    * @private
    * @param {Function} callback 定时回调。
    * @param {number} delay 延迟毫秒。
-   * @returns {number}
+   * @returns {string} timer key。
    */
-  static _setTimer(callback, delay) {
-    const timer = setTimeout(() => {
-      Toast.timers.delete(timer);
+  static _setTimer(id, action, callback, delay) {
+    const key = `${id}-${action}`;
+    Toast.timers.add(key);
+    timer.start(key, delay, () => {
+      Toast.timers.delete(key);
       callback();
-    }, delay);
-    Toast.timers.add(timer);
-    return timer;
+    });
+    return key;
   }
 
   /**
@@ -231,8 +247,8 @@ class Toast {
    * @returns {void}
    */
   static clearAll() {
-    for (const timer of Toast.timers) {
-      clearTimeout(timer);
+    for (const key of Toast.timers) {
+      timer.cancel(key);
     }
     Toast.timers.clear();
     for (const dispose of Toast.disposers.values()) dispose();
@@ -248,20 +264,6 @@ class Toast {
   static destroyAll() {
     Toast.clearAll();
   }
-}
-
-/**
- * 校验 Toast.show 参数。
- * @private
- * @param {string} message 消息内容。
- * @param {number} duration 展示时长。
- * @param {string} type 消息类型。
- * @returns {void}
- */
-function validateToastParams(message, duration, type) {
-  validateParam('message', message, 'string', 'Toast.show');
-  validateParam('duration', duration, TOAST_DURATION_RULE, 'Toast.show');
-  validateParam('type', type, TOAST_TYPE_RULE, 'Toast.show');
 }
 
 export default Toast;

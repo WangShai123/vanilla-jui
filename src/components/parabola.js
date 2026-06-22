@@ -1,6 +1,6 @@
 import { jsx } from 'vanilla-signal';
 
-import { resolveOptions } from '../utilities/core.js';
+import { resolveProps } from '../utilities/core.js';
 import { canRenderDOM, getEl } from '../utilities/dom.js';
 
 const PARABOLA_OPTIONS_SCHEMA = {
@@ -64,7 +64,7 @@ class Parabola {
       throw new Error('Parabola: DOM render environment is required.');
     }
 
-    this.options = resolveOptions(
+    this.options = resolveProps(
       options,
       PARABOLA_OPTIONS_SCHEMA,
       'Parabola.options'

@@ -14,11 +14,10 @@ import {
   hasOwn,
   isPlainObject,
   randomId,
-  resolveOptions,
+  resolveProps,
   validateParam,
 } from '../utilities/core.js';
 import { all, q, canUseDOM, canRenderDOM, isNode } from '../utilities/dom.js';
-import { createEventManager } from '../utilities/events.js';
 import { icon } from './icons.js';
 
 const HIDE_DURATION = 300;
@@ -35,12 +34,12 @@ function cloneFields(fields) {
   }));
 }
 
-function cloneOptions(options) {
+function cloneProps(props) {
   return {
-    ...options,
-    fields: Array.isArray(options.fields)
-      ? cloneFields(options.fields)
-      : options.fields,
+    ...props,
+    fields: Array.isArray(props.fields)
+      ? cloneFields(props.fields)
+      : props.fields,
   };
 }
 
@@ -59,7 +58,7 @@ function isModalContent(content) {
   );
 }
 
-function isUpdateOptions(value) {
+function isUpdateProps(value) {
   return isPlainObject(value);
 }
 
@@ -98,8 +97,6 @@ function createTextState(props) {
     title: typeof text.title === 'string' ? text.title : 'Tip',
     confirm: typeof text.confirm === 'string' ? text.confirm : 'Confirm',
     cancel: typeof text.cancel === 'string' ? text.cancel : 'Cancel',
-    back: text.back ?? null,
-    ok: typeof text.ok === 'string' ? text.ok : 'OK',
   };
 }
 
@@ -141,14 +138,12 @@ const MODAL_TEXT_RULE = {
       title: typeof text.title === 'string' ? text.title : 'Tip',
       confirm: typeof text.confirm === 'string' ? text.confirm : 'Confirm',
       cancel: typeof text.cancel === 'string' ? text.cancel : 'Cancel',
-      ok: typeof text.ok === 'string' ? text.ok : 'OK',
-      back: text.back ?? null,
     };
   },
 };
 
 const MODAL_FIELDS_RULE = { types: ['array', 'null'] };
-const MODAL_OPTIONS_SCHEMA = {
+const MODAL_PROPS_SCHEMA = {
   content: { default: '', ...MODAL_CONTENT_RULE },
   position: { default: 'center', type: 'string' },
   showCancel: { default: true, type: 'boolean' },
@@ -187,7 +182,7 @@ const MODAL_OPTIONS_SCHEMA = {
 };
 
 const MODAL_STATE_SCHEMA = {
-  ...MODAL_OPTIONS_SCHEMA,
+  ...MODAL_PROPS_SCHEMA,
   loading: { default: false, type: 'boolean' },
   submitting: { default: false, type: 'boolean' },
   visible: { default: false, type: 'boolean' },
@@ -204,62 +199,48 @@ const MODAL_EXTRA_FIELDS_RULE = {
 };
 
 const MODAL_UPDATE_RULE = {
-  validate: isUpdateOptions,
-  message: 'expects an options object.',
+  validate: isUpdateProps,
+  message: 'expects a props object.',
 };
 
 let modalScrollLockCount = 0;
 let modalBodyOverflow = '';
 
 class Modal extends Component {
-  constructor(options = {}) {
-    const props = resolveOptions(
-      options,
-      MODAL_OPTIONS_SCHEMA,
-      'Modal.options'
-    );
+  constructor(input = {}) {
+    const props = resolveProps(input, MODAL_PROPS_SCHEMA, 'Modal');
     super(props);
-    this.init(props);
-  }
 
-  init(props) {
-    super.init(props);
-    this.dom = {
-      root: null,
-      modal: null,
-      header: null,
-      body: null,
-      footer: null,
-      form: null,
-    };
-    this.cleanup.visibility = null;
-    this.cleanup = this.cleanup || {};
-    this.cleanup.events = this.cleanup.events || createEventManager();
+    this.dom.modal = null;
+    this.dom.header = null;
+    this.dom.body = null;
+    this.dom.footer = null;
+    this.dom.form = null;
+
     this.cleanup.visibility = null;
     this.cleanup.view = null;
     this.cleanup.hideTimer = null;
+
+    this.runtime.scrollLocked = false;
+    this.runtime.visibleApplied = false;
+
     this.cache = {
-      initial: cloneOptions(this.props),
+      initial: cloneProps(this.props),
       fieldIds: new Map(),
       baseStyle: '',
       previousActiveElement: null,
       formId: `${this.props.id}_form`,
     };
-    this.runtime = {
-      scrollLocked: false,
-      visibleApplied: false,
-      destroyed: false,
-    };
 
     this.state = createDeepStore(createModalState(this.props));
-    this.bindReactiveVisibility();
 
-    if (!this.state.lazy && canRenderDOM()) this.buildRoot();
+    this.init(props);
   }
 
-  // Use internal DOM refs `this.dom.modal` and `this.dom.form` directly
-  // rather than exposing getter accessors. This keeps the component
-  // strictly state-driven and avoids redundant accessor APIs.
+  onInit() {
+    this.bindReactiveVisibility();
+    if (!this.state.lazy && canRenderDOM()) this.buildRoot();
+  }
 
   buildRoot() {
     if (this.root) return this.root;
@@ -581,13 +562,13 @@ class Modal extends Component {
     return !!(this.state.loading || this.state.submitting);
   }
 
-  validateOptionPatch(patch, namespace = 'Modal.update') {
-    validateParam('options', patch, MODAL_UPDATE_RULE, namespace);
+  validatePropsPatch(patch, namespace = 'Modal.update') {
+    validateParam('props', patch, MODAL_UPDATE_RULE, namespace);
 
     for (const key of Object.keys(patch)) {
-      if (!hasOwn(MODAL_OPTIONS_SCHEMA, key)) {
+      if (!hasOwn(MODAL_PROPS_SCHEMA, key)) {
         throw new Error(
-          `Validator: ${namespace}.${key} is not a supported modal option.`
+          `Validator: ${namespace}.${key} is not a supported modal prop.`
         );
       }
       if (MODAL_UPDATE_BLOCKED_KEYS.has(key)) {
@@ -595,12 +576,12 @@ class Modal extends Component {
           `Modal.update: "${key}" cannot be updated after initialization.`
         );
       }
-      validateParam(key, patch[key], MODAL_OPTIONS_SCHEMA[key], namespace);
+      validateParam(key, patch[key], MODAL_PROPS_SCHEMA[key], namespace);
     }
   }
 
-  applyOptions(patch, { validate = true, force = false } = {}) {
-    if (validate) this.validateOptionPatch(patch);
+  applyProps(patch, { validate = true, force = false } = {}) {
+    if (validate) this.validatePropsPatch(patch);
     if (!patch || Object.keys(patch).length === 0) return this;
 
     const hasFields = hasOwn(patch, 'fields');
@@ -621,6 +602,7 @@ class Modal extends Component {
 
     this.props = nextProps;
     super.update(patch, { force });
+    this.props = nextProps;
 
     const statePatch = {};
     if (hasFields) {
@@ -1236,10 +1218,6 @@ class Modal extends Component {
     return this;
   }
 
-  open() {
-    return this.show();
-  }
-
   hide() {
     this.assertActive('hide');
     flushSync(() => {
@@ -1250,7 +1228,7 @@ class Modal extends Component {
 
   setFields(data, force = false) {
     validateParam('data', data, MODAL_FIELDS_RULE, 'Modal.setFields');
-    this.applyOptions({ fields: data }, { validate: false, force });
+    this.applyProps({ fields: data }, { validate: false, force });
     return this;
   }
 
@@ -1271,22 +1249,22 @@ class Modal extends Component {
       );
     }
 
-    this.applyOptions({ content }, { validate: false, force });
+    this.applyProps({ content }, { validate: false, force });
     return this;
   }
 
-  update(options = {}, force = false) {
-    return this.applyOptions(options, { validate: true, force });
+  update(patch = {}, force = false) {
+    return this.applyProps(patch, { validate: true, force });
   }
 
   reset() {
     this.cache.fieldIds.clear();
 
-    const initialOptions = cloneOptions(this.cache.initial);
-    delete initialOptions.id;
-    delete initialOptions.lazy;
-    this.props = cloneOptions(initialOptions);
-    this.applyOptions(initialOptions, { validate: false });
+    const initialProps = cloneProps(this.cache.initial);
+    delete initialProps.id;
+    delete initialProps.lazy;
+    this.props = cloneProps(initialProps);
+    this.applyProps(initialProps, { validate: false });
     flushSync(() => {
       this.state.data = null;
       this.state.extraData = null;

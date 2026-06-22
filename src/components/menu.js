@@ -1,6 +1,6 @@
 import { jsx } from 'vanilla-signal';
 
-import { randomId, resolveOptions, validateParam } from '../utilities/core.js';
+import { randomId, resolveProps, validateParam } from '../utilities/core.js';
 import { canRenderDOM, getEl, q } from '../utilities/dom.js';
 import { createEventManager } from '../utilities/events.js';
 import { icon } from './icons.js';
@@ -49,7 +49,7 @@ class Menu {
    */
   constructor(element, options = {}) {
     this._element = element;
-    this.options = resolveOptions(options, MENU_OPTIONS_SCHEMA, 'Menu.options');
+    this.options = resolveProps(options, MENU_OPTIONS_SCHEMA, 'Menu.options');
 
     this.root = null;
     this.cleanup = {

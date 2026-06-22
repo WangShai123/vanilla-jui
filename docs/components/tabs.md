@@ -1,6 +1,8 @@
 # Tabs
 
-Tabs 是轻量命令式标签页组件，源码位于 `src/components/tabs.js`。它适合绑定已有 DOM，也可以通过 `new Tabs(false, { tabs })` 动态创建。
+Tabs 继承 `Component`，基于 `vanilla-signal` 响应式渲染的标签页组件，源码位于 `src/components/tabs.js`。
+
+DOM 创建一次，通过 `createEffect` 细粒度更新 class/ARIA。支持横向/纵向导航溢出拖拽。
 
 ## 导入
 
@@ -9,36 +11,72 @@ import { Tabs } from 'vanilla-jui';
 import 'vanilla-jui/style.css';
 ```
 
-## 动态创建
+## 创建与挂载
 
 ```js
-const tabs = new Tabs(false, {
+const tabs = new Tabs('#demo', {
   active: 'profile',
   tabs: [
-    { name: 'account', title: 'Account', content: 'Account content' },
-    { name: 'profile', title: 'Profile', content: '<strong>Profile</strong>' },
+    { name: 'account', title: 'Account', panel: 'Account content' },
+    { name: 'profile', title: 'Profile', panel: '<strong>Profile</strong>' },
   ],
 });
 
-document.querySelector('#demo').appendChild(tabs.root);
+tabs.render();
 ```
 
-`title` 和 `content` 支持字符串、DOM 节点、节点数组、函数和 `null`。字符串会按 HTML 片段渲染。
+## 禁用标签
 
-## 常用方法
+```js
+tabs.disable('account');
+tabs.enable('account');
+```
+
+## 动态增删
+
+```js
+await tabs.add({ name: 'billing', title: 'Billing', panel: '...' });
+await tabs.delete('billing');
+```
+
+## 导航位置
+
+```js
+new Tabs('#demo', { direction: 'left', tabs }).render();
+```
+
+## 实例属性
+
+| 属性    | 说明                                              |
+| ------- | ------------------------------------------------- |
+| `root`  | 根节点                                            |
+| `props` | 归一化后的配置                                    |
+| `state` | 响应式状态，含 `activeIndex` / `disabledNames` / `isVertical` / `draggable` |
+
+## 实例方法
 
 | 方法                      | 说明                   |
 | ------------------------- | ---------------------- |
+| `render()`                | 挂载到构造器指定的容器 |
 | `activate(indexOrName)`   | 激活指定标签           |
-| `addTab(tabConfig)`       | 动态新增标签           |
-| `deleteTab(indexOrName)`  | 删除指定标签           |
-| `disableTab(indexOrName)` | 禁用标签               |
-| `enableTab(indexOrName)`  | 启用标签               |
-| `reInit(options)`         | 更新配置并重新同步状态 |
-| `destroy()`               | 解绑事件并清理实例     |
+| `add(tabConfig)`          | 动态新增标签           |
+| `delete(indexOrName)`     | 删除指定标签           |
+| `disable(indexOrName)`    | 禁用标签               |
+| `enable(indexOrName)`     | 启用标签               |
+| `reInit(patch)`           | 更新配置并重新渲染     |
+| `destroy()`               | 销毁实例，释放资源     |
 
-`destroy()` 会移除由 `new Tabs(false, options)` 动态创建的根节点；绑定已有 DOM 的实例只解绑事件和清理状态，不会移除传入的宿主元素。
+继承自 `Component`：`setState()`、`on()`、`off()`、`emit()`、`use()`。
 
-## 测试
+## 参数
 
-可视化半自动测试页面：`tests/tabs.test.html`。
+| 参数       | 类型                                 | 默认值  | 说明                           |
+| ---------- | ------------------------------------ | ------- | ------------------------------ |
+| `id`       | `string \| null`                     | `null`  | 根节点 id；为空时自动生成      |
+| `direction`| `'top' \| 'bottom' \| 'left' \| 'right'` | `'top'` | 标签导航位置              |
+| `active`   | `number \| string`                   | `0`     | 默认激活项索引或名称           |
+| `disabled` | `number \| string \| Array`          | `[]`    | 默认禁用项索引或名称           |
+| `tabs`     | `TabItem[]`                          | `[]`    | 标签配置列表                   |
+| `onChange` | `Function \| null`                   | `null`  | 激活项变化回调 `(index, name, tabEl, panelEl)` |
+| `onAdd`    | `Function \| null`                   | `null`  | 新增标签回调 `(index, tabConfig, tabEl, panelEl)` |
+| `onRemove` | `Function \| null`                   | `null`  | 删除标签回调 `(index, removedName)` |

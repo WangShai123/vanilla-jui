@@ -145,6 +145,7 @@ export default class Component {
         // 忽略监听器执行错误，防止影响其他监听器
       }
     }
+    return this;
   }
 
   /**

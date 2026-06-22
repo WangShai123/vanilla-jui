@@ -1,17 +1,6 @@
-/**
- * @todo
- * file validate:
- *  - file: Bool
- *  - maxSize: Number
- *  - minSize: Number
- *  - accept: String
- * select validate:
- *  - multiple: Bool
- */
-
 import { jsx } from 'vanilla-signal';
 
-import { resolveOptions, validateParam } from '../utilities/core.js';
+import { resolveProps, validateParam } from '../utilities/core.js';
 import { all, canRenderDOM, getEl, q } from '../utilities/dom.js';
 import { createEventManager } from '../utilities/events.js';
 
@@ -30,10 +19,18 @@ const VALIDATOR_OPTIONS_SCHEMA = {
  * @property {boolean} [email] 是否按邮箱格式校验。
  * @property {boolean} [checked] 复选框是否必须处于指定状态。
  * @property {boolean} [selected] 下拉选择框是否必须选择非空值。
+ * @property {boolean} [multiple] 多选下拉框是否必须至少选择一项。
+ * @property {number} [min] 多选下拉框最少选择项数。
+ * @property {number} [max] 多选下拉框最多选择项数。
  * @property {boolean} [noSpace] 是否禁止空格。
  * @property {boolean} [noChinese] 是否禁止中文。
  * @property {boolean} [noSpecial] 是否禁止特殊字符。
  * @property {string|RegExp} [pattern] 自定义正则。
+ * @property {boolean} [file] 文件是否必选。
+ * @property {number} [minSize] 文件最小字节数。
+ * @property {number} [maxSize] 文件最大字节数。
+ * @property {string} [accept] 允许的文件类型，逗号分隔（如 ".jpg,.png" 或 "image/*"）。
+ * @property {Function} [validate] 自定义验证函数，接收 element，返回 boolean（通过/失败）或 string（错误信息）。
  */
 
 /**
@@ -60,7 +57,7 @@ class Validator {
       throw new Error('Validator: DOM render environment is required.');
     }
 
-    this.options = resolveOptions(
+    this.options = resolveProps(
       options,
       VALIDATOR_OPTIONS_SCHEMA,
       'Validator.options'
@@ -203,6 +200,18 @@ class Validator {
         case 'selected':
           this.valid = this._validateSelected(element, rules[rule]);
           break;
+        // 验证项7b：多选下拉框是否至少选择了一项
+        case 'multiple':
+          this.valid = this._validateMultiple(element, rules[rule]);
+          break;
+        // 验证项7c：多选下拉框最少选择项数
+        case 'min':
+          this.valid = this._validateSelectMin(element, rules[rule]);
+          break;
+        // 验证项7d：多选下拉框最多选择项数
+        case 'max':
+          this.valid = this._validateSelectMax(element, rules[rule]);
+          break;
         /**
          * 验证项8：是否包含空格
          * @since 1.0.0
@@ -231,7 +240,26 @@ class Validator {
         case 'pattern':
           this.valid = new RegExp(rules[rule]).test(element.value);
           break;
-        // 更多验证项待补充
+        // 验证项12：文件必选
+        case 'file':
+          this.valid = this._validateFile(element, rules[rule]);
+          break;
+        // 验证项13：文件最小大小
+        case 'minSize':
+          this.valid = this._validateMinSize(element, rules[rule]);
+          break;
+        // 验证项14：文件最大大小
+        case 'maxSize':
+          this.valid = this._validateMaxSize(element, rules[rule]);
+          break;
+        // 验证项16：文件类型
+        case 'accept':
+          this.valid = this._validateAccept(element, rules[rule]);
+          break;
+        // 验证项17：自定义验证函数
+        case 'validate':
+          this.valid = this._validateCustom(element, rules[rule]);
+          break;
       }
       if (!this.valid) {
         /**
@@ -347,6 +375,47 @@ class Validator {
   }
 
   /**
+   * 校验多选下拉框是否至少选择了一项。
+   * @private
+   * @param {HTMLSelectElement} element 多选下拉框。
+   * @param {boolean} multiple 是否必须选择至少一项。
+   * @returns {boolean}
+   */
+  _validateMultiple(element, multiple) {
+    if (element.tagName !== 'SELECT') {
+      throw new Error(
+        `Validator: element expects a select element, but ${element.tagName.toLowerCase()} given.`
+      );
+    }
+    if (multiple !== true) return true;
+    return element.selectedOptions.length > 0;
+  }
+
+  /**
+   * 校验多选下拉框最少选择项数。
+   * @private
+   * @param {HTMLSelectElement} element 多选下拉框。
+   * @param {number} min 最少选择项数。
+   * @returns {boolean}
+   */
+  _validateSelectMin(element, min) {
+    if (element.tagName !== 'SELECT') return true;
+    return element.selectedOptions.length >= min;
+  }
+
+  /**
+   * 校验多选下拉框最多选择项数。
+   * @private
+   * @param {HTMLSelectElement} element 多选下拉框。
+   * @param {number} max 最多选择项数。
+   * @returns {boolean}
+   */
+  _validateSelectMax(element, max) {
+    if (element.tagName !== 'SELECT') return true;
+    return element.selectedOptions.length <= max;
+  }
+
+  /**
    * 校验是否禁止空格。
    * @private
    * @param {HTMLInputElement|HTMLTextAreaElement} element 表单控件。
@@ -355,6 +424,81 @@ class Validator {
    */
   _validateNoSpace(element, noSpace) {
     return !/\s/.test(element.value) || noSpace !== true;
+  }
+
+  /**
+   * 校验文件是否已选择。
+   * @private
+   * @param {HTMLInputElement} element 文件控件。
+   * @param {boolean} required 是否必选。
+   * @returns {boolean}
+   */
+  _validateFile(element, required) {
+    if (element.type !== 'file') return true;
+    return required === true ? element.files.length > 0 : true;
+  }
+
+  /**
+   * 校验文件最小大小。
+   * @private
+   * @param {HTMLInputElement} element 文件控件。
+   * @param {number} minSize 最小字节数。
+   * @returns {boolean}
+   */
+  _validateMinSize(element, minSize) {
+    if (element.type !== 'file' || !element.files.length) return true;
+    return element.files[0].size >= minSize;
+  }
+
+  /**
+   * 校验文件最大大小。
+   * @private
+   * @param {HTMLInputElement} element 文件控件。
+   * @param {number} maxSize 最大字节数。
+   * @returns {boolean}
+   */
+  _validateMaxSize(element, maxSize) {
+    if (element.type !== 'file' || !element.files.length) return true;
+    return element.files[0].size <= maxSize;
+  }
+
+  /**
+   * 校验文件类型。
+   * @private
+   * @param {HTMLInputElement} element 文件控件。
+   * @param {string} accept 允许的 MIME 类型或扩展名（逗号分隔，如 ".jpg,.png" 或 "image/*"）。
+   * @returns {boolean}
+   */
+  _validateAccept(element, accept) {
+    if (element.type !== 'file' || !element.files.length) return true;
+    const file = element.files[0];
+    const allowed = accept.split(',').map((s) => s.trim().toLowerCase());
+
+    return allowed.some((rule) => {
+      if (rule.startsWith('.')) {
+        return file.name.toLowerCase().endsWith(rule);
+      }
+      if (rule.endsWith('/*')) {
+        return file.type.startsWith(rule.replace('/*', '/'));
+      }
+      return file.type === rule;
+    });
+  }
+
+  /**
+   * 执行自定义验证函数。
+   * @private
+   * @param {HTMLElement} element 表单控件。
+   * @param {Function} fn 验证函数，接收 element，返回 boolean 或 string（错误信息）。
+   * @returns {boolean}
+   */
+  _validateCustom(element, fn) {
+    if (typeof fn !== 'function') return true;
+    const result = fn(element);
+    if (typeof result === 'string') {
+      return false;
+    }
+    return !!result;
   }
 
   /**
@@ -373,7 +517,6 @@ class Validator {
     const error =
       this.options.messages[nameAttr] && this.options.messages[nameAttr][rule];
     if (error) {
-      this.message = error;
       const formControl = element.closest('.form-control');
       let help = formControl ? q('.help-block', formControl) : null;
       if (!help) {
@@ -393,7 +536,6 @@ class Validator {
    * @returns {void}
    */
   _success(element) {
-    this.message = '';
     const formControl = element.closest('.form-control');
     const helpBlock = formControl ? q('.help-block', formControl) : null;
     if (helpBlock) {
@@ -420,7 +562,6 @@ class Validator {
       help.remove();
     }
     this.valid = true;
-    this.message = '';
   }
 
   /**
@@ -435,7 +576,6 @@ class Validator {
     this.reset();
     this.root = null;
     this.options = null;
-    this.message = null;
     this.valid = null;
     this.cleanup?.events.clear();
     this.cleanup = null;

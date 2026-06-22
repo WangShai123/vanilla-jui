@@ -1,0 +1,11 @@
+export default [
+  { name: 'Tabs', slug: 'tabs', extends: 'Component' },
+  { name: 'Accordion', slug: 'accordion', extends: 'Component' },
+  { name: 'Toast', slug: 'toast', extends: null },
+  { name: 'Drop', slug: 'drop', extends: null },
+  { name: 'Tooltip', slug: 'tooltip', extends: 'Drop' },
+  { name: 'Offcanvas', slug: 'offcanvas', extends: 'Component' },
+  { name: 'Flow', slug: 'flow', extends: null },
+  { name: 'Validator', slug: 'validator', extends: null },
+  { name: 'Modal', slug: 'modal', extends: 'Component' },
+];

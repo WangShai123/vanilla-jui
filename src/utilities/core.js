@@ -1,11 +1,24 @@
+/**
+ * 判断对象是否包含指定属性。
+ * @param {object} obj - 待检查的对象。
+ * @param {string} key - 属性名。
+ * @returns {boolean} - 如果对象包含指定属性，则返回 true；否则返回 false。
+ */
 export const hasOwn = (obj, key) =>
   Object.prototype.hasOwnProperty.call(obj, key);
+
+/**
+ * 创建一个去重后的数组，并移除“假值”（如 null、undefined、false、0、NaN、空字符串）。
+ * @param {Array} list - 待去重的数组。
+ * @returns {Array} - 去重后的数组。
+ */
+// export const uniq = (list) => Array.from(new Set(list.filter(Boolean)));
 
 /**
  * 定时器管理器
  */
 export const timer = {
-  // 内部维护一个对象，用于存储不同 key 对应的定时器 ID
+  // 存储定时器 { key: timerId }
   timers: {},
 
   /**
@@ -81,24 +94,46 @@ export const isClass = (fn) => {
   );
 };
 
+/**
+ * 判断是否为普通对象。
+ * @param {*} value 需要判断的值。
+ * @returns {boolean}
+ */
 export function isPlainObject(value) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
   const proto = Object.getPrototypeOf(value);
   return proto === Object.prototype || proto === null;
 }
 
+/**
+ * 浅拷贝默认值。
+ * @param {*} value 需要拷贝的值。
+ * @returns {*} 拷贝后的值。
+ */
 function cloneDefault(value) {
   if (Array.isArray(value)) return value.slice();
   if (isPlainObject(value)) return { ...value };
   return value;
 }
 
+/**
+ * 规范化规则对象。
+ * @param {string|string[]|object} rule 需要规范化的规则对象。
+ * @returns {object} 规范化后的规则对象。
+ */
 function normalizeRule(rule = {}) {
   if (typeof rule === 'string' || Array.isArray(rule)) return { type: rule };
   if (!rule || typeof rule !== 'object') return {};
   return rule;
 }
 
+/**
+ * 运行错误条件。
+ * @param {string} name 参数名称，用于错误信息。
+ * @param {*} value 参数值。
+ * @param {Function|Array<Function|{test:Function,message?:string}>} [conditions=[]] 附加条件。
+ * @throws {Error} 条件失败时抛出。
+ */
 function runValidateConditions(name, value, conditions = []) {
   const list = Array.isArray(conditions)
     ? conditions
@@ -129,30 +164,11 @@ function runValidateConditions(name, value, conditions = []) {
 }
 
 /**
- * 按类型和附加条件校验单个值。
- * @param {string} name 参数名称，用于错误信息。
- * @param {*} value 参数值。
- * @param {string|string[]} expectedTypes 允许的类型。
- * @param {Function|Array<Function|{test:Function,message?:string}>} [conditions=[]] 附加校验条件。
- * @returns {*} 校验通过后的原值。
- * @throws {Error} 校验失败时抛出。
+ * 格式化错误名称。
+ * @param {string} namespace 命名空间。
+ * @param {string} name 参数名。
+ * @returns {string} 格式化后的错误名称。
  */
-export const validate = (name, value, expectedTypes, conditions = []) => {
-  const types = Array.isArray(expectedTypes) ? expectedTypes : [expectedTypes];
-  const actualType = getType(value);
-  const typeMatch = types.some((t) => t === actualType);
-
-  if (!typeMatch) {
-    const allowed = types.join(', ');
-    throw new Error(
-      `Validator: ${name} expects ${allowed}, but got ${actualType}.`
-    );
-  }
-
-  runValidateConditions(name, value, conditions);
-  return value;
-};
-
 function formatValidateName(namespace, name) {
   return namespace ? `${namespace}.${name}` : name;
 }
@@ -174,17 +190,10 @@ function resolveDefault(rule) {
  * @param {*} value 参数值。
  * @param {string|string[]|object} [rule={}] 校验规则。
  * @param {string} [namespace=""] 错误命名空间。
- * @param {object} [context={}] 传给自定义 validate 的上下文。
  * @returns {*} 校验通过后的原值。
  * @throws {Error} 校验失败时抛出。
  */
-export function validateParam(
-  name,
-  value,
-  rule = {},
-  namespace = '',
-  context = {}
-) {
+export function validateParam(name, value, rule = {}, namespace = '') {
   const config = normalizeRule(rule);
   const label = formatValidateName(namespace, name);
   const expectedTypes = hasOwn(config, 'types') ? config.types : config.type;
@@ -194,7 +203,20 @@ export function validateParam(
   }
 
   if (expectedTypes !== undefined) {
-    validate(label, value, expectedTypes, config.conditions);
+    const types = Array.isArray(expectedTypes)
+      ? expectedTypes
+      : [expectedTypes];
+    const actualType = getType(value);
+    const typeMatch = types.some((t) => t === actualType);
+
+    if (!typeMatch) {
+      const allowed = types.join(', ');
+      throw new Error(
+        `Validator: ${label} expects ${allowed}, but got ${actualType}.`
+      );
+    }
+
+    runValidateConditions(label, value, config.conditions);
   } else {
     runValidateConditions(label, value, config.conditions);
   }
@@ -206,12 +228,7 @@ export function validateParam(
   }
 
   if (typeof config.validate === 'function') {
-    const valid = config.validate(value, {
-      ...context,
-      name,
-      value,
-      namespace,
-    });
+    const valid = config.validate(value);
 
     if (!valid) {
       throw new Error(
@@ -224,29 +241,6 @@ export function validateParam(
 }
 
 /**
- * 按 schema 校验 options 对象。
- * @param {object} options 已解析的配置对象。
- * @param {Record<string, object|string|string[]>} schema 配置 schema。
- * @param {string} [namespace="Options"] 错误命名空间。
- * @returns {object} 原 options。
- */
-export function validateOptions(options, schema, namespace = 'Options') {
-  if (!options || typeof options !== 'object' || Array.isArray(options)) {
-    throw new Error(`Validator: ${namespace} expects object.`);
-  }
-
-  for (const [key, rule] of Object.entries(schema || {})) {
-    validateParam(key, options[key], rule, namespace, {
-      key,
-      options,
-      schema,
-    });
-  }
-
-  return options;
-}
-
-/**
  * 合并默认值、执行 normalize 并校验配置。
  *
  * schema 的每一项可同时定义 default、factory、normalize 和校验规则。
@@ -255,7 +249,7 @@ export function validateOptions(options, schema, namespace = 'Options') {
  * @param {string} [namespace="Options"] 错误命名空间。
  * @returns {object} 合并并校验后的配置。
  */
-export function resolveOptions(input = {}, schema = {}, namespace = 'Options') {
+export function resolveProps(input = {}, schema = {}, namespace = 'Options') {
   const source = input == null ? {} : input;
 
   if (typeof source !== 'object' || Array.isArray(source)) {
@@ -282,7 +276,11 @@ export function resolveOptions(input = {}, schema = {}, namespace = 'Options') {
     }
   }
 
-  return validateOptions(resolved, schema, namespace);
+  for (const [key, rule] of Object.entries(schema || {})) {
+    validateParam(key, resolved[key], rule, namespace);
+  }
+
+  return resolved;
 }
 
 /**

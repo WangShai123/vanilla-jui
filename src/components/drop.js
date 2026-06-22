@@ -1,6 +1,6 @@
 import { jsx } from 'vanilla-signal';
 
-import { randomId, resolveOptions } from '../utilities/core.js';
+import { randomId, resolveProps } from '../utilities/core.js';
 import {
   canRenderDOM,
   isElement,
@@ -10,7 +10,7 @@ import {
 } from '../utilities/dom.js';
 import { createEventManager } from '../utilities/events.js';
 
-const DROP_OPTIONS_SCHEMA = {
+const DROP_PROPS_SCHEMA = {
   name: { default: null, types: ['string', 'null'] },
   mode: { default: 'click', type: 'string', enum: ['hover', 'click'] },
   position: {
@@ -58,7 +58,7 @@ const DROP_OPTIONS_SCHEMA = {
 };
 
 /**
- * @typedef {object} DropOptions
+ * @typedef {object} DropProps
  * @property {string|null} [name] 浮层名称，写入 data-drop。
  * @property {"hover"|"click"} [mode="click"] 触发方式。
  * @property {"auto"|"top-left"|"top-center"|"top-right"|"bottom-left"|"bottom-center"|"bottom-right"|"left"|"right"} [position="auto"] 浮层位置。
@@ -78,12 +78,11 @@ const DROP_OPTIONS_SCHEMA = {
  *
  * 可用于菜单、提示、下拉面板等场景，支持点击或 hover 触发，并自动计算视口内位置。
  */
-
 class Drop {
   /**
    * 创建浮层实例。
    * @param {HTMLElement} element 触发元素。
-   * @param {DropOptions} [options={}] 浮层配置。
+   * @param {DropProps} [options={}] 浮层配置。
    */
   constructor(element, options = {}) {
     if (!canRenderDOM()) {
@@ -95,12 +94,11 @@ class Drop {
     }
 
     this.target = element;
-    this.options = resolveOptions(options, DROP_OPTIONS_SCHEMA, 'Drop.options');
-    this._init(this.options);
+    this.props = resolveProps(options, DROP_PROPS_SCHEMA, 'Drop');
+    this._init(this.props);
   }
 
-  _init(options) {
-    // 初始化状态。
+  _init(props) {
     this.isVisible = false;
     this.root = null;
     this.cleanup = {
@@ -109,8 +107,7 @@ class Drop {
     this._timer = { show: null, hide: null };
     this._hoverIntentData = { x: 0, y: 0, lastMoveTime: 0 };
 
-    // 归一化延迟配置。
-    const { delay } = options;
+    const { delay } = props;
     if (typeof delay === 'number' && delay >= 0) {
       this.delayShow = delay;
       this.delayHide = delay;
@@ -122,18 +119,16 @@ class Drop {
       this.delayHide = 0;
     }
 
-    this._buildDrop(options);
-    this._bindEvents(options);
+    this._buildDrop(props);
+    this._bindEvents(props);
   }
 
   /**
-   * 创建浮层 DOM。
+   * 创建浮层 DOM（不挂载到 document）。
    * @private
-   * @param {DropOptions} options 已归一化配置。
-   * @returns {void}
    */
-  _buildDrop(options) {
-    const { className, content, id, name, containerClassName } = options;
+  _buildDrop(props) {
+    const { className, content, id, name, containerClassName } = props;
     const _class = className || '';
     const _wrapper =
       isNode(content) && content.nodeType === 1
@@ -145,25 +140,20 @@ class Drop {
             children: normalizeContentNodes(content, this),
           });
 
-    const drop = jsx('div', {
+    this.root = jsx('div', {
       className: _class ? `j-drop ${_class}` : 'j-drop',
       id: id,
       'data-drop': name || randomId(),
       children: _wrapper,
     });
-
-    this.root = drop;
-    document.body.appendChild(drop);
   }
 
   /**
-   * 按触发模式绑定事件。
+   * 按触发模式绑定事件（仅 target 和 document）。
    * @private
-   * @param {DropOptions} options 已归一化配置。
-   * @returns {void}
    */
-  _bindEvents(options) {
-    const { mode, hoverIntent } = options;
+  _bindEvents(props) {
+    const { mode, hoverIntent } = props;
     this._unbindEvents();
 
     if (mode === 'hover') {
@@ -182,12 +172,6 @@ class Drop {
           this.hide()
         );
       }
-      this.cleanup.events.on('root:enter', this.root, 'mouseenter', () =>
-        this.show()
-      );
-      this.cleanup.events.on('root:leave', this.root, 'mouseleave', () =>
-        this.hide()
-      );
     } else if (mode === 'click') {
       this.cleanup.events.on('target:click', this.target, 'click', () =>
         this.toggle()
@@ -196,6 +180,29 @@ class Drop {
         this._docClick(event)
       );
     }
+  }
+
+  /**
+   * 绑定 root 浮层的 hover 事件（show 时调用）。
+   * @private
+   */
+  _bindRootEvents() {
+    if (!this.root || this.props.mode !== 'hover') return;
+    this.cleanup.events.on('root:enter', this.root, 'mouseenter', () =>
+      this.show()
+    );
+    this.cleanup.events.on('root:leave', this.root, 'mouseleave', () =>
+      this.hide()
+    );
+  }
+
+  /**
+   * 解绑 root 浮层的 hover 事件（hide 时调用）。
+   * @private
+   */
+  _unbindRootEvents() {
+    this.cleanup.events.off('root:enter');
+    this.cleanup.events.off('root:leave');
   }
 
   /**
@@ -266,7 +273,7 @@ class Drop {
   _setPosition() {
     const rect = this.target.getBoundingClientRect();
     const drop = this.root;
-    const { offset, position } = this.options;
+    const { offset, position } = this.props;
 
     drop.style.visibility = 'hidden';
     drop.style.display = 'block';
@@ -338,20 +345,23 @@ class Drop {
   /**
    * 应用展示或隐藏状态。
    * @private
-   * @param {boolean} boolean 是否展示浮层。
-   * @returns {void}
    */
-  _exec(boolean) {
+  _exec(visible) {
     if (!this.root) return;
 
-    if (boolean) {
+    if (visible) {
+      if (!this.root.parentNode) document.body.appendChild(this.root);
+      this._bindRootEvents();
       this._setPosition();
     } else {
+      this._unbindRootEvents();
       this.root.style.top = '';
       this.root.style.left = '';
+      if (this.root.parentNode) this.root.parentNode.removeChild(this.root);
     }
-    this.root.classList.toggle('is-active', boolean);
-    this.isVisible = boolean;
+
+    this.root.classList.toggle('is-active', visible);
+    this.isVisible = visible;
   }
 
   // ========== 公开 API ==========
@@ -372,7 +382,7 @@ class Drop {
       this._exec(true);
     }
 
-    if (this.options.onShown) this.options.onShown();
+    if (this.props.onShown) this.props.onShown();
   }
 
   /**
@@ -391,7 +401,7 @@ class Drop {
       this._exec(false);
     }
 
-    if (this.options.onHidden) this.options.onHidden();
+    if (this.props.onHidden) this.props.onHidden();
   }
 
   /**
@@ -411,16 +421,15 @@ class Drop {
    * @returns {void}
    */
   destroy() {
-    if (!this.options) return;
+    if (!this.props) return;
 
     clearTimeout(this._timer?.show);
     clearTimeout(this._timer?.hide);
 
-    if (this.root) this._exec(false);
-    if (this.options) this._unbindEvents();
-
+    this._unbindEvents();
     if (this.root?.parentNode) this.root.parentNode.removeChild(this.root);
-    this.options = null;
+
+    this.props = null;
     this.root = null;
     this.target = null;
     this._timer = { show: null, hide: null };

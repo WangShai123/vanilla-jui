@@ -1,0 +1,338 @@
+import { createDeepStore, flushSync, jsx, Show, render } from 'vanilla-signal';
+
+import { Tabs } from '../dist/index.js?v=1';
+import {
+  equal,
+  hasClass,
+  textOf,
+  truthy,
+  dateTime,
+} from './helpers.js';
+
+const tabsConfig = () => [
+  { name: 'one', title: 'Tab 1', panel: 'No 1 Panel' },
+  { name: 'two', title: 'Tab 2', panel: 'No 2 Panel' },
+  { name: 'three', title: () => 'Tab 3', panel: () => 'No 3 Panel' },
+];
+
+const tabs2Config = () => [
+  { name: 'alpha', title: 'Alpha', panel: 'Alpha Panel' },
+  { name: 'beta', title: 'Beta', panel: 'Beta Panel' },
+];
+
+let demoTabs = null;
+
+const ui = createDeepStore({
+  created: false,
+  multiple: false,
+  disabled: false,
+  reinited: true,
+});
+
+function mountButtons() {
+  const container = document.getElementById('manual-buttons');
+  if (!container) return;
+
+  render(
+    () =>
+      Show({
+        when: () => !ui.created,
+        children: () =>
+          jsx('button', {
+            id: 'btn-create',
+            type: 'button',
+            className: 'j-button is-primary is-sm',
+            children: '创建实例',
+          }),
+        fallback: () =>
+          jsx('div', {
+            className: 'demo-buttons',
+            children: [
+              jsx('button', {
+                id: 'btn-add',
+                type: 'button',
+                className: 'j-button is-outline is-sm',
+                children: '新增标签',
+              }),
+              jsx('button', {
+                id: 'btn-delete',
+                type: 'button',
+                className: 'j-button is-outline is-sm',
+                disabled: () => !ui.multiple,
+                children: '删除标签',
+              }),
+              jsx('button', {
+                id: 'btn-switch',
+                type: 'button',
+                className: 'j-button is-outline is-sm',
+                children: '指定切换',
+              }),
+              jsx('button', {
+                id: 'btn-disable',
+                type: 'button',
+                className: 'j-button is-outline is-sm',
+                children: '指定禁用',
+              }),
+              jsx('button', {
+                id: 'btn-enable',
+                type: 'button',
+                className: 'j-button is-outline is-sm',
+                disabled: () => !ui.disabled,
+                children: '指定启用',
+              }),
+              jsx('button', {
+                id: 'btn-reinit',
+                type: 'button',
+                className: 'j-button is-outline is-sm',
+                disabled: () => !ui.reinited,
+                children: '重新初始化',
+              }),
+              jsx('button', {
+                id: 'btn-destroy',
+                type: 'button',
+                className: 'j-button is-error is-sm',
+                children: '销毁实例',
+              }),
+            ],
+          }),
+      }),
+    container
+  );
+}
+
+function mountDemo() {
+  const container = document.getElementById('manual-demo');
+  if (!container) return;
+
+  render(
+    () =>
+      Show({
+        when: () => ui.created,
+        children: () =>
+          jsx('div', {
+            ref: (el) => {
+              if (el && demoTabs && !el.contains(demoTabs.root)) {
+                el.appendChild(demoTabs.root);
+              }
+            },
+          }),
+      }),
+    container
+  );
+}
+
+function syncState() {
+  flushSync(() => {
+    ui.created = !!demoTabs;
+    ui.multiple = demoTabs ? demoTabs.props.tabs.length > 1 : false;
+    ui.disabled = demoTabs ? demoTabs.state.disabledNames.length > 0 : false;
+  });
+}
+
+function bindEvents(runner) {
+  const container = document.getElementById('manual-buttons');
+  if (!container) return;
+
+  container.addEventListener('click', (e) => {
+    const id = e.target.id;
+
+    if (id === 'btn-create') {
+      if (demoTabs) {
+        runner.log(`${dateTime()} 实例已存在, ID ${demoTabs.props.id}`);
+        return;
+      }
+      demoTabs = new Tabs('#manual-demo', { tabs: tabsConfig(), active: 0 });
+      runner.log(`${dateTime()} 实例已创建, ID ${demoTabs.props.id}`);
+      syncState();
+      mountButtons(runner);
+      mountDemo();
+    }
+
+    if (id === 'btn-add' && demoTabs) {
+      const n = demoTabs.props.tabs.length;
+      demoTabs.add({
+        name: `tab-${n}`,
+        title: `Tab ${n + 1}`,
+        panel: `Panel ${n + 1}`,
+      });
+      runner.log(`${dateTime()} 已新增标签 Tab ${n + 1}`);
+      syncState();
+      mountButtons(runner);
+    }
+
+    if (id === 'btn-delete' && demoTabs && demoTabs.props.tabs.length > 1) {
+      const last = demoTabs.props.tabs[demoTabs.props.tabs.length - 1];
+      demoTabs.delete(last.name);
+      runner.log(`${dateTime()} 已删除标签 ${last.title}`);
+      syncState();
+      mountButtons(runner);
+    }
+
+    if (id === 'btn-switch' && demoTabs) {
+      const next =
+        (demoTabs.state.activeIndex + 1) % demoTabs.props.tabs.length;
+      demoTabs.activate(next);
+      runner.log(`${dateTime()} 已切换到 ${demoTabs.props.tabs[next].title}`);
+    }
+
+    if (id === 'btn-disable' && demoTabs) {
+      const idx = demoTabs.state.activeIndex;
+      const name = demoTabs.props.tabs[idx]?.name;
+      if (name && !demoTabs.state.disabledNames.includes(name)) {
+        demoTabs.disable(name);
+        runner.log(`${dateTime()} 已禁用 ${demoTabs.props.tabs[idx].title}`);
+        syncState();
+        mountButtons(runner);
+      }
+    }
+
+    if (
+      id === 'btn-enable' &&
+      demoTabs &&
+      demoTabs.state.disabledNames.length > 0
+    ) {
+      const name = demoTabs.state.disabledNames[0];
+      const tab = demoTabs.props.tabs.find((t) => t.name === name);
+      demoTabs.enable(name);
+      runner.log(`${dateTime()} 已启用 ${tab?.title || name}`);
+      syncState();
+      mountButtons(runner);
+    }
+
+    if (id === 'btn-reinit' && demoTabs && ui.reinited) {
+      flushSync(() => {
+        ui.reinited = false;
+      });
+      demoTabs.reInit({ tabs: tabs2Config() });
+      runner.log(`${dateTime()} 已重新初始化, ID ${demoTabs.props.id}`);
+      syncState();
+      mountButtons(runner);
+    }
+
+    if (id === 'btn-destroy' && demoTabs) {
+      const id = demoTabs.props.id;
+      demoTabs.destroy();
+      demoTabs = null;
+      flushSync(() => {
+        ui.reinited = true;
+      });
+      runner.log(`${dateTime()} 实例已销毁, ID ${id}`);
+      syncState();
+      mountButtons(runner);
+      mountDemo();
+    }
+  });
+}
+
+function resetManual() {
+  if (demoTabs) {
+    demoTabs.destroy();
+    demoTabs = null;
+  }
+  flushSync(() => {
+    ui.created = false;
+    ui.multiple = false;
+    ui.disabled = false;
+    ui.reinited = true;
+  });
+  mountButtons();
+  mountDemo();
+}
+
+export function tabsApp(runner) {
+  runner.add('动态创建 Tabs', '验证 创建并 render DOM', async () => {
+    const tabs = new Tabs(document.body, {
+      tabs: tabsConfig(),
+      active: 'two',
+    });
+    tabs.render();
+    tabs.root.dataset.test = 'dynamic';
+
+    equal(tabs.dom.tabs.length, 3, 'tabs length');
+    equal(tabs.dom.panels.length, 3, 'panels length');
+    equal(tabs.state.activeIndex, 1, 'current index');
+    equal(textOf(tabs.dom.panels[0]), 'No 1 Panel', 'html content');
+
+    const root = tabs.root;
+    tabs.destroy();
+    equal(
+      document.body.contains(root),
+      false,
+      'dynamic root should be removed'
+    );
+  });
+
+  runner.add('名称激活和点击切换', '验证 activate(name) 与点击', async () => {
+    const tabs = new Tabs(document.body, { tabs: tabsConfig(), active: 0 });
+    tabs.render();
+    tabs.root.dataset.test = 'switch';
+
+    await tabs.activate('three');
+    equal(tabs.state.activeIndex, 2, 'active by name');
+    tabs.dom.tabs[1].click();
+    equal(tabs.state.activeIndex, 1, 'click switch');
+    truthy(hasClass(tabs.dom.tabs[1], 'is-active'), 'second tab active');
+
+    tabs.destroy();
+  });
+
+  runner.add('禁用与启用', '验证 disabled、disable、enable', async () => {
+    const tabs = new Tabs(document.body, {
+      tabs: tabsConfig(),
+      active: 0,
+      disabled: ['two'],
+    });
+    tabs.render();
+    tabs.root.dataset.test = 'disabled';
+
+    tabs.dom.tabs[1].click();
+    equal(tabs.state.activeIndex, 0, 'disabled tab should not activate');
+    tabs.enable('two');
+    tabs.dom.tabs[1].click();
+    equal(tabs.state.activeIndex, 1, 'enabled tab can activate');
+    tabs.disable('three');
+    truthy(hasClass(tabs.dom.tabs[2], 'is-disabled'), 'third tab disabled');
+
+    tabs.destroy();
+  });
+
+  runner.add('动态增删', '验证 add 和 delete', async () => {
+    const tabs = new Tabs(document.body, { tabs: tabsConfig(), active: 0 });
+    tabs.render();
+    tabs.root.dataset.test = 'dynamic-mutate';
+
+    await tabs.add({ name: 'four', title: 'Four', panel: 'Four content' });
+    equal(tabs.dom.tabs.length, 4, 'after add length');
+    await tabs.delete('four');
+    equal(tabs.dom.tabs.length, 3, 'after delete length');
+
+    tabs.destroy();
+  });
+
+  runner.add('销毁清理', '验证 DOM 状态', () => {
+    const tabs = new Tabs(document.body, { tabs: tabsConfig(), active: 0 });
+    tabs.render();
+    tabs.root.dataset.test = 'destroy';
+    const root = tabs.root;
+    tabs.destroy();
+
+    equal(
+      document.body.contains(root),
+      false,
+      'dynamic root should be removed'
+    );
+    equal(tabs.root, null, 'root cleared');
+  });
+
+  runner.log('Tabs 组件测试已加载。');
+}
+
+export function tabsSetup(runner) {
+  mountButtons(runner);
+  mountDemo();
+  bindEvents(runner);
+}
+
+export function tabsReset() {
+  resetManual();
+}

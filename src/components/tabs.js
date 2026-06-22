@@ -1,17 +1,23 @@
-import { jsx } from 'vanilla-signal';
-
-import { randomId, resolveOptions, validateParam } from '../utilities/core.js';
 import {
-  all,
+  createDeepStore,
+  createEffect,
+  createRoot,
+  flushSync,
+  insert,
+  jsx,
+} from 'vanilla-signal';
+
+import Component from '../core/Component.js';
+import { randomId, resolveProps, validateParam } from '../utilities/core.js';
+import {
   canRenderDOM,
-  isElement,
   isRenderableContent,
   normalizeContentNodes,
   q,
+  resolveContainer,
 } from '../utilities/dom.js';
-import { createEventManager } from '../utilities/events.js';
 
-const TABS_OPTIONS_SCHEMA = {
+const TABS_PROPS_SCHEMA = {
   id: {
     default: null,
     types: ['string', 'null'],
@@ -40,321 +46,400 @@ const TAB_CONFIG_RULE = {
   validate: (value) =>
     !!value &&
     isRenderableContent(value.title) &&
-    isRenderableContent(value.content),
+    isRenderableContent(value.panel),
   message:
-    'expects an object with renderable title and content: string, Node, array, function or null.',
+    'expects an object with renderable title and panel: string, Node, array, function or null.',
 };
 
-/**
- * @typedef {object} TabItem
- * @property {string|Node|Node[]|Function|null} title 标签标题，字符串会按 HTML 片段渲染。
- * @property {string|Node|Node[]|Function|null} content 标签面板内容，字符串会按 HTML 片段渲染。
- * @property {string} [name] 标签名称，可用于通过名称激活、删除、禁用或启用。
- */
+function cloneTabItems(tabs) {
+  return Array.isArray(tabs) ? tabs.map((t) => ({ ...t })) : [];
+}
 
 /**
- * @typedef {object} TabsOptions
- * @property {string|null} [id] 根节点 id，不传时自动生成。
- * @property {"top"|"bottom"|"left"|"right"} [direction="top"] 标签导航位置。
- * @property {number|string} [active=0] 默认激活项索引或名称。
- * @property {number|string|Array<number|string>} [disabled=[]] 默认禁用项索引或名称。
- * @property {(index:number,name:string|number,tab:HTMLElement,panel:HTMLElement)=>void|Promise<void>|null} [onChange] 激活项变化回调。
- * @property {TabItem[]} [tabs] 当 element 为 false 时用于动态创建标签页的配置。
- * @property {(index:number,item:TabItem,tab:HTMLElement,panel:HTMLElement)=>void|Promise<void>|null} [onAdd] 新增标签回调。
- * @property {(index:number,name:string|number)=>void|Promise<void>|null} [onRemove] 删除标签回调。
- */
-
-/**
- * 标签页组件。
+ * 标签页组件，继承 Component。
  *
- * 支持绑定已有 DOM 或按配置动态创建，并内置横向/纵向导航溢出拖拽。
+ * DOM 创建一次，通过 createEffect 细粒度更新 class/ARIA。
  */
-class Tabs {
+class Tabs extends Component {
   /**
-   * 创建标签页实例。
-   * @param {HTMLElement|false} element 已有根节点；传入 false 时根据 options.tabs 创建根节点。
-   * @param {TabsOptions} [options={}] 标签页配置。
+   * @param {HTMLElement|string} container 挂载容器（元素或 CSS 选择器）。
+   * @param {object} [input={}] 标签页配置。
    */
-  constructor(element, options = {}) {
+  constructor(container, input = {}) {
     if (!canRenderDOM()) {
       throw new Error('Tabs: DOM render environment is required.');
     }
 
-    if (element !== false && !isElement(element)) {
-      throw new Error('Tabs: element expects a valid HTMLElement or false.');
-    }
+    const el = resolveContainer(container, 'Tabs');
 
-    this.options = resolveOptions(options, TABS_OPTIONS_SCHEMA, 'Tabs.options');
-    this._dynamic = element === false;
-    this._init(element);
+    const props = resolveProps(input, TABS_PROPS_SCHEMA, 'Tabs');
+    super(props);
+
+    this.container = el;
+
+    this.state = createDeepStore({
+      activeIndex: -1,
+      disabledNames: this._parseDisabled(props.disabled),
+      isVertical: props.direction === 'left' || props.direction === 'right',
+      draggable: false,
+    });
+
+    try {
+      this.onInit(props);
+    } catch (error) {
+      this.destroy();
+      throw error;
+    }
   }
-  _init(el) {
-    this.root = el;
-    this.current = null;
-    this.cleanup = {
-      events: createEventManager(),
-    };
-    this._disabledIndex = [];
-    this._destroyed = false;
 
-    const { tabs, disabled, active } = this.options;
-    if (this.root === false) {
-      this.root = this._buildRoot(tabs);
-    }
-
-    if (this.tabs.length === 0 || this.panels.length === 0) {
-      throw new Error('.tab-item or .panel-item not found.');
-    }
-
-    this._disabledIndex = this._parseDisabled(disabled);
-
-    this._markDisabledTabs();
-    this._bindEvents();
-
-    // 默认激活时不触发 onChange。
-    void this._activate(active, false);
-
-    // 初始化拖拽滚动能力。
+  onInit(props) {
+    this.root = this.buildRoot(props);
+    this.rebuildItems();
+    void this._activate(props.active, false);
+    this.bindEvents();
+    this.mountEffect();
     this._initDrag();
   }
 
-  /**
-   * 获取所有标签按钮节点。
-   * @returns {HTMLElement[]}
-   */
-  get tabs() {
-    return this.root ? all('.tab-item', this.root) : [];
-  }
+  buildRoot(props) {
+    const { id, direction } = props;
+    const nav = jsx('nav', { className: 'tab-list' });
+    const wrap = jsx('div', { className: 'tab-wrap', children: nav });
+    const panelWrapper = jsx('div', { className: 'tab-panel' });
 
-  /**
-   * 获取所有面板节点。
-   * @returns {HTMLElement[]}
-   */
-  get panels() {
-    return this.root ? all('.panel-item', this.root) : [];
-  }
-
-  get _dragContainer() {
-    return this.root ? q('.tab-wrap', this.root) : null;
-  }
-  get _dragInner() {
-    return this.root ? q('.tab-list', this.root) : null;
-  }
-
-  /**
-   * 当 element 为 false 时创建完整标签页 DOM。
-   * @private
-   * @param {TabItem[]} tabsConfig 标签页配置。
-   * @returns {HTMLElement} 根节点。
-   */
-  _buildRoot(tabsConfig) {
-    const { id, direction } = this.options;
-
-    for (const item of tabsConfig) {
-      validateParam('tab', item, TAB_CONFIG_RULE, 'Tabs.options.tabs');
-    }
-
-    const nav = jsx('nav', {
-      className: 'tab-list',
-    });
-
-    const wrap = jsx('div', {
-      className: 'tab-wrap',
-      children: nav,
-    });
-
-    const panelWrapper = jsx('div', {
-      className: 'tab-panel',
-    });
-
-    for (const item of tabsConfig) {
-      const tab = this._createTab(item);
-      nav.appendChild(tab);
-
-      const panel = this._createPanel(item);
-      panelWrapper.appendChild(panel);
-    }
-
-    const container = jsx('div', {
+    return jsx('div', {
       className: `j-tabs is-${direction}`,
-      id: id,
+      id,
       children: [wrap, panelWrapper],
     });
-
-    return container;
   }
 
   /**
-   * 创建单个标签按钮。
+   * 清空 root 内容并重建 tab-list 和 tab-panel。
    * @private
-   * @param {TabItem} item 标签配置。
-   * @returns {HTMLElement}
    */
-  _createTab(item) {
-    const tab = jsx('div', {
-      className: 'tab-item',
-      'data-tab': item.name || randomId(),
+  rebuildItems() {
+    const tabList = q('.tab-list', this.root);
+    const panelWrapper = q('.tab-panel', this.root);
+    if (!tabList || !panelWrapper) return;
+
+    tabList.textContent = '';
+    panelWrapper.textContent = '';
+
+    this.dom.tabs = [];
+    this.dom.panels = [];
+
+    const tabFragment = document.createDocumentFragment();
+    const panelFragment = document.createDocumentFragment();
+
+    this.props.tabs.forEach((item) => {
+      const name = item.name || randomId();
+
+      const title = jsx('span');
+      title.append(...normalizeContentNodes(item.title, { tabs: this, item }));
+
+      const tab = jsx('div', {
+        className: 'tab-item',
+        'data-tab': name,
+        children: title,
+      });
+
+      const panel = jsx('div');
+      panel.append(...normalizeContentNodes(item.panel, { tabs: this, item }));
+
+      const panelItem = jsx('div', {
+        className: 'panel-item',
+        role: 'tabpanel',
+        children: panel,
+      });
+
+      this.dom.tabs.push(tab);
+      this.dom.panels.push(panelItem);
+      tabFragment.append(tab);
+      panelFragment.append(panelItem);
     });
-    const title = jsx('span');
-    title.append(...normalizeContentNodes(item.title, { tabs: this, item }));
-    tab.appendChild(title);
 
-    return tab;
+    tabList.append(tabFragment);
+    panelWrapper.append(panelFragment);
   }
 
   /**
-   * 创建单个标签面板。
+   * 挂载 createEffect：state 变化时，精确更新 class/ARIA。
    * @private
-   * @param {TabItem} item 标签配置。
-   * @returns {HTMLElement}
    */
-  _createPanel(item) {
-    const panel = jsx('div', {
-      className: 'panel-item',
+  mountEffect() {
+    this.cleanup.view?.();
+    this.cleanup.view = createRoot((dispose) => {
+      createEffect(() => {
+        const activeIndex = this.state.activeIndex;
+        const disabledNames = this.state.disabledNames;
+
+        this.dom.tabs.forEach((tab, index) => {
+          const name = tab.dataset.tab;
+          const active = activeIndex === index;
+          const disabled = disabledNames.includes(name);
+
+          let cls = 'tab-item';
+          if (active) cls += ' is-active';
+          if (disabled) cls += ' is-disabled';
+          tab.className = cls;
+          tab.setAttribute('aria-selected', String(active));
+          tab.setAttribute('aria-disabled', String(disabled));
+        });
+
+        this.dom.panels.forEach((panel, index) => {
+          const active = activeIndex === index;
+          panel.className = `panel-item${active ? ' is-active' : ''}`;
+          panel.setAttribute('aria-hidden', String(!active));
+          panel.hidden = !active;
+        });
+      });
+      return dispose;
     });
-    const content = jsx('div');
-    content.append(
-      ...normalizeContentNodes(item.content, { tabs: this, item })
-    );
-    panel.appendChild(content);
-
-    return panel;
   }
 
-  /**
-   * 将 disabled 配置转换为索引数组。
-   * @private
-   * @param {number|string|Array<number|string>} disabled 禁用项配置。
-   * @returns {number[]}
-   */
   _parseDisabled(disabled) {
     if (disabled == null) return [];
-
-    const toIndex = (val) => {
-      if (typeof val === 'number') return val;
-      if (typeof val === 'string') {
-        return this.tabs.findIndex((tab) => tab.dataset.tab === val);
-      }
-      return -1;
+    const toName = (val) => {
+      if (typeof val === 'number') return this.props.tabs[val]?.name || null;
+      if (typeof val === 'string') return val;
+      return null;
     };
-
     if (Array.isArray(disabled)) {
-      return disabled.map(toIndex).filter((i) => i >= 0);
-    } else {
-      const idx = toIndex(disabled);
-      return idx >= 0 ? [idx] : [];
+      return disabled.map(toName).filter(Boolean);
     }
+    const name = toName(disabled);
+    return name ? [name] : [];
   }
 
-  /**
-   * 同步标签禁用状态到 DOM。
-   * @private
-   */
-  _markDisabledTabs() {
-    for (const [index, tab] of this.tabs.entries()) {
-      if (this._disabledIndex.includes(index)) {
-        tab.setAttribute('disabled', 'true');
-        tab.classList.add('is-disabled');
-      } else {
-        tab.removeAttribute('disabled');
-        tab.classList.remove('is-disabled');
-      }
-    }
-  }
+  bindEvents() {
+    this.unbindEvents();
 
-  /**
-   * 绑定标签点击事件。
-   * @private
-   */
-  _bindEvents() {
-    this._unbindEvents();
+    const tabList = q('.tab-list', this.root);
+    if (!tabList) return;
 
-    if (!this._dragInner) return;
-
-    this.cleanup.events.on('tabClick', this._dragInner, 'click', (e) => {
+    this.cleanup.events.on('tabClick', tabList, 'click', (e) => {
       const tab = e.target.closest('.tab-item');
-      if (!tab || !this.tabs.includes(tab)) return;
-      const tabIndex = this.tabs.indexOf(tab);
-      if (tabIndex >= 0 && !this._disabledIndex.includes(tabIndex)) {
-        void this.activate(tabIndex);
+      if (!tab) return;
+      const name = tab.dataset.tab;
+      if (name && !this.state.disabledNames.includes(name)) {
+        void this.activate(name);
       }
     });
   }
 
-  /**
-   * 解绑标签点击事件。
-   * @private
-   */
-  _unbindEvents() {
-    this.cleanup.events.off('tabClick');
+  unbindEvents() {
+    this.cleanup.events.clear();
   }
 
-  /**
-   * 执行激活逻辑。
-   * @private
-   * @param {number|string} val 标签索引或 `data-tab` 名称。
-   * @param {boolean} [fireEvent=true] 是否触发 onChange。
-   * @returns {Promise<void>}
-   */
-  async _activate(val, fireEvent = true) {
-    const { onChange } = this.options;
-
-    const index = this._getIndex(val);
-
-    if (
-      index < 0 ||
-      index >= this.tabs.length ||
-      this._disabledIndex.includes(index) ||
-      this.current === index
-    ) {
-      return;
-    }
-
-    this.current = index;
-
-    for (const [i, tab] of this.tabs.entries()) {
-      tab.classList.toggle('is-active', i === index);
-    }
-    for (const [i, panel] of this.panels.entries()) {
-      panel.classList.toggle('is-active', i === index);
-    }
-
-    if (fireEvent && onChange) {
-      const tabEl = this.tabs[index];
-      const panelEl = this.panels[index];
-      const tabName = tabEl ? tabEl.dataset.tab || index : index;
-      await Promise.resolve(onChange(index, tabName, tabEl, panelEl));
+  assertActive(method) {
+    if (this.runtime.destroyed) {
+      throw new Error(`Tabs.${method}: instance has been destroyed.`);
     }
   }
 
-  /**
-   * 将索引或名称转换为真实索引。
-   * @private
-   * @param {number|string} val 标签索引或名称。
-   * @returns {number}
-   */
   _getIndex(val) {
     if (typeof val === 'number') return val;
     if (typeof val === 'string') {
-      return this.tabs.findIndex((tab) => tab.dataset.tab === val);
+      return this.dom.tabs.findIndex((tab) => tab.dataset.tab === val);
     }
     return -1;
   }
 
-  /**
-   * 初始化导航拖拽能力。
-   * @private
-   */
-  _initDrag() {
-    const { direction } = this.options;
+  async _activate(val, fireEvent = true) {
+    const index = this._getIndex(val);
+    if (
+      index < 0 ||
+      index >= this.dom.tabs.length ||
+      this.state.disabledNames.includes(this.dom.tabs[index]?.dataset.tab) ||
+      this.state.activeIndex === index
+    ) {
+      return;
+    }
 
+    flushSync(() => {
+      this.state.activeIndex = index;
+    });
+
+    if (fireEvent && this.props.onChange) {
+      const tabEl = this.dom.tabs[index];
+      const panelEl = this.dom.panels[index];
+      await Promise.resolve(
+        this.props.onChange(index, tabEl?.dataset.tab || index, tabEl, panelEl)
+      );
+    }
+  }
+
+  /**
+   * 激活指定标签。
+   * @param {number|string} val 标签索引或 `data-tab` 名称。
+   */
+  async activate(val) {
+    this.assertActive('activate');
+    await this._activate(val, true);
+  }
+
+  /**
+   * 将组件挂载到构造器指定的容器中。
+   */
+  render() {
+    this.assertActive('render');
+    insert(this.container, () => this.root);
+  }
+
+  /**
+   * 动态新增标签。
+   * @param {object} tabConfig 标签配置。
+   */
+  async add(tabConfig) {
+    this.assertActive('add');
+    validateParam('tabConfig', tabConfig, TAB_CONFIG_RULE, 'Tabs.add');
+
+    tabConfig.name = tabConfig.name || randomId();
+    this.props.tabs = [...cloneTabItems(this.props.tabs), tabConfig];
+
+    this.rebuildItems();
+    this.syncActiveNames(this.resolveActiveNames(this.props.active));
+    this.bindEvents();
+    this.mountEffect();
+    this._refreshDrag();
+
+    const { onAdd } = this.props;
+    if (onAdd) {
+      const index = this.props.tabs.length - 1;
+      await Promise.resolve(
+        onAdd(index, tabConfig, this.dom.tabs[index], this.dom.panels[index])
+      );
+    }
+  }
+
+  /**
+   * 根据索引或名称删除标签。
+   * @param {number|string} val 标签索引或 `data-tab` 名称。
+   */
+  async delete(val) {
+    this.assertActive('delete');
+    if (this.props.tabs.length <= 1) return;
+
+    const index = this._getIndex(val);
+    if (index < 0 || index >= this.props.tabs.length) return;
+
+    const removedName = this.props.tabs[index].name;
+    const { onRemove } = this.props;
+
+    this.props.tabs = this.props.tabs.filter((_, i) => i !== index);
+
+    if (this.state.activeIndex >= this.props.tabs.length) {
+      flushSync(() => {
+        this.state.activeIndex = this.props.tabs.length - 1;
+      });
+    } else if (this.state.activeIndex > index) {
+      flushSync(() => {
+        this.state.activeIndex = this.state.activeIndex - 1;
+      });
+    }
+
+    this.rebuildItems();
+    this.bindEvents();
+    this.mountEffect();
+    this._refreshDrag();
+
+    if (onRemove) {
+      await Promise.resolve(onRemove(index, removedName));
+    }
+  }
+
+  /**
+   * 根据索引或名称禁用标签。
+   * @param {number|string} val 标签索引或 `data-tab` 名称。
+   */
+  disable(val) {
+    this.assertActive('disable');
+    const name =
+      typeof val === 'number' ? this.dom.tabs[val]?.dataset.tab : val;
+    if (name && !this.state.disabledNames.includes(name)) {
+      flushSync(() => {
+        this.state.disabledNames = [...this.state.disabledNames, name];
+      });
+    }
+  }
+
+  /**
+   * 根据索引或名称启用标签。
+   * @param {number|string} val 标签索引或 `data-tab` 名称。
+   */
+  enable(val) {
+    this.assertActive('enable');
+    const name =
+      typeof val === 'number' ? this.dom.tabs[val]?.dataset.tab : val;
+    if (name) {
+      flushSync(() => {
+        this.state.disabledNames = this.state.disabledNames.filter(
+          (n) => n !== name
+        );
+      });
+    }
+  }
+
+  resolveActiveNames(active) {
+    if (active == null) return -1;
+    if (typeof active === 'number') return active;
+    if (typeof active === 'string') {
+      return this.dom.tabs.findIndex((tab) => tab.dataset.tab === active);
+    }
+    return 0;
+  }
+
+  syncActiveNames(index) {
+    flushSync(() => {
+      this.state.activeIndex = index;
+    });
+  }
+
+  /**
+   * 使用新配置重新初始化状态。
+   * @param {object} [patch={}] 需要覆盖的配置。
+   */
+  async reInit(patch = {}) {
+    this.assertActive('reInit');
+    Object.assign(this.props, resolveProps(patch, TABS_PROPS_SCHEMA, 'Tabs'));
+
+    flushSync(() => {
+      this.state.disabledNames = this._parseDisabled(this.props.disabled);
+    });
+
+    this.rebuildItems();
+    this.syncActiveNames(this.resolveActiveNames(this.props.active));
+    this.bindEvents();
+    this.mountEffect();
+    this._refreshDrag();
+  }
+
+  // ========== 拖拽相关 ==========
+
+  get _dragContainer() {
+    return this.root ? q('.tab-wrap', this.root) : null;
+  }
+
+  get _dragInner() {
+    return this.root ? q('.tab-list', this.root) : null;
+  }
+
+  _initDrag() {
+    const { direction } = this.props;
     if (!this._dragContainer || !this._dragInner) return;
 
-    this.isVertical = direction === 'left' || direction === 'right';
+    const isVertical = direction === 'left' || direction === 'right';
+    const draggable = isVertical
+      ? this._dragInner.scrollHeight > this._dragContainer.clientHeight + 5
+      : this._dragInner.scrollWidth > this._dragContainer.clientWidth + 5;
 
-    this.draggable = this._draggable();
+    flushSync(() => {
+      this.state.isVertical = isVertical;
+      this.state.draggable = draggable;
+    });
 
-    if (!this.draggable) {
+    if (!draggable) {
       this._removeDragEvents();
       return;
     }
@@ -369,32 +454,12 @@ class Tabs {
     });
   }
 
-  /**
-   * 判断当前导航是否需要拖拽。
-   * @private
-   * @returns {boolean}
-   */
-  _draggable() {
-    if (this.isVertical) {
-      const innerH = this._dragInner.scrollHeight;
-      const viewH = this._dragContainer.clientHeight;
-      return innerH > viewH + 5;
-    }
-    const innerW = this._dragInner.scrollWidth;
-    const viewW = this._dragContainer.clientWidth;
-    return innerW > viewW + 5;
-  }
-
-  /**
-   * 绑定拖拽事件，并使用 rAF 降低滚动更新频率。
-   * @private
-   */
   _bindDragEvents() {
     this._removeDragEvents();
 
     const container = this._dragContainer;
     const inner = this._dragInner;
-    const isVertical = this.isVertical;
+    const isVertical = this.state.isVertical;
 
     let posStart = 0;
     let scrollStart = 0;
@@ -413,11 +478,9 @@ class Tabs {
     const onDragStart = (e) => {
       this.isDragging = true;
       inner.classList.add('dragging');
-
       posStart = getPos(e);
       lastPos = posStart;
       scrollStart = isVertical ? container.scrollTop : container.scrollLeft;
-
       this._velocity = 0;
       cancelAnimationFrame(this.raf);
     };
@@ -425,12 +488,8 @@ class Tabs {
     const onDragMove = (e) => {
       if (!this.isDragging) return;
       e.preventDefault();
-
       const current = getPos(e);
-      // const delta = current - posStart
       const dist = posStart - current;
-
-      // velocity 记录最后 2 次移动
       this._velocity = lastPos - current;
       lastPos = current;
 
@@ -438,7 +497,6 @@ class Tabs {
         frameRequested = true;
         requestAnimationFrame(() => {
           frameRequested = false;
-
           if (isVertical) {
             container.scrollTop = scrollStart + dist;
           } else {
@@ -461,9 +519,7 @@ class Tabs {
       inner,
       'touchstart',
       onDragStart,
-      {
-        passive: true,
-      }
+      { passive: true }
     );
     this.cleanup.events.on('drag:mousemove', window, 'mousemove', onDragMove, {
       passive: false,
@@ -475,42 +531,28 @@ class Tabs {
     this.cleanup.events.on('drag:touchend', window, 'touchend', onDragEnd);
   }
 
-  /**
-   * 执行拖拽结束后的惯性滚动。
-   * @private
-   */
   _startInertiaScroll() {
     const container = this._dragContainer;
     let v = this._velocity;
-    const isVertical = this.isVertical;
-
+    const isVertical = this.state.isVertical;
     let last = performance.now();
 
     const step = (now) => {
       const dt = now - last;
       last = now;
-
-      // 速度衰减（指数）
       v *= 0.92;
-
-      if (Math.abs(v) < 0.3) return; // 停止
-
+      if (Math.abs(v) < 0.3) return;
       if (isVertical) {
         container.scrollTop += v * dt * 0.05;
       } else {
         container.scrollLeft += v * dt * 0.05;
       }
-
       this.raf = requestAnimationFrame(step);
     };
 
     this.raf = requestAnimationFrame(step);
   }
 
-  /**
-   * 移除拖拽事件。
-   * @private
-   */
   _removeDragEvents() {
     this.cleanup.events.off('drag:mousedown');
     this.cleanup.events.off('drag:touchstart');
@@ -520,172 +562,30 @@ class Tabs {
     this.cleanup.events.off('drag:touchend');
   }
 
-  /**
-   * 在标签数量变化后刷新拖拽状态。
-   * @private
-   */
   _refreshDrag() {
     this._initDrag();
   }
 
-  // ========== 公开 API ==========
+  // ========== 销毁 ==========
 
-  /**
-   * 激活指定标签。
-   * @param {number|string} val 标签索引或 `data-tab` 名称。
-   * @returns {Promise<void>}
-   */
-  async activate(val) {
-    await this._activate(val, true);
-  }
-
-  /**
-   * 使用新配置重新初始化状态。
-   * @param {Partial<TabsOptions>} [newOptions={}] 需要覆盖的配置。
-   * @returns {Promise<void>}
-   */
-  async reInit(newOptions = {}) {
-    this.options = resolveOptions(
-      { ...this.options, ...newOptions },
-      TABS_OPTIONS_SCHEMA,
-      'Tabs.options'
-    );
-    const { disabled, active } = this.options;
-    this._disabledIndex = this._parseDisabled(disabled);
-    this._markDisabledTabs();
-    this._bindEvents();
-    await this._activate(active, false);
-    this._refreshDrag();
-  }
-
-  /**
-   * 动态新增标签。
-   * @param {TabItem} tabConfig 标签配置。
-   * @returns {Promise<void>}
-   */
-  async addTab(tabConfig) {
-    validateParam('tabConfig', tabConfig, TAB_CONFIG_RULE, 'Tabs.addTab');
-    const { title, name, content } = tabConfig;
-
-    const panelWrapper = q('.tab-panel', this.root);
-
-    tabConfig.name = name || randomId();
-    const tab = this._createTab(tabConfig);
-    if (this._dragInner) this._dragInner.appendChild(tab);
-
-    const panel = this._createPanel({ title, name, content });
-    panelWrapper.appendChild(panel);
-
-    this._markDisabledTabs();
-    this._bindEvents();
-
-    const { onAdd } = this.options;
-    if (onAdd) {
-      await Promise.resolve(onAdd(this.tabs.length - 1, tabConfig, tab, panel));
-    }
-
-    this._refreshDrag();
-  }
-
-  /**
-   * 根据索引或名称删除标签。
-   * @param {number|string} val 标签索引或 `data-tab` 名称。
-   * @returns {Promise<void>}
-   */
-  async deleteTab(val) {
-    if (this.tabs.length <= 1) return;
-
-    const index = this._getIndex(val);
-    if (index < 0 || index >= this.tabs.length) return;
-
-    const tab = this.tabs[index];
-    const panel = this.panels[index];
-    const tabName = tab.dataset.tab || index;
-
-    if (tab && tab.parentNode) tab.parentNode.removeChild(tab);
-    if (panel && panel.parentNode) panel.parentNode.removeChild(panel);
-
-    this._markDisabledTabs();
-    this._bindEvents();
-
-    const { onRemove } = this.options;
-    if (onRemove) {
-      await Promise.resolve(onRemove(index, tabName));
-    }
-
-    // 如果删除的是当前激活标签，则激活最后一个标签。
-    if (tab.classList.contains('is-active')) {
-      await this._activate(this.tabs.length - 1, false);
-    }
-
-    this._refreshDrag();
-  }
-
-  /**
-   * 根据索引或名称禁用标签。
-   * @param {number|string} val 标签索引或 `data-tab` 名称。
-   * @returns {void}
-   */
-  disableTab(val) {
-    const idx = this._getIndex(val);
-    if (idx >= 0 && !this._disabledIndex.includes(idx)) {
-      this._disabledIndex.push(idx);
-      this._markDisabledTabs();
-      this._bindEvents();
-    }
-  }
-
-  /**
-   * 根据索引或名称启用标签。
-   * @param {number|string} val 标签索引或 `data-tab` 名称。
-   * @returns {void}
-   */
-  enableTab(val) {
-    const idx = this._getIndex(val);
-    const pos = this._disabledIndex.indexOf(idx);
-    if (pos >= 0) {
-      this._disabledIndex.splice(pos, 1);
-      this._markDisabledTabs();
-      this._bindEvents();
-    }
-  }
-
-  /**
-   * 销毁当前标签页实例并解绑事件。
-   * @returns {void}
-   */
-  destroy() {
-    if (this._destroyed) return;
-
-    const root = this.root;
-    const shouldRemoveRoot = this._dynamic;
-
-    this._destroyed = true;
-
-    this._unbindEvents();
+  onDestroy() {
+    this.unbindEvents();
     this._removeDragEvents();
+    this.cleanup.view?.();
+    this.cleanup.view = null;
     cancelAnimationFrame(this.raf);
     cancelAnimationFrame(this._resizeRaf);
-
-    for (const tab of this.tabs) {
-      tab.classList.remove('is-active', 'is-disabled');
-      tab.removeAttribute('disabled');
-    }
-    for (const panel of this.panels) {
-      panel.classList.remove('is-active');
-    }
-
     this.cleanup.events.off('resize');
 
-    if (shouldRemoveRoot && root?.parentNode) {
-      root.parentNode.removeChild(root);
+    if (this.root?.parentNode) {
+      this.root.parentNode.removeChild(this.root);
     }
+  }
 
-    this.root = null;
-    this.options = {};
-    this.isVertical = false;
-    this.cleanup.events.clear();
-    this.cleanup = null;
+  destroy() {
+    if (this.runtime.destroyed) return;
+    this.onDestroy();
+    super.destroy();
   }
 }
 

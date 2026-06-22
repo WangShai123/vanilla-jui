@@ -1,4 +1,4 @@
-import { resolveOptions, validateParam } from '../utilities/core.js';
+import { resolveProps, validateParam } from '../utilities/core.js';
 import {
   all,
   canRenderDOM,
@@ -102,7 +102,7 @@ class Swiper {
       throw new Error('Swiper: DOM render environment is required.');
     }
 
-    const resolvedOptions = resolveOptions(
+    const resolvedOptions = resolveProps(
       options,
       SWIPER_OPTIONS_SCHEMA,
       'Swiper.options'

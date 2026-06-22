@@ -1,6 +1,6 @@
 # Tooltip
 
-Tooltip 是基于 Drop 的文本提示组件，源码位于 `src/components/tooltip.js`。它只负责把文本提示包装成标准 Tooltip UI，定位和触发交给 Drop。
+Tooltip 基于 Drop 实现，源码位于 `src/components/tooltip.js`。只负责把文本包装成标准 Tooltip UI，定位和触发交给 Drop。
 
 ## 导入
 
@@ -21,7 +21,21 @@ tooltip.show();
 tooltip.hide();
 ```
 
-## 方法
+## 参数
+
+| 参数          | 类型                          | 默认值   | 说明                                             |
+| ------------- | ----------------------------- | -------- | ------------------------------------------------ |
+| `message`     | `string`                      | —        | 提示文案，不能为空                               |
+| `mode`        | `'click' \| 'hover'`          | `'hover'`| 触发方式                                         |
+| `position`    | `string`                      | `'auto'` | 浮层位置，取值与 Drop 一致                       |
+| `offset`      | `number`                      | `8`      | 与目标元素间距                                   |
+| `delay`       | `number \| object`            | `100`    | 展示/隐藏延迟（毫秒）                           |
+| `hoverIntent` | `boolean`                     | `true`   | hover 模式下启用意图判断                         |
+| `name`        | `string \| null`              | `null`   | 提示名称，写入 `data-drop`                       |
+| `id`          | `string \| null`              | `null`   | 浮层 id，不传时自动生成                          |
+| `className`   | `string \| null`              | `null`   | 浮层额外类名                                     |
+
+## 实例方法
 
 | 方法             | 说明                     |
 | ---------------- | ------------------------ |

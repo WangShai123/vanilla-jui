@@ -318,10 +318,10 @@ const modal = new Modal({
 | `back(payload)`                  | 返回上一步                          |
 | `goTo(target, payload, options)` | 跳转到指定步骤                      |
 | `setData(data)`                  | 合并全局数据                        |
-| `setStepData(stepId, data)`      | 合并指定步骤缓存                    |
+| `setStepData(stepId, data, options?)` | 合并指定步骤缓存；`options.silent` 为 `true` 时不触发 `onChange` |
 | `getStepData(stepId)`            | 获取指定步骤缓存                    |
 | `snapshot()`                     | 获取当前快照                        |
 | `subscribe(handler)`             | 订阅变化                            |
 | `reset()`                        | 重置流程                            |
-| `finish(payload)`                | 完成流程                            |
+| `finish(payload?, options?)`     | 完成流程；`options.internal` 为 `true` 标记为内部调用 |
 | `destroy()`                      | 销毁实例                            |
