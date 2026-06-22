@@ -253,7 +253,7 @@ export function resolveProps(input = {}, schema = {}, namespace = 'Options') {
   const source = input == null ? {} : input;
 
   if (typeof source !== 'object' || Array.isArray(source)) {
-    throw new Error(`Validator: ${namespace} expects object.`);
+    throw new Error(`${namespace} expects object.`);
   }
 
   const resolved = { ...source };

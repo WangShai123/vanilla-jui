@@ -44,12 +44,20 @@ const MENU_ITEMS_RULE = { type: 'array' };
 class Menu {
   /**
    * 创建菜单实例。
-   * @param {HTMLElement|string|false} element 已有菜单节点、选择器；传 false 时按 items 动态创建。
    * @param {MenuOptions} [options={}] 菜单配置。
+   * @param {HTMLElement|string|false} [element=false] 已有菜单节点、选择器；默认 `false` 按 items 动态创建。
    */
-  constructor(element, options = {}) {
-    this._element = element;
+  constructor(options = {}, element = false) {
     this.options = resolveProps(options, MENU_OPTIONS_SCHEMA, 'Menu.options');
+    this._element = element;
+    if (element !== false) {
+      this._element = validateParam(
+        'element',
+        element,
+        ['HTMLElement', 'string'],
+        'Menu'
+      );
+    }
 
     this.root = null;
     this.cleanup = {
@@ -57,36 +65,6 @@ class Menu {
     };
     this._bound = false;
     this._destroyed = false;
-
-    this._validateOptions();
-  }
-
-  /**
-   * 获取菜单根节点。
-   * @returns {HTMLElement|null}
-   */
-  get menu() {
-    return this.root;
-  }
-
-  /**
-   * 校验初始化参数。
-   * @private
-   * @returns {void}
-   */
-  _validateOptions() {
-    const { items } = this.options;
-
-    if (this._element !== false) {
-      validateParam(
-        'element',
-        this._element,
-        ['HTMLElement', 'string'],
-        'Menu'
-      );
-    }
-
-    this._verifyItems(items);
   }
 
   /**

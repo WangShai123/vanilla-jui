@@ -60,7 +60,7 @@ export const iconMarkup = iconHtml;
  * 获取当前已注册图标的 path 片段浅拷贝。
  * @returns {Record<string, string>}
  */
-export function getIcons() {
+export function getRegistedIconPath() {
   return { ...defaultSvgObjects };
 }
 
