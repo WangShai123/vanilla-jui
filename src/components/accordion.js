@@ -1,6 +1,7 @@
 import {
+  bindAttr,
+  bindClass,
   createDeepStore,
-  createEffect,
   createRoot,
   flushSync,
   insert,
@@ -128,7 +129,6 @@ class Accordion extends Component {
     this.buildItems(props);
     this.syncActiveNames(this.resolveActiveNames(props.active));
     this.bindEvents();
-    this.mountEffect();
   }
 
   buildRoot(props) {
@@ -190,6 +190,33 @@ class Accordion extends Component {
     });
 
     this.root.append(fragment);
+
+    this.cleanup.bindings?.();
+    this.cleanup.bindings = createRoot((dispose) => {
+      this.dom.headers.forEach((header) => {
+        const name = header.dataset.item;
+        bindClass(header, 'is-active', () =>
+          this.state.activeNames.includes(name)
+        );
+        bindAttr(
+          header,
+          'aria-expanded',
+          () => this.state.activeNames.includes(name)
+        );
+      });
+      this.dom.panels.forEach((panel, i) => {
+        const name = this.dom.headers[i]?.dataset.item;
+        bindClass(panel, 'is-active', () =>
+          this.state.activeNames.includes(name)
+        );
+        bindAttr(
+          panel,
+          'aria-hidden',
+          () => !this.state.activeNames.includes(name)
+        );
+      });
+      return dispose;
+    });
   }
 
   contentView(content, item, index, type) {
@@ -199,33 +226,6 @@ class Accordion extends Component {
       index,
       type,
       active: false,
-    });
-  }
-
-  /**
-   * 挂载 createEffect：state.activeNames 变化时，精确更新 class/ARIA。
-   * @private
-   */
-  mountEffect() {
-    this.cleanup.view?.();
-    this.cleanup.view = createRoot((dispose) => {
-      createEffect(() => {
-        const names = this.state.activeNames;
-        this.dom.headers.forEach((header) => {
-          const name = header.dataset.item;
-          const active = names.includes(name);
-          header.classList.toggle('is-active', active);
-          header.setAttribute('aria-expanded', String(active));
-        });
-        this.dom.panels.forEach((panel, i) => {
-          const name = this.dom.headers[i]?.dataset.item;
-          const active = names.includes(name);
-          panel.classList.toggle('is-active', active);
-          panel.setAttribute('aria-hidden', String(!active));
-          panel.hidden = !active;
-        });
-      });
-      return dispose;
     });
   }
 
@@ -363,13 +363,12 @@ class Accordion extends Component {
     this.buildItems(this.props);
     this.syncActiveNames(this.resolveActiveNames(active));
     this.bindEvents();
-    this.mountEffect();
   }
 
   onDestroy() {
     this.unbindEvents();
-    this.cleanup.view?.();
-    this.cleanup.view = null;
+    this.cleanup.bindings?.();
+    this.cleanup.bindings = null;
     if (this.root?.parentNode) {
       this.root.parentNode.removeChild(this.root);
     }

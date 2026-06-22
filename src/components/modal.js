@@ -3,6 +3,7 @@ import {
   createEffect,
   createRoot,
   flushSync,
+  html,
   jsx,
   onCleanup,
   render,
@@ -502,9 +503,7 @@ class Modal extends Component {
     if (content == null) return '';
     if (typeof content !== 'string') return '';
 
-    const template = document.createElement('template');
-    template.innerHTML = content;
-    return Array.from(template.content.childNodes);
+    return Array.from(html(content).childNodes);
   }
 
   bindReactiveLoading() {

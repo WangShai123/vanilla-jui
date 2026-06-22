@@ -1,3 +1,5 @@
+import { html } from 'vanilla-signal';
+
 /**
  * 判断当前环境是否可访问 DOM。
  * @returns {boolean}
@@ -93,9 +95,7 @@ export function normalizeContentNodes(content, context) {
   if (isNode(value)) return [value];
 
   if (typeof value === 'string') {
-    const template = document.createElement('template');
-    template.innerHTML = value;
-    return Array.from(template.content.childNodes);
+    return Array.from(html(value).childNodes);
   }
 
   return [document.createTextNode(String(value))];

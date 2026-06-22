@@ -1,6 +1,7 @@
 import {
+  bindAttr,
+  bindClass,
   createDeepStore,
-  createEffect,
   createRoot,
   flushSync,
   insert,
@@ -97,7 +98,7 @@ class Tabs extends Component {
     this.rebuildItems();
     void this._activate(props.active, false);
     this.bindEvents();
-    this.mountEffect();
+
     this._initDrag();
   }
 
@@ -161,38 +162,35 @@ class Tabs extends Component {
 
     tabList.append(tabFragment);
     panelWrapper.append(panelFragment);
-  }
 
-  /**
-   * 挂载 createEffect：state 变化时，精确更新 class/ARIA。
-   * @private
-   */
-  mountEffect() {
-    this.cleanup.view?.();
-    this.cleanup.view = createRoot((dispose) => {
-      createEffect(() => {
-        const activeIndex = this.state.activeIndex;
-        const disabledNames = this.state.disabledNames;
-
-        this.dom.tabs.forEach((tab, index) => {
-          const name = tab.dataset.tab;
-          const active = activeIndex === index;
-          const disabled = disabledNames.includes(name);
-
-          let cls = 'tab-item';
-          if (active) cls += ' is-active';
-          if (disabled) cls += ' is-disabled';
-          tab.className = cls;
-          tab.setAttribute('aria-selected', String(active));
-          tab.setAttribute('aria-disabled', String(disabled));
-        });
-
-        this.dom.panels.forEach((panel, index) => {
-          const active = activeIndex === index;
-          panel.className = `panel-item${active ? ' is-active' : ''}`;
-          panel.setAttribute('aria-hidden', String(!active));
-          panel.hidden = !active;
-        });
+    this.cleanup.bindings?.();
+    this.cleanup.bindings = createRoot((dispose) => {
+      this.dom.tabs.forEach((tab, index) => {
+        const name = tab.dataset.tab;
+        bindClass(tab, 'is-active', () => this.state.activeIndex === index);
+        bindClass(
+          tab,
+          'is-disabled',
+          () => this.state.disabledNames.includes(name)
+        );
+        bindAttr(
+          tab,
+          'aria-selected',
+          () => this.state.activeIndex === index
+        );
+        bindAttr(
+          tab,
+          'aria-disabled',
+          () => this.state.disabledNames.includes(name)
+        );
+      });
+      this.dom.panels.forEach((panel, index) => {
+        bindClass(panel, 'is-active', () => this.state.activeIndex === index);
+        bindAttr(
+          panel,
+          'aria-hidden',
+          () => this.state.activeIndex !== index
+        );
       });
       return dispose;
     });
@@ -301,7 +299,7 @@ class Tabs extends Component {
     this.rebuildItems();
     this.syncActiveNames(this.resolveActiveNames(this.props.active));
     this.bindEvents();
-    this.mountEffect();
+
     this._refreshDrag();
 
     const { onAdd } = this.props;
@@ -341,7 +339,7 @@ class Tabs extends Component {
 
     this.rebuildItems();
     this.bindEvents();
-    this.mountEffect();
+
     this._refreshDrag();
 
     if (onRemove) {
@@ -411,7 +409,7 @@ class Tabs extends Component {
     this.rebuildItems();
     this.syncActiveNames(this.resolveActiveNames(this.props.active));
     this.bindEvents();
-    this.mountEffect();
+
     this._refreshDrag();
   }
 
@@ -571,8 +569,8 @@ class Tabs extends Component {
   onDestroy() {
     this.unbindEvents();
     this._removeDragEvents();
-    this.cleanup.view?.();
-    this.cleanup.view = null;
+    this.cleanup.bindings?.();
+    this.cleanup.bindings = null;
     cancelAnimationFrame(this.raf);
     cancelAnimationFrame(this._resizeRaf);
     this.cleanup.events.off('resize');
