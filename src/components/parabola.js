@@ -1,6 +1,6 @@
 import { jsx } from 'vanilla-signal';
 
-import { resolveProps } from '../utilities/core.js';
+import { resolveProps, timer } from '../utilities/core.js';
 import { canRenderDOM, getEl } from '../utilities/dom.js';
 
 const PARABOLA_OPTIONS_SCHEMA = {
@@ -79,16 +79,10 @@ class Parabola {
    * @returns {void}
    */
   _init(options) {
-    // 状态标志
     this.hidden = false;
 
-    // 资源引用
     this._ball = null;
     this._animationId = null;
-    this._showTimeoutId = null;
-    this._hideTimeoutId = null;
-
-    if (this.hidden) return;
 
     const fromEl = getEl(options.from);
     const toEl = getEl(options.to);
@@ -97,6 +91,9 @@ class Parabola {
       this.hidden = true;
       throw new Error('Parabola: from or to element not found.');
     }
+
+    this._fromEl = fromEl;
+    this._toEl = toEl;
 
     this._createBall(options);
   }
@@ -136,8 +133,8 @@ class Parabola {
    * @returns {{startX:number,startY:number,endX:number,endY:number}|null}
    */
   _calculatePath(options) {
-    const fromRect = getEl(options.from)?.getBoundingClientRect();
-    const toRect = getEl(options.to)?.getBoundingClientRect();
+    const fromRect = this._fromEl?.getBoundingClientRect();
+    const toRect = this._toEl?.getBoundingClientRect();
 
     if (!fromRect || !toRect) return null;
 
@@ -199,7 +196,7 @@ class Parabola {
     const startTime = performance.now();
     const deltaX = endX - startX;
     const deltaY = endY - startY;
-    const peakOffset = -100; // 抛物线高度（可配置）
+    const peakOffset = -100;
 
     const step = (currentTime) => {
       if (this.hidden) return;
@@ -208,14 +205,11 @@ class Parabola {
       const progress = Math.min(elapsed / duration, 1);
       const eased = this._easeOutCubic(progress);
 
-      // 计算位置（抛物线）
       const currentX = startX + deltaX * eased;
       const currentY =
         startY + peakOffset * Math.sin(Math.PI * eased) + deltaY * eased;
 
-      // 透明度随进度线性减少
       const opacity = 1 - progress;
-      //   const scale = 1 - eased * 0.3 // 可选：同时缩小
 
       this._ball.style.left = `${currentX}px`;
       this._ball.style.top = `${currentY}px`;
@@ -240,7 +234,7 @@ class Parabola {
     if (this.hidden) return false;
 
     return new Promise((resolve) => {
-      this._showTimeoutId = setTimeout(() => {
+      timer.start('show', this.options.showDelay, () => {
         if (this.hidden) {
           resolve(false);
           return;
@@ -253,16 +247,14 @@ class Parabola {
           return;
         }
 
-        // 设置起始位置（不改变 opacity，保持 1）
         this._ball.style.left = `${path.startX}px`;
         this._ball.style.top = `${path.startY}px`;
-        // this._ball.style.opacity = '1'
 
         if (this.options.onShow) this.options.onShow();
 
         this._animate(path.startX, path.startY, path.endX, path.endY);
         resolve(true);
-      }, this.options.showDelay);
+      });
     });
   }
 
@@ -273,22 +265,17 @@ class Parabola {
   destroy() {
     if (this.hidden) return;
 
-    // 移除 DOM
-    if (this._ball?.parentNode) {
-      this._ball.parentNode.removeChild(this._ball);
-    }
+    this._ball?.remove();
 
-    // 清理定时器
-    if (this._showTimeoutId) clearTimeout(this._showTimeoutId);
-    if (this._hideTimeoutId) clearTimeout(this._hideTimeoutId);
+    timer.cancel('show');
     if (this._animationId) cancelAnimationFrame(this._animationId);
 
-    // 解绑引用
     this._ball = null;
+    this._fromEl = null;
+    this._toEl = null;
 
     this.hidden = true;
 
-    // 触发最终回调
     if (this.options.onHidden) this.options.onHidden();
   }
 
