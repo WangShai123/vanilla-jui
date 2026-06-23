@@ -726,7 +726,6 @@ class Swiper extends Component {
     this.cleanup.bindings = createRoot((dispose) => {
       this.dom.bullets.forEach((bullet, i) => {
         bindClass(bullet, 'is-active', () => this.toRealIndex() === i);
-        // bindClass(bullet, 'active', () => this.toRealIndex() === i);
         bindAttr(bullet, 'aria-current', () =>
           String(this.toRealIndex() === i)
         );
