@@ -272,6 +272,28 @@ export function menuApp(runner) {
     root.remove();
   });
 
+  runner.add('绑定 JSX DOM', '验证 h/jsx 返回节点可作为 element', () => {
+    cleanup();
+    const root = jsx('nav', {
+      className: 'j-mobile-menu',
+      children: jsx('ul', {
+        className: 'menu',
+        children: jsx('li', {
+          className: 'menu-item',
+          children: jsx('a', { className: 'menu-link', children: 'Old' }),
+        }),
+      }),
+    });
+    document.body.appendChild(root);
+
+    const menu = new Menu({ type: 'mobile', items: [] }, root).build();
+    menu.setItems([{ id: 'jsx-bound', title: 'JSX Bound', url: '#bound' }]);
+    equal(textOf(root), 'JSX Bound', 'jsx bound text');
+
+    menu.destroy();
+    root.remove();
+  });
+
   runner.log('Menu 组件测试已加载。');
 }
 

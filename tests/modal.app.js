@@ -250,6 +250,7 @@ function bindEvents(runner) {
       });
 
       flowModal = new Modal({
+        // content: '1',
         header: false,
         footer: false,
         bgClose: false,
@@ -300,8 +301,9 @@ function clearRuntimeLayers() {
 export function modalApp(runner) {
   runner.add('默认状态与 ID', '验证默认文本、可见性和自动 ID', () => {
     clearRuntimeLayers();
-    const modal = new Modal();
-
+    const modal = new Modal({
+      content: '1',
+    });
     truthy(
       typeof modal.state.id === 'string' && modal.state.id.length > 0,
       'auto id'
@@ -322,6 +324,7 @@ export function modalApp(runner) {
       const order = [];
 
       const modal = new Modal({
+        content: '1',
         onShow: () => order.push('onShow'),
         onShown: () => order.push('onShown'),
         onHide: () => order.push('onHide'),
@@ -340,6 +343,7 @@ export function modalApp(runner) {
   runner.add('props 更新与限制', '验证 update 文本合并和不可变字段保护', () => {
     clearRuntimeLayers();
     const modal = new Modal({
+      content: '1',
       id: 'modal-stable-id',
       text: { title: 'A', confirm: 'B', cancel: 'C' },
       showCancel: true,
@@ -391,7 +395,7 @@ export function modalApp(runner) {
 
   runner.add('setState 与链式调用', '验证 setState 类型校验和链式返回', () => {
     clearRuntimeLayers();
-    const modal = new Modal({ text: { title: 'Init' } });
+    const modal = new Modal({ content: '1', text: { title: 'Init' } });
 
     const chained = modal
       .setState({ text: { title: 'Next' } })

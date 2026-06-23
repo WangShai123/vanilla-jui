@@ -8,7 +8,10 @@
     display: flex;
     align-items: center;
     cursor: pointer;
-    padding: var(--accordion-header-padding, calc(var(--space) * 2) calc(var(--space) * 3));
+    padding: var(
+      --accordion-header-padding,
+      calc(var(--space) * 2) calc(var(--space) * 3)
+    );
     margin: var(--accordion-header-margin, 0);
     border-bottom: var(--accordion-border);
     font-size: var(--accordion-header-font-size, var(--font-size));
@@ -49,13 +52,20 @@
   }
 
   .j-accordion .accordion-panel {
+    display: none;
     margin: 0;
+  }
+
+  .j-accordion .accordion-panel.is-active {
+    display: block;
   }
 
   .j-accordion .accordion-panel .panel-content {
     margin: var(--accordion-panel-content-margin, 0);
-    padding: var(--accordion-panel-content-padding,
-        0 calc(var(--space) * 3) calc(var(--space) * 2));
+    padding: var(
+      --accordion-panel-content-padding,
+      0 calc(var(--space) * 3) calc(var(--space) * 2)
+    );
     border-bottom: var(--accordion-border);
     font-size: var(--accordion-font-size, var(--font-size));
   }

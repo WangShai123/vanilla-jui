@@ -1,13 +1,7 @@
 import { createDeepStore, flushSync, jsx, Show, render } from 'vanilla-signal';
 
-import { Accordion } from '../dist/index.js?v=1';
-import {
-  equal,
-  hasClass,
-  textOf,
-  truthy,
-  dateTime,
-} from './helpers.js';
+import { Accordion } from '../dist/index.js?v=2';
+import { equal, hasClass, textOf, truthy, dateTime } from './helpers.js';
 
 const items = (prefix = 'Item') => [
   {
@@ -176,6 +170,23 @@ export function accordionApp(runner) {
       hasClass(accordion.dom.headers[1], 'is-active'),
       'second header should active'
     );
+    truthy(accordion.dom.panels[0].hidden, 'first panel hidden');
+    equal(
+      accordion.dom.panels[0].getAttribute('aria-hidden'),
+      'true',
+      'first panel aria hidden'
+    );
+    equal(
+      getComputedStyle(accordion.dom.panels[0]).display,
+      'none',
+      'first panel display none'
+    );
+    truthy(!accordion.dom.panels[1].hidden, 'second panel visible');
+    equal(
+      accordion.dom.panels[1].getAttribute('aria-hidden'),
+      'false',
+      'second panel aria visible'
+    );
     accordion.destroy();
     equal(
       document.body.contains(root),
@@ -210,6 +221,8 @@ export function accordionApp(runner) {
         !hasClass(accordion.dom.headers[2], 'is-active'),
         'api header inactive'
       );
+      truthy(accordion.dom.panels[2].hidden, 'api panel hidden after switch');
+      truthy(!accordion.dom.panels[1].hidden, 'usage panel visible');
 
       accordion.destroy();
     }
@@ -307,7 +320,15 @@ export function accordionApp(runner) {
     truthy(changed.header instanceof HTMLElement, 'header element');
     truthy(changed.panel instanceof HTMLElement, 'panel element');
 
+    let destroyCount = 0;
+    const onDestroy = accordion.onDestroy.bind(accordion);
+    accordion.onDestroy = () => {
+      destroyCount += 1;
+      onDestroy();
+    };
     accordion.destroy();
+    accordion.destroy();
+    equal(destroyCount, 1, 'onDestroy once');
     equal(accordion.root, null, 'root cleared');
     equal(accordion.runtime.destroyed, true, 'instance destroyed');
   });

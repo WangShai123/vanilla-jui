@@ -136,26 +136,24 @@ class Tabs extends Component {
     this.props.tabs.forEach((item) => {
       const name = item.name || randomId();
 
-      const title = jsx('span');
-      title.append(...normalizeContentNodes(item.title, { tabs: this, item }));
-
       const tab = jsx('div', {
         className: 'tab-item',
         'data-tab': name,
-        children: title,
-      });
-
-      const panel = jsx('div');
-      panel.append(...normalizeContentNodes(item.panel, { tabs: this, item }));
-
-      const panelItem = jsx('div', {
-        className: 'panel-item',
-        role: 'tabpanel',
-        children: panel,
+        children: jsx('span', {
+          children: normalizeContentNodes(item.title, { tabs: this, item }),
+        }),
       });
 
       this.dom.tabs.push(tab);
-      this.dom.panels.push(panelItem);
+      this.dom.panels.push(
+        jsx('div', {
+          className: 'panel-item',
+          role: 'tabpanel',
+          children: jsx('div', {
+            children: normalizeContentNodes(item.panel, { tabs: this, item }),
+          }),
+        })
+      );
       tabFragment.append(tab);
       panelFragment.append(panelItem);
     });
@@ -168,29 +166,17 @@ class Tabs extends Component {
       this.dom.tabs.forEach((tab, index) => {
         const name = tab.dataset.tab;
         bindClass(tab, 'is-active', () => this.state.activeIndex === index);
-        bindClass(
-          tab,
-          'is-disabled',
-          () => this.state.disabledNames.includes(name)
+        bindClass(tab, 'is-disabled', () =>
+          this.state.disabledNames.includes(name)
         );
-        bindAttr(
-          tab,
-          'aria-selected',
-          () => this.state.activeIndex === index
-        );
-        bindAttr(
-          tab,
-          'aria-disabled',
-          () => this.state.disabledNames.includes(name)
+        bindAttr(tab, 'aria-selected', () => this.state.activeIndex === index);
+        bindAttr(tab, 'aria-disabled', () =>
+          this.state.disabledNames.includes(name)
         );
       });
       this.dom.panels.forEach((panel, index) => {
         bindClass(panel, 'is-active', () => this.state.activeIndex === index);
-        bindAttr(
-          panel,
-          'aria-hidden',
-          () => this.state.activeIndex !== index
-        );
+        bindAttr(panel, 'aria-hidden', () => this.state.activeIndex !== index);
       });
       return dispose;
     });
@@ -578,12 +564,6 @@ class Tabs extends Component {
     if (this.root?.parentNode) {
       this.root.parentNode.removeChild(this.root);
     }
-  }
-
-  destroy() {
-    if (this.runtime.destroyed) return;
-    this.onDestroy();
-    super.destroy();
   }
 }
 

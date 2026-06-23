@@ -173,6 +173,20 @@ export function parabolaApp(runner) {
     falsy(document.querySelector('.parabola-ball'), 'ball removed from DOM');
   });
 
+  runner.add('JSX 起止点', '验证 from/to 支持 jsx 返回节点', () => {
+    cleanupBalls();
+    const from = jsx('button', { children: 'From' });
+    const to = jsx('button', { children: 'To' });
+    document.body.append(from, to);
+    const parabola = new Parabola({ from, to });
+
+    truthy(document.querySelector('.parabola-ball'), 'ball exists');
+
+    parabola.destroy();
+    from.remove();
+    to.remove();
+  });
+
   runner.add('启动动画', '验证 show 返回 true 并触发 onShow', async () => {
     cleanupBalls();
     const from = document.getElementById('from-point');

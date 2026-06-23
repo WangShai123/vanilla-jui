@@ -1,7 +1,16 @@
 import { jsx } from 'vanilla-signal';
 
 import { resolveProps, timer } from '../utilities/core.js';
-import { canRenderDOM, getEl } from '../utilities/dom.js';
+import { canRenderDOM, isNode, resolveElement } from '../utilities/dom.js';
+
+const ELEMENT_REF_RULE = {
+  validate: (value) =>
+    value == null ||
+    typeof value === 'string' ||
+    Array.isArray(value) ||
+    isNode(value),
+  message: 'expects Element, Node, selector or JSX node.',
+};
 
 const PARABOLA_OPTIONS_SCHEMA = {
   ball: {
@@ -18,8 +27,8 @@ const PARABOLA_OPTIONS_SCHEMA = {
     message:
       'expects an object with two string properties: "color" and "size".',
   },
-  from: { default: null, types: ['HTMLElement', 'string'] },
-  to: { default: null, types: ['HTMLElement', 'string'] },
+  from: { default: null, ...ELEMENT_REF_RULE },
+  to: { default: null, ...ELEMENT_REF_RULE },
   direction: {
     default: 'center',
     type: 'string',
@@ -40,8 +49,8 @@ const PARABOLA_OPTIONS_SCHEMA = {
 /**
  * @typedef {object} ParabolaOptions
  * @property {ParabolaBallOptions} [ball] 小球样式配置。
- * @property {HTMLElement|string} from 起点元素或选择器。
- * @property {HTMLElement|string} to 终点元素或选择器。
+ * @property {Element|Node|string|Array} from 起点元素、选择器或 JSX/h 返回节点。
+ * @property {Element|Node|string|Array} to 终点元素、选择器或 JSX/h 返回节点。
  * @property {"center"|"top-right"|"top-left"|"bottom-right"|"bottom-left"} [direction="center"] 起点取样位置。
  * @property {number} [showDelay=0] 开始动画前的延迟，单位毫秒。
  * @property {number} [hideDelay=0] 预留隐藏延迟配置。
@@ -84,13 +93,8 @@ class Parabola {
     this._ball = null;
     this._animationId = null;
 
-    const fromEl = getEl(options.from);
-    const toEl = getEl(options.to);
-
-    if (!fromEl || !toEl) {
-      this.hidden = true;
-      throw new Error('Parabola: from or to element not found.');
-    }
+    const fromEl = resolveElement(options.from, 'Parabola.from');
+    const toEl = resolveElement(options.to, 'Parabola.to');
 
     this._fromEl = fromEl;
     this._toEl = toEl;

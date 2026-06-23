@@ -1,13 +1,7 @@
 import { createDeepStore, flushSync, jsx, Show, render } from 'vanilla-signal';
 
-import { Drop } from '../dist/index.js?v=1';
-import {
-  equal,
-  hasClass,
-  textOf,
-  truthy,
-  dateTime,
-} from './helpers.js';
+import { Drop } from '../dist/index.js?v=2';
+import { equal, hasClass, textOf, truthy, dateTime } from './helpers.js';
 
 // ========== 手动测试 UI ==========
 
@@ -134,6 +128,7 @@ export function dropApp(runner) {
     drop.show(false);
     truthy(hasClass(drop.root, 'is-active'), 'drop active');
     equal(textOf(drop.root), 'Drop content', 'content text');
+    truthy(drop.root.querySelector('b'), 'html node rendered');
     drop.hide(false);
     truthy(!hasClass(drop.root, 'is-active'), 'drop inactive');
 
@@ -154,6 +149,41 @@ export function dropApp(runner) {
     truthy(drop.root.querySelector('.custom-drop-node'), 'custom node exists');
     drop.destroy();
     target.remove();
+  });
+
+  runner.add('字符串内容', '验证纯文本 content 正常渲染', () => {
+    const target = document.createElement('button');
+    target.textContent = 'Text target';
+    document.body.appendChild(target);
+
+    const drop = new Drop(target, { content: 'Plain drop content' });
+
+    equal(textOf(drop.root), 'Plain drop content', 'plain content text');
+
+    drop.destroy();
+    target.remove();
+  });
+
+  runner.add('目标元素兼容', '验证选择器和 JSX 节点入口', () => {
+    const selectorTarget = jsx('button', {
+      id: 'drop-selector-target',
+      children: 'Selector target',
+    });
+    const jsxTarget = jsx('button', { children: 'JSX target' });
+    document.body.append(selectorTarget, jsxTarget);
+
+    const selectorDrop = new Drop('#drop-selector-target', {
+      content: 'Selector content',
+    });
+    const jsxDrop = new Drop(jsxTarget, { content: 'JSX content' });
+
+    equal(textOf(selectorDrop.root), 'Selector content', 'selector content');
+    equal(textOf(jsxDrop.root), 'JSX content', 'jsx content');
+
+    selectorDrop.destroy();
+    jsxDrop.destroy();
+    selectorTarget.remove();
+    jsxTarget.remove();
   });
 
   runner.add('hover 模式', '验证 hover 配置', () => {

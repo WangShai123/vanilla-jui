@@ -19,6 +19,7 @@
   .j-swiper .swiper-slide {
     position: relative;
     display: block;
+    width: var(--swiper-slide-width, 100%);
     min-width: 100%;
     overflow: hidden;
     color: inherit;
@@ -87,8 +88,10 @@
 
   .j-swiper .swiper-pagination-indicator:hover,
   .j-swiper .swiper-pagination-indicator:focus-visible {
-    background: var(--swiper-indicator-hover-background,
-        rgb(255 255 255 / 86%));
+    background: var(
+      --swiper-indicator-hover-background,
+      rgb(255 255 255 / 86%)
+    );
   }
 
   .j-swiper .swiper-pagination-indicator.is-active,

@@ -1,7 +1,7 @@
 import { jsx } from 'vanilla-signal';
 
 import { resolveProps, validateParam } from '../utilities/core.js';
-import { all, canRenderDOM, getEl, q } from '../utilities/dom.js';
+import { all, canRenderDOM, q, resolveElement } from '../utilities/dom.js';
 import { createEventManager } from '../utilities/events.js';
 
 const VALIDATOR_OPTIONS_SCHEMA = {
@@ -48,7 +48,7 @@ const VALIDATOR_OPTIONS_SCHEMA = {
 class Validator {
   /**
    * 创建表单校验实例。
-   * @param {HTMLFormElement|string} element 表单元素或选择器。
+   * @param {HTMLFormElement|Node|string|Array} element 表单元素、选择器或 JSX/h 返回节点。
    * @param {ValidatorOptions} [options={}] 校验配置。
    * @param {boolean} [bindEvents=false] 是否自动绑定 submit/reset 事件。
    */
@@ -73,27 +73,23 @@ class Validator {
   /**
    * 校验构造参数。
    * @private
-   * @param {HTMLFormElement|string} element 表单元素或选择器。
+   * @param {HTMLFormElement|Node|string|Array} element 表单元素、选择器或 JSX/h 返回节点。
    * @param {ValidatorOptions} options 已归一化配置。
    * @param {boolean} bindEvents 是否绑定事件。
    * @returns {void}
    */
   _validateOptions(element, options, bindEvents) {
-    validateParam('element', element, ['HTMLElement', 'string'], 'Validator');
     validateParam('bindEvents', bindEvents, 'boolean', 'Validator');
   }
 
   /**
    * 初始化实例状态。
    * @private
-   * @param {HTMLFormElement} element 表单元素。
+   * @param {HTMLFormElement|Node|string|Array} element 表单元素、选择器或 JSX/h 返回节点。
    * @returns {void}
    */
   _init(element) {
-    this.root = getEl(element, 'Validator.element');
-    if (!this.root) {
-      throw new Error('Validator: element not found.');
-    }
+    this.root = resolveElement(element, 'Validator.element');
 
     this.valid = true;
     this.cleanup = {
@@ -267,9 +263,6 @@ class Validator {
          * @since 1.0.0
          */
         this._errorMsg(element, nameAttr, rule);
-        //  else {
-        //   this._errorMsg(element, `${nameAttr} ${rule}`)
-        // }
         break;
       } else {
         this._success(element);

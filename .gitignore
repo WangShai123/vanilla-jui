@@ -2,6 +2,7 @@
 node_modules
 AGENTS.md
 
+docs/audits
 tests/*
 !tests/index.html
 !tests/test.css

@@ -151,9 +151,6 @@ class Accordion extends Component {
       const headerId = `${props.id}_header_${index}`;
       const panelId = `${props.id}_panel_${index}`;
 
-      const headerTitle = jsx('span', { className: 'header-title' });
-      headerTitle.append(...this.contentView(item.title, item, index, 'title'));
-
       const header = jsx('div', {
         className: 'accordion-header',
         'data-item': name,
@@ -162,7 +159,10 @@ class Accordion extends Component {
         tabindex: '0',
         'aria-controls': panelId,
         children: [
-          headerTitle,
+          jsx('span', {
+            className: 'header-title',
+            children: this.contentView(item.title, item, index, 'title'),
+          }),
           jsx('span', {
             className: 'header-arrow',
             'aria-hidden': 'true',
@@ -171,17 +171,15 @@ class Accordion extends Component {
         ],
       });
 
-      const panelContent = jsx('div', { className: 'panel-content' });
-      panelContent.append(
-        ...this.contentView(item.content, item, index, 'content')
-      );
-
       const panel = jsx('div', {
         className: 'accordion-panel',
         id: panelId,
         role: 'region',
         'aria-labelledby': headerId,
-        children: panelContent,
+        children: jsx('div', {
+          className: 'panel-content',
+          children: this.contentView(item.content, item, index, 'content'),
+        }),
       });
 
       this.dom.headers.push(header);
@@ -198,10 +196,8 @@ class Accordion extends Component {
         bindClass(header, 'is-active', () =>
           this.state.activeNames.includes(name)
         );
-        bindAttr(
-          header,
-          'aria-expanded',
-          () => this.state.activeNames.includes(name)
+        bindAttr(header, 'aria-expanded', () =>
+          this.state.activeNames.includes(name)
         );
       });
       this.dom.panels.forEach((panel, i) => {
@@ -209,11 +205,10 @@ class Accordion extends Component {
         bindClass(panel, 'is-active', () =>
           this.state.activeNames.includes(name)
         );
-        bindAttr(
-          panel,
-          'aria-hidden',
-          () => !this.state.activeNames.includes(name)
+        bindAttr(panel, 'aria-hidden', () =>
+          this.state.activeNames.includes(name) ? 'false' : 'true'
         );
+        bindAttr(panel, 'hidden', () => !this.state.activeNames.includes(name));
       });
       return dispose;
     });
@@ -372,12 +367,6 @@ class Accordion extends Component {
     if (this.root?.parentNode) {
       this.root.parentNode.removeChild(this.root);
     }
-  }
-
-  destroy() {
-    if (this.runtime.destroyed) return;
-    this.onDestroy();
-    super.destroy();
   }
 }
 

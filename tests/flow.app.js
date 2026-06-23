@@ -425,6 +425,23 @@ export function flowApp(runner) {
     flow.destroy();
   });
 
+  runner.add('JSX 容器挂载', '验证 mount 支持 jsx 返回节点', () => {
+    const container = jsx('div');
+    document.body.appendChild(container);
+    const flow = new Flow({
+      steps: [
+        { id: 'a', title: 'Step A', content: 'A' },
+        { id: 'b', title: 'Step B', content: 'B' },
+      ],
+    });
+
+    flow.mount(container);
+    truthy(container.querySelector('.j-flow'), 'flow mounted in jsx node');
+
+    flow.destroy();
+    container.remove();
+  });
+
   runner.add(
     'next 前进并缓存数据',
     '验证 next 后当前步骤和全局缓存',

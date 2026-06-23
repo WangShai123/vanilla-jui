@@ -3,7 +3,7 @@ import {
   createEffect,
   createRoot,
   flushSync,
-  html,
+  // html,
   jsx,
   onCleanup,
   render,
@@ -373,6 +373,11 @@ class Modal extends Component {
     if (this.isFormMode()) return this.formView();
     this.dom.form = null;
     return this.contentView(this.state.content);
+    // return () => {
+    //   if (this.isFormMode()) return this.formView();
+    //   this.dom.form = null;
+    //   return this.contentView(this.state.content);
+    // };
   }
 
   formView() {
@@ -503,7 +508,10 @@ class Modal extends Component {
     if (content == null) return '';
     if (typeof content !== 'string') return '';
 
-    return Array.from(html(content).childNodes);
+    // return Array.from(html(content).childNodes);
+    const template = document.createElement('template');
+    template.innerHTML = content;
+    return Array.from(template.content.childNodes);
   }
 
   bindReactiveLoading() {

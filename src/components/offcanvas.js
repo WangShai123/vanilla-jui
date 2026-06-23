@@ -239,12 +239,6 @@ class Offcanvas extends Component {
 
     this._overlay = null;
   }
-
-  destroy() {
-    if (this.runtime.destroyed) return;
-    this.onDestroy();
-    super.destroy();
-  }
 }
 
 export default Offcanvas;

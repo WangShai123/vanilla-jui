@@ -1,13 +1,7 @@
 import { createDeepStore, flushSync, jsx, Show, render } from 'vanilla-signal';
 
-import { Tabs } from '../dist/index.js?v=1';
-import {
-  equal,
-  hasClass,
-  textOf,
-  truthy,
-  dateTime,
-} from './helpers.js';
+import { Tabs } from '../dist/index.js?v=2';
+import { equal, hasClass, textOf, truthy, dateTime } from './helpers.js';
 
 const tabsConfig = () => [
   { name: 'one', title: 'Tab 1', panel: 'No 1 Panel' },
@@ -314,6 +308,13 @@ export function tabsApp(runner) {
     tabs.render();
     tabs.root.dataset.test = 'destroy';
     const root = tabs.root;
+    let destroyCount = 0;
+    const onDestroy = tabs.onDestroy.bind(tabs);
+    tabs.onDestroy = () => {
+      destroyCount += 1;
+      onDestroy();
+    };
+    tabs.destroy();
     tabs.destroy();
 
     equal(
@@ -321,6 +322,7 @@ export function tabsApp(runner) {
       false,
       'dynamic root should be removed'
     );
+    equal(destroyCount, 1, 'onDestroy once');
     equal(tabs.root, null, 'root cleared');
   });
 

@@ -13,7 +13,7 @@ import {
   resolveProps,
   validateParam,
 } from '../utilities/core.js';
-import { canRenderDOM, isElement } from '../utilities/dom.js';
+import { canRenderDOM, resolveElement } from '../utilities/dom.js';
 
 function isFlowRenderContent(content) {
   return (
@@ -324,7 +324,7 @@ class Flow {
 
   /**
    * 挂载默认 Flow UI。
-   * @param {Element|string} container DOM 容器或选择器。
+   * @param {Element|Node|string|Array} container DOM 容器、选择器或 JSX/h 返回节点。
    * @returns {Flow}
    */
   mount(container) {
@@ -334,13 +334,7 @@ class Flow {
       throw new Error('Flow.mount: DOM environment is required.');
     }
 
-    const target =
-      typeof container === 'string'
-        ? document.querySelector(container)
-        : container;
-    if (!isElement(target)) {
-      throw new Error('Flow.mount: container expects Element or selector.');
-    }
+    const target = resolveElement(container, 'Flow.mount.container');
 
     this.unmount();
     this.root = this._buildRoot();

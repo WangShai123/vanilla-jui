@@ -1,13 +1,7 @@
 import { createDeepStore, flushSync, jsx, Show, render } from 'vanilla-signal';
 
-import { Offcanvas } from '../dist/index.js?v=1';
-import {
-  equal,
-  hasClass,
-  textOf,
-  truthy,
-  dateTime,
-} from './helpers.js';
+import { Offcanvas } from '../dist/index.js?v=2';
+import { equal, hasClass, textOf, truthy, dateTime } from './helpers.js';
 
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -205,9 +199,17 @@ export function offcanvasApp(runner) {
     });
 
     await offcanvas.show();
+    let destroyCount = 0;
+    const onDestroy = offcanvas.onDestroy.bind(offcanvas);
+    offcanvas.onDestroy = () => {
+      destroyCount += 1;
+      onDestroy();
+    };
+    offcanvas.destroy();
     offcanvas.destroy();
     equal(document.querySelectorAll('.j-offcanvas').length, 0, 'root removed');
     equal(document.body.style.overflow, '', 'body overflow restored');
+    equal(destroyCount, 1, 'onDestroy once');
   });
 
   runner.log('Offcanvas 组件测试已加载。');

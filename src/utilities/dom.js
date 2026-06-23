@@ -1,5 +1,3 @@
-import { html } from 'vanilla-signal';
-
 /**
  * 判断当前环境是否可访问 DOM。
  * @returns {boolean}
@@ -39,23 +37,20 @@ export function isElement(value) {
   return typeof Element !== 'undefined' && value instanceof Element;
 }
 
+function nodeFromArray(value) {
+  const nodes = value.flatMap((item) => normalizeContentNodes(item));
+  return nodes.find(isElement) || nodes.find(isNode) || null;
+}
+
 /**
  * 解析并验证容器元素
- * @param {HTMLElement|string} container - CSS 选择器字符串或 DOM 元素
+ * @param {Element|Node|string|Array|false|null|undefined} container - CSS 选择器、DOM/JSX 节点或节点数组
  * @param {string} namespace - 组件名称，用于错误提示
- * @returns {HTMLElement} 有效的 DOM 元素
+ * @returns {Element} 有效的 DOM 元素
  * @throws {Error} 当容器无效时抛出错误
  */
 export const resolveContainer = (container, namespace = 'Component') => {
-  let el;
-
-  el = typeof container === 'string' ? q(container) : container;
-
-  if (!el || typeof el.appendChild !== 'function') {
-    throw new Error(`${namespace}: container expects a valid Element.`);
-  }
-
-  return el;
+  return resolveElement(container, `${namespace}.container`);
 };
 
 /**
@@ -73,6 +68,12 @@ export function isRenderableContent(value) {
     Array.isArray(value) ||
     isNode(value)
   );
+}
+
+function parseContentString(value) {
+  const template = document.createElement('template');
+  template.innerHTML = value;
+  return Array.from(template.content.childNodes);
 }
 
 /**
@@ -95,7 +96,7 @@ export function normalizeContentNodes(content, context) {
   if (isNode(value)) return [value];
 
   if (typeof value === 'string') {
-    return Array.from(html(value).childNodes);
+    return parseContentString(value);
   }
 
   return [document.createTextNode(String(value))];
@@ -127,14 +128,29 @@ export function all(selector, context = document) {
 }
 
 /**
- * 将 Element 或 CSS 选择器解析为 DOM 元素。
- * @param {Element|string|false|null|undefined} ref 元素引用、选择器或空值。
+ * 将 DOM 引用解析为节点。
+ * @param {Element|Node|string|Array|false|null|undefined} ref 元素引用、选择器、JSX/h 返回值或空值。
  * @param {string} [namespace="getEl"] 错误命名空间。
- * @returns {Element|null}
+ * @returns {Node|null}
  */
 export function getEl(ref, namespace = 'getEl') {
-  if (typeof Element !== 'undefined' && ref instanceof Element) return ref;
+  if (isElement(ref) || isNode(ref)) return ref;
   if (typeof ref === 'string') return q(ref);
+  if (Array.isArray(ref)) return nodeFromArray(ref);
   if (ref === false || ref == null) return null;
-  throw new Error(`${namespace}: expects Element or string.`);
+  throw new Error(`${namespace}: expects Element, Node, selector or JSX node.`);
+}
+
+/**
+ * 将 DOM 引用解析为元素。
+ * @param {Element|Node|string|Array|false|null|undefined} ref 元素引用、选择器、JSX/h 返回值或空值。
+ * @param {string} [namespace="resolveElement"] 错误命名空间。
+ * @returns {Element}
+ */
+export function resolveElement(ref, namespace = 'resolveElement') {
+  const element = getEl(ref, namespace);
+  if (!isElement(element)) {
+    throw new Error(`${namespace}: expects a valid Element.`);
+  }
+  return element;
 }

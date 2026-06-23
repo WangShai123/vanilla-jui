@@ -3,10 +3,10 @@ import { jsx } from 'vanilla-signal';
 import { randomId, resolveProps } from '../utilities/core.js';
 import {
   canRenderDOM,
-  isElement,
   isNode,
   isRenderableContent,
   normalizeContentNodes,
+  resolveElement,
 } from '../utilities/dom.js';
 import { createEventManager } from '../utilities/events.js';
 
@@ -81,7 +81,7 @@ const DROP_PROPS_SCHEMA = {
 class Drop {
   /**
    * 创建浮层实例。
-   * @param {HTMLElement} element 触发元素。
+   * @param {Element|Node|string|Array} element 触发元素、选择器或 JSX/h 返回节点。
    * @param {DropProps} [options={}] 浮层配置。
    */
   constructor(element, options = {}) {
@@ -89,11 +89,7 @@ class Drop {
       throw new Error('Drop: DOM render environment is required.');
     }
 
-    if (!isElement(element)) {
-      throw new Error('Drop: element expects a valid HTMLElement.');
-    }
-
-    this.target = element;
+    this.target = resolveElement(element, 'Drop.element');
     this.props = resolveProps(options, DROP_PROPS_SCHEMA, 'Drop');
     this._init(this.props);
   }

@@ -1,7 +1,7 @@
-import { jsx } from 'vanilla-signal';
+import { render, jsx } from 'vanilla-signal';
 
 import { randomId, resolveProps, validateParam } from '../utilities/core.js';
-import { canRenderDOM, getEl, q } from '../utilities/dom.js';
+import { canRenderDOM, q, resolveElement } from '../utilities/dom.js';
 import { createEventManager } from '../utilities/events.js';
 import { icon } from './icons.js';
 
@@ -45,19 +45,11 @@ class Menu {
   /**
    * 创建菜单实例。
    * @param {MenuOptions} [options={}] 菜单配置。
-   * @param {HTMLElement|string|false} [element=false] 已有菜单节点、选择器；默认 `false` 按 items 动态创建。
+   * @param {Element|Node|string|Array|false} [element=false] 已有菜单节点、选择器或 JSX/h 返回节点；默认 `false` 按 items 动态创建。
    */
   constructor(options = {}, element = false) {
     this.options = resolveProps(options, MENU_OPTIONS_SCHEMA, 'Menu.options');
     this._element = element;
-    if (element !== false) {
-      this._element = validateParam(
-        'element',
-        element,
-        ['HTMLElement', 'string'],
-        'Menu'
-      );
-    }
 
     this.root = null;
     this.cleanup = {
@@ -94,13 +86,7 @@ class Menu {
       this.root = this._buildRoot();
       this._bound = true;
     } else {
-      const el = getEl(this._element, 'Menu.element');
-
-      if (!el) {
-        throw new Error('Element not found');
-      }
-
-      this.root = el;
+      this.root = resolveElement(this._element, 'Menu.element');
       this._bound = true;
     }
 
@@ -246,6 +232,8 @@ class Menu {
    */
   _teardown({ keepElement = false } = {}) {
     this._unbindEvents();
+    this.cleanup.items?.();
+    this.cleanup.items = null;
 
     if (this._element === false && this.root?.parentElement) {
       this.root.remove();
@@ -365,8 +353,11 @@ class Menu {
         }
 
         this._unbindEvents();
-        list.textContent = '';
-        list.append(...items.map((item) => this._buildItem(item)));
+        this.cleanup.items?.();
+        this.cleanup.items = render(
+          () => items.map((item) => this._buildItem(item)),
+          list
+        );
         this._bindEvents();
       }
     }

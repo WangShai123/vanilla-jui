@@ -3,6 +3,7 @@ import {
   bindClass,
   createDeepStore,
   createRoot,
+  h,
 } from 'vanilla-signal';
 
 import Component from '../core/Component.js';
@@ -14,10 +15,12 @@ import {
   isRenderableContent,
   normalizeContentNodes,
   q,
+  resolveContainer,
 } from '../utilities/dom.js';
 import { icon } from './icons.js';
 
 const SWIPE_THRESHOLD = 6;
+const AUTOPLAY_DELAY_FLOOR = 16;
 
 const SWIPER_OPTIONS_SCHEMA = {
   data: {
@@ -93,6 +96,29 @@ function isInteractiveTarget(target) {
   );
 }
 
+function normalizeNumber(value, fallback = 0) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : fallback;
+}
+
+function getRenderableNodes(content, context) {
+  return normalizeContentNodes(content, context);
+}
+
+function resolveSwiperRoot(container) {
+  const roots = all('.j-swiper', container);
+  validateParam(
+    'container',
+    roots,
+    {
+      validate: (value) => value.length === 1,
+      message: 'expects exactly one .j-swiper descendant.',
+    },
+    'Swiper'
+  );
+  return roots[0];
+}
+
 /**
  * 轻量轮播组件，继承 Component。
  *
@@ -102,58 +128,33 @@ function isInteractiveTarget(target) {
 class Swiper extends Component {
   /**
    * 创建轮播实例。
-   * @param {HTMLElement|string} container 根节点或选择器。
+   * @param {HTMLElement|string} container 挂载容器或选择器。
    * @param {object} [options={}] Swiper 配置。
    */
   constructor(container, options = {}) {
-    if (!canRenderDOM()) {
-      throw new Error('Swiper: DOM render environment is required.');
-    }
-
     const resolvedOptions = resolveProps(
       options,
       SWIPER_OPTIONS_SCHEMA,
       'Swiper.options'
     );
-    const hasData = Array.isArray(resolvedOptions.data);
-    const root =
-      typeof container === 'string'
-        ? q(container)
-        : isElement(container)
-          ? container
-          : null;
-
-    if (!root && !hasData) {
-      validateParam(
-        'container',
-        root,
-        {
-          validate: isElement,
-          message: 'expects a valid HTMLElement or selector.',
-        },
-        'Swiper'
-      );
-    }
-
-    let mountRoot = root;
-    let mountTarget = null;
-    const createdRoot = hasData;
-
-    if (hasData) {
-      mountTarget = root || document.body;
-      mountRoot = document.createElement('div');
-      mountRoot.className = 'j-swiper';
-      mountTarget.appendChild(mountRoot);
-    } else if (!mountRoot.classList.contains('j-swiper')) {
-      throw new Error('Swiper: root element must have .j-swiper.');
-    }
 
     super(resolvedOptions);
 
-    this.dom.root = mountRoot;
-    this.dom.mountTarget = mountTarget;
-    this.dom.createdRoot = createdRoot;
-    this.dom.createdSlides = hasData;
+    this._container = container;
+    this._built = false;
+
+    this.dom.mountTarget = null;
+    this.dom.createdRoot = false;
+    this.dom.createdSlides = false;
+    this.dom.wrapper = null;
+    this.dom.slides = [];
+    this.dom.pagination = null;
+    this.dom.prevButton = null;
+    this.dom.nextButton = null;
+    this.dom.bullets = [];
+    this.dom.createdPagination = false;
+    this.dom.createdPrevButton = false;
+    this.dom.createdNextButton = false;
 
     this.runtime.logs = [];
     this.runtime.startTarget = null;
@@ -162,60 +163,129 @@ class Swiper extends Component {
     this.runtime.swiping = false;
     this.runtime.clickPrevented = false;
     this.runtime.timer = null;
+    this.runtime.imageCleanups = new Set();
 
-    const wrapper = hasData
-      ? this.createDataView(mountRoot, resolvedOptions.data)
-      : q('.swiper-wrapper', mountRoot);
-    if (!wrapper) throw new Error('Swiper: .swiper-wrapper not found.');
-
-    this.dom.wrapper = wrapper;
-    this.dom.slides = all('.swiper-slide', wrapper);
-    this.dom.pagination = q('.swiper-pagination', mountRoot);
-    this.dom.prevButton = q('.swiper-navigation.is-prev', mountRoot);
-    this.dom.nextButton = q('.swiper-navigation.is-next', mountRoot);
-    this.dom.bullets = [];
-    this.dom.createdPagination = false;
-    this.dom.createdPrevButton = false;
-    this.dom.createdNextButton = false;
-
-    if (this.dom.slides.length === 0) return;
-
-    this.runtime.realCount = this.dom.slides.length;
+    this.runtime.realCount = 0;
 
     this.state = createDeepStore({
       index: 0,
+      trackIndex: 0,
       transform: 0,
       animating: false,
       width: 0,
     });
+  }
 
-    this.onInit();
+  /**
+   * 构建或绑定 Swiper DOM。
+   * @returns {Swiper} 当前实例。
+   */
+  build() {
+    if (this.runtime.destroyed)
+      throw new Error('Swiper.build: instance destroyed');
+    if (this._built) return this;
+
+    if (!canRenderDOM()) {
+      throw new Error('Swiper: DOM render environment is required.');
+    }
+
+    const hasData = Array.isArray(this.props.data);
+    const root = resolveContainer(this._container, 'Swiper');
+
+    let mountRoot = null;
+    let mountTarget = null;
+
+    if (hasData) {
+      mountTarget = root;
+      mountRoot = h('div', { className: 'j-swiper' });
+      mountTarget.appendChild(mountRoot);
+    } else {
+      mountRoot = resolveSwiperRoot(root);
+    }
+
+    try {
+      this.dom.root = mountRoot;
+      this.dom.mountTarget = mountTarget;
+      this.dom.createdRoot = hasData;
+      this.dom.createdSlides = hasData;
+
+      const wrapper = hasData
+        ? this.createDataView(mountRoot, this.props.data)
+        : q('.swiper-wrapper', mountRoot);
+      validateParam(
+        'wrapper',
+        wrapper,
+        {
+          validate: isElement,
+          message: 'expects .swiper-wrapper in the root element.',
+        },
+        'Swiper'
+      );
+
+      this.dom.wrapper = wrapper;
+      this.dom.slides = all('.swiper-slide', wrapper);
+      this.dom.pagination = q('.swiper-pagination', mountRoot);
+      this.dom.prevButton = q('.swiper-navigation.is-prev', mountRoot);
+      this.dom.nextButton = q('.swiper-navigation.is-next', mountRoot);
+      this.dom.bullets = [];
+      this.dom.createdPagination = false;
+      this.dom.createdPrevButton = false;
+      this.dom.createdNextButton = false;
+
+      this.runtime.realCount = this.dom.slides.length;
+      this._built = true;
+
+      if (this.dom.slides.length > 0) this.onInit();
+    } catch (error) {
+      this.destroy();
+      throw error;
+    }
+
+    this.emit('init', this.props);
+    return this;
   }
 
   set index(v) {
-    this.state.index = Number(v) || 0;
+    this.setState({ index: normalizeNumber(v) });
+  }
+
+  set trackIndex(v) {
+    this.setState({ trackIndex: normalizeNumber(v) });
   }
 
   set transform(v) {
-    this.state.transform = Number(v) || 0;
+    this.setState({ transform: normalizeNumber(v) });
   }
 
   set animating(v) {
-    this.state.animating = !!v;
+    this.setState({ animating: !!v });
   }
 
   set width(v) {
-    this.state.width = Number(v) || 0;
+    this.setState({ width: normalizeNumber(v) });
   }
 
   get realCount() {
+    if (this.runtime?.destroyed) return 0;
     return this.runtime?.realCount || 0;
+  }
+
+  get realIndex() {
+    return this.toRealIndex();
+  }
+
+  assertBuilt(method) {
+    if (!this._built) {
+      throw new Error(`Swiper.${method}: call build() first.`);
+    }
   }
 
   createDataView(root, data) {
     const items = this.normalizeData(data);
-    const wrapper = document.createElement('div');
-    wrapper.className = 'swiper-wrapper';
+    const wrapper = h('div', {
+      className: 'swiper-wrapper',
+      'aria-live': 'polite',
+    });
     root.textContent = '';
 
     items.forEach((item, index) => {
@@ -248,42 +318,46 @@ class Swiper extends Component {
   }
 
   createDataSlide(item, index) {
-    const slide = item.url
-      ? document.createElement('a')
-      : document.createElement('div');
-
-    slide.className = 'swiper-slide';
-    slide.setAttribute('data-swiper-index', String(index));
-    if (item.url) slide.href = item.url;
+    const slide = h(item.url ? 'a' : 'div', {
+      className: 'swiper-slide',
+      href: item.url || undefined,
+      'data-swiper-index': String(index),
+      role: 'group',
+      'aria-label': `Slide ${index + 1}`,
+    });
 
     if (item.children != null) {
       slide.append(
-        ...normalizeContentNodes(item.children, { swiper: this, item, index })
+        ...getRenderableNodes(item.children, { swiper: this, item, index })
       );
       return slide;
     }
 
     if (item.image) {
-      const img = document.createElement('img');
-      img.className = 'swiper-image';
-      img.alt = item.title || '';
-      img.loading = 'lazy';
+      const img = h('img', {
+        className: 'swiper-image',
+        alt: item.title || '',
+        loading: 'lazy',
+      });
       if (this.props.lazyload) img.dataset.lazy = item.image;
       else img.src = item.image;
       slide.appendChild(img);
     }
 
     if (item.title) {
-      const title = document.createElement('span');
-      title.className = 'swiper-slide-title';
-      title.textContent = item.title;
-      slide.appendChild(title);
+      slide.appendChild(
+        h('span', {
+          className: 'swiper-slide-title',
+          children: item.title,
+        })
+      );
     }
 
     return slide;
   }
 
   onInit() {
+    this.dom.wrapper.setAttribute('aria-live', 'polite');
     this.updateSize();
 
     if (this.props.loop && this.realCount > 1) {
@@ -292,8 +366,7 @@ class Swiper extends Component {
 
     this.setupStyles();
 
-    this.index = this.props.loop ? 1 : 0;
-    this.transform = -this.state.index * this.state.width;
+    this.setTrackIndex(this.props.loop ? 1 : 0, false);
     this.render(false);
     this.bindEvents();
 
@@ -305,31 +378,33 @@ class Swiper extends Component {
 
   onDestroy() {
     this.pause();
+    this.clearImageCleanups();
     this.cleanup.events.clear();
     this.cleanup.bindings?.();
     this.cleanup.bindings = null;
     this.cleanup.navBindings?.();
     this.cleanup.navBindings = null;
 
-    all('[data-clone]', this.dom.wrapper).forEach((slide) => slide.remove());
+    if (this.dom.wrapper) {
+      all('[data-clone]', this.dom.wrapper).forEach((slide) => slide.remove());
+    }
     if (this.dom.createdPagination) this.dom.pagination?.remove();
     if (this.dom.createdPrevButton) this.dom.prevButton?.remove();
     if (this.dom.createdNextButton) this.dom.nextButton?.remove();
     if (this.dom.createdRoot) this.dom.root?.remove();
-  }
-
-  destroy() {
-    if (this.runtime.destroyed) return;
-    this.onDestroy();
-    super.destroy();
+    this._built = false;
   }
 
   updateSize() {
+    this.assertBuilt('updateSize');
     this.width = this.dom.root.clientWidth || this.dom.root.offsetWidth;
   }
 
   refreshSlides() {
     this.dom.slides = all('.swiper-slide', this.dom.wrapper);
+    this.runtime.realCount = this.dom.slides.filter(
+      (slide) => !slide.hasAttribute('data-clone')
+    ).length;
   }
 
   initLoop() {
@@ -338,6 +413,8 @@ class Swiper extends Component {
 
     first.setAttribute('data-clone', '');
     last.setAttribute('data-clone', '');
+    first.removeAttribute('data-swiper-index');
+    last.removeAttribute('data-swiper-index');
 
     this.dom.wrapper.appendChild(first);
     this.dom.wrapper.insertBefore(last, this.dom.slides[0]);
@@ -345,13 +422,77 @@ class Swiper extends Component {
   }
 
   setupStyles() {
-    this.dom.wrapper.style.display = 'flex';
-    this.dom.wrapper.style.willChange = 'transform';
+    this.dom.root.style.setProperty(
+      '--swiper-slide-width',
+      `${this.state.width}px`
+    );
+  }
 
-    this.dom.slides.forEach((slide) => {
-      slide.style.flexShrink = '0';
-      slide.style.width = `${this.state.width}px`;
+  reInitView() {
+    this.pause();
+    this.clearImageCleanups();
+    this.cleanup.bindings?.();
+    this.cleanup.bindings = null;
+    this.cleanup.navBindings?.();
+    this.cleanup.navBindings = null;
+    this.cleanup.events.clear();
+
+    all('[data-clone]', this.dom.wrapper).forEach((slide) => slide.remove());
+
+    this.refreshSlides();
+
+    if (this.props.loop && this.realCount > 1) {
+      this.initLoop();
+    }
+
+    this.updateSize();
+    this.setupStyles();
+    this.setTrackIndex(this.trackIndexForRealIndex(this.state.index), false);
+    this.render(false);
+    this.bindEvents();
+
+    if (this.props.pagination) this.initPagination();
+    else this.clearPagination();
+
+    if (this.props.navigation) this.initNavigation();
+    else this.clearNavigation();
+
+    if (this.props.lazyload) this.loadImages();
+    if (this.props.autoplay) this.play();
+  }
+
+  clearPagination() {
+    this.cleanup.bindings?.();
+    this.cleanup.bindings = null;
+    this.dom.bullets.forEach((_, index) => {
+      this.cleanup.events.off(`bullet:${index}:click`);
+      this.cleanup.events.off(`bullet:${index}:keydown`);
     });
+    this.dom.bullets = [];
+    if (this.dom.createdPagination) {
+      this.dom.pagination?.remove();
+      this.dom.pagination = null;
+      this.dom.createdPagination = false;
+    } else if (this.dom.pagination) {
+      this.dom.pagination.textContent = '';
+    }
+  }
+
+  clearNavigation() {
+    this.cleanup.navBindings?.();
+    this.cleanup.navBindings = null;
+    this.cleanup.events.off('nav:prev');
+    this.cleanup.events.off('nav:next');
+    if (this.dom.createdPrevButton) {
+      this.dom.prevButton?.remove();
+      this.dom.prevButton = null;
+      this.dom.createdPrevButton = false;
+    }
+    if (this.dom.createdNextButton) {
+      this.dom.nextButton?.remove();
+      this.dom.nextButton = null;
+      this.dom.createdNextButton = false;
+    }
   }
 
   bindEvents() {
@@ -411,6 +552,10 @@ class Swiper extends Component {
         if (event.buttons === 1) this.onMove(event, event);
       }
     );
+    this.cleanup.events.on('window:mousemove', window, 'mousemove', (event) => {
+      if (this.runtime.touching && event.buttons === 1)
+        this.onMove(event, event);
+    });
     this.cleanup.events.on('mouseup', this.dom.wrapper, 'mouseup', (event) => {
       this.dom.wrapper.style.cursor = 'grab';
       this.pushLog(event);
@@ -427,9 +572,7 @@ class Swiper extends Component {
       this.dom.wrapper,
       'mouseleave',
       () => {
-        if (!this.runtime.touching) return;
         this.dom.wrapper.style.cursor = 'grab';
-        this.onEnd();
       }
     );
     this.cleanup.events.on(
@@ -454,7 +597,10 @@ class Swiper extends Component {
       'transitionend',
       this.dom.wrapper,
       'transitionend',
-      () => this.onTransitionEnd()
+      (event) => this.onTransitionEnd(event)
+    );
+    this.cleanup.events.on('window:resize', window, 'resize', () =>
+      this.update(null, { force: true })
     );
     this.cleanup.events.on('root:mouseenter', this.dom.root, 'mouseenter', () =>
       this.pause()
@@ -512,7 +658,8 @@ class Swiper extends Component {
     if (this.runtime.swiping) {
       event.preventDefault();
       this.transform =
-        -this.state.index * this.state.width + offset.x * this.props.touchRatio;
+        -this.state.trackIndex * this.state.width +
+        offset.x * this.props.touchRatio;
       this.render(false);
     }
   }
@@ -530,13 +677,13 @@ class Swiper extends Component {
     const duration = this.getDuration();
     const offset = this.getOffset();
     const ox = offset.x;
-    let target = this.state.index;
+    let target = this.state.trackIndex;
 
     if (duration > this.props.longSwipesMs) {
       const steps = Math.ceil(
         Math.abs(ox) / this.state.width - this.props.longSwipesRatio
       );
-      if (steps > 0) target = this.state.index + steps * (ox > 0 ? -1 : 1);
+      if (steps > 0) target = this.state.trackIndex + steps * (ox > 0 ? -1 : 1);
     } else {
       const distance = Math.abs(ox) / this.state.width;
       const slides =
@@ -544,17 +691,22 @@ class Swiper extends Component {
           ? Math.max(1, Math.ceil(distance - this.props.longSwipesRatio))
           : 0;
       if (slides > 0)
-        target = ox > 0 ? this.state.index - slides : this.state.index + slides;
+        target =
+          ox > 0
+            ? this.state.trackIndex - slides
+            : this.state.trackIndex + slides;
     }
 
-    this.slideTo(target);
+    this.slideToTrack(target);
     this.runtime.logs = [];
     this.resume();
   }
 
   resetDrag(animate = true) {
     const target =
-      this.state.index === 0 ? 0 : -this.state.index * this.state.width;
+      this.state.trackIndex === 0
+        ? 0
+        : -this.state.trackIndex * this.state.width;
     const shouldAnimate = animate && this.state.transform !== target;
 
     this.runtime.touching = false;
@@ -567,17 +719,21 @@ class Swiper extends Component {
     this.resume();
   }
 
-  onTransitionEnd() {
+  onTransitionEnd(event) {
+    if (
+      event &&
+      (event.target !== this.dom.wrapper || event.propertyName !== 'transform')
+    )
+      return;
+
     this.animating = false;
 
     if (this.props.loop) {
-      if (this.state.index === 0) {
-        this.index = this.realCount;
-        this.transform = -this.state.index * this.state.width;
+      if (this.state.trackIndex === 0) {
+        this.setTrackIndex(this.realCount, false);
         this.render(false);
-      } else if (this.state.index === this.dom.slides.length - 1) {
-        this.index = 1;
-        this.transform = -this.state.index * this.state.width;
+      } else if (this.state.trackIndex === this.dom.slides.length - 1) {
+        this.setTrackIndex(1, false);
         this.render(false);
       }
     }
@@ -607,15 +763,38 @@ class Swiper extends Component {
     return { x: last.x - first.x, y: last.y - first.y };
   }
 
-  toRealIndex(index = this.state.index) {
+  toRealIndex(index = this.state.trackIndex) {
+    if (!this.realCount) return 0;
     if (!this.props.loop) return index;
     if (index === 0) return this.realCount - 1;
     if (index === this.dom.slides.length - 1) return 0;
     return index - 1;
   }
 
-  slideTo(idx) {
+  trackIndexForRealIndex(index) {
+    if (!this.realCount) return 0;
+    const target = Math.max(0, Math.min(index, this.realCount - 1));
+    return this.props.loop && this.realCount > 1 ? target + 1 : target;
+  }
+
+  setTrackIndex(trackIndex, animate = true) {
+    const target = normalizeNumber(trackIndex);
+    this.setState({
+      trackIndex: target,
+      index: this.toRealIndex(target),
+      transform: -target * this.state.width,
+    });
+    if (animate != null) this.render(animate);
+  }
+
+  slideTo(index) {
+    return this.slideToTrack(this.trackIndexForRealIndex(index));
+  }
+
+  slideToTrack(idx) {
+    this.assertBuilt('slideToTrack');
     if (this.state.animating) return;
+    if (this.dom.slides.length === 0) return;
 
     let target = idx;
 
@@ -627,24 +806,25 @@ class Swiper extends Component {
       target = Math.max(0, Math.min(idx, this.dom.slides.length - 1));
     }
 
-    this.index = target;
-    this.transform = -target * this.state.width;
-    this.render(true);
+    this.setTrackIndex(target, true);
 
     if (this.props.lazyload) this.loadImages();
   }
 
   next() {
+    this.assertBuilt('next');
     if (this.state.animating) return;
-    this.slideTo(this.state.index + 1);
+    this.slideToTrack(this.state.trackIndex + 1);
   }
 
   prev() {
+    this.assertBuilt('prev');
     if (this.state.animating) return;
-    this.slideTo(this.state.index - 1);
+    this.slideToTrack(this.state.trackIndex - 1);
   }
 
   render(animate) {
+    this.assertBuilt('render');
     if (animate) {
       this.dom.wrapper.style.transition = `transform ${this.props.speed}ms cubic-bezier(0.25, 0.46, 0.45, 0.94)`;
       this.animating = true;
@@ -657,10 +837,11 @@ class Swiper extends Component {
   }
 
   loadImages() {
-    const indices = [this.state.index];
-    if (this.state.index > 0) indices.push(this.state.index - 1);
-    if (this.state.index < this.dom.slides.length - 1)
-      indices.push(this.state.index + 1);
+    this.assertBuilt('loadImages');
+    const indices = [this.state.trackIndex];
+    if (this.state.trackIndex > 0) indices.push(this.state.trackIndex - 1);
+    if (this.state.trackIndex < this.dom.slides.length - 1)
+      indices.push(this.state.trackIndex + 1);
 
     indices.forEach((index) => {
       const slide = this.dom.slides[index];
@@ -671,22 +852,35 @@ class Swiper extends Component {
 
       img.classList.add('loading');
       img.src = img.dataset.lazy;
+      const cleanup = () => {
+        img.onload = null;
+        img.onerror = null;
+        this.runtime.imageCleanups.delete(cleanup);
+      };
+      this.runtime.imageCleanups.add(cleanup);
       img.onload = () => {
         img.classList.remove('loading');
         img.classList.add('loaded');
+        cleanup();
       };
       img.onerror = () => {
         img.classList.remove('loading');
         img.classList.add('error');
+        cleanup();
       };
     });
   }
 
+  clearImageCleanups() {
+    this.runtime.imageCleanups?.forEach((cleanup) => cleanup());
+    this.runtime.imageCleanups?.clear();
+  }
+
   initPagination() {
     if (!this.dom.pagination) {
-      this.dom.pagination = document.createElement('div');
-      this.dom.pagination.className =
-        'swiper-pagination is-horizontal is-clickable is-bullet';
+      this.dom.pagination = h('div', {
+        className: 'swiper-pagination is-horizontal is-clickable is-bullet',
+      });
       this.dom.root.appendChild(this.dom.pagination);
       this.dom.createdPagination = true;
     } else {
@@ -701,13 +895,13 @@ class Swiper extends Component {
     this.dom.bullets = [];
 
     for (let index = 0; index < this.realCount; index++) {
-      const bullet = document.createElement('span');
-      bullet.className = 'swiper-pagination-indicator swiper-pagination-bullet';
-      bullet.setAttribute('role', 'button');
-      bullet.setAttribute('tabindex', '0');
-      bullet.setAttribute('aria-label', `Go to slide ${index + 1}`);
+      const bullet = h('button', {
+        type: 'button',
+        className: 'swiper-pagination-indicator swiper-pagination-bullet',
+        'aria-label': `Go to slide ${index + 1}`,
+      });
       this.cleanup.events.on(`bullet:${index}:click`, bullet, 'click', () => {
-        this.slideTo(this.props.loop ? index + 1 : index);
+        this.slideTo(index);
       });
       this.cleanup.events.on(
         `bullet:${index}:keydown`,
@@ -716,7 +910,7 @@ class Swiper extends Component {
         (event) => {
           if (event.key !== 'Enter' && event.key !== ' ') return;
           event.preventDefault();
-          this.slideTo(this.props.loop ? index + 1 : index);
+          this.slideTo(index);
         }
       );
       this.dom.bullets.push(bullet);
@@ -725,9 +919,9 @@ class Swiper extends Component {
 
     this.cleanup.bindings = createRoot((dispose) => {
       this.dom.bullets.forEach((bullet, i) => {
-        bindClass(bullet, 'is-active', () => this.toRealIndex() === i);
+        bindClass(bullet, 'is-active', () => this.state.index === i);
         bindAttr(bullet, 'aria-current', () =>
-          String(this.toRealIndex() === i)
+          this.state.index === i ? 'true' : null
         );
       });
       return dispose;
@@ -750,18 +944,18 @@ class Swiper extends Component {
         bindClass(
           this.dom.prevButton,
           'is-disabled',
-          () => this.state.index <= 0
+          () => this.state.trackIndex <= 0
         );
         bindAttr(this.dom.prevButton, 'disabled', () =>
-          this.state.index <= 0 ? '' : null
+          this.state.trackIndex <= 0 ? '' : null
         );
         bindClass(
           this.dom.nextButton,
           'is-disabled',
-          () => this.state.index >= this.dom.slides.length - 1
+          () => this.state.trackIndex >= this.dom.slides.length - 1
         );
         bindAttr(this.dom.nextButton, 'disabled', () =>
-          this.state.index >= this.dom.slides.length - 1 ? '' : null
+          this.state.trackIndex >= this.dom.slides.length - 1 ? '' : null
         );
         return dispose;
       });
@@ -775,9 +969,7 @@ class Swiper extends Component {
     let button = q(`.swiper-navigation.is-${direction}`, this.dom.root);
 
     if (!button) {
-      button = document.createElement('button');
-      button.type = 'button';
-      button.className = className;
+      button = h('button', { type: 'button', className });
       this.dom.root.appendChild(button);
       this.dom[key] = true;
     } else if (!button.matches('button')) {
@@ -799,8 +991,11 @@ class Swiper extends Component {
   }
 
   play() {
-    if (this.runtime.timer) return;
-    this.runtime.timer = setInterval(() => this.next(), this.props.delay);
+    this.assertBuilt('play');
+    if (this.runtime.destroyed || this.runtime.timer) return;
+    if (this.realCount <= 1) return;
+    const delay = Math.max(this.props.delay, AUTOPLAY_DELAY_FLOOR);
+    this.runtime.timer = setInterval(() => this.next(), delay);
   }
 
   pause() {
@@ -810,7 +1005,108 @@ class Swiper extends Component {
   }
 
   resume() {
+    if (this.runtime.destroyed) return;
     if (this.props.autoplay && !this.runtime.timer) this.play();
+  }
+
+  restartAutoplay() {
+    this.pause();
+    if (this.props.autoplay) this.play();
+  }
+
+  update(propsPatch = {}, { force = false } = {}) {
+    if (this.runtime.destroyed)
+      throw new Error('Component.update: instance destroyed');
+    this.assertBuilt('update');
+
+    const patch =
+      propsPatch && typeof propsPatch === 'object' && !Array.isArray(propsPatch)
+        ? propsPatch
+        : {};
+    const nextProps = resolveProps(
+      Object.assign({}, this.props, patch),
+      SWIPER_OPTIONS_SCHEMA,
+      'Swiper.options'
+    );
+    const normalizedPatch = {};
+
+    Object.keys(patch).forEach((key) => {
+      normalizedPatch[key] = nextProps[key];
+    });
+
+    this.props = nextProps;
+    this.emit('beforeUpdate', normalizedPatch, { force });
+    this.onUpdate(normalizedPatch, { force });
+    this.emit('afterUpdate', normalizedPatch, { force });
+    return this;
+  }
+
+  onUpdate(propsPatch = {}) {
+    if (
+      propsPatch &&
+      Object.prototype.hasOwnProperty.call(propsPatch, 'data')
+    ) {
+      this.updateData(propsPatch.data);
+      return;
+    }
+
+    const needsReInit = ['loop', 'pagination', 'navigation', 'lazyload'].some(
+      (key) => Object.prototype.hasOwnProperty.call(propsPatch, key)
+    );
+
+    if (needsReInit) {
+      this.reInitView();
+      return;
+    }
+
+    this.updateSize();
+    this.setupStyles();
+    this.setTrackIndex(this.trackIndexForRealIndex(this.state.index), false);
+
+    if (
+      Object.prototype.hasOwnProperty.call(propsPatch, 'autoplay') ||
+      Object.prototype.hasOwnProperty.call(propsPatch, 'delay')
+    ) {
+      this.restartAutoplay();
+    } else if (this.props.autoplay) this.resume();
+    else this.pause();
+  }
+
+  updateData(data = this.props.data) {
+    if (this.runtime.destroyed)
+      throw new Error('Swiper.updateData: instance destroyed');
+    this.assertBuilt('updateData');
+
+    validateParam('data', data, SWIPER_OPTIONS_SCHEMA.data, 'Swiper.options');
+    if (!Array.isArray(data)) {
+      this.props.data = data;
+      this.reInitView();
+      return this;
+    }
+
+    this.props.data = data;
+    const realIndex = this.state.index;
+
+    this.pause();
+    this.clearImageCleanups();
+    this.cleanup.bindings?.();
+    this.cleanup.bindings = null;
+    this.cleanup.navBindings?.();
+    this.cleanup.navBindings = null;
+    this.cleanup.events.clear();
+
+    const items = this.normalizeData(data);
+    this.dom.wrapper.textContent = '';
+    items.forEach((item, index) => {
+      this.dom.wrapper.appendChild(this.createDataSlide(item, index));
+    });
+    this.refreshSlides();
+    this.runtime.realCount = this.dom.slides.length;
+    this.setState({
+      index: Math.min(realIndex, Math.max(0, this.realCount - 1)),
+    });
+    this.reInitView();
+    return this;
   }
 }
 

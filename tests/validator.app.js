@@ -1,7 +1,7 @@
 import { createDeepStore, flushSync, jsx, Show, render } from 'vanilla-signal';
 
 import { Validator, Toast } from '../dist/index.js?v=1';
-import { equal, hasClass, truthy, dateTime } from './helpers.js';
+import { equal, hasClass, truthy, textOf, dateTime } from './helpers.js';
 
 // ========== 手动测试 UI ==========
 
@@ -243,7 +243,7 @@ function validateInvalidCase(runner, name, formValues, fieldName, message) {
     ...formValues,
   };
   const fields = [
-    { tag: 'input', name: 'email', type: 'text', value: data.email },
+    { tag: 'input', name: 'email', type: 'email', value: data.email },
     { tag: 'input', name: 'password', type: 'password', value: data.password },
     {
       tag: 'input',
@@ -302,8 +302,11 @@ function validateInvalidCase(runner, name, formValues, fieldName, message) {
       hasClass(form.elements[fieldName], 'is-invalid'),
       `${fieldName} invalid`
     );
+    const help = form.elements[fieldName]
+      .closest('.form-control')
+      ?.querySelector('.help-block');
+    equal(textOf(help), message, `${name} help text`);
   }
-  equal(validator.message, message, `${name} message`);
   validator.destroy();
   form.remove();
 }
@@ -404,7 +407,11 @@ export function validatorApp(runner) {
       messages: { agree: { checked: 'Terms must be accepted' } },
     });
     equal(validator.validate(), false, 'checked validate false');
-    equal(validator.message, 'Terms must be accepted', 'checked message');
+    equal(
+      textOf(form.querySelector('.help-block')),
+      'Terms must be accepted',
+      'checked help text'
+    );
     validator.destroy();
     form.remove();
   });
@@ -413,7 +420,7 @@ export function validatorApp(runner) {
     const form = document.createElement('form');
     form.noValidate = true;
     const fields = [
-      { tag: 'input', name: 'email', type: 'text', value: 'a@test.com' },
+      { tag: 'input', name: 'email', type: 'email', value: 'a@test.com' },
       {
         tag: 'select',
         name: 'plan',
@@ -508,7 +515,25 @@ export function validatorApp(runner) {
     form.remove();
   });
 
+  runner.add('JSX 表单入口', '验证 jsx 返回节点可作为 element', () => {
+    const form = jsx('form', {
+      children: jsx('div', {
+        className: 'form-control',
+        children: jsx('input', {
+          className: 'j-input',
+          name: 'email',
+          type: 'text',
+        }),
+      }),
+    });
+    document.body.appendChild(form);
 
+    const validator = new Validator(form, VALIDATOR_RULES);
+
+    truthy(validator.root === form, 'jsx form resolved');
+    validator.destroy();
+    form.remove();
+  });
 
   runner.log('Validator 组件测试已加载。');
 }
