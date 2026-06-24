@@ -1082,6 +1082,10 @@ class Swiper extends Component {
     if (this.runtime.destroyed)
       throw new Error('Swiper.updateData: instance destroyed');
     this.assertBuilt('updateData');
+    if (!this.dom.createdRoot)
+      throw new Error(
+        'Swiper.updateData: not supported on DOM-bound instances.'
+      );
 
     validateParam('data', data, SWIPER_OPTIONS_SCHEMA.data, 'Swiper.options');
     if (!Array.isArray(data)) {
