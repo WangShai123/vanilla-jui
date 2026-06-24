@@ -83,11 +83,12 @@ const SWIPER_DATA_ITEM_RULE = {
       (value.url == null || typeof value.url === 'string') &&
       (value.title == null || typeof value.title === 'string') &&
       (value.sort == null || typeof value.sort === 'number') &&
+      (value.blank == null || typeof value.blank === 'boolean') &&
       (value.children == null || isRenderableContent(value.children))
     );
   },
   message:
-    'expects items with optional image, url, title, sort and children fields.',
+    'expects items with optional image, url, title, sort, blank and children fields.',
 };
 
 function isInteractiveTarget(target) {
@@ -306,7 +307,11 @@ class Swiper extends Component {
       );
     });
 
-    const items = data.map((item, index) => ({ ...item, index }));
+    const items = data.map((item, index) => ({
+      ...item,
+      blank: item.blank !== false,
+      index,
+    }));
     if (!items.some((item) => item.sort != null)) return items;
 
     return items.sort((a, b) => {
@@ -321,6 +326,7 @@ class Swiper extends Component {
     const slide = h(item.url ? 'a' : 'div', {
       className: 'swiper-slide',
       href: item.url || undefined,
+      target: item.url ? (item.blank ? '_blank' : '_self') : undefined,
       'data-swiper-index': String(index),
       role: 'group',
       'aria-label': `Slide ${index + 1}`,

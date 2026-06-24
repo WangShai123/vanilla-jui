@@ -32,7 +32,7 @@ const swiper = new Swiper(document.querySelector('.banner-container'), {
 ```js
 const swiper = new Swiper(document.querySelector('.banner'), {
   data: [
-    { image: '/img/a.jpg', url: '/page-a', title: 'A', sort: 1 },
+    { image: '/img/a.jpg', url: '/page-a', title: 'A', blank: true, sort: 1 },
     { image: '/img/b.jpg', title: 'B' },
   ],
 }).build();
@@ -113,7 +113,13 @@ const swiper = new Swiper(document.querySelector('.banner'), {
   <div class="j-swiper">
     <div class="swiper-wrapper" aria-live="polite">
       <a href="/page-a" class="swiper-slide" role="group" aria-label="Slide 1">
-        <img class="swiper-image" loading="lazy" alt="A" src="/img/a.jpg" />
+        <img
+          class="swiper-image"
+          loading="lazy"
+          alt="A"
+          src="/img/a.jpg"
+          target="_blank"
+        />
         <span class="swiper-slide-title">A</span>
       </a>
       <div class="swiper-slide" role="group" aria-label="Slide 2">
@@ -122,6 +128,7 @@ const swiper = new Swiper(document.querySelector('.banner'), {
           loading="lazy"
           alt="B"
           data-lazy="/img/b.jpg"
+          target="_self"
         />
         <span class="swiper-slide-title">B</span>
       </div>
@@ -155,6 +162,7 @@ const swiper = new Swiper(document.querySelector('.banner'), {
 | ---------- | ------------------------- | ---------------------------------------------------------------------------------------- |
 | `image`    | `string`                  | 生成 `<img class="swiper-image">`，`alt` 取 `title`                                      |
 | `url`      | `string`                  | slide 使用 `<a href="url">` 而非 `<div>`                                                 |
+| `blank`    | `boolean`                 | 是否在新窗口打开链接，`true` 为 `_blank`，`false` 为 `_self`                             |
 | `title`    | `string`                  | 生成 `<span class="swiper-slide-title">`                                                 |
 | `sort`     | `number`                  | 排序值；全部未设置时按数组自然顺序                                                       |
 | `children` | `string \| Node \| Array` | 自定义内容，优先级高于 `image` 和 `title`。渲染回调收到 `{ swiper, item, index }` 上下文 |
