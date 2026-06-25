@@ -1,6 +1,6 @@
 import { createDeepStore, flushSync, jsx, Show, render } from 'vanilla-signal';
 
-import { Tabs } from '../dist/index.js?v=2';
+import { Tabs } from '../dist/index.js?v=4';
 import { equal, hasClass, textOf, truthy, dateTime } from './helpers.js';
 
 const tabsConfig = () => [
@@ -119,7 +119,7 @@ function syncState() {
   flushSync(() => {
     ui.created = !!demoTabs;
     ui.multiple = demoTabs ? demoTabs.props.tabs.length > 1 : false;
-    ui.disabled = demoTabs ? demoTabs.state.disabledNames.length > 0 : false;
+    ui.disabled = demoTabs ? demoTabs.state.disabled.names.length > 0 : false;
   });
 }
 
@@ -164,15 +164,15 @@ function bindEvents(runner) {
 
     if (id === 'btn-switch' && demoTabs) {
       const next =
-        (demoTabs.state.activeIndex + 1) % demoTabs.props.tabs.length;
+        (demoTabs.state.current.index + 1) % demoTabs.props.tabs.length;
       demoTabs.activate(next);
       runner.log(`${dateTime()} 已切换到 ${demoTabs.props.tabs[next].title}`);
     }
 
     if (id === 'btn-disable' && demoTabs) {
-      const idx = demoTabs.state.activeIndex;
+      const idx = demoTabs.state.current.index;
       const name = demoTabs.props.tabs[idx]?.name;
-      if (name && !demoTabs.state.disabledNames.includes(name)) {
+      if (name && !demoTabs.state.disabled.names.includes(name)) {
         demoTabs.disable(name);
         runner.log(`${dateTime()} 已禁用 ${demoTabs.props.tabs[idx].title}`);
         syncState();
@@ -183,9 +183,9 @@ function bindEvents(runner) {
     if (
       id === 'btn-enable' &&
       demoTabs &&
-      demoTabs.state.disabledNames.length > 0
+      demoTabs.state.disabled.names.length > 0
     ) {
-      const name = demoTabs.state.disabledNames[0];
+      const name = demoTabs.state.disabled.names[0];
       const tab = demoTabs.props.tabs.find((t) => t.name === name);
       demoTabs.enable(name);
       runner.log(`${dateTime()} 已启用 ${tab?.title || name}`);
@@ -244,8 +244,9 @@ export function tabsApp(runner) {
 
     equal(tabs.dom.tabs.length, 3, 'tabs length');
     equal(tabs.dom.panels.length, 3, 'panels length');
-    equal(tabs.state.activeIndex, 1, 'current index');
-    equal(textOf(tabs.dom.panels[0]), 'No 1 Panel', 'html content');
+    equal(tabs.state.current.index, 1, 'current index');
+    equal(tabs.state.current.name, 'two', 'current name');
+    equal(textOf(tabs.dom.panels[1]), 'No 2 Panel', 'html content');
 
     const root = tabs.root;
     tabs.destroy();
@@ -262,9 +263,11 @@ export function tabsApp(runner) {
     tabs.root.dataset.test = 'switch';
 
     await tabs.activate('three');
-    equal(tabs.state.activeIndex, 2, 'active by name');
+    equal(tabs.state.current.index, 2, 'active by name');
+    equal(tabs.state.current.name, 'three', 'active name');
     tabs.dom.tabs[1].click();
-    equal(tabs.state.activeIndex, 1, 'click switch');
+    equal(tabs.state.current.index, 1, 'click switch');
+    equal(tabs.state.current.name, 'two', 'click switch name');
     truthy(hasClass(tabs.dom.tabs[1], 'is-active'), 'second tab active');
 
     tabs.destroy();
@@ -280,12 +283,14 @@ export function tabsApp(runner) {
     tabs.root.dataset.test = 'disabled';
 
     tabs.dom.tabs[1].click();
-    equal(tabs.state.activeIndex, 0, 'disabled tab should not activate');
+    equal(tabs.state.current.index, 0, 'disabled tab should not activate');
     tabs.enable('two');
     tabs.dom.tabs[1].click();
-    equal(tabs.state.activeIndex, 1, 'enabled tab can activate');
+    equal(tabs.state.current.index, 1, 'enabled tab can activate');
     tabs.disable('three');
     truthy(hasClass(tabs.dom.tabs[2], 'is-disabled'), 'third tab disabled');
+    equal(tabs.state.disabled.names[0], 'three', 'disabled names');
+    equal(tabs.state.disabled.indexes[0], 2, 'disabled indexes');
 
     tabs.destroy();
   });

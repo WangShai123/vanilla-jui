@@ -291,7 +291,11 @@ export function parabolaApp(runner) {
       new Parabola({ from: '#nonexistent', to: '#also-missing' });
     } catch (e) {
       threw = true;
-      truthy(e.message.includes('element not found'), 'error message correct');
+      console.warn(e.message);
+      truthy(
+        e.message.includes('Parabola.from: expects a valid Element.'),
+        'error message correct'
+      );
     }
     truthy(threw, 'should throw');
   });

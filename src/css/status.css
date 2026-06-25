@@ -8,18 +8,13 @@
  * - drag status
  */
 @layer status {
+
   /* sad mode */
   .is-sad {
     filter: grayscale(100%);
   }
 
-  /* disabled */
-  [disabled],
-  :disabled,
-  .is-disabled {
-    cursor: not-allowed;
-    user-select: none;
-  }
+
 
   /* readonly */
   [readonly] {
@@ -31,22 +26,31 @@
   [data-action] {
     cursor: pointer;
   }
-  
+
   /* shape status */
   .is-circle {
     border-radius: var(--circle);
   }
+
   .is-round {
     border-radius: var(--round);
   }
-  
+
   /* drag status */
   .dragging {
     cursor: move;
     cursor: grab;
   }
+
   .dragging:active {
     cursor: grabbing;
   }
 
+  /* disabled */
+  [disabled],
+  :disabled,
+  .is-disabled {
+    cursor: not-allowed;
+    user-select: none;
+  }
 }

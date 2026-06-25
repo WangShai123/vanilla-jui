@@ -34,46 +34,45 @@ export function isNode(value) {
  * @returns {boolean}
  */
 export function isElement(value) {
-  return typeof Element !== 'undefined' && value instanceof Element;
-}
-
-function nodeFromArray(value) {
-  const nodes = value.flatMap((item) => normalizeContentNodes(item));
-  return nodes.find(isElement) || nodes.find(isNode) || null;
-}
-
-/**
- * 解析并验证容器元素
- * @param {Element|Node|string|Array|false|null|undefined} container - CSS 选择器、DOM/JSX 节点或节点数组
- * @param {string} namespace - 组件名称，用于错误提示
- * @returns {Element} 有效的 DOM 元素
- * @throws {Error} 当容器无效时抛出错误
- */
-export const resolveContainer = (container, namespace = 'Component') => {
-  return resolveElement(container, `${namespace}.container`);
-};
-
-/**
- * 判断是否为组件可渲染内容。
- * @param {*} value 需要判断的值。
- * @returns {boolean}
- */
-export function isRenderableContent(value) {
   return (
-    value == null ||
-    typeof value === 'string' ||
-    typeof value === 'number' ||
-    typeof value === 'boolean' ||
-    typeof value === 'function' ||
-    Array.isArray(value) ||
-    isNode(value)
+    canUseDOM() && typeof Element !== 'undefined' && value instanceof Element
   );
 }
 
-function parseContentString(value) {
-  const template = document.createElement('template');
-  template.innerHTML = value;
-  return Array.from(template.content.childNodes);
+/**
+ * 判断值是否为可接受的容器输入。
+ * @param {*} value 需要判断的值。
+ * @returns {boolean}
+ */
+function isContainerLike(value) {
+  return (
+    typeof value === 'string' ||
+    isElement(value) ||
+    isNode(value) ||
+    Array.isArray(value)
+  );
+}
+
+function firstElement(nodes) {
+  return nodes.find(isElement) || null;
+}
+
+function flattenNodeArray(value, out = []) {
+  for (const item of value) {
+    if (Array.isArray(item)) {
+      if (!flattenNodeArray(item, out)) return null;
+      continue;
+    }
+
+    if (isNode(item)) {
+      out.push(item);
+      continue;
+    }
+
+    return null;
+  }
+
+  return out;
 }
 
 /**
@@ -96,10 +95,154 @@ export function normalizeContentNodes(content, context) {
   if (isNode(value)) return [value];
 
   if (typeof value === 'string') {
-    return parseContentString(value);
+    const template = document.createElement('template');
+    template.innerHTML = value;
+    return Array.from(template.content.childNodes);
   }
 
   return [document.createTextNode(String(value))];
+}
+
+/**
+ * 将 DOM 引用解析为节点列表。
+ *
+ * @param {Element|Node|string|Array|false|null|undefined} ref 元素引用、选择器、节点或空值。
+ * @param {string} [namespace='Component'] 错误命名空间。
+ * @returns {Node[]|null}
+ */
+export function resolveNodeList(ref, _namespace = 'Component') {
+  if (ref === false || ref == null) return null;
+
+  if (typeof ref === 'string') {
+    if (!canUseDOM()) return null;
+    const nodes = Array.from(document.querySelectorAll(ref));
+    return nodes.length > 0 ? nodes : null;
+  }
+
+  if (Array.isArray(ref)) {
+    const nodes = flattenNodeArray(ref, []);
+    return nodes && nodes.length > 0 ? nodes : null;
+  }
+
+  if (isNode(ref)) return [ref];
+
+  return null;
+}
+
+/**
+ * 将 DOM 引用解析为节点。
+ *
+ * @param {Element|Node|string|Array|false|null|undefined} ref 元素引用、选择器、节点或空值。
+ * @param {string} [namespace='Component'] 错误命名空间。
+ * @returns {Node|null}
+ */
+export function resolveNode(ref, namespace = 'Component') {
+  if (isElement(ref) || isNode(ref)) return ref;
+
+  if (typeof ref === 'string') {
+    if (!canUseDOM()) return null;
+    return document.querySelector(ref);
+  }
+
+  if (Array.isArray(ref)) {
+    const nodes = resolveNodeList(ref, namespace) || [];
+    return nodes[0] || null;
+  }
+
+  return null;
+}
+
+/**
+ * 将 DOM 引用解析为元素。
+ *
+ * @param {Element|Node|string|Array|false|null|undefined} ref 元素引用、选择器、节点或空值。
+ * @param {string} [namespace='Component'] 错误命名空间。
+ * @returns {Element|null}
+ */
+export function resolveElement(ref, namespace = 'Component') {
+  if (!isContainerLike(ref) || ref === false || ref == null) return null;
+
+  if (typeof ref === 'string') {
+    if (!canUseDOM()) return null;
+    const element = document.querySelector(ref);
+    return isElement(element) ? element : null;
+  }
+
+  if (Array.isArray(ref)) {
+    const nodes = resolveNodeList(ref, namespace);
+    return Array.isArray(nodes) ? firstElement(nodes) : null;
+  }
+
+  return isElement(ref) ? ref : null;
+}
+
+/**
+ * 统一解析容器引用。
+ *
+ * @param {Element|Node|string|Array|false|null|undefined} container 容器引用、选择器、节点或数组。
+ * @param {string} [namespace='Component'] 错误命名空间。
+ * @param {'node'|'element'|'array'} [expect='element'] 期望返回类型。
+ * @returns {Node|Element|Node[]|null}
+ */
+export function resolveContainer(
+  container,
+  namespace = 'Component',
+  expect = 'element'
+) {
+  if (!['node', 'element', 'array'].includes(expect)) {
+    throw new Error(
+      `${namespace}: expect must be one of 'node', 'element', 'array'.`
+    );
+  }
+
+  if (!isContainerLike(container)) return null;
+
+  if (expect === 'array') {
+    return resolveNodeList(container, namespace);
+  }
+
+  if (expect === 'node') {
+    return resolveNode(container, namespace);
+  }
+
+  return resolveElement(container, namespace);
+}
+
+/**
+ * 强制解析容器并要求返回值存在。
+ *
+ * @param {Element|Node|string|Array|false|null|undefined} container 容器引用、选择器、节点或数组。
+ * @param {string} [namespace='Component'] 错误命名空间。
+ * @param {'node'|'element'|'array'} [expect='element'] 期望返回类型。
+ * @returns {Node|Element|Node[]}
+ */
+export function requireContainer(
+  container,
+  namespace = 'Component',
+  expect = 'element'
+) {
+  const resolved = resolveContainer(container, namespace, expect);
+  if (resolved == null) {
+    throw new Error(`${namespace}: container not found.`);
+  }
+  return resolved;
+}
+
+/**
+ * 判断是否为组件可渲染内容。
+ * @param {*} value 需要判断的值。
+ * @returns {boolean}
+ */
+export function isRenderableContent(value) {
+  return (
+    value == null ||
+    typeof value === 'string' ||
+    typeof value === 'number' ||
+    typeof value === 'boolean' ||
+    typeof value === 'function' ||
+    Array.isArray(value) ||
+    isNode(value)
+  );
 }
 
 /**
@@ -125,32 +268,4 @@ export function q(selector, context = document) {
  */
 export function all(selector, context = document) {
   return Array.from(context.querySelectorAll(selector));
-}
-
-/**
- * 将 DOM 引用解析为节点。
- * @param {Element|Node|string|Array|false|null|undefined} ref 元素引用、选择器、JSX/h 返回值或空值。
- * @param {string} [namespace="getEl"] 错误命名空间。
- * @returns {Node|null}
- */
-export function getEl(ref, namespace = 'getEl') {
-  if (isElement(ref) || isNode(ref)) return ref;
-  if (typeof ref === 'string') return q(ref);
-  if (Array.isArray(ref)) return nodeFromArray(ref);
-  if (ref === false || ref == null) return null;
-  throw new Error(`${namespace}: expects Element, Node, selector or JSX node.`);
-}
-
-/**
- * 将 DOM 引用解析为元素。
- * @param {Element|Node|string|Array|false|null|undefined} ref 元素引用、选择器、JSX/h 返回值或空值。
- * @param {string} [namespace="resolveElement"] 错误命名空间。
- * @returns {Element}
- */
-export function resolveElement(ref, namespace = 'resolveElement') {
-  const element = getEl(ref, namespace);
-  if (!isElement(element)) {
-    throw new Error(`${namespace}: expects a valid Element.`);
-  }
-  return element;
 }

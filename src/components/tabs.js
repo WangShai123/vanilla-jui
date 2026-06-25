@@ -15,7 +15,7 @@ import {
   isRenderableContent,
   normalizeContentNodes,
   q,
-  resolveContainer,
+  requireContainer,
 } from '../utilities/dom.js';
 
 const TABS_PROPS_SCHEMA = {
@@ -63,7 +63,7 @@ function cloneTabItems(tabs) {
  */
 class Tabs extends Component {
   /**
-   * @param {HTMLElement|string} container 挂载容器（元素或 CSS 选择器）。
+   * @param {Element|Node|string|Array} container 挂载容器（元素、选择器或 JSX/h 返回节点）。
    * @param {object} [input={}] 标签页配置。
    */
   constructor(container, input = {}) {
@@ -71,16 +71,19 @@ class Tabs extends Component {
       throw new Error('Tabs: DOM render environment is required.');
     }
 
-    const el = resolveContainer(container, 'Tabs');
+    const el = requireContainer(container, 'Tabs');
 
     const props = resolveProps(input, TABS_PROPS_SCHEMA, 'Tabs');
     super(props);
 
-    this.container = el;
+    this.dom.container = el;
 
     this.state = createDeepStore({
-      activeIndex: -1,
-      disabledNames: this._parseDisabled(props.disabled),
+      current: {
+        index: -1,
+        name: null,
+      },
+      disabled: this._parseDisabled(props.disabled),
       isVertical: props.direction === 'left' || props.direction === 'right',
       draggable: false,
     });
@@ -155,7 +158,7 @@ class Tabs extends Component {
         })
       );
       tabFragment.append(tab);
-      panelFragment.append(panelItem);
+      panelFragment.append(this.dom.panels[this.dom.panels.length - 1]);
     });
 
     tabList.append(tabFragment);
@@ -165,35 +168,79 @@ class Tabs extends Component {
     this.cleanup.bindings = createRoot((dispose) => {
       this.dom.tabs.forEach((tab, index) => {
         const name = tab.dataset.tab;
-        bindClass(tab, 'is-active', () => this.state.activeIndex === index);
+        bindClass(tab, 'is-active', () => this.state.current.index === index);
         bindClass(tab, 'is-disabled', () =>
-          this.state.disabledNames.includes(name)
+          this.state.disabled.names.includes(name)
         );
-        bindAttr(tab, 'aria-selected', () => this.state.activeIndex === index);
+        bindAttr(
+          tab,
+          'aria-selected',
+          () => this.state.current.index === index
+        );
         bindAttr(tab, 'aria-disabled', () =>
-          this.state.disabledNames.includes(name)
+          this.state.disabled.names.includes(name)
         );
       });
       this.dom.panels.forEach((panel, index) => {
-        bindClass(panel, 'is-active', () => this.state.activeIndex === index);
-        bindAttr(panel, 'aria-hidden', () => this.state.activeIndex !== index);
+        bindClass(panel, 'is-active', () => this.state.current.index === index);
+        bindAttr(
+          panel,
+          'aria-hidden',
+          () => this.state.current.index !== index
+        );
       });
       return dispose;
     });
   }
 
   _parseDisabled(disabled) {
-    if (disabled == null) return [];
+    if (disabled == null) {
+      return {
+        names: [],
+        indexes: [],
+      };
+    }
     const toName = (val) => {
       if (typeof val === 'number') return this.props.tabs[val]?.name || null;
       if (typeof val === 'string') return val;
       return null;
     };
-    if (Array.isArray(disabled)) {
-      return disabled.map(toName).filter(Boolean);
-    }
-    const name = toName(disabled);
-    return name ? [name] : [];
+    const names = Array.isArray(disabled)
+      ? disabled.map(toName).filter(Boolean)
+      : (() => {
+          const name = toName(disabled);
+          return name ? [name] : [];
+        })();
+
+    return this._createDisabledState(names);
+  }
+
+  _createDisabledState(names) {
+    const uniqNames = Array.from(new Set(names));
+    return {
+      names: uniqNames,
+      indexes: uniqNames
+        .map((name) => this.props.tabs.findIndex((tab) => tab.name === name))
+        .filter((index) => index >= 0),
+    };
+  }
+
+  _syncCurrent(index) {
+    this.state.current = {
+      index,
+      name:
+        index >= 0 && index < this.dom.tabs.length
+          ? this.dom.tabs[index]?.dataset.tab || null
+          : null,
+    };
+  }
+
+  get activeIndex() {
+    return this.state.current.index;
+  }
+
+  get disabledNames() {
+    return this.state.disabled.names;
   }
 
   bindEvents() {
@@ -206,7 +253,7 @@ class Tabs extends Component {
       const tab = e.target.closest('.tab-item');
       if (!tab) return;
       const name = tab.dataset.tab;
-      if (name && !this.state.disabledNames.includes(name)) {
+      if (name && !this.state.disabled.names.includes(name)) {
         void this.activate(name);
       }
     });
@@ -235,14 +282,14 @@ class Tabs extends Component {
     if (
       index < 0 ||
       index >= this.dom.tabs.length ||
-      this.state.disabledNames.includes(this.dom.tabs[index]?.dataset.tab) ||
-      this.state.activeIndex === index
+      this.state.disabled.names.includes(this.dom.tabs[index]?.dataset.tab) ||
+      this.state.current.index === index
     ) {
       return;
     }
 
     flushSync(() => {
-      this.state.activeIndex = index;
+      this._syncCurrent(index);
     });
 
     if (fireEvent && this.props.onChange) {
@@ -268,7 +315,7 @@ class Tabs extends Component {
    */
   render() {
     this.assertActive('render');
-    insert(this.container, () => this.root);
+    insert(this.dom.container, () => this.root);
   }
 
   /**
@@ -313,13 +360,13 @@ class Tabs extends Component {
 
     this.props.tabs = this.props.tabs.filter((_, i) => i !== index);
 
-    if (this.state.activeIndex >= this.props.tabs.length) {
+    if (this.state.current.index >= this.props.tabs.length) {
       flushSync(() => {
-        this.state.activeIndex = this.props.tabs.length - 1;
+        this._syncCurrent(this.props.tabs.length - 1);
       });
-    } else if (this.state.activeIndex > index) {
+    } else if (this.state.current.index > index) {
       flushSync(() => {
-        this.state.activeIndex = this.state.activeIndex - 1;
+        this._syncCurrent(this.state.current.index - 1);
       });
     }
 
@@ -341,9 +388,12 @@ class Tabs extends Component {
     this.assertActive('disable');
     const name =
       typeof val === 'number' ? this.dom.tabs[val]?.dataset.tab : val;
-    if (name && !this.state.disabledNames.includes(name)) {
+    if (name && !this.state.disabled.names.includes(name)) {
       flushSync(() => {
-        this.state.disabledNames = [...this.state.disabledNames, name];
+        this.state.disabled = this._createDisabledState([
+          ...this.state.disabled.names,
+          name,
+        ]);
       });
     }
   }
@@ -358,8 +408,8 @@ class Tabs extends Component {
       typeof val === 'number' ? this.dom.tabs[val]?.dataset.tab : val;
     if (name) {
       flushSync(() => {
-        this.state.disabledNames = this.state.disabledNames.filter(
-          (n) => n !== name
+        this.state.disabled = this._createDisabledState(
+          this.state.disabled.names.filter((n) => n !== name)
         );
       });
     }
@@ -376,7 +426,7 @@ class Tabs extends Component {
 
   syncActiveNames(index) {
     flushSync(() => {
-      this.state.activeIndex = index;
+      this._syncCurrent(index);
     });
   }
 
@@ -389,7 +439,7 @@ class Tabs extends Component {
     Object.assign(this.props, resolveProps(patch, TABS_PROPS_SCHEMA, 'Tabs'));
 
     flushSync(() => {
-      this.state.disabledNames = this._parseDisabled(this.props.disabled);
+      this.state.disabled = this._parseDisabled(this.props.disabled);
     });
 
     this.rebuildItems();
@@ -566,5 +616,7 @@ class Tabs extends Component {
     }
   }
 }
-
 export default Tabs;
+export function createTabs(container, input = {}) {
+  return new Tabs(container, input);
+}

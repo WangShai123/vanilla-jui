@@ -15,7 +15,7 @@ import {
   isRenderableContent,
   normalizeContentNodes,
   q,
-  resolveContainer,
+  requireContainer,
 } from '../utilities/dom.js';
 import { icon } from './icons.js';
 
@@ -129,7 +129,7 @@ function resolveSwiperRoot(container) {
 class Swiper extends Component {
   /**
    * 创建轮播实例。
-   * @param {HTMLElement|string} container 挂载容器或选择器。
+   * @param {Element|Node|string|Array} container 挂载容器、选择器或 JSX/h 返回节点。
    * @param {object} [options={}] Swiper 配置。
    */
   constructor(container, options = {}) {
@@ -141,7 +141,7 @@ class Swiper extends Component {
 
     super(resolvedOptions);
 
-    this._container = container;
+    this.dom.container = container;
     this._built = false;
 
     this.dom.mountTarget = null;
@@ -191,7 +191,7 @@ class Swiper extends Component {
     }
 
     const hasData = Array.isArray(this.props.data);
-    const root = resolveContainer(this._container, 'Swiper');
+    const root = requireContainer(this.dom.container, 'Swiper');
 
     let mountRoot = null;
     let mountTarget = null;

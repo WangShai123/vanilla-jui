@@ -14,7 +14,7 @@ import {
   canRenderDOM,
   isRenderableContent,
   normalizeContentNodes,
-  resolveContainer,
+  requireContainer,
 } from '../utilities/dom.js';
 import { icon } from './icons.js';
 
@@ -94,7 +94,7 @@ function normalizeItems(items) {
  */
 class Accordion extends Component {
   /**
-   * @param {HTMLElement|string} container 挂载容器（元素或 CSS 选择器）。
+   * @param {Element|Node|string|Array} container 挂载容器（元素、选择器或 JSX/h 返回节点）。
    * @param {object} [input={}] 手风琴配置。
    */
   constructor(container, input = {}) {
@@ -102,12 +102,12 @@ class Accordion extends Component {
       throw new Error('Accordion: DOM render environment is required.');
     }
 
-    const el = resolveContainer(container, 'Accordion');
+    const el = requireContainer(container, 'Accordion');
 
     const props = resolveProps(input, ACCORDION_PROPS_SCHEMA, 'Accordion');
     super(props);
 
-    this.container = el;
+    this.dom.container = el;
     this.dom.headers = [];
     this.dom.panels = [];
 
@@ -333,7 +333,7 @@ class Accordion extends Component {
    */
   render() {
     this.assertActive('render');
-    insert(this.container, () => this.root);
+    insert(this.dom.container, () => this.root);
   }
 
   /**
