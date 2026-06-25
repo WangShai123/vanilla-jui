@@ -91,11 +91,14 @@ class Validator {
   _init(element) {
     this.root = resolveElement(element, 'Validator.element');
 
-    this.valid = true;
+    this.runtime = {
+      valid: true,
+      message: '',
+      destroyed: false,
+    };
     this.cleanup = {
       events: createEventManager(),
     };
-    this._destroyed = false;
   }
 
   /**
@@ -108,7 +111,7 @@ class Validator {
 
     this.cleanup.events.on('submit', this.root, 'submit', (e) => {
       e.preventDefault();
-      this.validate();
+      this.runtime.validate();
     });
     this.cleanup.events.on('reset', this.root, 'reset', () => {
       this.reset();
@@ -129,19 +132,19 @@ class Validator {
    * @returns {boolean} 表单是否通过校验。
    */
   validate() {
-    this.valid = true;
-
+    this.runtime.valid = true;
+    this.runtime.message = '';
     for (const element of this.root.elements) {
       const nameAttr = element.name;
       if (this.options.rules[nameAttr]) {
-        this.valid = this._validateRule(element, nameAttr);
-        if (!this.valid) break;
+        this.runtime.valid = this._validateRule(element, nameAttr);
+        if (!this.runtime.valid) break;
       }
     }
-    if (this.valid && this.options.onSubmit) {
+    if (this.runtime.valid && this.options.onSubmit) {
       this.options.onSubmit();
     }
-    return this.valid;
+    return this.runtime.valid;
   }
 
   /**
@@ -163,101 +166,101 @@ class Validator {
       element.hasAttribute('max') ||
       element.hasAttribute('step')
     ) {
-      return this.valid;
+      return this.runtime.valid;
     }
     // 如果没有，则使用下面规则进行验证
     for (const rule in rules) {
       switch (rule) {
         // 验证项1：必填
         case 'required':
-          this.valid = this._validateRequired(element, rules[rule]);
+          this.runtime.valid = this._validateRequired(element, rules[rule]);
           break;
         // 验证项2：最短长度
         case 'minLength':
-          this.valid = this._validateMinLength(element, rules[rule]);
+          this.runtime.valid = this._validateMinLength(element, rules[rule]);
           break;
         // 验证项3：最长长度
         case 'maxLength':
-          this.valid = this._validateMaxLength(element, rules[rule]);
+          this.runtime.valid = this._validateMaxLength(element, rules[rule]);
           break;
         // 验证项4：密码是否一致
         case 'equalTo':
-          this.valid = this._validateEqualTo(element, rules[rule]);
+          this.runtime.valid = this._validateEqualTo(element, rules[rule]);
           break;
         // 验证项5：邮箱合法性
         case 'email':
-          this.valid = this._validateEmail(element);
+          this.runtime.valid = this._validateEmail(element);
           break;
         // 验证项6：复选框是否选中
         case 'checked':
-          this.valid = this._validateCheck(element, rules[rule]);
+          this.runtime.valid = this._validateCheck(element, rules[rule]);
           break;
         // 验证项7：下拉选择框是否已选择非空值
         case 'selected':
-          this.valid = this._validateSelected(element, rules[rule]);
+          this.runtime.valid = this._validateSelected(element, rules[rule]);
           break;
         // 验证项7b：多选下拉框是否至少选择了一项
         case 'multiple':
-          this.valid = this._validateMultiple(element, rules[rule]);
+          this.runtime.valid = this._validateMultiple(element, rules[rule]);
           break;
         // 验证项7c：多选下拉框最少选择项数
         case 'min':
-          this.valid = this._validateSelectMin(element, rules[rule]);
+          this.runtime.valid = this._validateSelectMin(element, rules[rule]);
           break;
         // 验证项7d：多选下拉框最多选择项数
         case 'max':
-          this.valid = this._validateSelectMax(element, rules[rule]);
+          this.runtime.valid = this._validateSelectMax(element, rules[rule]);
           break;
         /**
          * 验证项8：是否包含空格
          * @since 1.0.0
          */
         case 'noSpace':
-          this.valid = this._validateNoSpace(element, rules[rule]);
+          this.runtime.valid = this._validateNoSpace(element, rules[rule]);
           break;
         /**
          * 验证项9: 不支持中文
          * @since 1.0.0
          */
         case 'noChinese':
-          this.valid = !/[\u4e00-\u9fa5]/.test(element.value);
+          this.runtime.valid = !/[\u4e00-\u9fa5]/.test(element.value);
           break;
         /**
          * 验证项10: 不支持特殊字符
          * @since 1.0.0
          */
         case 'noSpecial':
-          this.valid = !/[@#$%^&*]+/g.test(element.value);
+          this.runtime.valid = !/[@#$%^&*]+/g.test(element.value);
           break;
         /**
          * 验证项11: 自定义正则表达式
          * @since 1.0.0
          */
         case 'pattern':
-          this.valid = new RegExp(rules[rule]).test(element.value);
+          this.runtime.valid = new RegExp(rules[rule]).test(element.value);
           break;
         // 验证项12：文件必选
         case 'file':
-          this.valid = this._validateFile(element, rules[rule]);
+          this.runtime.valid = this._validateFile(element, rules[rule]);
           break;
         // 验证项13：文件最小大小
         case 'minSize':
-          this.valid = this._validateMinSize(element, rules[rule]);
+          this.runtime.valid = this._validateMinSize(element, rules[rule]);
           break;
         // 验证项14：文件最大大小
         case 'maxSize':
-          this.valid = this._validateMaxSize(element, rules[rule]);
+          this.runtime.valid = this._validateMaxSize(element, rules[rule]);
           break;
         // 验证项16：文件类型
         case 'accept':
-          this.valid = this._validateAccept(element, rules[rule]);
+          this.runtime.valid = this._validateAccept(element, rules[rule]);
           break;
         // 验证项17：自定义验证函数
         case 'validate':
-          this.valid = this._validateCustom(element, rules[rule]);
+          this.runtime.valid = this._validateCustom(element, rules[rule]);
           break;
       }
-      if (!this.valid) {
+      if (!this.runtime.valid) {
         /**
          * messages配置规则，保持与rules配置规则一致
          * @since 1.0.0
@@ -268,7 +271,7 @@ class Validator {
         this._success(element);
       }
     }
-    return this.valid;
+    return this.runtime.valid;
   }
 
   /**
@@ -510,6 +513,9 @@ class Validator {
     const error =
       this.options.messages[nameAttr] && this.options.messages[nameAttr][rule];
     if (error) {
+      // 记录上一次报错信息
+      this.runtime.message = error;
+
       const formControl = element.closest('.form-control');
       let help = formControl ? q('.help-block', formControl) : null;
       if (!help) {
@@ -554,7 +560,8 @@ class Validator {
     for (const help of helpBlocks) {
       help.remove();
     }
-    this.valid = true;
+    this.runtime.valid = true;
+    this.runtime.message = '';
   }
 
   /**
@@ -562,14 +569,15 @@ class Validator {
    * @returns {void}
    */
   destroy() {
-    if (this._destroyed) return;
-    this._destroyed = true;
+    if (this.runtime.destroyed) return;
+    this.runtime.destroyed = true;
 
     this._unbindEvents();
     this.reset();
     this.root = null;
     this.options = null;
-    this.valid = null;
+    this.runtime.valid = null;
+    this.runtime.message = null;
     this.cleanup?.events.clear();
     this.cleanup = null;
   }

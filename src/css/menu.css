@@ -36,7 +36,7 @@
     line-height: var(--line-height);
     text-decoration: underline;
     text-decoration-style: wavy;
-    text-decoration-color: var(--danger);
+    text-decoration-color: var(--state-danger);
     text-underline-offset: 4px;
     position: relative;
     cursor: help;
@@ -87,7 +87,7 @@
     border-width: var(--border-width, 1px);
     border-style: var(--border-style, solid);
     border-color: var(--button-border-color, transparent);
-    border-radius: var(--button-border-radius, var(--border-radius));
+    border-radius: var(--button-border-radius, var(--radius));
   }
 
   /* submenu */
@@ -96,12 +96,12 @@
     position: absolute;
     transform: translateY(1px);
     padding: calc(var(--space) * 2) 0;
-    background-color: var(--surface-sm);
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius);
+    background-color: var(--ui-surface-subtle);
+    border: 1px solid var(--ui-border);
+    border-radius: var(--radius);
     min-width: 120px;
     max-width: 240px;
-    box-shadow: var(--box-shadow-sm);
+    box-shadow: var(--shadow-sm);
   }
   .j-menu .menu .menu-item .sub-menu .menu-item a {
     justify-content: flex-start;
@@ -115,37 +115,37 @@
     z-index: var(--z-index-submenu);
   }
   .j-menu .menu .menu-item .sub-menu .menu-item:hover a {
-    background-color: var(--primary);
-    color: var(--primary-foreground);
-    outline: 1px solid var(--primary);
+    background-color: var(--tone-solid);
+    color: var(--tone-fg);
+    outline: 1px solid var(--tone-solid);
   }
 
   /* menu status */
   .j-menu .menu .menu-item a:hover,
   .j-menu .menu .menu-item.menu-item-has-children:hover > a {
     text-decoration: none;
-    background-color: var(--secondary);
-    color: var(--secondary-foreground);
+    background-color: var(--tone-soft);
+    color: var(--tone-text);
   }
   .j-menu .menu > .menu-item.current-menu-item > a {
-    color: var(--primary);
+    color: var(--tone-solid);
   }
   .j-menu .menu .menu-item.current-menu-item > .sub-menu > .menu-item:not(.current-menu-item) a {
     color: inherit;
   }
   .j-menu .menu-item.current-menu-item > .sub-menu > .menu-item:not(.current-menu-item):hover a {
-    color: var(--primary-foreground);
+    color: var(--tone-fg);
   }
   .j-menu .menu-item.menu-item-has-children:hover > .sub-menu > .menu-item.current-menu-item a {
-    color: var(--primary-foreground);
-    background-color: var(--primary);
-    outline: 1px solid var(--primary);
+    color: var(--tone-fg);
+    background-color: var(--tone-solid);
+    outline: 1px solid var(--tone-solid);
   }
 
   /* error status */
   .j-menu .menu .menu-item:not(:has(a)):hover,
   .j-mobile-menu .menu .menu-item:not(:has(a)):hover {
-    background-color: var(--ruby-a2);
+    background-color: var(--state-danger-subtle);
     border-radius: var(--space);
   }
   .j-menu .menu .menu-item:not(:has(a)):hover::after,
@@ -154,8 +154,8 @@
     position: absolute;
     top: 0;
     right: 0;
-    background-color: var(--danger);
-    color: var(--danger-foreground);
+    background-color: var(--state-danger);
+    color: var(--state-danger-fg);
     font-size: var(--font-size-sm);
     padding: 0 var(--space);
     border-radius: var(--space);
@@ -313,7 +313,7 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
     user-select: none;
-    background-color: var(--background);
+    background-color: var(--ui-bg);
   }
   .j-mobile-menu::-webkit-scrollbar {
     display: none;
@@ -343,7 +343,7 @@
     height: var(--button-height, var(--el-height-lg));
     text-decoration: underline;
     text-decoration-style: wavy;
-    text-decoration-color: var(--danger);
+    text-decoration-color: var(--state-danger);
     text-underline-offset: 4px;
     position: relative;
     cursor: help;
@@ -400,14 +400,14 @@
       visibility 0.3s ease-in-out;
 
     max-width: 100%;
-    background-color: var(--background);
+    background-color: var(--ui-bg);
     z-index: -1;
   }
 
   .j-mobile-menu > .menu > .menu-item:hover > a,
   .j-mobile-menu > .menu > .menu-item.menu-item-has-children .sub-menu > .menu-item:hover > a {
-    background-color: var(--primary);
-    color: var(--primary-foreground);
+    background-color: var(--tone-solid);
+    color: var(--tone-fg);
     text-decoration: none;
   }
   .j-mobile-menu .menu .menu-item.menu-item-has-children.is-active > .sub-menu {
@@ -441,14 +441,14 @@
     justify-content: space-between;
     align-items: center;
     gap: 1px;
-    border-top: var(--border-sm);
+    border-top: 1px solid var(--ui-border-subtle);
     background: linear-gradient(
       to bottom,
-      var(--surface-sm) 10%,
-      var(--gray-3) 30%,
-      var(--gray-5) 50%,
-      var(--gray-3) 70%,
-      var(--surface-sm) 90%
+      var(--ui-surface-subtle) 10%,
+      var(--ui-bg-muted) 30%,
+      var(--ui-surface-muted) 50%,
+      var(--ui-bg-muted) 70%,
+      var(--ui-surface-subtle) 90%
     );
     font-size: var(--font-size);
   }
@@ -457,7 +457,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: var(--surface-sm);
+    background-color: var(--ui-surface-subtle);
   }
   .j-bottom-menu .menu .menu-item > a {
     width: 100%;
@@ -468,7 +468,7 @@
     justify-content: center;
     align-items: center;
     gap: calc(var(--space) * 1);
-    color: var(--foreground);
+    color: var(--ui-fg);
     padding: calc(var(--space) * 1.5);
   }
   .j-bottom-menu .menu .menu-item:has(a) a .el-icon,
@@ -489,20 +489,20 @@
   .j-bottom-menu .menu .menu-item.current-menu-parent > a,
   .j-bottom-menu .menu .menu-item.current-menu-item > a,
   .j-bottom-menu .menu .menu-item.menu-item-has-children.is-active > a {
-    color: var(--primary);
+    color: var(--tone-solid);
   }
   .j-bottom-menu .menu .menu-item.menu-item-has-children > .sub-menu {
     opacity: 0;
     visibility: hidden;
     background: linear-gradient(
       to right,
-      var(--surface-sm) 10%,
-      var(--gray-3) 30%,
-      var(--gray-5) 50%,
-      var(--gray-3) 70%,
-      var(--surface-sm) 90%
+      var(--ui-surface-subtle) 10%,
+      var(--ui-bg-muted) 30%,
+      var(--ui-surface-muted) 50%,
+      var(--ui-bg-muted) 70%,
+      var(--ui-surface-subtle) 90%
     );
-    border: var(--border-sm);
+    border: 1px solid var(--ui-border-subtle);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -523,7 +523,7 @@
     visibility: visible;
   }
   .j-bottom-menu .menu .menu-item.menu-item-has-children > .sub-menu > .menu-item {
-    background-color: var(--surface-sm);
+    background-color: var(--ui-surface-subtle);
     white-space: normal;
   }
   .j-bottom-menu .menu .menu-item.menu-item-has-children > .sub-menu > .menu-item > a {
@@ -536,7 +536,7 @@
     max-width: 200px;
     padding: calc(var(--space) * 2);
     font-size: var(--font-size);
-    background-color: var(--surface-sm);
+    background-color: var(--ui-surface-subtle);
   }
   .drop-menu ul,
   .drop-menu ol,
@@ -553,16 +553,16 @@
     width: 100%;
     padding: calc(var(--space) * 1) calc(var(--space) * 2);
     text-decoration: none;
-    color: var(--gray-a11);
-    border-radius: var(--border-radius);
+    color: var(--ui-fg-muted);
+    border-radius: var(--radius);
     user-select: none;
   }
   .drop-menu .menu-item a .menu-text {
     flex-grow: 1;
   }
   .drop-menu .menu-item a:hover {
-    background-color: var(--primary);
-    color: var(--primary-foreground);
+    background-color: var(--tone-solid);
+    color: var(--tone-fg);
   }
   .drop-menu .el-icon,
   .drop-menu svg {
@@ -571,7 +571,7 @@
   }
   .drop-menu .menu-item.menu-heading {
     padding: var(--menu-item-heading, calc(var(--space) * 1) calc(var(--space) * 2));
-    color: var(--gray-10);
+    color: var(--ui-fg-soft);
     font-size: var(--font-size-sm);
   }
 }

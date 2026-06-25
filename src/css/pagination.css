@@ -4,7 +4,7 @@
   }
   .j-pagination a {
     text-decoration: none;
-    color: var(--pagination-link-color, var(--foreground));
+    color: var(--pagination-link-color, var(--ui-fg));
   }
   .pagination {
     list-style: none;

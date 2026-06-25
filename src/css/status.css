@@ -29,11 +29,11 @@
 
   /* shape status */
   .is-circle {
-    border-radius: var(--circle);
+    border-radius: 50%;
   }
 
   .is-round {
-    border-radius: var(--round);
+    border-radius: 0.5rem;
   }
 
   /* drag status */

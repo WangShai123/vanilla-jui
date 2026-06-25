@@ -35,8 +35,8 @@
 
     font-feature-settings: normal;
     font-variation-settings: normal;
-    color: var(--foreground);
-    background-color: var(--background);
+    color: var(--ui-fg);
+    background-color: var(--ui-bg);
   }
 
   html.light,
@@ -124,8 +124,8 @@
     left: 0;
     /* z-index: -1; */
     background-image:
-      linear-gradient(to right, var(--gray-a3) 1px, transparent 1px),
-      linear-gradient(to bottom, var(--gray-a3) 1px, transparent 1px);
+      linear-gradient(to right, var(--ui-surface-subtle) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--ui-surface-subtle) 1px, transparent 1px);
     background-size: 24px 36px;
     mask-image: radial-gradient(ellipse 70% 20% at 50% 0%, #000 60%, transparent 300%);
     pointer-events: none;
@@ -134,8 +134,8 @@
 
   .dark .j-background-grid {
     background-image:
-      linear-gradient(to right, var(--gray-a2) 1px, transparent 1px),
-      linear-gradient(to bottom, var(--gray-a2) 1px, transparent 1px);
+      linear-gradient(to right, var(--ui-surface-hover) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--ui-surface-hover) 1px, transparent 1px);
   }
 
   /* ==============================

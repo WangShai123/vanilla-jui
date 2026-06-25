@@ -15,8 +15,8 @@
     border-width: var(--button-border-width, 1px);
     border-style: var(--button-border-style, solid);
     border-color: var(--button-border-color, transparent);
-    border-radius: var(--button-border-radius, var(--border-radius));
-    box-shadow: var(--button-box-shadow, var(--box-shadow-sm));
+    border-radius: var(--button-border-radius, var(--radius));
+    box-shadow: var(--button-box-shadow, var(--shadow-sm));
     appearance: button;
     user-select: none;
     touch-action: manipulation;
@@ -51,31 +51,31 @@
 
   /* variant */
   .j-button.is-default {
-    --button-background: var(--background);
-    --button-border-color: var(--border-color);
-    color: var(--foreground);
+    --button-background: var(--ui-bg);
+    --button-border-color: var(--ui-border);
+    color: var(--ui-fg);
   }
 
   .j-button.is-contrast {
-    --button-background: var(--foreground);
-    color: var(--background);
+    --button-background: var(--ui-fg);
+    color: var(--ui-bg);
   }
 
   .j-button.is-primary {
-    --button-background: var(--primary);
-    color: var(--primary-foreground);
+    --button-background: var(--tone-solid);
+    color: var(--tone-fg);
   }
 
   .j-button.is-secondary {
     --button-border-color: transparent;
-    --button-background: var(--secondary);
-    color: var(--secondary-foreground);
+    --button-background: var(--tone-soft);
+    color: var(--tone-text);
   }
 
   .j-button.is-outline {
     --button-background: transparent;
-    --button-border-color: var(--primary);
-    color: var(--primary);
+    --button-border-color: var(--tone-solid);
+    color: var(--tone-solid);
   }
 
   .j-button.is-ghost {
@@ -96,44 +96,45 @@
   }
 
   .j-button.is-danger {
-    --button-background: var(--danger);
-    color: var(--danger-foreground);
+    --button-background: var(--state-danger);
+    color: var(--state-danger-fg);
   }
 
   .j-button.is-warning {
-    --button-background: var(--warning);
-    color: var(--warning-foreground);
+    --button-background: var(--state-warning);
+    color: var(--state-warning-fg);
   }
 
   .j-button.is-success {
-    --button-background: var(--success);
-    color: var(--success-foreground);
+    --button-background: var(--state-success);
+    color: var(--state-success-fg);
   }
 
   .j-button.is-error {
-    --button-background: var(--red-3);
-    color: var(--red-a11);
+    --button-background: var(--state-danger-subtle);
+    color: var(--state-danger-text);
   }
 
   .j-button[class*='is-surface-'] {
-    --button-border-color: var(--border-color);
-    color: var(--foreground);
+    --button-border-color: var(--ui-border);
+    color: var(--ui-fg);
   }
 
   .j-button.is-surface-sm {
-    --button-background: var(--surface-sm);
+    --button-background: var(--ui-surface-subtle);
   }
 
   .j-button.is-surface-md {
-    --button-background: var(--surface-md);
+    --button-background: var(--ui-surface-muted);
   }
 
   .j-button.is-surface-lg {
-    --button-background: var(--surface-lg);
+    --button-background: var(--ui-surface-active);
   }
 
   /* group */
   .j-button-group {
+    --button-padding: 0 calc(var(--space) * 2);
     display: flex;
     margin: 0;
   }
@@ -175,11 +176,11 @@
   }
 
   .j-button-group.is-vertical .j-button:first-child {
-    border-top-right-radius: var(--border-radius);
+    border-top-right-radius: var(--radius);
   }
 
   .j-button-group.is-vertical .j-button:last-child {
-    border-bottom-left-radius: var(--border-radius);
+    border-bottom-left-radius: var(--radius);
   }
 
   /* disabled */
@@ -198,82 +199,82 @@
 
   .j-button:not(:disabled).is-active,
   .j-button:not(:disabled):focus-visible {
-    outline: 2px solid var(--button-ring, var(--primary));
+    outline: 2px solid var(--button-ring, var(--tone-solid));
     outline-offset: 1px;
     border-color: transparent;
   }
 
   .j-button.is-default:hover:not(:disabled) {
-    background-color: var(--gray-a2);
+    background-color: var(--ui-surface-hover);
   }
 
   .j-button.is-outline:hover:not(:disabled),
   .j-button.is-ghost:hover:not(:disabled) {
-    background-color: var(--accent);
+    background-color: var(--tone-subtle);
   }
 
   .j-button.is-text:not(:disabled):active,
   .j-button.is-text:not(:disabled):focus-visible,
   .j-button.is-text:not(:disabled).is-active {
     outline: none;
-    color: var(--primary);
+    color: var(--tone-solid);
     text-decoration: underline;
     text-underline-offset: var(--space);
   }
 
   .j-button.is-contrast:not(:disabled):active,
   .j-button.is-contrast:not(:disabled):focus-visible {
-    --button-ring: var(--foreground);
+    --button-ring: var(--ui-fg);
   }
 
   .j-button.is-success:not(:disabled):active,
   .j-button.is-success:not(:disabled):focus-visible {
-    --button-ring: var(--success);
+    --button-ring: var(--state-success);
   }
 
   .j-button.is-warning:not(:disabled):active,
   .j-button.is-warning:not(:disabled):focus-visible {
-    --button-ring: var(--warning);
+    --button-ring: var(--state-warning);
   }
 
   .j-button.is-danger:not(:disabled):active,
   .j-button.is-danger:not(:disabled):focus-visible {
-    --button-ring: var(--danger);
+    --button-ring: var(--state-danger);
   }
 
   .j-button.is-error:not(:disabled):active,
   .j-button.is-error:not(:disabled):focus-visible {
-    --button-ring: var(--red-3);
+    --button-ring: var(--state-danger-subtle);
   }
 
   .j-button.is-surface-sm:not(:disabled):active,
   .j-button.is-surface-sm:not(:disabled):focus-visible {
-    --button-ring: var(--gray-a4);
+    --button-ring: var(--ui-surface-hover);
   }
 
   .j-button.is-surface-md:not(:disabled):active,
   .j-button.is-surface-md:not(:disabled):focus-visible {
-    --button-ring: var(--gray-a6);
+    --button-ring: var(--ui-border);
   }
 
   .j-button.is-surface-lg:not(:disabled):active,
   .j-button.is-surface-lg:not(:disabled):focus-visible {
-    --button-ring: var(--gray-a8);
+    --button-ring: var(--ui-border-strong);
   }
 
   .j-button-group .j-button:active,
   .j-button-group .j-button:focus-visible {
     outline: none;
     --button-border-color: transparent;
-    --button-box-shadow: 0 0 0 2px var(--primary);
+    --button-box-shadow: 0 0 0 2px var(--tone-solid);
     z-index: 1;
   }
 
   .j-button-group .j-button.is-primary:not(:disabled):active,
   .j-button-group .j-button.is-primary:not(:disabled):focus-visible {
-    outline: 2px solid var(--button-ring, var(--primary));
+    outline: 2px solid var(--button-ring, var(--tone-solid));
     outline-offset: 1px;
     --button-border-color: transparent;
-    --button-box-shadow: var(--box-shadow-sm);
+    --button-box-shadow: var(--shadow-sm);
   }
 }

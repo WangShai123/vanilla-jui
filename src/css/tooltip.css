@@ -6,7 +6,7 @@
     border-width: var(--tooltip-border-width, 1px);
     border-style: var(--tooltip-border-style, solid);
     border-color: var(--tooltip-border-color, #111);
-    border-radius: var(--tooltip-radius, var(--border-radius));
+    border-radius: var(--tooltip-radius, var(--radius));
     max-width: var(--tooltip-max-width, 260px);
   }
 

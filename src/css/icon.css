@@ -50,7 +50,7 @@
 		transform: translateY(1px);
 	}
 	.icon-close:focus-within {
-		background-color: var(--accent);
+		background-color: var(--tone-subtle);
 	}
 
 	/* icon element status */

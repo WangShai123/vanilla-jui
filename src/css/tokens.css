@@ -1,0 +1,1195 @@
+/* ============================================
+   Design Tokens - Unified Token System
+   vanilla-jui v2
+   ============================================ */
+
+@layer config {
+
+  /* ============================================
+     1. Layout Tokens
+     ============================================ */
+
+  :root {
+    /* --- Z-Index --- */
+    --z-index-0: 0;
+    --z-index-1: 1;
+    --z-index-badge: 2;
+    --z-index-toolbar-container: 2;
+    --z-index-submenu: 5;
+    --z-index-drop: 9900;
+    --z-index-overlay: 9950;
+    --z-index-offcanvas: 9960;
+    --z-index-popup: 9970;
+    --z-index-toast: 9980;
+
+    /* --- Spacing --- */
+    --space: 0.25rem;
+
+    /* --- Transitions --- */
+    --speed-sm: 0.15s;
+    --speed: 0.25s;
+    --speed-md: 0.25s;
+    --speed-lg: 0.5s;
+    --speed-xl: 0.75s;
+
+    /* --- Typography Scale --- */
+    --text-xs: 0.75rem;
+    --text-sm: 0.875rem;
+    --text: 1rem;
+    --text-md: 1rem;
+    --text-lg: 1.125rem;
+    --text-xl: 1.25rem;
+    --text-2xl: 1.5rem;
+    --text-3xl: 1.875rem;
+    --text-4xl: 2.25rem;
+    --text-5xl: 3rem;
+
+    /* --- Font Weight --- */
+    --font-thin: 100;
+    --font-extraLight: 200;
+    --font-light: 300;
+    --font-normal: 400;
+    --font-medium: 500;
+    --font-semiBold: 600;
+    --font-bold: 700;
+    --font-extraBold: 800;
+    --font-black: 900;
+
+    /* --- Line Height --- */
+    --line-height: 1.5;
+    --line-height-paragraph: 1.5;
+    --line-height-pre: 1.4;
+    --line-height-heading: 1.25;
+    --line-height-self: 1;
+
+    /* --- Breakpoints --- */
+    --screen-sm: 576px;
+    --screen-md: 768px;
+    --screen-lg: 992px;
+    --screen-xl: 1200px;
+
+    /* --- Container Widths --- */
+    --columns-xs: 20rem;
+    --columns-sm: 24rem;
+    --columns: 28rem;
+    --columns-md: 32rem;
+    --columns-lg: 36rem;
+    --columns-xl: 42rem;
+    --columns-2xl: 48rem;
+    --columns-3xl: 56rem;
+    --columns-4xl: 64rem;
+
+    /* --- Border Radius --- */
+    --radius-xs: 0.125rem;
+    --radius-sm: 0.25rem;
+    --radius: 0.375rem;
+    --radius-md: 0.5rem;
+    --radius-lg: 0.75rem;
+    --radius-xl: 1rem;
+    --radius-2xl: 1.5rem;
+    --radius-full: 9999px;
+
+    /* --- Element Heights --- */
+    --el-height-3xs: 1rem;
+    --el-height-2xs: 1.25rem;
+    --el-height-xs: 1.5rem;
+    --el-height-sm: 1.75rem;
+    --el-height: 2rem;
+    --el-height-md: 2rem;
+    --el-height-lg: 2.25rem;
+
+    /* --- Font Sizes --- */
+    --font-size-xs: 0.75rem;
+    --font-size-sm: 0.875rem;
+    --font-size: 1rem;
+    --font-size-md: 1rem;
+    --font-size-lg: 1.125rem;
+    --font-size-xl: 1.25rem;
+    --font-size-2xl: 1.5rem;
+  }
+
+
+  /* ============================================
+     2. Color Tokens - Light Mode
+     ============================================ */
+
+  :root,
+  .light,
+  .light-theme {
+    /* UI Structure */
+    --ui-bg: #ffffff;
+    --ui-bg-subtle: #f9fafb;
+    --ui-bg-muted: #f3f4f6;
+    --ui-surface: #ffffff;
+    --ui-surface-subtle: #f9fafb;
+    --ui-surface-muted: #f3f4f6;
+    --ui-surface-hover: rgba(0, 0, 0, 0.02);
+    --ui-surface-active: rgba(0, 0, 0, 0.04);
+    --ui-surface-raised: #ffffff;
+    --ui-surface-overlay: rgba(255, 255, 255, 0.9);
+    --ui-fg: #111827;
+    --ui-fg-muted: #6b7280;
+    --ui-fg-soft: #9ca3af;
+    --ui-fg-subtle: #d1d5db;
+    --ui-border-subtle: rgba(0, 0, 0, 0.06);
+    --ui-border: rgba(0, 0, 0, 0.1);
+    --ui-border-strong: rgba(0, 0, 0, 0.2);
+    --ui-outline: rgba(0, 0, 0, 0.15);
+    --ui-placeholder: #9ca3af;
+    --ui-disabled-bg: rgba(0, 0, 0, 0.04);
+    --ui-disabled-fg: #9ca3af;
+    --ui-overlay: rgba(0, 0, 0, 0.5);
+    --ui-overlay-muted: rgba(0, 0, 0, 0.25);
+    --ui-popup-background: rgba(255, 255, 255, 0.15);
+    --ui-input-color: #111827;
+    --ui-input-border: rgba(0, 0, 0, 0.15);
+    --ui-input-focus-border: #3b82f6;
+    --ui-input-placeholder: #9ca3af;
+    --ui-input-focus-ring: rgba(59, 130, 246, 0.25);
+    --ui-tooltip-bg: #1f2937;
+    --ui-tooltip-fg: #f9fafb;
+
+    /* --- Fixed Theme Colors (15 themes) --- */
+    --ui-gray: #374151;
+    --ui-olive: #717762;
+    --ui-tomato: #ef4444;
+    --ui-ruby: #f43f5e;
+    --ui-pink: #ec4899;
+    --ui-violet: #8b5cf6;
+    --ui-indigo: #6366f1;
+    --ui-blue: #3b82f6;
+    --ui-teal: #14b8a6;
+    --ui-grass: #22c55e;
+    --ui-mint: #06b6d4;
+    --ui-lime: #84cc16;
+    --ui-yellow: #eab308;
+    --ui-orange: #f97316;
+    --ui-gold: #b45309;
+
+    /* Theme Color (default indigo) */
+    --tone-subtle: rgba(99, 102, 241, 0.05);
+    --tone-soft: rgba(99, 102, 241, 0.08);
+    --tone-muted: rgba(99, 102, 241, 0.12);
+    --tone-wash: rgba(99, 102, 241, 0.03);
+    --tone-border: rgba(99, 102, 241, 0.2);
+    --tone-border-strong: rgba(99, 102, 241, 0.35);
+    --tone-solid: #6366f1;
+    --tone-solid-hover: #4f46e5;
+    --tone-solid-active: #4338ca;
+    --tone-text: #4f46e5;
+    --tone-text-hover: #4338ca;
+    --tone-fg: #ffffff;
+    --tone-ring: rgba(99, 102, 241, 0.4);
+    --tone-highlight: #fef08a;
+    --tone-highlight-fg: #854d0e;
+
+    /* Typography */
+    --tone-heading: #111827;
+    --tone-subtitle: #374151;
+    --tone-body: #4b5563;
+    --tone-caption: #6b7280;
+    --tone-muted: #9ca3af;
+    --tone-disabled: #d1d5db;
+
+    /* Links */
+    --tone-link: #4f46e5;
+    --tone-link-hover: #4338ca;
+    --tone-link-visited: #7c3aed;
+    --tone-link-active: #dc2626;
+    --tone-link-disabled: #9ca3af;
+
+    /* Card */
+    --tone-card: rgba(255, 255, 255, 0.8);
+    --tone-card-hover: rgba(255, 255, 255, 0.9);
+    --tone-card-border: rgba(0, 0, 0, 0.08);
+    --tone-card-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+
+    /* Code */
+    --tone-code-bg: #f3f4f6;
+    --tone-code-fg: #374151;
+
+    /* States */
+    --state-danger: #ef4444;
+    --state-danger-hover: #dc2626;
+    --state-danger-active: #b91c1c;
+    --state-danger-fg: #ffffff;
+    --state-danger-text: #dc2626;
+    --state-danger-subtle: rgba(239, 68, 68, 0.08);
+    --state-danger-soft: rgba(239, 68, 68, 0.12);
+    --state-danger-muted: rgba(239, 68, 68, 0.16);
+    --state-danger-border: rgba(239, 68, 68, 0.25);
+    --state-danger-ring: rgba(239, 68, 68, 0.3);
+
+    --state-success: #22c55e;
+    --state-success-hover: #16a34a;
+    --state-success-active: #15803d;
+    --state-success-fg: #ffffff;
+    --state-success-text: #16a34a;
+    --state-success-subtle: rgba(34, 197, 94, 0.08);
+    --state-success-soft: rgba(34, 197, 94, 0.12);
+    --state-success-muted: rgba(34, 197, 94, 0.16);
+    --state-success-border: rgba(34, 197, 94, 0.25);
+    --state-success-ring: rgba(34, 197, 94, 0.3);
+
+    --state-warning: #f59e0b;
+    --state-warning-hover: #d97706;
+    --state-warning-active: #b45309;
+    --state-warning-fg: #ffffff;
+    --state-warning-text: #d97706;
+    --state-warning-subtle: rgba(245, 158, 11, 0.08);
+    --state-warning-soft: rgba(245, 158, 11, 0.12);
+    --state-warning-muted: rgba(245, 158, 11, 0.16);
+    --state-warning-border: rgba(245, 158, 11, 0.25);
+    --state-warning-ring: rgba(245, 158, 11, 0.3);
+
+    --state-info: #3b82f6;
+    --state-info-hover: #2563eb;
+    --state-info-active: #1d4ed8;
+    --state-info-fg: #ffffff;
+    --state-info-text: #2563eb;
+    --state-info-subtle: rgba(59, 130, 246, 0.08);
+    --state-info-soft: rgba(59, 130, 246, 0.12);
+    --state-info-muted: rgba(59, 130, 246, 0.16);
+    --state-info-border: rgba(59, 130, 246, 0.25);
+    --state-info-ring: rgba(59, 130, 246, 0.3);
+
+    /* Component Aliases */
+    --state-danger-solid: var(--state-danger);
+    --state-danger-surface: var(--state-danger-subtle);
+    --state-success-solid: var(--state-success);
+    --state-success-surface: var(--state-success-subtle);
+    --state-warning-solid: var(--state-warning);
+    --state-warning-surface: var(--state-warning-subtle);
+    --state-info-solid: var(--state-info);
+    --state-info-surface: var(--state-info-subtle);
+  }
+
+
+  /* ============================================
+     3. Color Tokens - Dark Mode
+     ============================================ */
+
+  .dark,
+  .dark-theme {
+    /* UI Structure */
+    --ui-bg: #030712;
+    --ui-bg-subtle: #111827;
+    --ui-bg-muted: #1f2937;
+    --ui-surface: #030712;
+    --ui-surface-subtle: #111827;
+    --ui-surface-muted: #1f2937;
+    --ui-surface-hover: rgba(255, 255, 255, 0.05);
+    --ui-surface-active: rgba(255, 255, 255, 0.08);
+    --ui-surface-raised: #1f2937;
+    --ui-surface-overlay: rgba(17, 24, 39, 0.95);
+    --ui-fg: #f9fafb;
+    --ui-fg-muted: #9ca3af;
+    --ui-fg-soft: #6b7280;
+    --ui-fg-subtle: #4b5563;
+    --ui-border-subtle: rgba(255, 255, 255, 0.08);
+    --ui-border: rgba(255, 255, 255, 0.12);
+    --ui-border-strong: rgba(255, 255, 255, 0.2);
+    --ui-outline: rgba(255, 255, 255, 0.15);
+    --ui-placeholder: #6b7280;
+    --ui-disabled-bg: rgba(255, 255, 255, 0.05);
+    --ui-disabled-fg: #6b7280;
+    --ui-overlay: rgba(0, 0, 0, 0.7);
+    --ui-overlay-muted: rgba(0, 0, 0, 0.5);
+    --ui-popup-background: rgba(17, 24, 39, 0.15);
+    --ui-input-color: #f9fafb;
+    --ui-input-border: rgba(255, 255, 255, 0.15);
+    --ui-input-focus-border: #818cf8;
+    --ui-input-placeholder: #6b7280;
+    --ui-input-focus-ring: rgba(129, 140, 248, 0.3);
+    --ui-tooltip-bg: #f9fafb;
+    --ui-tooltip-fg: #111827;
+
+    /* --- Fixed Theme Colors (15 themes) --- */
+    --ui-gray: #e5e7eb;
+    --ui-olive: #d4d9cc;
+    --ui-tomato: #fca5a5;
+    --ui-ruby: #fda4af;
+    --ui-pink: #f9a8d4;
+    --ui-violet: #c4b5fd;
+    --ui-indigo: #a5b4fc;
+    --ui-blue: #93c5fd;
+    --ui-teal: #5eead4;
+    --ui-grass: #86efac;
+    --ui-mint: #67e8f9;
+    --ui-lime: #bef264;
+    --ui-yellow: #fde047;
+    --ui-orange: #fdba74;
+    --ui-gold: #fbbf24;
+
+    /* Theme Color (default indigo) */
+    --tone-subtle: rgba(129, 140, 248, 0.1);
+    --tone-soft: rgba(129, 140, 248, 0.15);
+    --tone-muted: rgba(129, 140, 248, 0.2);
+    --tone-wash: rgba(129, 140, 248, 0.05);
+    --tone-border: rgba(129, 140, 248, 0.25);
+    --tone-border-strong: rgba(129, 140, 248, 0.4);
+    --tone-solid: #818cf8;
+    --tone-solid-hover: #a5b4fc;
+    --tone-solid-active: #c7d2fe;
+    --tone-text: #a5b4fc;
+    --tone-text-hover: #c7d2fe;
+    --tone-fg: #1e1b4b;
+    --tone-ring: rgba(129, 140, 248, 0.5);
+    --tone-highlight: #fbbf24;
+    --tone-highlight-fg: #78350f;
+
+    /* Typography */
+    --tone-heading: #f9fafb;
+    --tone-subtitle: #e5e7eb;
+    --tone-body: #d1d5db;
+    --tone-caption: #9ca3af;
+    --tone-muted: #6b7280;
+    --tone-disabled: #4b5563;
+
+    /* Links */
+    --tone-link: #818cf8;
+    --tone-link-hover: #a5b4fc;
+    --tone-link-visited: #a78bfa;
+    --tone-link-active: #f87171;
+    --tone-link-disabled: #4b5563;
+
+    /* Card */
+    --tone-card: rgba(17, 24, 39, 0.8);
+    --tone-card-hover: rgba(17, 24, 39, 0.9);
+    --tone-card-border: rgba(255, 255, 255, 0.08);
+    --tone-card-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+
+    /* Code */
+    --tone-code-bg: #1f2937;
+    --tone-code-fg: #e5e7eb;
+
+    /* States */
+    --state-danger: #f87171;
+    --state-danger-hover: #fca5a5;
+    --state-danger-active: #fecaca;
+    --state-danger-fg: #030712;
+    --state-danger-text: #fca5a5;
+    --state-danger-subtle: rgba(248, 113, 113, 0.1);
+    --state-danger-soft: rgba(248, 113, 113, 0.15);
+    --state-danger-muted: rgba(248, 113, 113, 0.2);
+    --state-danger-border: rgba(248, 113, 113, 0.25);
+    --state-danger-ring: rgba(248, 113, 113, 0.4);
+
+    --state-success: #4ade80;
+    --state-success-hover: #86efac;
+    --state-success-active: #bbf7d0;
+    --state-success-fg: #030712;
+    --state-success-text: #86efac;
+    --state-success-subtle: rgba(74, 222, 128, 0.1);
+    --state-success-soft: rgba(74, 222, 128, 0.15);
+    --state-success-muted: rgba(74, 222, 128, 0.2);
+    --state-success-border: rgba(74, 222, 128, 0.25);
+    --state-success-ring: rgba(74, 222, 128, 0.4);
+
+    --state-warning: #fbbf24;
+    --state-warning-hover: #fcd34d;
+    --state-warning-active: #fde68a;
+    --state-warning-fg: #030712;
+    --state-warning-text: #fcd34d;
+    --state-warning-subtle: rgba(251, 191, 36, 0.1);
+    --state-warning-soft: rgba(251, 191, 36, 0.15);
+    --state-warning-muted: rgba(251, 191, 36, 0.2);
+    --state-warning-border: rgba(251, 191, 36, 0.25);
+    --state-warning-ring: rgba(251, 191, 36, 0.4);
+
+    --state-info: #60a5fa;
+    --state-info-hover: #93bbfd;
+    --state-info-active: #bfdbfe;
+    --state-info-fg: #030712;
+    --state-info-text: #93bbfd;
+    --state-info-subtle: rgba(96, 165, 250, 0.1);
+    --state-info-soft: rgba(96, 165, 250, 0.15);
+    --state-info-muted: rgba(96, 165, 250, 0.2);
+    --state-info-border: rgba(96, 165, 250, 0.25);
+    --state-info-ring: rgba(96, 165, 250, 0.4);
+
+    /* Shadows */
+    --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+    --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.4), 0 1px 2px -1px rgb(0 0 0 / 0.3);
+    --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.4);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.5), 0 8px 10px -6px rgb(0 0 0 / 0.4);
+  }
+
+
+  /* ============================================
+     5. Theme Variants (15 themes)
+     ============================================ */
+
+  /* --- Gray --- */
+  .j-theme-gray {
+    --tone-subtle: rgba(0, 0, 0, 0.04);
+    --tone-soft: rgba(0, 0, 0, 0.06);
+    --tone-muted: rgba(0, 0, 0, 0.1);
+    --tone-wash: rgba(0, 0, 0, 0.02);
+    --tone-border: rgba(0, 0, 0, 0.12);
+    --tone-border-strong: rgba(0, 0, 0, 0.2);
+    --tone-solid: #374151;
+    --tone-solid-hover: #4b5563;
+    --tone-solid-active: #6b7280;
+    --tone-text: #374151;
+    --tone-text-hover: #4b5563;
+    --tone-fg: #ffffff;
+    --tone-ring: rgba(55, 65, 81, 0.3);
+    --tone-link: #374151;
+    --tone-link-hover: #4b5563;
+    --tone-link-visited: #6b7280;
+  }
+
+  /* --- Olive --- */
+  .j-theme-olive {
+    --tone-subtle: rgba(113, 119, 98, 0.06);
+    --tone-soft: rgba(113, 119, 98, 0.1);
+    --tone-muted: rgba(113, 119, 98, 0.15);
+    --tone-wash: rgba(113, 119, 98, 0.03);
+    --tone-border: rgba(113, 119, 98, 0.2);
+    --tone-border-strong: rgba(113, 119, 98, 0.35);
+    --tone-solid: #717762;
+    --tone-solid-hover: #5f6651;
+    --tone-solid-active: #4d5440;
+    --tone-text: #5f6651;
+    --tone-text-hover: #4d5440;
+    --tone-fg: #ffffff;
+    --tone-ring: rgba(113, 119, 98, 0.4);
+    --tone-link: #5f6651;
+    --tone-link-hover: #4d5440;
+    --tone-link-visited: #3d4530;
+  }
+
+  /* --- Tomato --- */
+  .j-theme-tomato {
+    --tone-subtle: rgba(239, 68, 68, 0.06);
+    --tone-soft: rgba(239, 68, 68, 0.1);
+    --tone-muted: rgba(239, 68, 68, 0.15);
+    --tone-wash: rgba(239, 68, 68, 0.03);
+    --tone-border: rgba(239, 68, 68, 0.2);
+    --tone-border-strong: rgba(239, 68, 68, 0.35);
+    --tone-solid: #ef4444;
+    --tone-solid-hover: #dc2626;
+    --tone-solid-active: #b91c1c;
+    --tone-text: #dc2626;
+    --tone-text-hover: #b91c1c;
+    --tone-fg: #ffffff;
+    --tone-ring: rgba(239, 68, 68, 0.4);
+    --tone-link: #dc2626;
+    --tone-link-hover: #b91c1c;
+    --tone-link-visited: #991b1b;
+  }
+
+  /* --- Ruby --- */
+  .j-theme-ruby {
+    --tone-subtle: rgba(244, 63, 94, 0.06);
+    --tone-soft: rgba(244, 63, 94, 0.1);
+    --tone-muted: rgba(244, 63, 94, 0.15);
+    --tone-wash: rgba(244, 63, 94, 0.03);
+    --tone-border: rgba(244, 63, 94, 0.2);
+    --tone-border-strong: rgba(244, 63, 94, 0.35);
+    --tone-solid: #f43f5e;
+    --tone-solid-hover: #e11d48;
+    --tone-solid-active: #be123c;
+    --tone-text: #e11d48;
+    --tone-text-hover: #be123c;
+    --tone-fg: #ffffff;
+    --tone-ring: rgba(244, 63, 94, 0.4);
+    --tone-link: #e11d48;
+    --tone-link-hover: #be123c;
+    --tone-link-visited: #9f1239;
+  }
+
+  /* --- Pink --- */
+  .j-theme-pink {
+    --tone-subtle: rgba(236, 72, 153, 0.06);
+    --tone-soft: rgba(236, 72, 153, 0.1);
+    --tone-muted: rgba(236, 72, 153, 0.15);
+    --tone-wash: rgba(236, 72, 153, 0.03);
+    --tone-border: rgba(236, 72, 153, 0.2);
+    --tone-border-strong: rgba(236, 72, 153, 0.35);
+    --tone-solid: #ec4899;
+    --tone-solid-hover: #db2777;
+    --tone-solid-active: #be185d;
+    --tone-text: #db2777;
+    --tone-text-hover: #be185d;
+    --tone-fg: #ffffff;
+    --tone-ring: rgba(236, 72, 153, 0.4);
+    --tone-link: #db2777;
+    --tone-link-hover: #be185d;
+    --tone-link-visited: #9d174d;
+  }
+
+  /* --- Violet --- */
+  .j-theme-violet {
+    --tone-subtle: rgba(139, 92, 246, 0.06);
+    --tone-soft: rgba(139, 92, 246, 0.1);
+    --tone-muted: rgba(139, 92, 246, 0.15);
+    --tone-wash: rgba(139, 92, 246, 0.03);
+    --tone-border: rgba(139, 92, 246, 0.2);
+    --tone-border-strong: rgba(139, 92, 246, 0.35);
+    --tone-solid: #8b5cf6;
+    --tone-solid-hover: #7c3aed;
+    --tone-solid-active: #6d28d9;
+    --tone-text: #7c3aed;
+    --tone-text-hover: #6d28d9;
+    --tone-fg: #ffffff;
+    --tone-ring: rgba(139, 92, 246, 0.4);
+    --tone-link: #7c3aed;
+    --tone-link-hover: #6d28d9;
+    --tone-link-visited: #5b21b6;
+  }
+
+  /* --- Indigo --- */
+  .j-theme-indigo {
+    --tone-subtle: rgba(99, 102, 241, 0.06);
+    --tone-soft: rgba(99, 102, 241, 0.1);
+    --tone-muted: rgba(99, 102, 241, 0.15);
+    --tone-wash: rgba(99, 102, 241, 0.03);
+    --tone-border: rgba(99, 102, 241, 0.2);
+    --tone-border-strong: rgba(99, 102, 241, 0.35);
+    --tone-solid: #6366f1;
+    --tone-solid-hover: #4f46e5;
+    --tone-solid-active: #4338ca;
+    --tone-text: #4f46e5;
+    --tone-text-hover: #4338ca;
+    --tone-fg: #ffffff;
+    --tone-ring: rgba(99, 102, 241, 0.4);
+    --tone-link: #4f46e5;
+    --tone-link-hover: #4338ca;
+    --tone-link-visited: #3730a3;
+  }
+
+  /* --- Blue --- */
+  .j-theme-blue {
+    --tone-subtle: rgba(59, 130, 246, 0.06);
+    --tone-soft: rgba(59, 130, 246, 0.1);
+    --tone-muted: rgba(59, 130, 246, 0.15);
+    --tone-wash: rgba(59, 130, 246, 0.03);
+    --tone-border: rgba(59, 130, 246, 0.2);
+    --tone-border-strong: rgba(59, 130, 246, 0.35);
+    --tone-solid: #3b82f6;
+    --tone-solid-hover: #2563eb;
+    --tone-solid-active: #1d4ed8;
+    --tone-text: #2563eb;
+    --tone-text-hover: #1d4ed8;
+    --tone-fg: #ffffff;
+    --tone-ring: rgba(59, 130, 246, 0.4);
+    --tone-link: #2563eb;
+    --tone-link-hover: #1d4ed8;
+    --tone-link-visited: #1e40af;
+  }
+
+  /* --- Teal --- */
+  .j-theme-teal {
+    --tone-subtle: rgba(20, 184, 166, 0.06);
+    --tone-soft: rgba(20, 184, 166, 0.1);
+    --tone-muted: rgba(20, 184, 166, 0.15);
+    --tone-wash: rgba(20, 184, 166, 0.03);
+    --tone-border: rgba(20, 184, 166, 0.2);
+    --tone-border-strong: rgba(20, 184, 166, 0.35);
+    --tone-solid: #14b8a6;
+    --tone-solid-hover: #0d9488;
+    --tone-solid-active: #0f766e;
+    --tone-text: #0d9488;
+    --tone-text-hover: #0f766e;
+    --tone-fg: #ffffff;
+    --tone-ring: rgba(20, 184, 166, 0.4);
+    --tone-link: #0d9488;
+    --tone-link-hover: #0f766e;
+    --tone-link-visited: #115e59;
+  }
+
+  /* --- Grass --- */
+  .j-theme-grass {
+    --tone-subtle: rgba(34, 197, 94, 0.06);
+    --tone-soft: rgba(34, 197, 94, 0.1);
+    --tone-muted: rgba(34, 197, 94, 0.15);
+    --tone-wash: rgba(34, 197, 94, 0.03);
+    --tone-border: rgba(34, 197, 94, 0.2);
+    --tone-border-strong: rgba(34, 197, 94, 0.35);
+    --tone-solid: #22c55e;
+    --tone-solid-hover: #16a34a;
+    --tone-solid-active: #15803d;
+    --tone-text: #16a34a;
+    --tone-text-hover: #15803d;
+    --tone-fg: #ffffff;
+    --tone-ring: rgba(34, 197, 94, 0.4);
+    --tone-link: #16a34a;
+    --tone-link-hover: #15803d;
+    --tone-link-visited: #166534;
+  }
+
+  /* --- Mint --- */
+  .j-theme-mint {
+    --tone-subtle: rgba(6, 182, 212, 0.06);
+    --tone-soft: rgba(6, 182, 212, 0.1);
+    --tone-muted: rgba(6, 182, 212, 0.15);
+    --tone-wash: rgba(6, 182, 212, 0.03);
+    --tone-border: rgba(6, 182, 212, 0.2);
+    --tone-border-strong: rgba(6, 182, 212, 0.35);
+    --tone-solid: #06b6d4;
+    --tone-solid-hover: #0891b2;
+    --tone-solid-active: #0e7490;
+    --tone-text: #0891b2;
+    --tone-text-hover: #0e7490;
+    --tone-fg: #ffffff;
+    --tone-ring: rgba(6, 182, 212, 0.4);
+    --tone-link: #0891b2;
+    --tone-link-hover: #0e7490;
+    --tone-link-visited: #155e75;
+  }
+
+  /* --- Lime --- */
+  .j-theme-lime {
+    --tone-subtle: rgba(132, 204, 22, 0.06);
+    --tone-soft: rgba(132, 204, 22, 0.1);
+    --tone-muted: rgba(132, 204, 22, 0.15);
+    --tone-wash: rgba(132, 204, 22, 0.03);
+    --tone-border: rgba(132, 204, 22, 0.2);
+    --tone-border-strong: rgba(132, 204, 22, 0.35);
+    --tone-solid: #84cc16;
+    --tone-solid-hover: #65a30d;
+    --tone-solid-active: #4d7c0f;
+    --tone-text: #65a30d;
+    --tone-text-hover: #4d7c0f;
+    --tone-fg: #ffffff;
+    --tone-ring: rgba(132, 204, 22, 0.4);
+    --tone-link: #65a30d;
+    --tone-link-hover: #4d7c0f;
+    --tone-link-visited: #3f6212;
+  }
+
+  /* --- Yellow --- */
+  .j-theme-yellow {
+    --tone-subtle: rgba(234, 179, 8, 0.06);
+    --tone-soft: rgba(234, 179, 8, 0.1);
+    --tone-muted: rgba(234, 179, 8, 0.15);
+    --tone-wash: rgba(234, 179, 8, 0.03);
+    --tone-border: rgba(234, 179, 8, 0.2);
+    --tone-border-strong: rgba(234, 179, 8, 0.35);
+    --tone-solid: #eab308;
+    --tone-solid-hover: #ca8a04;
+    --tone-solid-active: #a16207;
+    --tone-text: #ca8a04;
+    --tone-text-hover: #a16207;
+    --tone-fg: #ffffff;
+    --tone-ring: rgba(234, 179, 8, 0.4);
+    --tone-link: #ca8a04;
+    --tone-link-hover: #a16207;
+    --tone-link-visited: #854d0e;
+  }
+
+  /* --- Orange --- */
+  .j-theme-orange {
+    --tone-subtle: rgba(249, 115, 22, 0.06);
+    --tone-soft: rgba(249, 115, 22, 0.1);
+    --tone-muted: rgba(249, 115, 22, 0.15);
+    --tone-wash: rgba(249, 115, 22, 0.03);
+    --tone-border: rgba(249, 115, 22, 0.2);
+    --tone-border-strong: rgba(249, 115, 22, 0.35);
+    --tone-solid: #f97316;
+    --tone-solid-hover: #ea580c;
+    --tone-solid-active: #c2410c;
+    --tone-text: #ea580c;
+    --tone-text-hover: #c2410c;
+    --tone-fg: #ffffff;
+    --tone-ring: rgba(249, 115, 22, 0.4);
+    --tone-link: #ea580c;
+    --tone-link-hover: #c2410c;
+    --tone-link-visited: #9a3412;
+  }
+
+  /* --- Gold --- */
+  .j-theme-gold {
+    --tone-subtle: rgba(180, 83, 9, 0.06);
+    --tone-soft: rgba(180, 83, 9, 0.1);
+    --tone-muted: rgba(180, 83, 9, 0.15);
+    --tone-wash: rgba(180, 83, 9, 0.03);
+    --tone-border: rgba(180, 83, 9, 0.2);
+    --tone-border-strong: rgba(180, 83, 9, 0.35);
+    --tone-solid: #b45309;
+    --tone-solid-hover: #92400e;
+    --tone-solid-active: #78350f;
+    --tone-text: #92400e;
+    --tone-text-hover: #78350f;
+    --tone-fg: #ffffff;
+    --tone-ring: rgba(180, 83, 9, 0.4);
+    --tone-link: #92400e;
+    --tone-link-hover: #78350f;
+    --tone-link-visited: #653008;
+  }
+
+
+  /* ============================================
+     6. Dark Theme Variants
+     ============================================ */
+
+  .dark .j-theme-gray,
+  .dark-theme.j-theme-gray {
+    --tone-subtle: rgba(255, 255, 255, 0.06);
+    --tone-soft: rgba(255, 255, 255, 0.1);
+    --tone-muted: rgba(255, 255, 255, 0.15);
+    --tone-wash: rgba(255, 255, 255, 0.03);
+    --tone-border: rgba(255, 255, 255, 0.12);
+    --tone-border-strong: rgba(255, 255, 255, 0.2);
+    --tone-solid: #e5e7eb;
+    --tone-solid-hover: #d1d5db;
+    --tone-solid-active: #9ca3af;
+    --tone-text: #e5e7eb;
+    --tone-text-hover: #d1d5db;
+    --tone-fg: #111827;
+    --tone-ring: rgba(229, 231, 235, 0.3);
+    --tone-link: #e5e7eb;
+    --tone-link-hover: #d1d5db;
+    --tone-link-visited: #9ca3af;
+  }
+
+  .dark .j-theme-olive,
+  .dark-theme.j-theme-olive {
+    --tone-subtle: rgba(180, 188, 162, 0.1);
+    --tone-soft: rgba(180, 188, 162, 0.15);
+    --tone-muted: rgba(180, 188, 162, 0.2);
+    --tone-wash: rgba(180, 188, 162, 0.05);
+    --tone-border: rgba(180, 188, 162, 0.25);
+    --tone-border-strong: rgba(180, 188, 162, 0.4);
+    --tone-solid: #b4bc9e;
+    --tone-solid-hover: #c8cfb5;
+    --tone-solid-active: #dce2cc;
+    --tone-text: #c8cfb5;
+    --tone-text-hover: #dce2cc;
+    --tone-fg: #1a1d16;
+    --tone-ring: rgba(180, 188, 162, 0.4);
+    --tone-link: #c8cfb5;
+    --tone-link-hover: #dce2cc;
+    --tone-link-visited: #a8b092;
+  }
+
+  .dark .j-theme-tomato,
+  .dark-theme.j-theme-tomato {
+    --tone-subtle: rgba(248, 113, 113, 0.1);
+    --tone-soft: rgba(248, 113, 113, 0.15);
+    --tone-muted: rgba(248, 113, 113, 0.2);
+    --tone-wash: rgba(248, 113, 113, 0.05);
+    --tone-border: rgba(248, 113, 113, 0.25);
+    --tone-border-strong: rgba(248, 113, 113, 0.4);
+    --tone-solid: #f87171;
+    --tone-solid-hover: #fca5a5;
+    --tone-solid-active: #fecaca;
+    --tone-text: #fca5a5;
+    --tone-text-hover: #fecaca;
+    --tone-fg: #7f1d1d;
+    --tone-ring: rgba(248, 113, 113, 0.4);
+    --tone-link: #fca5a5;
+    --tone-link-hover: #fecaca;
+    --tone-link-visited: #f87171;
+  }
+
+  .dark .j-theme-ruby,
+  .dark-theme.j-theme-ruby {
+    --tone-subtle: rgba(251, 113, 133, 0.1);
+    --tone-soft: rgba(251, 113, 133, 0.15);
+    --tone-muted: rgba(251, 113, 133, 0.2);
+    --tone-wash: rgba(251, 113, 133, 0.05);
+    --tone-border: rgba(251, 113, 133, 0.25);
+    --tone-border-strong: rgba(251, 113, 133, 0.4);
+    --tone-solid: #fb7185;
+    --tone-solid-hover: #fda4af;
+    --tone-solid-active: #fecdd3;
+    --tone-text: #fda4af;
+    --tone-text-hover: #fecdd3;
+    --tone-fg: #881337;
+    --tone-ring: rgba(251, 113, 133, 0.4);
+    --tone-link: #fda4af;
+    --tone-link-hover: #fecdd3;
+    --tone-link-visited: #fb7185;
+  }
+
+  .dark .j-theme-pink,
+  .dark-theme.j-theme-pink {
+    --tone-subtle: rgba(244, 114, 182, 0.1);
+    --tone-soft: rgba(244, 114, 182, 0.15);
+    --tone-muted: rgba(244, 114, 182, 0.2);
+    --tone-wash: rgba(244, 114, 182, 0.05);
+    --tone-border: rgba(244, 114, 182, 0.25);
+    --tone-border-strong: rgba(244, 114, 182, 0.4);
+    --tone-solid: #f472b6;
+    --tone-solid-hover: #f9a8d4;
+    --tone-solid-active: #fbcfe8;
+    --tone-text: #f9a8d4;
+    --tone-text-hover: #fbcfe8;
+    --tone-fg: #831843;
+    --tone-ring: rgba(244, 114, 182, 0.4);
+    --tone-link: #f9a8d4;
+    --tone-link-hover: #fbcfe8;
+    --tone-link-visited: #f472b6;
+  }
+
+  .dark .j-theme-violet,
+  .dark-theme.j-theme-violet {
+    --tone-subtle: rgba(167, 139, 250, 0.1);
+    --tone-soft: rgba(167, 139, 250, 0.15);
+    --tone-muted: rgba(167, 139, 250, 0.2);
+    --tone-wash: rgba(167, 139, 250, 0.05);
+    --tone-border: rgba(167, 139, 250, 0.25);
+    --tone-border-strong: rgba(167, 139, 250, 0.4);
+    --tone-solid: #a78bfa;
+    --tone-solid-hover: #c4b5fd;
+    --tone-solid-active: #ddd6fe;
+    --tone-text: #c4b5fd;
+    --tone-text-hover: #ddd6fe;
+    --tone-fg: #2e1065;
+    --tone-ring: rgba(167, 139, 250, 0.4);
+    --tone-link: #c4b5fd;
+    --tone-link-hover: #ddd6fe;
+    --tone-link-visited: #a78bfa;
+  }
+
+  .dark .j-theme-indigo,
+  .dark-theme.j-theme-indigo {
+    --tone-subtle: rgba(129, 140, 248, 0.1);
+    --tone-soft: rgba(129, 140, 248, 0.15);
+    --tone-muted: rgba(129, 140, 248, 0.2);
+    --tone-wash: rgba(129, 140, 248, 0.05);
+    --tone-border: rgba(129, 140, 248, 0.25);
+    --tone-border-strong: rgba(129, 140, 248, 0.4);
+    --tone-solid: #818cf8;
+    --tone-solid-hover: #a5b4fc;
+    --tone-solid-active: #c7d2fe;
+    --tone-text: #a5b4fc;
+    --tone-text-hover: #c7d2fe;
+    --tone-fg: #1e1b4b;
+    --tone-ring: rgba(129, 140, 248, 0.4);
+    --tone-link: #a5b4fc;
+    --tone-link-hover: #c7d2fe;
+    --tone-link-visited: #818cf8;
+  }
+
+  .dark .j-theme-blue,
+  .dark-theme.j-theme-blue {
+    --tone-subtle: rgba(96, 165, 250, 0.1);
+    --tone-soft: rgba(96, 165, 250, 0.15);
+    --tone-muted: rgba(96, 165, 250, 0.2);
+    --tone-wash: rgba(96, 165, 250, 0.05);
+    --tone-border: rgba(96, 165, 250, 0.25);
+    --tone-border-strong: rgba(96, 165, 250, 0.4);
+    --tone-solid: #60a5fa;
+    --tone-solid-hover: #93bbfd;
+    --tone-solid-active: #bfdbfe;
+    --tone-text: #93bbfd;
+    --tone-text-hover: #bfdbfe;
+    --tone-fg: #1e3a5f;
+    --tone-ring: rgba(96, 165, 250, 0.4);
+    --tone-link: #93bbfd;
+    --tone-link-hover: #bfdbfe;
+    --tone-link-visited: #60a5fa;
+  }
+
+  .dark .j-theme-teal,
+  .dark-theme.j-theme-teal {
+    --tone-subtle: rgba(45, 212, 191, 0.1);
+    --tone-soft: rgba(45, 212, 191, 0.15);
+    --tone-muted: rgba(45, 212, 191, 0.2);
+    --tone-wash: rgba(45, 212, 191, 0.05);
+    --tone-border: rgba(45, 212, 191, 0.25);
+    --tone-border-strong: rgba(45, 212, 191, 0.4);
+    --tone-solid: #2dd4bf;
+    --tone-solid-hover: #5eead4;
+    --tone-solid-active: #99f6e4;
+    --tone-text: #5eead4;
+    --tone-text-hover: #99f6e4;
+    --tone-fg: #134e4a;
+    --tone-ring: rgba(45, 212, 191, 0.4);
+    --tone-link: #5eead4;
+    --tone-link-hover: #99f6e4;
+    --tone-link-visited: #2dd4bf;
+  }
+
+  .dark .j-theme-grass,
+  .dark-theme.j-theme-grass {
+    --tone-subtle: rgba(74, 222, 128, 0.1);
+    --tone-soft: rgba(74, 222, 128, 0.15);
+    --tone-muted: rgba(74, 222, 128, 0.2);
+    --tone-wash: rgba(74, 222, 128, 0.05);
+    --tone-border: rgba(74, 222, 128, 0.25);
+    --tone-border-strong: rgba(74, 222, 128, 0.4);
+    --tone-solid: #4ade80;
+    --tone-solid-hover: #86efac;
+    --tone-solid-active: #bbf7d0;
+    --tone-text: #86efac;
+    --tone-text-hover: #bbf7d0;
+    --tone-fg: #14532d;
+    --tone-ring: rgba(74, 222, 128, 0.4);
+    --tone-link: #86efac;
+    --tone-link-hover: #bbf7d0;
+    --tone-link-visited: #4ade80;
+  }
+
+  .dark .j-theme-mint,
+  .dark-theme.j-theme-mint {
+    --tone-subtle: rgba(34, 211, 238, 0.1);
+    --tone-soft: rgba(34, 211, 238, 0.15);
+    --tone-muted: rgba(34, 211, 238, 0.2);
+    --tone-wash: rgba(34, 211, 238, 0.05);
+    --tone-border: rgba(34, 211, 238, 0.25);
+    --tone-border-strong: rgba(34, 211, 238, 0.4);
+    --tone-solid: #22d3ee;
+    --tone-solid-hover: #67e8f9;
+    --tone-solid-active: #a5f3fc;
+    --tone-text: #67e8f9;
+    --tone-text-hover: #a5f3fc;
+    --tone-fg: #164e63;
+    --tone-ring: rgba(34, 211, 238, 0.4);
+    --tone-link: #67e8f9;
+    --tone-link-hover: #a5f3fc;
+    --tone-link-visited: #22d3ee;
+  }
+
+  .dark .j-theme-lime,
+  .dark-theme.j-theme-lime {
+    --tone-subtle: rgba(163, 230, 53, 0.1);
+    --tone-soft: rgba(163, 230, 53, 0.15);
+    --tone-muted: rgba(163, 230, 53, 0.2);
+    --tone-wash: rgba(163, 230, 53, 0.05);
+    --tone-border: rgba(163, 230, 53, 0.25);
+    --tone-border-strong: rgba(163, 230, 53, 0.4);
+    --tone-solid: #a3e635;
+    --tone-solid-hover: #bef264;
+    --tone-solid-active: #d9f99d;
+    --tone-text: #bef264;
+    --tone-text-hover: #d9f99d;
+    --tone-fg: #365314;
+    --tone-ring: rgba(163, 230, 53, 0.4);
+    --tone-link: #bef264;
+    --tone-link-hover: #d9f99d;
+    --tone-link-visited: #a3e635;
+  }
+
+  .dark .j-theme-yellow,
+  .dark-theme.j-theme-yellow {
+    --tone-subtle: rgba(250, 204, 21, 0.1);
+    --tone-soft: rgba(250, 204, 21, 0.15);
+    --tone-muted: rgba(250, 204, 21, 0.2);
+    --tone-wash: rgba(250, 204, 21, 0.05);
+    --tone-border: rgba(250, 204, 21, 0.25);
+    --tone-border-strong: rgba(250, 204, 21, 0.4);
+    --tone-solid: #facc15;
+    --tone-solid-hover: #fde047;
+    --tone-solid-active: #fef08a;
+    --tone-text: #fde047;
+    --tone-text-hover: #fef08a;
+    --tone-fg: #713f12;
+    --tone-ring: rgba(250, 204, 21, 0.4);
+    --tone-link: #fde047;
+    --tone-link-hover: #fef08a;
+    --tone-link-visited: #facc15;
+  }
+
+  .dark .j-theme-orange,
+  .dark-theme.j-theme-orange {
+    --tone-subtle: rgba(251, 146, 60, 0.1);
+    --tone-soft: rgba(251, 146, 60, 0.15);
+    --tone-muted: rgba(251, 146, 60, 0.2);
+    --tone-wash: rgba(251, 146, 60, 0.05);
+    --tone-border: rgba(251, 146, 60, 0.25);
+    --tone-border-strong: rgba(251, 146, 60, 0.4);
+    --tone-solid: #fb923c;
+    --tone-solid-hover: #fdba74;
+    --tone-solid-active: #fed7aa;
+    --tone-text: #fdba74;
+    --tone-text-hover: #fed7aa;
+    --tone-fg: #7c2d12;
+    --tone-ring: rgba(251, 146, 60, 0.4);
+    --tone-link: #fdba74;
+    --tone-link-hover: #fed7aa;
+    --tone-link-visited: #fb923c;
+  }
+
+  .dark .j-theme-gold,
+  .dark-theme.j-theme-gold {
+    --tone-subtle: rgba(217, 119, 6, 0.1);
+    --tone-soft: rgba(217, 119, 6, 0.15);
+    --tone-muted: rgba(217, 119, 6, 0.2);
+    --tone-wash: rgba(217, 119, 6, 0.05);
+    --tone-border: rgba(217, 119, 6, 0.25);
+    --tone-border-strong: rgba(217, 119, 6, 0.4);
+    --tone-solid: #d97706;
+    --tone-solid-hover: #f59e0b;
+    --tone-solid-active: #fbbf24;
+    --tone-text: #f59e0b;
+    --tone-text-hover: #fbbf24;
+    --tone-fg: #78350f;
+    --tone-ring: rgba(217, 119, 6, 0.4);
+    --tone-link: #f59e0b;
+    --tone-link-hover: #fbbf24;
+    --tone-link-visited: #d97706;
+  }
+
+
+  /* ============================================
+     7. Radius Themes
+     ============================================ */
+
+  .j-radius-none {
+    --radius-xs: 0;
+    --radius-sm: 0;
+    --radius: 0;
+    --radius-md: 0;
+    --radius-lg: 0;
+    --radius-xl: 0;
+  }
+
+  .j-radius-sm {
+    --radius-xs: 0.0625rem;
+    --radius-sm: 0.125rem;
+    --radius: 0.25rem;
+    --radius-md: 0.375rem;
+    --radius-lg: 0.5rem;
+    --radius-xl: 0.75rem;
+  }
+
+  .j-radius-md {
+    --radius-xs: 0.125rem;
+    --radius-sm: 0.25rem;
+    --radius: 0.375rem;
+    --radius-md: 0.5rem;
+    --radius-lg: 0.75rem;
+    --radius-xl: 1rem;
+  }
+
+  .j-radius-lg {
+    --radius-xs: 0.25rem;
+    --radius-sm: 0.5rem;
+    --radius: 0.75rem;
+    --radius-md: 1rem;
+    --radius-lg: 1.25rem;
+    --radius-xl: 1.5rem;
+  }
+
+  .j-radius-xl {
+    --radius-xs: 0.375rem;
+    --radius-sm: 0.75rem;
+    --radius: 1rem;
+    --radius-md: 1.25rem;
+    --radius-lg: 1.5rem;
+    --radius-xl: 2rem;
+  }
+
+  .j-radius-round {
+    --radius-xs: 9999px;
+    --radius-sm: 9999px;
+    --radius: 9999px;
+    --radius-md: 9999px;
+    --radius-lg: 9999px;
+    --radius-xl: 9999px;
+  }
+
+
+  /* ============================================
+     8. Shadow Themes
+     ============================================ */
+
+  .j-shadow-none {
+    --shadow-xs: none;
+    --shadow-sm: none;
+    --shadow: none;
+    --shadow-md: none;
+    --shadow-lg: none;
+    --shadow-xl: none;
+  }
+
+  .j-shadow-sm {
+    --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.03);
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.06);
+    --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.08);
+    --shadow-md: 0 2px 4px -1px rgb(0 0 0 / 0.08);
+    --shadow-lg: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    --shadow-xl: 0 8px 10px -3px rgb(0 0 0 / 0.1);
+  }
+
+  .j-shadow-md {
+    --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+    --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    --shadow-md: 0 4px 8px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+  }
+
+  .j-shadow-lg {
+    --shadow-xs: 0 1px 3px 0 rgb(0 0 0 / 0.08);
+    --shadow-sm: 0 2px 4px 0 rgb(0 0 0 / 0.12);
+    --shadow: 0 4px 8px -1px rgb(0 0 0 / 0.15);
+    --shadow-md: 0 6px 12px -2px rgb(0 0 0 / 0.15);
+    --shadow-lg: 0 12px 20px -4px rgb(0 0 0 / 0.18);
+    --shadow-xl: 0 24px 38px -6px rgb(0 0 0 / 0.2);
+  }
+
+  .dark .j-shadow-sm {
+    --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.2);
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+    --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.4);
+    --shadow-md: 0 2px 4px -1px rgb(0 0 0 / 0.4);
+    --shadow-lg: 0 4px 6px -1px rgb(0 0 0 / 0.5);
+    --shadow-xl: 0 8px 10px -3px rgb(0 0 0 / 0.5);
+  }
+
+  .dark .j-shadow-md {
+    --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.25);
+    --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.35);
+    --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.4);
+    --shadow-md: 0 4px 8px -2px rgb(0 0 0 / 0.45);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.55);
+  }
+
+  .dark .j-shadow-lg {
+    --shadow-xs: 0 1px 3px 0 rgb(0 0 0 / 0.3);
+    --shadow-sm: 0 2px 4px 0 rgb(0 0 0 / 0.4);
+    --shadow: 0 4px 8px -1px rgb(0 0 0 / 0.5);
+    --shadow-md: 0 6px 12px -2px rgb(0 0 0 / 0.55);
+    --shadow-lg: 0 12px 20px -4px rgb(0 0 0 / 0.6);
+    --shadow-xl: 0 24px 38px -6px rgb(0 0 0 / 0.65);
+  }
+
+
+  /* ============================================
+     9. Font Themes
+     ============================================ */
+
+  .j-font-sm {
+    --font-size-xs: 0.6875rem;
+    --font-size-sm: 0.75rem;
+    --font-size: 0.8125rem;
+    --font-size-md: 0.8125rem;
+    --font-size-lg: 0.875rem;
+    --font-size-xl: 1rem;
+    --font-size-2xl: 1.25rem;
+    --el-height-3xs: 0.875rem;
+    --el-height-2xs: 1.125rem;
+    --el-height-xs: 1.375rem;
+    --el-height-sm: 1.625rem;
+    --el-height: 1.875rem;
+    --el-height-md: 1.875rem;
+    --el-height-lg: 2.125rem;
+  }
+
+  .j-font-md {
+    --font-size-xs: 0.75rem;
+    --font-size-sm: 0.875rem;
+    --font-size: 0.9375rem;
+    --font-size-md: 0.9375rem;
+    --font-size-lg: 1.0625rem;
+    --font-size-xl: 1.25rem;
+    --font-size-2xl: 1.5rem;
+    --el-height-3xs: 1.125rem;
+    --el-height-2xs: 1.375rem;
+    --el-height-xs: 1.625rem;
+    --el-height-sm: 1.875rem;
+    --el-height: 2.125rem;
+    --el-height-md: 2.125rem;
+    --el-height-lg: 2.375rem;
+  }
+}

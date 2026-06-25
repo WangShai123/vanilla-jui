@@ -1,9 +1,6 @@
-@layer color, config, base, layout, content, icon, font, components, menu, form, animation, utilities, status;
+@layer config, layout, content, icon, font, components, menu, form, animation, status;
 
-@import url('./config.css');
-@import url('./semantic.css');
-/* @import url('./color_p3.css'); */
-/* @import url('./base.css'); */
+@import url('./tokens.css');
 @import url('./layout.css');
 @import url('./content.css');
 @import url('./icon.css');
@@ -11,5 +8,4 @@
 @import url('./components.css');
 @import url('./form.css');
 @import url('./animation.css');
-/* @import url('./utilities.css'); */
 @import url('./status.css');

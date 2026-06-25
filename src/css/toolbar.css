@@ -11,8 +11,8 @@
     scrollbar-width: none;
     -ms-overflow-style: none;
     scroll-behavior: smooth;
-    background: var(--toolbar-container-background, var(--background));
-    border-bottom: var(--toolbar-container-border, 1px solid var(--border-color));
+    background: var(--toolbar-container-background, var(--ui-bg));
+    border-bottom: var(--toolbar-container-border, 1px solid var(--ui-border));
   }
   .j-toolbar {
     position: relative;
@@ -22,7 +22,7 @@
     align-items: center;
     gap: var(--toolbar-gap, 0);
     padding: var(--toolbar-padding, calc(var(--space) * 2));
-    box-shadow: var(--toolbar-box-shadow, var(--box-shadow-sm));
+    box-shadow: var(--toolbar-box-shadow, var(--shadow-sm));
   }
   @media screen and (max-width: 992px) {
     .j-toolbar {

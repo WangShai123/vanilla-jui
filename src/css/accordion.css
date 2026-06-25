@@ -1,6 +1,6 @@
 @layer components {
   .j-accordion {
-    --accordion-border: var(--border-sm);
+    --accordion-border: 1px solid var(--ui-border-subtle);
     --accordion-icon-size: var(--font-size-lg);
   }
 
@@ -20,7 +20,7 @@
   }
 
   .j-accordion .accordion-header:hover:not(.is-active) {
-    background: var(--accordion-header-hover-background, var(--gray-a2));
+    background: var(--accordion-header-hover-background, var(--ui-surface-hover));
   }
 
   .j-accordion .accordion-header.is-active {

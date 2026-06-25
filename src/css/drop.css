@@ -19,10 +19,10 @@
   .drop-container {
     border-width: var(--drop-border-width, 1px);
     border-style: var(--drop-border-style, solid);
-    border-color: var(--drop-border-color, var(--border-color));
-    border-radius: var(--border-radius, var(--border-radius));
-    background-color: var(--drop-background, var(--background));
-    color: var(--drop-foreground, var(--foreground));
-    box-shadow: var(--drop-box-shadow, var(--box-shadow-sm));
+    border-color: var(--drop-border-color, var(--ui-border));
+    border-radius: var(--radius);
+    background-color: var(--drop-background, var(--ui-bg));
+    color: var(--drop-foreground, var(--ui-fg));
+    box-shadow: var(--drop-box-shadow, var(--shadow-sm));
   }
 }

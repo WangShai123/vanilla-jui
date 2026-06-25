@@ -6,16 +6,16 @@
     grid-template-columns: 0 1fr;
     align-items: flex-start;
     row-gap: var(--tip-gap, calc(var(--space, 0.25rem) * 2));
-    border-radius: var(--tip-border-radius, var(--border-radius));
+    border-radius: var(--tip-border-radius, var(--radius));
     border-style: var(--tip-border-style, solid);
     border-width: var(--tip-border-width, 1px);
-    border-color: var(--tip-border-color, var(--border-color));
+    border-color: var(--tip-border-color, var(--ui-border));
     padding-inline: calc(var(--space, 0.25rem) * 4);
     padding-block: calc(var(--space, 0.25rem) * 3);
     font-size: var(--tip-font-size, var(--font-size));
-    color: var(--tip-color, var(--foreground));
-    background-color: var(--tip-background, var(--background));
-    box-shadow: var(--tip-box-shadow, var(--box-shadow-sm));
+    color: var(--tip-color, var(--ui-fg));
+    background-color: var(--tip-background, var(--ui-bg));
+    box-shadow: var(--tip-box-shadow, var(--shadow-sm));
   }
 
   .j-tip:has(.tip-icon) {
@@ -65,17 +65,17 @@
   }
 
   .j-tip.is-success {
-    --tip-border-color: var(--success);
-    --tip-icon-color: var(--success);
+    --tip-border-color: var(--state-success);
+    --tip-icon-color: var(--state-success);
   }
 
   .j-tip.is-warning {
-    --tip-border-color: var(--warning);
-    --tip-icon-color: var(--warning);
+    --tip-border-color: var(--state-warning);
+    --tip-icon-color: var(--state-warning);
   }
 
   .j-tip.is-danger {
-    --tip-border-color: var(--danger);
-    --tip-icon-color: var(--danger);
+    --tip-border-color: var(--state-danger);
+    --tip-icon-color: var(--state-danger);
   }
 }

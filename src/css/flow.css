@@ -2,7 +2,7 @@
   .j-flow {
     --flow-gap: calc(var(--space) * 2);
     --flow-step-size: 28px;
-    --flow-border: 1px solid var(--border-color-sm);
+    --flow-border: 1px solid var(--ui-border-subtle);
 
     display: grid;
     gap: var(--flow-gap);
@@ -19,7 +19,7 @@
   }
 
   .j-flow .flow-description {
-    color: var(--gray-11);
+    color: var(--ui-fg-muted);
     font-size: var(--font-size-sm);
     line-height: var(--line-height-paragraph);
   }
@@ -42,7 +42,7 @@
     gap: var(--space);
     border: 0;
     background: transparent;
-    color: var(--gray-11);
+    color: var(--ui-fg-muted);
     cursor: pointer;
     padding: 0;
   }
@@ -54,7 +54,7 @@
 
   .j-flow .flow-step-index {
     align-items: center;
-    background: var(--gray-4);
+    background: var(--ui-surface-muted);
     border-radius: 999px;
     display: inline-flex;
     height: var(--flow-step-size);
@@ -63,13 +63,13 @@
   }
 
   .j-flow .flow-step.is-active .flow-step-button {
-    color: var(--primary);
+    color: var(--tone-solid);
   }
 
   .j-flow .flow-step.is-active .flow-step-index,
   .j-flow .flow-step.is-complete .flow-step-index {
-    background: var(--primary);
-    color: var(--primary-foreground);
+    background: var(--tone-solid);
+    color: var(--tone-fg);
   }
 
   .j-flow .flow-body {

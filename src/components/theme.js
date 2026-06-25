@@ -384,7 +384,7 @@ class Theme {
                               // className: `el-prefix item-hex bg-${val}-10`,
                               className: `el-prefix item-hex`,
                               style: {
-                                backgroundColor: `var(--${val}-10)`,
+                                backgroundColor: `var(--ui-${val})`,
                               },
                             })
                           : null,

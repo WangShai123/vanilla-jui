@@ -4,7 +4,7 @@
     display: block;
     width: 100%;
     overflow: hidden;
-    border-radius: var(--swiper-radius, var(--border-radius));
+    border-radius: var(--swiper-radius, var(--radius));
     touch-action: pan-y;
     user-select: none;
   }

@@ -16,8 +16,8 @@
       sans-serif;
     font-feature-settings: normal;
     font-variation-settings: normal;
-    color: var(--foreground);
-    background-color: var(--background);
+    color: var(--ui-fg);
+    background-color: var(--ui-bg);
   }
   @font-face {
     font-family: Emoji;

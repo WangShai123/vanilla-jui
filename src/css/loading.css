@@ -5,11 +5,11 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: var(--loading-background, var(--gray-1));
+    background-color: var(--loading-background, var(--ui-bg));
     display: none;
     justify-content: center;
     align-items: center;
-    backdrop-filter: var(--loading-backdrop-filter, blur(var(--drop-blur-sm)));
+    backdrop-filter: var(--loading-backdrop-filter, blur(2px));
   }
 
   .j-loading.is-active {
@@ -20,9 +20,9 @@
   .loading-spinner {
     width: var(--loading-spinner-size, 3rem);
     height: var(--loading-spinner-size, 3rem);
-    /* border: var(--loading-spinner-width, 4px) solid var(--loading-spinner-background, var(--primary-foreground)); */
-    border: var(--loading-spinner-width, 4px) solid var(--loading-spinner-background, var(--secondary));
-    border-top: var(--loading-spinner-width, 4px) solid var(--loading-spinner-color, var(--primary));
+    /* border: var(--loading-spinner-width, 4px) solid var(--loading-spinner-background, var(--tone-fg)); */
+    border: var(--loading-spinner-width, 4px) solid var(--loading-spinner-background, var(--tone-soft));
+    border-top: var(--loading-spinner-width, 4px) solid var(--loading-spinner-color, var(--tone-solid));
     border-radius: 50%;
     animation: animate-spin 1s linear infinite;
   }
@@ -31,8 +31,8 @@
     border: none;
     aspect-ratio: 1;
     background:
-      radial-gradient(farthest-side, var(--primary) 94%, #0000) top/8px 8px no-repeat,
-      conic-gradient(#0000 30%, var(--primary));
+      radial-gradient(farthest-side, var(--tone-solid) 94%, #0000) top/8px 8px no-repeat,
+      conic-gradient(#0000 30%, var(--tone-solid));
     mask: radial-gradient(farthest-side, #0000 calc(100% - 8px), #000 0);
   }
 }

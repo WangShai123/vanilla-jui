@@ -12,14 +12,14 @@
     border-spacing: 0;
   }
   table.j-table tr.is-selected {
-    background-color: var(--table-selected-background, var(--secondary));
+    background-color: var(--table-selected-background, var(--tone-soft));
   }
 
   table.j-table td,
   table.j-table th {
     border-width: var(--table-border-width, 0 0 1px);
     border-style: var(--table-border-style, solid);
-    border-color: var(--table-border-color, var(--border-color));
+    border-color: var(--table-border-color, var(--ui-border));
     padding: var(--table-padding, 0.5em 0.75em);
   }
 
@@ -34,15 +34,15 @@
 
   table.j-table a {
     text-decoration: var(--table-link-decoration, inherit);
-    color: var(--table-link-color, var(--primary));
+    color: var(--table-link-color, var(--tone-solid));
   }
 
   table.j-table.is-striped thead tr,
   table.j-table.is-striped tbody tr:not(.is-selected):nth-child(2n) {
-    background-color: var(--table-striped-background, var(--secondary));
+    background-color: var(--table-striped-background, var(--tone-soft));
   }
   table.j-table.is-hoverable tbody tr:hover {
-    background-color: var(--table-hover-background, var(--secondary));
+    background-color: var(--table-hover-background, var(--tone-soft));
   }
 
   table.j-table.is-bordered td,

@@ -5,7 +5,7 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: var(--offcanvas-overlay-background, var(--gray-a1));
+    background-color: var(--offcanvas-overlay-background, var(--ui-overlay-muted));
     z-index: var(--z-index-overlay);
     opacity: 0;
     transition: opacity 0.3s ease;
@@ -18,9 +18,9 @@
   .j-offcanvas {
     position: fixed;
     z-index: var(--z-index-offcanvas);
-    background: var(--offcanvas-background, var(--background));
-    box-shadow: var(--offcanvas-box-shadow, var(--box-shadow));
-    --offcanvas-border: var(--border-sm);
+    background: var(--offcanvas-background, var(--ui-bg));
+    box-shadow: var(--offcanvas-box-shadow, var(--shadow));
+    --offcanvas-border: 1px solid var(--ui-border-subtle);
   }
 
   .j-offcanvas.is-slide,

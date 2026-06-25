@@ -1,81 +1,131 @@
 @layer content {
+  /* ============================================
+     Content - 文章阅读/编辑器预览样式
+     ============================================ */
+
   .j-content {
-    --content-block-margin: 1.5em;
-    --content-block-margin-bottom: 1em;
-    --content-heading-margin: 1.75em;
-    --content-heading-margin-bottom: 1em;
-    line-height: 1.5;
+    /* 阅读模式变量 */
+    --content-line-height: 1.75;
+    --content-letter-spacing: 0.01em;
+    --content-word-spacing: 0.02em;
+    --content-paragraph-spacing: 1.25em;
+    --content-heading-spacing: 1.5em;
+    --content-block-spacing: 1.5em;
+    --content-list-spacing: 0.5em;
+
+    line-height: var(--content-line-height);
+    letter-spacing: var(--content-letter-spacing);
+    word-spacing: var(--content-word-spacing);
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
+  /* --- Size Modes --- */
   .j-content,
   .j-content.is-md {
     font-size: var(--font-size-lg);
   }
 
   .j-content.is-sm {
+    --content-line-height: 1.65;
+    --content-paragraph-spacing: 1em;
+    --content-heading-spacing: 1.25em;
+    --content-block-spacing: 1.25em;
     font-size: var(--font-size);
   }
 
   .j-content.is-lg {
+    --content-line-height: 1.8;
+    --content-paragraph-spacing: 1.5em;
+    --content-heading-spacing: 1.75em;
+    --content-block-spacing: 1.75em;
     font-size: var(--font-size-xl);
   }
 
   .j-content.is-xl {
+    --content-line-height: 1.85;
+    --content-paragraph-spacing: 1.75em;
+    --content-heading-spacing: 2em;
+    --content-block-spacing: 2em;
     font-size: var(--font-size-2xl);
   }
 
-  /* 通用重置 */
+  /* ============================================
+     Typography - 段落与标题
+     ============================================ */
+
+  /* Reset */
   .j-content *,
   .j-content *::before,
   .j-content *::after {
     box-sizing: border-box;
   }
 
-  /* 段落与通用块级元素 */
-  .j-content p,
-  .j-content div {
-    margin: 0 0 var(--content-block-margin-bottom);
+  /* 段落 */
+  .j-content p {
+    margin: 0 0 var(--content-paragraph-spacing);
   }
 
+  /* 标题层级 */
   .j-content h1,
   .j-content h2,
   .j-content h3,
   .j-content h4,
   .j-content h5,
   .j-content h6 {
-    margin: var(--content-heading-margin) 0 var(--content-heading-margin-bottom);
+    margin: var(--content-heading-spacing) 0 calc(var(--content-heading-spacing) * 0.5);
     font-weight: 600;
-    line-height: 1.25;
+    line-height: 1.3;
+    color: var(--tone-heading);
+    letter-spacing: -0.02em;
   }
 
   .j-content h1 {
     font-size: 2em;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    margin-top: 0;
   }
 
   .j-content h2 {
-    font-size: 1.75em;
+    font-size: 1.625em;
+    font-weight: 650;
+    padding-bottom: 0.5em;
+    border-bottom: 1px solid var(--ui-border-subtle);
   }
 
   .j-content h3 {
-    font-size: 1.5em;
+    font-size: 1.375em;
   }
 
   .j-content h4 {
-    font-size: 1.25em;
-  }
-
-  .j-content h5 {
     font-size: 1.125em;
   }
 
+  .j-content h5,
   .j-content h6 {
     font-size: 1em;
   }
 
-  /* 强调文本 */
+  /* 标题后的段落减少间距 */
+  .j-content h1+p,
+  .j-content h2+p,
+  .j-content h3+p,
+  .j-content h4+p,
+  .j-content h5+p,
+  .j-content h6+p {
+    margin-top: calc(var(--content-paragraph-spacing) * -0.5);
+  }
+
+  /* ============================================
+     Inline Elements - 内联元素
+     ============================================ */
+
   .j-content strong,
   .j-content b {
-    font-weight: 700;
+    font-weight: 650;
+    color: var(--tone-heading);
   }
 
   .j-content em,
@@ -85,21 +135,26 @@
 
   .j-content u {
     text-decoration: underline;
+    text-decoration-color: var(--tone-muted);
+    text-underline-offset: 0.2em;
   }
 
   .j-content s,
   .j-content del {
     text-decoration: line-through;
+    color: var(--tone-caption);
   }
 
   .j-content mark {
-    background-color: var(--yellow-9);
-    padding: 0 0.2em;
+    background-color: var(--tone-highlight);
+    color: var(--tone-highlight-fg);
+    padding: 0.1em 0.3em;
     border-radius: 0.2em;
   }
 
   .j-content small {
     font-size: 0.875em;
+    color: var(--tone-caption);
   }
 
   .j-content sub {
@@ -112,32 +167,72 @@
     font-size: 0.75em;
   }
 
-  /* 链接 */
+  .j-content abbr[title] {
+    text-decoration: underline dotted;
+    text-decoration-color: var(--tone-muted);
+    text-underline-offset: 0.2em;
+    cursor: help;
+  }
+
+  .j-content time {
+    white-space: nowrap;
+    color: var(--tone-caption);
+  }
+
+  .j-content ruby {
+    font-size: 0.95em;
+  }
+
+  .j-content rt {
+    font-size: 0.7em;
+    color: var(--tone-caption);
+  }
+
+  /* ============================================
+     Links - 链接
+     ============================================ */
+
   .j-content a {
-    color: var(--link);
+    color: var(--tone-link);
     text-decoration: none;
+    text-decoration-color: transparent;
+    text-underline-offset: 0.15em;
+    transition: color 0.15s, text-decoration-color 0.15s;
   }
 
   .j-content a:hover {
-    color: var(--link-hover);
+    color: var(--tone-link-hover);
     text-decoration: underline;
+    text-decoration-color: var(--tone-link-hover);
   }
 
-  .j-content a:focus {
-    color: var(--link-focus);
-    text-decoration: underline;
+  .j-content a:visited {
+    color: var(--tone-link-visited);
   }
 
-  /* 列表 */
+  .j-content a:active {
+    color: var(--tone-link-active);
+  }
+
+  /* ============================================
+     Lists - 列表
+     ============================================ */
+
   .j-content ul,
   .j-content ol {
-    margin: 0 0 var(--content-block-margin-bottom);
-    padding-left: 1.5em;
+    margin: 0 0 var(--content-paragraph-spacing);
+    padding-left: 1.75em;
   }
 
   .j-content ul li,
   .j-content ol li {
-    margin-bottom: 0.25em;
+    margin-bottom: var(--content-list-spacing);
+    padding-left: 0.25em;
+  }
+
+  .j-content ul li:last-child,
+  .j-content ol li:last-child {
+    margin-bottom: 0;
   }
 
   .j-content ul {
@@ -148,14 +243,20 @@
     list-style-type: decimal;
   }
 
-  .j-content ul ul,
-  .j-content ol ul {
+  .j-content ul ul {
     list-style-type: circle;
+    margin-top: var(--content-list-spacing);
+    margin-bottom: 0;
   }
 
-  .j-content ol ol,
-  .j-content ul ol {
+  .j-content ol ol {
     list-style-type: lower-alpha;
+    margin-top: var(--content-list-spacing);
+    margin-bottom: 0;
+  }
+
+  .j-content ul ul ul {
+    list-style-type: square;
   }
 
   .j-content ul p,
@@ -163,15 +264,16 @@
     margin: 0;
   }
 
-  /* 定义列表 —— 新增支持 */
+  /* Definition List */
   .j-content dl {
-    margin: 0 0 var(--content-block-margin);
+    margin: 0 0 var(--content-block-spacing);
   }
 
   .j-content dt {
     font-weight: 600;
-    margin-top: 0.8em;
-    margin-bottom: 0.2em;
+    margin-top: 0.75em;
+    margin-bottom: 0.125em;
+    color: var(--tone-heading);
   }
 
   .j-content dt:first-child {
@@ -179,74 +281,86 @@
   }
 
   .j-content dd {
-    margin: 0 0 0.8em;
-    padding-left: 0;
-    color: var(--gray-11);
+    margin: 0 0 0.75em;
+    padding-left: 1em;
+    color: var(--tone-body);
   }
 
   .j-content dd+dt {
     margin-top: 1em;
   }
 
-  /* 引用与引用块 */
-  .j-content blockquote {
-    margin: 1.5em 4em;
-    padding: 1.2em;
-    border-left: 0.25em solid var(--gray-6);
-    color: var(--gray-11);
-    background-color: var(--gray-3);
-    font-style: italic;
-  }
+  /* ============================================
+     Blockquote - 引用
+     ============================================ */
 
-  @media screen and (max-width: 768px) {
-    .j-content blockquote {
-      margin: 1.5em 0;
-      padding: 0.5em 1em;
-      font-size: 0.85em;
-    }
+  .j-content blockquote {
+    margin: var(--content-block-spacing) 0;
+    margin-left: 0;
+    margin-right: 0;
+    padding: 1em 1.5em;
+    border-left: 3px solid var(--tone-border);
+    border-radius: 0 var(--radius) var(--radius) 0;
+    background-color: var(--tone-wash);
+    color: var(--tone-subtitle);
+    font-style: italic;
   }
 
   .j-content blockquote p {
     margin: 0;
   }
 
-  .j-content cite {
-    display: block;
-    margin-top: 0.5em;
-    font-style: normal;
-    font-size: 0.9em;
-    color: var(--gray-9);
+  .j-content blockquote p+p {
+    margin-top: 0.75em;
   }
 
-  /* 代码相关 */
+  .j-content cite {
+    display: block;
+    margin-top: 0.75em;
+    font-style: normal;
+    font-size: 0.875em;
+    color: var(--tone-caption);
+  }
+
+  .j-content cite::before {
+    content: '— ';
+  }
+
+  /* ============================================
+     Code - 代码
+     ============================================ */
+
   .j-content code {
-    font-family: Consolas, Monaco, 'Andale Mono', monospace;
-    font-size: 0.9em;
-    background-color: var(--accent);
-    border: 1px solid var(--secondary);
-    padding: 0.15em 0.3em;
-    border-radius: 0.2em;
-    color: var(--primary);
+    font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 0.875em;
+    background-color: var(--tone-code-bg);
+    color: var(--tone-code-fg);
+    padding: 0.15em 0.4em;
+    border-radius: var(--radius-sm);
+    word-break: break-word;
   }
 
   .j-content kbd {
     font-family: inherit;
-    background-color: var(--gray-3);
-    border: 1px solid var(--gray-6);
-    border-radius: 0.2em;
-    padding: 0.1em 0.3em;
-    font-size: 0.9em;
+    font-size: 0.875em;
+    background-color: var(--ui-surface-subtle);
+    border: 1px solid var(--ui-border);
+    border-bottom-width: 2px;
+    border-radius: var(--radius-sm);
+    padding: 0.1em 0.4em;
+    color: var(--tone-heading);
   }
 
   .j-content pre {
-    margin: var(--content-block-margin) 0;
-    padding: 0.8em;
-    background-color: var(--gray-a3);
-    border-radius: var(--border-radius);
+    margin: var(--content-block-spacing) 0;
+    padding: 1.25em 1.5em;
+    background-color: var(--tone-code-bg);
+    border-radius: var(--radius-md);
     overflow-x: auto;
-    font-family: Consolas, Monaco, 'Andale Mono', monospace;
-    font-size: 0.9em;
-    line-height: 1.4;
+    font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 0.875em;
+    line-height: 1.6;
+    tab-size: 2;
   }
 
   .j-content pre code {
@@ -254,134 +368,38 @@
     padding: 0;
     color: inherit;
     font-size: inherit;
-    border: none;
+    border-radius: 0;
   }
 
-  /* 内联语义元素 */
-  .j-content q {
-    quotes: '“' '”' '‘' '’';
-    text-decoration: underline;
-    text-underline-offset: var(--space);
-    text-decoration-color: var(--amber-9);
-  }
+  /* ============================================
+     Media - 媒体
+     ============================================ */
 
-  .j-content abbr[title] {
-    border-bottom: 1px dotted var(--border-color);
-    cursor: help;
-  }
-
-  .j-content time {
-    white-space: nowrap;
-  }
-
-  .j-content address {
-    font-style: normal;
-    margin: 0 0 var(--content-block-margin-bottom);
-    color: var(--gray-9);
-  }
-
-  .j-content ruby {
-    font-size: 0.95em;
-  }
-
-  .j-content rt {
-    font-size: 0.7em;
-    color: var(--gray-9);
-  }
-
-  .j-content progress {
-    max-width: 100%;
-    height: 0.8em;
-    margin: 0.125em 0;
-  }
-
-  .j-content meter {
-    max-width: 100%;
-    height: 0.8em;
-    margin: 0.125em 0;
-  }
-
-  /* 图片与媒体容器 */
   .j-content img {
     max-width: 100%;
     height: auto;
-    margin: 0.5em 0;
+    border-radius: var(--radius-md);
   }
 
-  /* figure / figcaption */
   .j-content figure {
-    margin: var(--content-block-margin) 0;
-    text-align: center;
+    margin: var(--content-block-spacing) 0;
   }
 
   .j-content figure img,
   .j-content figure video,
   .j-content figure iframe {
-    margin: 0;
+    display: block;
+    margin: 0 auto;
   }
 
   .j-content figcaption {
-    margin-top: 0.5em;
-    font-size: 0.9em;
-    color: var(--gray-9);
+    margin-top: 0.75em;
+    font-size: 0.875em;
+    color: var(--tone-caption);
     text-align: center;
+    line-height: 1.5;
   }
 
-  /* 表格 */
-  .j-content table {
-    min-width: 240px;
-    max-width: 100%;
-    margin: var(--content-block-margin) 0;
-    border-collapse: collapse;
-    font-size: 0.95em;
-    display: block;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .j-content th,
-  .j-content td {
-    padding: 0.5em 0.75em;
-    border: 1px solid var(--border-color);
-    text-align: left;
-  }
-
-  .j-content th {
-    background-color: var(--gray-a3);
-    font-weight: 600;
-  }
-
-  .j-content tbody tr:nth-child(even) {
-    background-color: var(--gray-a2);
-  }
-
-  /* 水平线 */
-  .j-content hr {
-    margin: var(--content-block-margin) 0;
-    border: 0;
-    border-top: 1px solid var(--gray-3);
-  }
-
-  /* 折叠内容 */
-  .j-content details {
-    margin: var(--content-block-margin) 0;
-    padding: 0.8em;
-    background-color: var(--accent);
-    border-radius: var(--border-radius);
-    border: 1px solid var(--border-color-sm);
-  }
-
-  .j-content summary {
-    cursor: pointer;
-    font-weight: 600;
-    outline: none;
-  }
-
-  .j-content details[open]>summary {
-    margin-bottom: 0.6em;
-  }
-
-  /* 嵌入内容：iframe / video / audio */
   .j-content iframe,
   .j-content video,
   .j-content audio {
@@ -391,11 +409,11 @@
   .j-content video,
   .j-content audio {
     display: block;
-    border-radius: var(--border-radius);
+    border-radius: var(--radius-md);
   }
 
   .j-content video {
-    background-color: var(--foreground);
+    background-color: var(--ui-fg);
   }
 
   .j-content figure:has(audio) {
@@ -405,21 +423,145 @@
     align-items: center;
   }
 
-  .j-content .j-loading,
-  .j-content .j-loading>* {
-    margin: 0;
+  /* ============================================
+     Table - 表格
+     ============================================ */
+
+  .j-content table {
+    min-width: 280px;
+    max-width: 100%;
+    margin: var(--content-block-spacing) 0;
+    border-collapse: collapse;
+    font-size: 0.9375em;
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
-  /* 默认行高与间距控制 */
+  .j-content th,
+  .j-content td {
+    padding: 0.75em 1em;
+    border-bottom: 1px solid var(--ui-border-subtle);
+    text-align: left;
+  }
+
+  .j-content th {
+    background-color: var(--ui-bg-subtle);
+    font-weight: 600;
+    color: var(--tone-heading);
+    white-space: nowrap;
+  }
+
+  .j-content thead th {
+    border-bottom: 2px solid var(--ui-border);
+  }
+
+  .j-content tbody tr:hover {
+    background-color: var(--ui-surface-hover);
+  }
+
+  .j-content tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  /* ============================================
+     Horizontal Rule - 分割线
+     ============================================ */
+
+  .j-content hr {
+    margin: var(--content-block-spacing) 0;
+    border: 0;
+    height: 1px;
+    background-color: var(--ui-border);
+  }
+
+  /* ============================================
+     Details / Summary - 折叠
+     ============================================ */
+
+  .j-content details {
+    margin: var(--content-block-spacing) 0;
+    padding: 1em 1.25em;
+    background-color: var(--ui-bg-subtle);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--ui-border-subtle);
+  }
+
+  .j-content summary {
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--tone-heading);
+    outline: none;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+  }
+
+  .j-content summary::before {
+    content: '▸';
+    display: inline-block;
+    transition: transform 0.2s ease;
+  }
+
+  .j-content details[open]>summary::before {
+    transform: rotate(90deg);
+  }
+
+  .j-content details[open]>summary {
+    margin-bottom: 0.75em;
+  }
+
+  .j-content details[open]>summary+* {
+    margin-top: 0;
+  }
+
+  /* ============================================
+     Progress / Meter
+     ============================================ */
+
+  .j-content progress {
+    max-width: 100%;
+    height: 0.5em;
+    margin: 0.5em 0;
+    border-radius: var(--radius-full);
+    overflow: hidden;
+  }
+
+  .j-content meter {
+    max-width: 100%;
+    height: 1em;
+    margin: 0.25em 0;
+  }
+
+  /* ============================================
+     Address
+     ============================================ */
+
+  .j-content address {
+    font-style: normal;
+    margin: 0 0 var(--content-block-spacing);
+    padding: 1em 1.25em;
+    background-color: var(--ui-bg-subtle);
+    border-radius: var(--radius-md);
+    color: var(--tone-caption);
+    font-size: 0.9375em;
+  }
+
+  /* ============================================
+     Block Item - 通用块级元素
+     ============================================ */
+
+  .j-content .block-item {
+    margin: var(--content-block-spacing) 0;
+  }
+
+  /* First/Last child margin reset */
   .j-content>*:first-child {
     margin-top: 0;
   }
 
   .j-content>*:last-child {
     margin-bottom: 0;
-  }
-
-  .j-content .block-item {
-    margin: var(--content-block-margin) 0;
   }
 }
