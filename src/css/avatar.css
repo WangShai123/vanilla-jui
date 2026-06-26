@@ -19,11 +19,11 @@
   }
 
   .j-avatar.is-sm {
-    --avatar-size: var(--el-height-sm);
+    --avatar-size: var(--el-height-2xs);
   }
 
   .j-avatar.is-lg {
-    --avatar-size: var(--el-height-lg);
+    --avatar-size: var(--el-height-md);
   }
 
   .j-avatar.is-round {

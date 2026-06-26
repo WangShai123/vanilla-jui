@@ -3,24 +3,24 @@
     display: inline-flex;
     justify-content: center;
     align-items: center;
-    padding: 0 var(--badge-padding, var(--space));
-    min-width: var(--badge-min-width, var(--el-height-2xs));
-    height: var(--badge-height, var(--el-height-2xs));
+    padding: 0 var(--badge-padding, calc(var(--space) * 1.5));
+    min-width: var(--badge-min-width, 1.25rem);
+    height: var(--badge-height, 1.25rem);
     line-height: var(--badge-line-height, var(--line-height-self));
-    font-size: var(--badge-font-size, var(--font-size-sm));
+    font-size: var(--badge-font-size, var(--font-size-xs));
     font-weight: var(--badge-font-weight, var(--font-medium));
     border-radius: var(--badge-radius, 500px);
     border: 1px solid var(--badge-border-color, var(--ui-border));
     color: var(--badge-color, var(--ui-fg));
     background-color: var(--badge-background, var(--ui-bg));
-    box-shadow: var(--badge-box-shadow, var(--shadow-sm));
+    box-shadow: var(--badge-box-shadow, none);
   }
 
   .j-badge.is-sm {
-    --badge-padding: .125rem;
-    --badge-min-width: .75rem;
-    --badge-height: var(--el-height-3xs);
-    --badge-font-size: .625rem;
+    --badge-padding: calc(var(--space) * 0.75);
+    --badge-min-width: 1rem;
+    --badge-height: 1rem;
+    --badge-font-size: 0.625rem;
   }
 
   .j-badge.is-contrast {

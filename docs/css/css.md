@@ -83,15 +83,15 @@ src/css/
 
 #### Component Font Sizes
 
-| Token | Value | Description |
-|-------|-------|-------------|
-| `--font-size-xs` | `0.75rem` | Extra small |
-| `--font-size-sm` | `0.875rem` | Small |
-| `--font-size` | `1rem` | Base |
-| `--font-size-md` | `1rem` | Medium |
-| `--font-size-lg` | `1.125rem` | Large |
-| `--font-size-xl` | `1.25rem` | Extra large |
-| `--font-size-2xl` | `1.5rem` | 2x large |
+| Token | Default | j-font-sm | j-font-md | Description |
+|-------|---------|-----------|-----------|-------------|
+| `--font-size-xs` | `0.75rem` | `0.6875rem` | `0.75rem` | Extra small |
+| `--font-size-sm` | `0.875rem` | `0.75rem` | `0.875rem` | Small |
+| `--font-size` | `0.875rem` | `0.875rem` | `1rem` | Base |
+| `--font-size-md` | `0.875rem` | `0.875rem` | `1rem` | Medium |
+| `--font-size-lg` | `1rem` | `1rem` | `1.125rem` | Large |
+| `--font-size-xl` | `1.125rem` | `1.125rem` | `1.25rem` | Extra large |
+| `--font-size-2xl` | `1.25rem` | `1.25rem` | `1.5rem` | 2x large |
 
 #### Font Weight
 
@@ -121,13 +121,15 @@ src/css/
 
 | Token | Default | j-font-sm | j-font-md | Description |
 |-------|---------|-----------|-----------|-------------|
-| `--el-height-3xs` | `1rem` | `0.875rem` | `1.125rem` | Extra extra small (16px) |
-| `--el-height-2xs` | `1.25rem` | `1.125rem` | `1.375rem` | Extra small (20px) |
-| `--el-height-xs` | `1.5rem` | `1.375rem` | `1.625rem` | Small (24px) |
-| `--el-height-sm` | `1.75rem` | `1.625rem` | `1.875rem` | Medium small (28px) |
-| `--el-height` | `2rem` | `1.875rem` | `2.125rem` | Default (32px) |
-| `--el-height-md` | `2rem` | `1.875rem` | `2.125rem` | Medium (32px) |
-| `--el-height-lg` | `2.25rem` | `2.125rem` | `2.375rem` | Large (36px) |
+| `--el-height-3xs` | `1.5rem` | `1.5rem` | `1.75rem` | Extra extra small (24px) |
+| `--el-height-2xs` | `1.75rem` | `1.75rem` | `2rem` | Extra small (28px) |
+| `--el-height-xs` | `2rem` | `2rem` | `2.25rem` | Small (32px) |
+| `--el-height-sm` | `2.25rem` | `2.25rem` | `2.5rem` | Medium small (36px) |
+| `--el-height` | `2rem` | `2rem` | `2.25rem` | Default (32px) |
+| `--el-height-md` | `2.25rem` | `2.25rem` | `2.5rem` | Medium (36px) |
+| `--el-height-lg` | `2.5rem` | `2.5rem` | `2.75rem` | Large (40px) |
+
+**Note:** `--el-height` defaults to the sm tier value, while other height variants default to their md tier value.
 
 #### Border Radius
 
@@ -286,44 +288,210 @@ Each state (danger, success, warning, info) has:
 
 ### Base Reset
 
-- Box-sizing: border-box for all elements
-- Font family: system-ui stack
-- Color scheme: light/dark support
-- Smooth scrolling
+The layout system provides a modern CSS reset:
+
+```css
+/* Applied to all elements */
+*, ::after, ::backdrop, ::before, ::file-selector-button {
+  box-sizing: border-box;
+}
+
+/* Applied to html */
+html {
+  -webkit-text-size-adjust: 100%;
+  tab-size: 4;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  scroll-behavior: smooth;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Emoji, Helvetica, Arial, sans-serif;
+  color: var(--ui-fg);
+  background-color: var(--ui-bg);
+}
+
+/* Applied to body */
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  font-size: var(--font-size);
+  margin: 0;
+}
+```
+
+### Color Scheme
+
+```html
+<!-- Light mode -->
+<html class="light">
+
+<!-- Dark mode -->
+<html class="dark">
+```
+
+### Reset Utility
+
+Use `.is-reset` to reset specific elements:
+
+```html
+<a class="is-reset" href="#">Link</a>
+<button class="is-reset">Button</button>
+<h1 class="is-reset">Heading</h1>
+<ul class="is-reset"><li>List</li></ul>
+<p class="is-reset">Paragraph</p>
+<pre class="is-reset">Code</pre>
+```
+
+---
 
 ### Container
 
-```html
-<div class="container">...</div>
-```
-
-| Class | Description |
-|-------|-------------|
-| `container` | Centered container with max-width |
-| `auto-container` | Auto-width scrollable container |
-| `block-center` | Block-level centering |
-
-### Flex Layout
+#### Basic Container
 
 ```html
-<div class="flex-container">
-  <div class="flex-col-6">Half width</div>
-  <div class="flex-col-6">Half width</div>
+<div class="container">
+  Content centered with max-width 1200px
 </div>
 ```
 
 | Class | Description |
 |-------|-------------|
-| `flex-container` | Flex row container |
-| `flex-cols` | Flexible column |
-| `flex-col-auto` | Auto-width column |
-| `flex-col-{n}` | Fixed column (1-12) |
-| `flex-col-sm-{n}` | Responsive column (sm breakpoint) |
-| `flex-col-md-{n}` | Responsive column (md breakpoint) |
-| `flex-col-lg-{n}` | Responsive column (lg breakpoint) |
-| `flex-col-xl-{n}` | Responsive column (xl breakpoint) |
+| `container` | Centered container, max-width `--screen-xl` (1200px), horizontal padding `1rem` |
+| `auto-container` | Full-width scrollable container |
+| `block-center` | Block-level centering with auto height |
+
+#### Container Variables
+
+```css
+.container {
+  --container-padding-inline: 1rem;  /* Horizontal padding */
+}
+```
+
+---
+
+### Flex Layout
+
+Flex layout is suitable for **one-dimensional** arrangements (navigation, forms, rows).
+
+#### Basic Flex Container
+
+```html
+<div class="flex-container">
+  <div class="flex-col">Item 1</div>
+  <div class="flex-col">Item 2</div>
+  <div class="flex-col">Item 3</div>
+</div>
+```
+
+| Class | Description |
+|-------|-------------|
+| `flex-container` | Flex row container with `flex-wrap: wrap` and gap |
+| `flex-cols` | Flexible column (equal width, `flex: 1 1 0%`) |
+| `flex-col-auto` | Auto-width column (content-sized) |
+
+#### Custom Gap
+
+```html
+<div class="flex-container" style="--flex-container-gap: 2rem;">
+  <div class="flex-col-6">Left</div>
+  <div class="flex-col-6">Right</div>
+</div>
+```
+
+#### Fixed Column Widths (1-12)
+
+The grid is based on 12 columns. Column width = `(100% - (n-1) * gap) / n`.
+
+```html
+<!-- Half width -->
+<div class="flex-container">
+  <div class="flex-col-6">50%</div>
+  <div class="flex-col-6">50%</div>
+</div>
+
+<!-- Third width -->
+<div class="flex-container">
+  <div class="flex-col-4">33.3%</div>
+  <div class="flex-col-4">33.3%</div>
+  <div class="flex-col-4">33.3%</div>
+</div>
+
+<!-- Quarter width -->
+<div class="flex-container">
+  <div class="flex-col-3">25%</div>
+  <div class="flex-col-3">25%</div>
+  <div class="flex-col-3">25%</div>
+  <div class="flex-col-3">25%</div>
+</div>
+
+<!-- Mixed widths -->
+<div class="flex-container">
+  <div class="flex-col-8">66.7%</div>
+  <div class="flex-col-4">33.3%</div>
+</div>
+```
+
+Available classes: `flex-col-1` through `flex-col-12`
+
+#### Responsive Columns
+
+Columns adapt to viewport width using breakpoints:
+
+| Breakpoint | Class Prefix | Min-Width |
+|------------|--------------|-----------|
+| Default | `flex-col-{n}` | 0 |
+| sm | `flex-col-sm-{n}` | 576px |
+| md | `flex-col-md-{n}` | 768px |
+| lg | `flex-col-lg-{n}` | 992px |
+| xl | `flex-col-xl-{n}` | 1200px |
+
+```html
+<!-- Mobile: full width, Tablet: half, Desktop: third -->
+<div class="flex-container">
+  <div class="flex-col-12 flex-col-sm-6 flex-col-md-4">
+    Content
+  </div>
+  <div class="flex-col-12 flex-col-sm-6 flex-col-md-4">
+    Content
+  </div>
+  <div class="flex-col-12 flex-col-sm-6 flex-col-md-4">
+    Content
+  </div>
+</div>
+```
+
+#### Responsive Example: Sidebar Layout
+
+```html
+<div class="flex-container">
+  <!-- Sidebar: full on mobile, 3 cols on desktop -->
+  <div class="flex-col-12 flex-col-md-3">
+    <nav>Sidebar</nav>
+  </div>
+  <!-- Main: full on mobile, 9 cols on desktop -->
+  <div class="flex-col-12 flex-col-md-9">
+    <main>Content</main>
+  </div>
+</div>
+```
+
+#### Responsive Example: Dashboard Cards
+
+```html
+<div class="flex-container">
+  <div class="flex-col-12 flex-col-sm-6 flex-col-lg-3">Card 1</div>
+  <div class="flex-col-12 flex-col-sm-6 flex-col-lg-3">Card 2</div>
+  <div class="flex-col-12 flex-col-sm-6 flex-col-lg-3">Card 3</div>
+  <div class="flex-col-12 flex-col-sm-6 flex-col-lg-3">Card 4</div>
+</div>
+```
+
+---
 
 ### Grid Layout
+
+Grid layout is suitable for **two-dimensional** layouts (card grids, dashboards, galleries).
+
+#### Basic Grid Container
 
 ```html
 <div class="grid-container grid-col-3">
@@ -335,24 +503,234 @@ Each state (danger, success, warning, info) has:
 
 | Class | Description |
 |-------|-------------|
-| `grid-container` | Grid container |
+| `grid-container` | Grid container with gap and full width |
 | `grid-col-{n}` | Fixed columns (1-12) |
-| `grid-col-auto-{px}` | Auto-fill with min-width |
-| `grid-col-sm-{n}` | Responsive columns (sm) |
-| `grid-col-md-{n}` | Responsive columns (md) |
-| `grid-col-lg-{n}` | Responsive columns (lg) |
-| `grid-col-xl-{n}` | Responsive columns (xl) |
 
-### Utility Classes
+#### Fixed Columns (1-12)
+
+```html
+<!-- 2 columns -->
+<div class="grid-container grid-col-2">
+  <div>Item 1</div>
+  <div>Item 2</div>
+</div>
+
+<!-- 4 columns -->
+<div class="grid-container grid-col-4">
+  <div>Item 1</div>
+  <div>Item 2</div>
+  <div>Item 3</div>
+  <div>Item 4</div>
+</div>
+```
+
+Available classes: `grid-col-1` through `grid-col-12`
+
+#### Auto-Fill Grid
+
+Auto-fill creates responsive columns based on minimum width:
+
+```html
+<!-- Auto-fill: minimum 200px per column -->
+<div class="grid-container grid-col-auto-200">
+  <div>Item 1</div>
+  <div>Item 2</div>
+  <div>Item 3</div>
+  <div>Item 4</div>
+  <div>Item 5</div>
+</div>
+```
+
+| Class | Min-Width | Description |
+|-------|-----------|-------------|
+| `grid-col-auto-150` | 150px | Small cards |
+| `grid-col-auto-200` | 200px | Medium cards |
+| `grid-col-auto-250` | 250px | Default cards |
+| `grid-col-auto-300` | 300px | Large cards |
+
+#### Responsive Grid Columns
+
+| Breakpoint | Class Prefix | Min-Width |
+|------------|--------------|-----------|
+| Default | `grid-col-{n}` | 0 |
+| sm | `grid-col-sm-{n}` | 576px |
+| md | `grid-col-md-{n}` | 768px |
+| lg | `grid-col-lg-{n}` | 992px |
+| xl | `grid-col-xl-{n}` | 1200px |
+
+```html
+<!-- Mobile: 1 col, Tablet: 2 cols, Desktop: 3 cols -->
+<div class="grid-container grid-col-1 grid-col-sm-2 grid-col-lg-3">
+  <div>Item 1</div>
+  <div>Item 2</div>
+  <div>Item 3</div>
+  <div>Item 4</div>
+  <div>Item 5</div>
+  <div>Item 6</div>
+</div>
+```
+
+#### Custom Gap
+
+```html
+<div class="grid-container grid-col-3" style="--grid-container-gap: 2rem;">
+  <div>Item 1</div>
+  <div>Item 2</div>
+  <div>Item 3</div>
+</div>
+```
+
+---
+
+### Aspect Ratio
+
+```html
+<div class="aspect-square">1:1</div>
+<div class="aspect-video">16:9</div>
+<div class="aspect-auto">Auto</div>
+```
+
+| Class | Ratio | Description |
+|-------|-------|-------------|
+| `aspect-square` | 1:1 | Square |
+| `aspect-video` | 16:9 | Video/Widescreen |
+| `aspect-auto` | auto | Natural aspect ratio |
+
+---
+
+### Width Utilities
+
+```html
+<div class="w-full">100% width</div>
+<div class="w-half">50% width</div>
+<div class="w-screen">100vw width</div>
+```
+
+| Class | Width | Description |
+|-------|-------|-------------|
+| `w-full` | 100% | Full parent width |
+| `w-half` | 50% | Half parent width |
+| `w-screen` | 100vw | Full viewport width |
+
+---
+
+### iOS Safe Area
+
+For apps running in standalone mode on iOS:
+
+```html
+<div class="ios-safe-x">Horizontal safe area</div>
+<div class="ios-safe-y">Vertical safe area</div>
+<div class="ios-safe-left">Left safe area</div>
+<div class="ios-safe-right">Right safe area</div>
+<div class="ios-safe-top">Top safe area</div>
+<div class="ios-safe-bottom">Bottom safe area</div>
+```
 
 | Class | Description |
 |-------|-------------|
-| `w-full` | Width 100% |
-| `w-half` | Width 50% |
-| `w-screen` | Width 100vw |
-| `aspect-square` | Aspect ratio 1:1 |
-| `aspect-video` | Aspect ratio 16:9 |
-| `ios-safe-*` | iOS safe area padding |
+| `ios-safe-x` | Left + Right padding |
+| `ios-safe-y` | Top + Bottom padding |
+| `ios-safe-left` | Left padding only |
+| `ios-safe-right` | Right padding only |
+| `ios-safe-top` | Top padding only |
+| `ios-safe-bottom` | Bottom padding only |
+
+---
+
+### Background Grid
+
+Decorative grid background for landing pages:
+
+```html
+<div class="j-background-grid"></div>
+```
+
+| Class | Description |
+|-------|-------------|
+| `j-background-grid` | Full-screen decorative grid with fade mask |
+
+---
+
+### Layout Examples
+
+#### Page Layout
+
+```html
+<body>
+  <header>
+    <div class="container">
+      Navigation
+    </div>
+  </header>
+  
+  <main class="container" style="padding: 2rem 1rem;">
+    <div class="flex-container">
+      <aside class="flex-col-12 flex-col-md-3">
+        Sidebar
+      </aside>
+      <section class="flex-col-12 flex-col-md-9">
+        Content
+      </section>
+    </div>
+  </main>
+  
+  <footer class="container">
+    Footer
+  </footer>
+</body>
+```
+
+#### Card Grid
+
+```html
+<div class="grid-container grid-col-auto-250">
+  <div class="card">Card 1</div>
+  <div class="card">Card 2</div>
+  <div class="card">Card 3</div>
+  <div class="card">Card 4</div>
+  <div class="card">Card 5</div>
+</div>
+```
+
+#### Form Layout
+
+```html
+<form class="flex-container" style="--flex-container-gap: 1rem;">
+  <div class="flex-col-12 flex-col-sm-6">
+    <label>First Name</label>
+    <input type="text" />
+  </div>
+  <div class="flex-col-12 flex-col-sm-6">
+    <label>Last Name</label>
+    <input type="text" />
+  </div>
+  <div class="flex-col-12">
+    <label>Email</label>
+    <input type="email" />
+  </div>
+</form>
+```
+
+#### Dashboard Layout
+
+```html
+<div class="container" style="padding: 2rem 1rem;">
+  <!-- Stats row -->
+  <div class="flex-container" style="margin-bottom: 2rem;">
+    <div class="flex-col-12 flex-col-sm-6 flex-col-lg-3">Stat 1</div>
+    <div class="flex-col-12 flex-col-sm-6 flex-col-lg-3">Stat 2</div>
+    <div class="flex-col-12 flex-col-sm-6 flex-col-lg-3">Stat 3</div>
+    <div class="flex-col-12 flex-col-sm-6 flex-col-lg-3">Stat 4</div>
+  </div>
+  
+  <!-- Main content -->
+  <div class="flex-container">
+    <div class="flex-col-12 flex-col-lg-8">Chart</div>
+    <div class="flex-col-12 flex-col-lg-4">Activity</div>
+  </div>
+</div>
+```
 
 ---
 
@@ -416,219 +794,4 @@ Each state (danger, success, warning, info) has:
 
 ```html
 <html class="j-theme-indigo j-font-sm j-radius-md dark">
-```
-
----
-
-## 4. Component Styles
-
-### Button (`button.css`)
-
-```html
-<button class="j-button">Default</button>
-<button class="j-button is-primary">Primary</button>
-<button class="j-button is-secondary">Secondary</button>
-<button class="j-button is-danger">Danger</button>
-<button class="j-button is-sm">Small</button>
-<button class="j-button is-lg">Large</button>
-<button class="j-button is-text">Text</button>
-<button class="j-button is-outline">Outline</button>
-```
-
-### Badge (`badge.css`)
-
-```html
-<span class="j-badge">Default</span>
-<span class="j-badge is-primary">Primary</span>
-<span class="j-badge is-success">Success</span>
-<span class="j-badge is-sm">Small</span>
-```
-
-### Tag (`tag.css`)
-
-```html
-<span class="j-tag">Default</span>
-<span class="j-tag is-primary">Primary</span>
-```
-
-### Card (`card.css`)
-
-```html
-<div class="j-card">
-  <div class="card-header">Header</div>
-  <div class="card-content">Content</div>
-  <div class="card-footer">Footer</div>
-</div>
-```
-
-### Form (`form.css`)
-
-```html
-<input class="j-input" type="text" />
-<textarea class="j-textarea"></textarea>
-<select class="j-select">
-  <option>Option</option>
-</select>
-
-<div class="j-checkbox">
-  <label><input type="checkbox" /> Label</label>
-</div>
-
-<div class="j-radio">
-  <label><input type="radio" name="group" /> Option 1</label>
-  <label><input type="radio" name="group" /> Option 2</label>
-</div>
-
-<div class="j-switch">
-  <label class="switch-slider"></label>
-</div>
-```
-
-### Modal (`modal.css`)
-
-```html
-<div class="j-modal">
-  <div class="modal-header">Title</div>
-  <div class="modal-body">Content</div>
-  <div class="modal-footer">Actions</div>
-</div>
-```
-
-### Toast (`toast.css`)
-
-```html
-<div class="j-toast is-success">Success message</div>
-<div class="j-toast is-error">Error message</div>
-<div class="j-toast is-warning">Warning message</div>
-<div class="j-toast is-info">Info message</div>
-```
-
-### Tabs (`tabs.css`)
-
-```html
-<div class="j-tabs">
-  <div class="tab-item is-active">Tab 1</div>
-  <div class="tab-item">Tab 2</div>
-</div>
-```
-
-### Menu (`menu.css`)
-
-```html
-<div class="j-menu">
-  <div class="menu-item">Item 1</div>
-  <div class="menu-item">Item 2</div>
-</div>
-```
-
-### Accordion (`accordion.css`)
-
-```html
-<div class="j-accordion">
-  <div class="accordion-header">
-    <span class="header-title">Title</span>
-    <span class="header-arrow"></span>
-  </div>
-  <div class="accordion-content">Content</div>
-</div>
-```
-
-### Breadcrumb (`breadcrumb.css`)
-
-```html
-<nav class="j-breadcrumb">
-  <ol>
-    <li><a href="#">Home</a></li>
-    <li><a href="#">Section</a></li>
-    <li class="is-active"><a>Current</a></li>
-  </ol>
-</nav>
-```
-
-### Table (`table.css`)
-
-```html
-<table class="j-table">
-  <thead>
-    <tr><th>Header</th></tr>
-  </thead>
-  <tbody>
-    <tr><td>Cell</td></tr>
-  </tbody>
-</table>
-```
-
-### Content (`content.css`)
-
-```html
-<div class="j-content">
-  <h1>Title</h1>
-  <p>Paragraph</p>
-  <ul><li>List item</li></ul>
-  <blockquote>Quote</blockquote>
-  <pre><code>Code</code></pre>
-</div>
-```
-
-Size variants: `is-sm`, `is-md` (default), `is-lg`, `is-xl`
-
----
-
-## 5. Usage Examples
-
-### Theme Switching
-
-```js
-// Apply theme
-html.classList.add(`j-theme-${theme}`, `j-radius-${radius}`, `j-shadow-${shadow}`, `j-font-${font}`);
-
-// Get theme color
-const color = getComputedStyle(document.documentElement)
-  .getPropertyValue(`--ui-${theme}`)
-  .trim();
-```
-
-### Button with Tokens
-
-```css
-.btn {
-  background: var(--tone-solid);
-  color: var(--tone-fg);
-  border-radius: var(--radius);
-  height: var(--el-height);
-  font-size: var(--font-size);
-}
-.btn:hover {
-  background: var(--tone-solid-hover);
-}
-```
-
-### Form Input with States
-
-```css
-.input {
-  background: var(--ui-bg);
-  border: 1px solid var(--ui-input-border);
-  color: var(--ui-input-color);
-  height: var(--el-height);
-  border-radius: var(--radius);
-}
-.input:focus {
-  border-color: var(--ui-input-focus-border);
-  box-shadow: 0 0 0 2px var(--ui-input-focus-ring);
-}
-.input:disabled {
-  background: var(--ui-disabled-bg);
-  color: var(--ui-disabled-fg);
-}
-```
-
-### Responsive Grid
-
-```html
-<div class="grid-container grid-col-1 grid-col-md-2 grid-col-lg-3">
-  <div class="j-card">Card 1</div>
-  <div class="j-card">Card 2</div>
-  <div class="j-card">Card 3</div>
-</div>
 ```

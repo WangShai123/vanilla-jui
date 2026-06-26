@@ -39,13 +39,13 @@
   /* size */
   .j-button.is-sm {
     font-size: var(--font-size-sm);
-    height: var(--button-height-sm, var(--el-height-sm));
+    height: var(--button-height-sm, var(--el-height-2xs));
     padding: var(--button-padding-sm, calc(var(--space) * 1) calc(var(--space) * 2));
   }
 
   .j-button.is-lg {
     font-size: var(--font-size-lg);
-    height: var(--button-height-lg, var(--el-height-lg));
+    height: var(--button-height-lg, var(--el-height-md));
     padding: var(--button-padding-lg, calc(var(--space) * 3) calc(var(--space) * 4));
   }
 

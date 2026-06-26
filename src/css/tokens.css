@@ -90,22 +90,22 @@
     --radius-full: 9999px;
 
     /* --- Element Heights --- */
-    --el-height-3xs: 1rem;
-    --el-height-2xs: 1.25rem;
-    --el-height-xs: 1.5rem;
-    --el-height-sm: 1.75rem;
+    --el-height-3xs: 1.5rem;
+    --el-height-2xs: 1.75rem;
+    --el-height-xs: 2rem;
+    --el-height-sm: 2.25rem;
     --el-height: 2rem;
-    --el-height-md: 2rem;
-    --el-height-lg: 2.25rem;
+    --el-height-md: 2.25rem;
+    --el-height-lg: 2.5rem;
 
     /* --- Font Sizes --- */
     --font-size-xs: 0.75rem;
     --font-size-sm: 0.875rem;
-    --font-size: 1rem;
-    --font-size-md: 1rem;
-    --font-size-lg: 1.125rem;
-    --font-size-xl: 1.25rem;
-    --font-size-2xl: 1.5rem;
+    --font-size: 0.875rem;
+    --font-size-md: 0.875rem;
+    --font-size-lg: 1rem;
+    --font-size-xl: 1.125rem;
+    --font-size-2xl: 1.25rem;
   }
 
 
@@ -1162,34 +1162,34 @@
   .j-font-sm {
     --font-size-xs: 0.6875rem;
     --font-size-sm: 0.75rem;
-    --font-size: 0.8125rem;
-    --font-size-md: 0.8125rem;
-    --font-size-lg: 0.875rem;
-    --font-size-xl: 1rem;
+    --font-size: 0.875rem;
+    --font-size-md: 0.875rem;
+    --font-size-lg: 1rem;
+    --font-size-xl: 1.125rem;
     --font-size-2xl: 1.25rem;
-    --el-height-3xs: 0.875rem;
-    --el-height-2xs: 1.125rem;
-    --el-height-xs: 1.375rem;
-    --el-height-sm: 1.625rem;
-    --el-height: 1.875rem;
-    --el-height-md: 1.875rem;
-    --el-height-lg: 2.125rem;
+    --el-height-3xs: 1.5rem;
+    --el-height-2xs: 1.75rem;
+    --el-height-xs: 2rem;
+    --el-height-sm: 2.25rem;
+    --el-height: 2rem;
+    --el-height-md: 2.25rem;
+    --el-height-lg: 2.5rem;
   }
 
   .j-font-md {
     --font-size-xs: 0.75rem;
     --font-size-sm: 0.875rem;
-    --font-size: 0.9375rem;
-    --font-size-md: 0.9375rem;
-    --font-size-lg: 1.0625rem;
+    --font-size: 1rem;
+    --font-size-md: 1rem;
+    --font-size-lg: 1.125rem;
     --font-size-xl: 1.25rem;
     --font-size-2xl: 1.5rem;
-    --el-height-3xs: 1.125rem;
-    --el-height-2xs: 1.375rem;
-    --el-height-xs: 1.625rem;
-    --el-height-sm: 1.875rem;
-    --el-height: 2.125rem;
-    --el-height-md: 2.125rem;
-    --el-height-lg: 2.375rem;
+    --el-height-3xs: 1.75rem;
+    --el-height-2xs: 2rem;
+    --el-height-xs: 2.25rem;
+    --el-height-sm: 2.5rem;
+    --el-height: 2.25rem;
+    --el-height-md: 2.5rem;
+    --el-height-lg: 2.75rem;
   }
 }
