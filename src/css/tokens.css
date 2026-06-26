@@ -295,7 +295,7 @@
     --ui-disabled-fg: #6b7280;
     --ui-overlay: rgba(0, 0, 0, 0.7);
     --ui-overlay-muted: rgba(0, 0, 0, 0.5);
-    --ui-popup-background: rgba(17, 24, 39, 0.15);
+    --ui-popup-background: rgba(17, 24, 39, 0.1);
     --ui-input-color: #f9fafb;
     --ui-input-border: rgba(255, 255, 255, 0.15);
     --ui-input-focus-border: #818cf8;
