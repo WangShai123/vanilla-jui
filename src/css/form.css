@@ -8,7 +8,7 @@
 
   .j-form.is-vertical {
     flex-direction: column;
-    gap: var(--form-gap-vertical, calc(var(--space) * 3));
+    gap: var(--form-gap-vertical, calc(var(--space) * 2));
   }
 
   .j-form.is-horizontal {
