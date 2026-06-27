@@ -1,8 +1,14 @@
 .DS_Store
 node_modules
-AGENTS.md
+
+src/index.runtime.js
+src/utilities/debug.js
+vite.config.debug.mode.ts
 
 docs/audits
+src/css_副本
+demo
+
 tests/*
 !tests/index.html
 !tests/test.css
@@ -10,5 +16,5 @@ tests/*
 !tests/helpers.js
 !tests/config.test.js
 !tests/*.app.js
-src/css_副本
-demo
+
+AGENTS.md

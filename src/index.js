@@ -9,8 +9,9 @@ export * from './utilities/core.js';
 export * from './utilities/dom.js';
 export * from './utilities/events.js';
 export * from './utilities/http.js';
-// export * from './utilities/legacy-dom.js';
 export * from './utilities/storage.js';
+// export * from './utilities/debug.js';
+// export * from './utilities/legacy-dom.js';
 
 /**
  * Icons

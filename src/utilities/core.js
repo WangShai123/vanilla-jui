@@ -194,6 +194,8 @@ function resolveDefault(rule) {
  * @throws {Error} 校验失败时抛出。
  */
 export function validateParam(name, value, rule = {}, namespace = '') {
+  // if (JUI_DEBUG_DISABLED) return value;
+
   const config = normalizeRule(rule);
   const label = formatValidateName(namespace, name);
   const expectedTypes = hasOwn(config, 'types') ? config.types : config.type;
@@ -252,10 +254,15 @@ export function validateParam(name, value, rule = {}, namespace = '') {
 export function resolveProps(input = {}, schema = {}, namespace = 'Options') {
   const source = input == null ? {} : input;
 
+  // if (
+  //   !JUI_DEBUG_DISABLED &&
+  //   (typeof source !== 'object' || Array.isArray(source))
+  // ) {
   if (typeof source !== 'object' || Array.isArray(source)) {
     throw new Error(`${namespace} expects object.`);
   }
 
+  // const resolved = { ...(source && typeof source === 'object' ? source : {}) };
   const resolved = { ...source };
   const entries = Object.entries(schema || {});
 
@@ -276,6 +283,11 @@ export function resolveProps(input = {}, schema = {}, namespace = 'Options') {
     }
   }
 
+  // if (!JUI_DEBUG_DISABLED) {
+  //   for (const [key, rule] of Object.entries(schema || {})) {
+  //     validateParam(key, resolved[key], rule, namespace);
+  //   }
+  // }
   for (const [key, rule] of Object.entries(schema || {})) {
     validateParam(key, resolved[key], rule, namespace);
   }
@@ -335,20 +347,3 @@ export function randomId(length = 8) {
 
   return result;
 }
-
-/**
- * 转义 HTML 特殊字符。
- * @param {*} text 需要转义的内容。
- * @returns {string}
- */
-// export function escapeHtml(text) {
-//   const ESCAPE_HTML_MAP = {
-//     '&': '&amp;',
-//     '<': '&lt;',
-//     '>': '&gt;',
-//     '"': '&quot;',
-//     "'": '&#39;',
-//   };
-
-//   return String(text).replace(/[&<>"']/g, (ch) => ESCAPE_HTML_MAP[ch]);
-// }
