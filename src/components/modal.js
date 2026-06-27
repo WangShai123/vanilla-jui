@@ -18,7 +18,14 @@ import {
   resolveProps,
   validateParam,
 } from '../utilities/core.js';
-import { all, q, canUseDOM, canRenderDOM, isNode } from '../utilities/dom.js';
+import {
+  all,
+  q,
+  canUseDOM,
+  canRenderDOM,
+  isNode,
+  requireRenderDOM,
+} from '../utilities/dom.js';
 import { icon } from './icons.js';
 
 const HIDE_DURATION = 300;
@@ -705,9 +712,7 @@ class Modal extends Component {
       throw new Error('Modal: The current instance has been destroyed.');
     }
 
-    if (!canRenderDOM()) {
-      throw new Error('Modal.show: DOM environment is required.');
-    }
+    requireRenderDOM('Modal.show');
 
     if (!this.root) this.buildRoot();
 

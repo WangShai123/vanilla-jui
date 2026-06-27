@@ -11,10 +11,10 @@ import {
 import Component from '../core/Component.js';
 import { randomId, resolveProps, validateParam } from '../utilities/core.js';
 import {
-  canRenderDOM,
   isRenderableContent,
   normalizeContentNodes,
   requireContainer,
+  requireRenderDOM,
 } from '../utilities/dom.js';
 import { icon } from './icons.js';
 
@@ -98,9 +98,7 @@ class Accordion extends Component {
    * @param {object} [input={}] 手风琴配置。
    */
   constructor(container, input = {}) {
-    if (!canRenderDOM()) {
-      throw new Error('Accordion: DOM render environment is required.');
-    }
+    requireRenderDOM('Accordion');
 
     const el = requireContainer(container, 'Accordion');
 

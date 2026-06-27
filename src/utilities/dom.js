@@ -20,6 +20,19 @@ export function canRenderDOM() {
 }
 
 /**
+ * 强制要求当前环境可执行 DOM 渲染。
+ * @param {string} [namespace='Component'] 错误命名空间。
+ * @returns {true}
+ * @throws {Error} 当前环境不可渲染 DOM 时抛出。
+ */
+export function requireRenderDOM(namespace = 'Component') {
+  if (!canRenderDOM()) {
+    throw new Error(`${namespace}: DOM render environment is required.`);
+  }
+  return true;
+}
+
+/**
  * 判断是否为 DOM Node。
  * @param {*} value 需要判断的值。
  * @returns {boolean}

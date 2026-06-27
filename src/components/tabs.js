@@ -11,11 +11,11 @@ import {
 import Component from '../core/Component.js';
 import { randomId, resolveProps, validateParam } from '../utilities/core.js';
 import {
-  canRenderDOM,
   isRenderableContent,
   normalizeContentNodes,
   q,
   requireContainer,
+  requireRenderDOM,
 } from '../utilities/dom.js';
 
 const TABS_PROPS_SCHEMA = {
@@ -67,9 +67,7 @@ class Tabs extends Component {
    * @param {object} [input={}] 标签页配置。
    */
   constructor(container, input = {}) {
-    if (!canRenderDOM()) {
-      throw new Error('Tabs: DOM render environment is required.');
-    }
+    requireRenderDOM('Tabs');
 
     const el = requireContainer(container, 'Tabs');
 

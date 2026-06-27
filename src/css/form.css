@@ -77,7 +77,7 @@
     padding: var(--input-padding, calc(var(--space) * 1.5) calc(var(--space) * 2));
     border-width: var(--input-border-width, 1px);
     border-style: var(--input-border-style, solid);
-    border-color: var(--input-border-color, var(--ui-input-color));
+    border-color: var(--input-border-color, var(--ui-input-border));
     border-radius: var(--input-border-radius, var(--radius));
     height: var(--input-height, var(--el-height));
     line-height: var(--input-line-height, var(--line-height));
@@ -123,7 +123,7 @@
     margin: calc(var(--space) * -2);
     margin-inline-end: calc(var(--space) * 2);
     padding: calc(var(--space) * 2);
-    border-color: var(--input-border-color, var(--ui-input-color));
+    border-color: var(--input-border-color, var(--ui-input-border));
     background-color: var(--ui-surface-subtle);
     font-size: var(--font-size-sm, 0.75rem);
   }
@@ -209,7 +209,7 @@
     border-radius: 50%;
     border-width: var(--input-border-width, 1px);
     border-style: var(--input-border-style, solid);
-    border-color: var(--input-border-color, var(--ui-input-color));
+    border-color: var(--input-border-color, var(--ui-input-border));
     background-color: var(--ui-bg);
     cursor: pointer;
     position: relative;
@@ -277,7 +277,7 @@
     height: var(--el-height);
     line-height: var(--line-height);
     position: relative;
-    box-shadow: 0 0 0 0.0625em var(--ui-input-color);
+    box-shadow: 0 0 0 0.0625em var(--ui-input-border);
     text-align: center;
     user-select: none;
     display: flex;
@@ -359,7 +359,7 @@
     aspect-ratio: 1/1;
     border-width: var(--input-border-width, 1px);
     border-style: var(--input-border-style, solid);
-    border-color: var(--input-border-color, var(--ui-input-color));
+    border-color: var(--input-border-color, var(--ui-input-border));
     border-radius: var(--input-border-radius, var(--radius-sm));
     cursor: pointer;
     position: relative;
@@ -508,8 +508,7 @@
     position: absolute;
     cursor: pointer;
     inset: 0;
-    /* border: 1px solid var(--input-border-color, var(--ui-border)); */
-    border: 1px solid var(--input-border-color, var(--ui-input-color));
+    border: 1px solid var(--input-border-color, var(--ui-input-border));
     border-radius: 50px;
     transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   }
@@ -522,8 +521,7 @@
   .j-switch.is-line .switch-slider:before {
     content: '';
     position: absolute;
-    /* background-color: var(--ui-border-strong); */
-    background-color: var(--ui-input-color);
+    background-color: var(--ui-input-border);
     border-radius: inherit;
     transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
   }
@@ -575,9 +573,9 @@
     padding: var(--input-padding, calc(var(--space) * 1.5) calc(var(--space) * 1.5));
     border-width: var(--input-border-width, 1px);
     border-style: var(--input-border-style, solid);
-    border-color: var(--input-border-color, var(--ui-input-color));
+    border-color: var(--input-border-color, var(--ui-input-border));
     border-radius: var(--input-border-radius, var(--radius));
-    height: var(--input-height, var(--el-height));
+    height: var(--input-height, var(--el-height-xs));
     line-height: var(--input-line-height, var(--line-height));
     box-shadow: var(--input-box-shadow, var(--shadow-sm));
     background-color: inherit;
@@ -585,13 +583,13 @@
   }
 
   select.j-select.is-sm {
-    --input-height: var(--el-height-sm);
+    --input-height: var(--el-height-2xs);
     --input-padding: calc(var(--space) * 1) calc(var(--space) * 1);
     --input-font-size: var(--font-size-sm);
   }
 
   select.j-select.is-lg {
-    --input-height: var(--el-height-lg);
+    --input-height: var(--el-height-sm);
     --input-padding: calc(var(--space) * 2) calc(var(--space) * 2);
     --input-font-size: var(--font-size-lg);
   }
@@ -603,8 +601,7 @@
     min-height: var(--textarea-min-height, calc(var(--space) * 18));
     border-width: var(--input-border-width, 1px);
     border-style: var(--input-border-style, solid);
-    /* border-color: var(--input-border-color, var(--ui-input-border)); */
-    border-color: var(--input-border-color, var(--ui-input-color));
+    border-color: var(--input-border-color, var(--ui-input-border));
     border-radius: var(--textarea-border-radius, var(--radius));
     background-color: var(--textarea-background, var(--ui-bg));
     color: var(--textarea-color, var(--ui-input-color));
@@ -652,7 +649,7 @@
 
   .input-group>.el-addon>.j-button {
     position: relative;
-    border-color: var(--input-border-color, var(--ui-input-color));
+    border-color: var(--input-border-color, var(--ui-input-border));
   }
 
   .input-group>.el-addon>.is-text {
@@ -667,7 +664,7 @@
     height: var(--button-height, var(--el-height));
     border-width: var(--border-width, 1px);
     border-style: var(--border-style, solid);
-    border-color: var(--input-border-color, var(--ui-input-color));
+    border-color: var(--input-border-color, var(--ui-input-border));
     border-radius: var(--button-border-radius, var(--radius));
     box-shadow: var(--shadow-sm);
     user-select: none;
@@ -688,6 +685,7 @@
   }
 
   .input-group>input.j-input:not(:first-child),
+  .input-group>select.j-select:not(:first-child),
   .input-group>*:not(:first-child)>*,
   .input-group>*:not(:first-child)>.is-text {
     border-top-left-radius: 0;
@@ -695,6 +693,7 @@
   }
 
   .input-group>input.j-input:not(:last-child),
+  .input-group>select.j-select:not(:last-child),
   .input-group>*:not(:last-child)>*,
   .input-group>*:not(:last-child)>.is-text {
     border-top-right-radius: 0;

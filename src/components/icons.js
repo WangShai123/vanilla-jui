@@ -1,5 +1,5 @@
 import iconPath from '../icons/index.js';
-import { canRenderDOM } from '../utilities/dom.js';
+import { requireRenderDOM } from '../utilities/dom.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
@@ -26,9 +26,7 @@ function svgMarkup(name) {
  * @throws {Error} 图标不存在或非 DOM 环境时抛出。
  */
 export function icon(name, props = {}) {
-  if (!canRenderDOM()) {
-    throw new Error('icon(): DOM render environment is required.');
-  }
+  requireRenderDOM('icon()');
 
   const template = document.createElement('template');
   template.innerHTML = svgMarkup(name);

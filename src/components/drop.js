@@ -2,10 +2,10 @@ import { jsx } from 'vanilla-signal';
 
 import { randomId, resolveProps } from '../utilities/core.js';
 import {
-  canRenderDOM,
   isNode,
   isRenderableContent,
   normalizeContentNodes,
+  requireRenderDOM,
   resolveElement,
 } from '../utilities/dom.js';
 import { createEventManager } from '../utilities/events.js';
@@ -85,9 +85,7 @@ class Drop {
    * @param {DropProps} [options={}] 浮层配置。
    */
   constructor(element, options = {}) {
-    if (!canRenderDOM()) {
-      throw new Error('Drop: DOM render environment is required.');
-    }
+    requireRenderDOM('Drop');
 
     this.target = resolveElement(element, 'Drop.element');
     this.props = resolveProps(options, DROP_PROPS_SCHEMA, 'Drop');

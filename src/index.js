@@ -32,6 +32,8 @@ export { default as Menu } from './components/menu.js';
 export { default as Modal } from './components/modal.js';
 export { default as Offcanvas } from './components/offcanvas.js';
 export { default as Parabola } from './components/parabola.js';
+export { createSticky, default as Sticky } from './components/sticky.js';
+export { createToc, default as Toc } from './components/toc.js';
 export { default as Swiper } from './components/swiper.js';
 export { default as Tabs } from './components/tabs.js';
 export { default as Theme } from './components/theme.js';

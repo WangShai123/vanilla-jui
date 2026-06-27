@@ -10,12 +10,12 @@ import Component from '../core/Component.js';
 import { resolveProps, validateParam } from '../utilities/core.js';
 import {
   all,
-  canRenderDOM,
   isElement,
   isRenderableContent,
   normalizeContentNodes,
   q,
   requireContainer,
+  requireRenderDOM,
 } from '../utilities/dom.js';
 import { icon } from './icons.js';
 
@@ -186,9 +186,7 @@ class Swiper extends Component {
       throw new Error('Swiper.build: instance destroyed');
     if (this._built) return this;
 
-    if (!canRenderDOM()) {
-      throw new Error('Swiper: DOM render environment is required.');
-    }
+    requireRenderDOM('Swiper');
 
     const hasData = Array.isArray(this.props.data);
     const root = requireContainer(this.dom.container, 'Swiper');

@@ -3,9 +3,9 @@ import { createDeepStore, flushSync, jsx } from 'vanilla-signal';
 import Component from '../core/Component.js';
 import { randomId, resolveProps, timer } from '../utilities/core.js';
 import {
-  canRenderDOM,
   isRenderableContent,
   normalizeContentNodes,
+  requireRenderDOM,
 } from '../utilities/dom.js';
 
 const OFFCANVAS_PROPS_SCHEMA = {
@@ -55,9 +55,7 @@ class Offcanvas extends Component {
    * @param {object} [input={}] 面板配置。
    */
   constructor(input = {}) {
-    if (!canRenderDOM()) {
-      throw new Error('Offcanvas: DOM render environment is required.');
-    }
+    requireRenderDOM('Offcanvas');
 
     const props = resolveProps(input, OFFCANVAS_PROPS_SCHEMA, 'Offcanvas');
     super(props);

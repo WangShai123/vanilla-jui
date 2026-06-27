@@ -1,7 +1,7 @@
 import { jsx } from 'vanilla-signal';
 
 import { randomId, timer, validateParam } from '../utilities/core.js';
-import { canRenderDOM, q } from '../utilities/dom.js';
+import { q, requireRenderDOM } from '../utilities/dom.js';
 import { listen } from '../utilities/events.js';
 import { icon } from './icons.js';
 
@@ -43,9 +43,7 @@ class Toast {
    * @returns {HTMLElement} Toast 节点。
    */
   static show(message = '', duration = 3000, type = 'info') {
-    if (!canRenderDOM()) {
-      throw new Error('Toast: DOM render environment is required.');
-    }
+    requireRenderDOM('Toast');
 
     validateParam('message', message, 'string', 'Toast.show');
     validateParam('duration', duration, TOAST_DURATION_RULE, 'Toast.show');
@@ -191,9 +189,7 @@ class Toast {
    * @returns {HTMLElement} 轻提示节点。
    */
   static lite(message = '', duration = 2000) {
-    if (!canRenderDOM()) {
-      throw new Error('Toast: DOM render environment is required.');
-    }
+    requireRenderDOM('Toast');
 
     validateParam('message', message, 'string', 'Toast.lite');
     validateParam('duration', duration, LITE_DURATION_RULE, 'Toast.lite');

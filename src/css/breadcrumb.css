@@ -1,4 +1,5 @@
 @layer components {
+
   .j-breadcrumb,
   .j-breadcrumb.is-md {
     font-size: var(--breadcrumb-font-size, var(--font-size));
@@ -6,9 +7,11 @@
     white-space: nowrap;
     user-select: none;
   }
+
   .j-breadcrumb.is-sm {
     --breadcrumb-font-size: var(--font-size-sm);
   }
+
   .j-breadcrumb.is-lg {
     --breadcrumb-font-size: var(--font-size-lg);
   }
@@ -18,15 +21,17 @@
     width: var(--breadcrumb-icon-size, var(--font-size));
     height: var(--breadcrumb-icon-size, var(--font-size));
   }
+
   .j-breadcrumb.is-sm svg {
     --breadcrumb-icon-size: var(--font-size-sm);
   }
+
   .j-breadcrumb.is-lg svg {
     --breadcrumb-icon-size: var(--font-size-lg);
   }
 
-  .j-breadcrumb > ol,
-  .j-breadcrumb > ul {
+  .j-breadcrumb>ol,
+  .j-breadcrumb>ul {
     display: flex;
     flex-wrap: wrap;
     justify-content: flex-start;
@@ -35,8 +40,8 @@
     padding: 0;
   }
 
-  .j-breadcrumb > ol li,
-  .j-breadcrumb > ul li {
+  .j-breadcrumb>ol li,
+  .j-breadcrumb>ul li {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -46,20 +51,20 @@
     padding-inline-start: 0;
   }
 
-  .j-breadcrumb li + li::before {
+  .j-breadcrumb li+li::before {
     color: var(--breadcrumb-item-separator-color, var(--ui-fg-soft));
     content: '/';
   }
 
-  .j-breadcrumb.is-dot li + li::before {
+  .j-breadcrumb.is-dot li+li::before {
     content: '•';
   }
 
-  .j-breadcrumb.is-arrow li + li::before {
+  .j-breadcrumb.is-arrow li+li::before {
     content: '>';
   }
 
-  .j-breadcrumb.is-dash li + li::before {
+  .j-breadcrumb.is-dash li+li::before {
     content: '–';
   }
 
@@ -69,8 +74,7 @@
     justify-content: center;
     gap: var(--space);
     color: var(--breadcrumb-link-color, var(--tone-text));
-    padding: var(--breadcrumb-item-padding-vertical, 0)
-      var(--breadcrumb-item-padding-horizontal, calc(var(--space) * 2));
+    padding: var(--breadcrumb-item-padding-vertical, 0) var(--breadcrumb-item-padding-horizontal, calc(var(--space) * 2));
     text-decoration: none;
   }
 
@@ -85,7 +89,7 @@
   }
 
   .j-breadcrumb li.is-active a {
-    --breadcrumb-link-color: var(--ui-fg);
+    --breadcrumb-link-color: var(--ui-fg-muted);
     cursor: default;
     pointer-events: none;
   }

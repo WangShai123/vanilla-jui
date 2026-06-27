@@ -1,7 +1,7 @@
 import { render, jsx } from 'vanilla-signal';
 
 import { randomId, resolveProps, validateParam } from '../utilities/core.js';
-import { canRenderDOM, q, resolveElement } from '../utilities/dom.js';
+import { q, requireRenderDOM, resolveElement } from '../utilities/dom.js';
 import { createEventManager } from '../utilities/events.js';
 import { icon } from './icons.js';
 
@@ -78,9 +78,7 @@ class Menu {
   build() {
     if (this._bound) return this;
 
-    if (!canRenderDOM()) {
-      throw new Error('Menu: DOM render environment is required.');
-    }
+    requireRenderDOM('Menu');
 
     if (this._element === false) {
       this.root = this._buildRoot();

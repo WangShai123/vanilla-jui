@@ -11,3 +11,4 @@ tests/*
 !tests/config.test.js
 !tests/*.app.js
 src/css_副本
+demo

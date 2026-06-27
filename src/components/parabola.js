@@ -1,7 +1,7 @@
 import { jsx } from 'vanilla-signal';
 
 import { resolveProps, timer } from '../utilities/core.js';
-import { canRenderDOM, isNode, resolveElement } from '../utilities/dom.js';
+import { isNode, requireRenderDOM, resolveElement } from '../utilities/dom.js';
 
 const ELEMENT_REF_RULE = {
   validate: (value) =>
@@ -69,9 +69,7 @@ class Parabola {
    * @param {ParabolaOptions} options 动画配置。
    */
   constructor(options) {
-    if (!canRenderDOM()) {
-      throw new Error('Parabola: DOM render environment is required.');
-    }
+    requireRenderDOM('Parabola');
 
     this.options = resolveProps(
       options,

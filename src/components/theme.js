@@ -2,7 +2,7 @@ import { jsx } from 'vanilla-signal';
 import { t } from 'vanilla-signal-i18n';
 
 import locales from '../locales/index.js';
-import { all, canRenderDOM } from '../utilities/dom.js';
+import { all, requireRenderDOM } from '../utilities/dom.js';
 import { createEventManager } from '../utilities/events.js';
 import { getCookie, setCookie } from '../utilities/storage.js';
 
@@ -35,9 +35,7 @@ class Theme {
    * @param {ThemeOptions} [options={}] 主题配置。
    */
   constructor(options = {}) {
-    if (!canRenderDOM()) {
-      throw new Error('Theme: DOM render environment is required.');
-    }
+    requireRenderDOM('Theme');
 
     this.options = {
       /**

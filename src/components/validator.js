@@ -1,7 +1,7 @@
 import { jsx } from 'vanilla-signal';
 
 import { resolveProps, validateParam } from '../utilities/core.js';
-import { all, canRenderDOM, q, resolveElement } from '../utilities/dom.js';
+import { all, q, requireRenderDOM, resolveElement } from '../utilities/dom.js';
 import { createEventManager } from '../utilities/events.js';
 
 const VALIDATOR_OPTIONS_SCHEMA = {
@@ -53,9 +53,7 @@ class Validator {
    * @param {boolean} [bindEvents=false] 是否自动绑定 submit/reset 事件。
    */
   constructor(element, options = {}, bindEvents = false) {
-    if (!canRenderDOM()) {
-      throw new Error('Validator: DOM render environment is required.');
-    }
+    requireRenderDOM('Validator');
 
     this.options = resolveProps(
       options,

@@ -1,0 +1,38 @@
+@layer components {
+  .j-toc {
+    width: 100%;
+  }
+
+  .j-toc .toc-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .j-toc .toc-link {
+    padding: 0.375rem 0 0.375rem 0.75rem;
+    border-left: 2px solid transparent;
+    color: var(--tone-caption);
+    font-size: var(--font-size-sm);
+    text-decoration: none;
+    transition:
+      color 0.15s,
+      border-color 0.15s;
+  }
+
+  .j-toc .toc-link:hover,
+  .j-toc .toc-link.is-active {
+    color: var(--tone-heading);
+  }
+
+  .j-toc .toc-link.is-active {
+    border-left-color: var(--tone-solid);
+  }
+
+  .j-toc .toc-link.is-level-3,
+  .j-toc .toc-link.is-level-4,
+  .j-toc .toc-link.is-level-5,
+  .j-toc .toc-link.is-level-6 {
+    padding-left: 1.5rem;
+  }
+}

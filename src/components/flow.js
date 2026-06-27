@@ -13,7 +13,7 @@ import {
   resolveProps,
   validateParam,
 } from '../utilities/core.js';
-import { canRenderDOM, resolveElement } from '../utilities/dom.js';
+import { requireRenderDOM, resolveElement } from '../utilities/dom.js';
 
 function isFlowRenderContent(content) {
   return (
@@ -330,9 +330,7 @@ class Flow {
   mount(container) {
     this._assertActive('mount');
     if (!this.options.render) return this;
-    if (!canRenderDOM()) {
-      throw new Error('Flow.mount: DOM environment is required.');
-    }
+    requireRenderDOM('Flow.mount');
 
     const target = resolveElement(container, 'Flow.mount.container');
 
