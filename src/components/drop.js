@@ -433,3 +433,7 @@ class Drop {
 }
 
 export default Drop;
+
+export function createDrop(container, input = {}) {
+  return new Drop(container, input);
+}

@@ -1,3 +1,5 @@
+import { canUseDOM, q } from './dom.js';
+
 const NOOP = () => {};
 
 function isEventTarget(target) {
@@ -6,6 +8,25 @@ function isEventTarget(target) {
     typeof target.addEventListener === 'function' &&
     typeof target.removeEventListener === 'function'
   );
+}
+
+function resolveEventTarget(target) {
+  if (isEventTarget(target)) return target;
+
+  if (typeof target === 'string') {
+    if (!canUseDOM()) return null;
+    const element = q(target);
+    return isEventTarget(element) ? element : null;
+  }
+
+  if (Array.isArray(target)) {
+    for (const item of target.flat(Infinity)) {
+      const resolved = resolveEventTarget(item);
+      if (resolved) return resolved;
+    }
+  }
+
+  return null;
 }
 
 function assertTarget(target, namespace) {
@@ -43,10 +64,11 @@ function assertHandler(handler, namespace) {
  * @returns {Function} 解绑函数，可重复调用。
  */
 export function listen(target, type, handler, options) {
+  target = resolveEventTarget(target);
+
   assertTarget(target, 'listen');
   assertType(type, 'listen');
   assertHandler(handler, 'listen');
-
   let active = true;
   target.addEventListener(type, handler, options);
 
@@ -66,6 +88,7 @@ export function listen(target, type, handler, options) {
  * @returns {void}
  */
 export function unlisten(target, type, handler, options) {
+  target = resolveEventTarget(target);
   assertTarget(target, 'unlisten');
   assertType(type, 'unlisten');
   assertHandler(handler, 'unlisten');

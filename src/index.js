@@ -26,18 +26,29 @@ export { default as Component } from './core/Component.js';
 /**
  * Components
  */
-export { default as Accordion } from './components/accordion.js';
-export { default as Drop } from './components/drop.js';
-export { createFlow, default as Flow } from './components/flow.js';
-export { default as Menu } from './components/menu.js';
-export { default as Modal } from './components/modal.js';
-export { default as Offcanvas } from './components/offcanvas.js';
-export { default as Parabola } from './components/parabola.js';
-export { createSticky, default as Sticky } from './components/sticky.js';
-export { createToc, default as Toc } from './components/toc.js';
-export { default as Swiper } from './components/swiper.js';
-export { default as Tabs } from './components/tabs.js';
+export {
+  default as Accordion,
+  createAccordion,
+} from './components/accordion.js';
+export {
+  default as Offcanvas,
+  createOffcanvas,
+} from './components/offcanvas.js';
+export {
+  default as Validator,
+  createValidator,
+} from './components/validator.js';
+
+export { default as Drop, createDrop } from './components/drop.js';
+export { default as Tooltip, createTooltip } from './components/tooltip.js';
+export { default as Flow, createFlow } from './components/flow.js';
+export { default as Menu, createMenu } from './components/menu.js';
+export { default as Modal, createModal } from './components/modal.js';
+export { default as Parabola, createParabola } from './components/parabola.js';
+export { default as Sticky, createSticky } from './components/sticky.js';
+export { default as Toc, createToc } from './components/toc.js';
+export { default as Swiper, createSwiper } from './components/swiper.js';
+export { default as Tabs, createTabs } from './components/tabs.js';
+
 export { default as Theme } from './components/theme.js';
 export { default as Toast } from './components/toast.js';
-export { default as Tooltip } from './components/tooltip.js';
-export { default as Validator } from './components/validator.js';

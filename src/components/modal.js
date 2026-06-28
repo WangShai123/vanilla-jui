@@ -23,6 +23,7 @@ import {
   q,
   canUseDOM,
   canRenderDOM,
+  createLoading,
   isNode,
   requireRenderDOM,
 } from '../utilities/dom.js';
@@ -526,11 +527,7 @@ class Modal extends Component {
 
     createEffect(() => {
       if (this.state.loading && !loading) {
-        loading = jsx('div', {
-          className: 'j-loading is-active',
-          'aria-live': 'polite',
-          children: jsx('div', { className: 'loading-spinner' }),
-        });
+        loading = createLoading();
         this.dom.modal.appendChild(loading);
       } else if (!this.state.loading && loading) {
         loading.remove();
@@ -1331,3 +1328,7 @@ class Modal extends Component {
 }
 
 export default Modal;
+
+export function createModal(input) {
+  return new Modal(input);
+}

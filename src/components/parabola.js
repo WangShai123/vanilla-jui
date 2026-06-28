@@ -290,3 +290,7 @@ class Parabola {
   }
 }
 export default Parabola;
+
+export function createParabola(options = {}) {
+  return new Parabola(options);
+}

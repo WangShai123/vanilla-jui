@@ -9,7 +9,6 @@ import { getCookie, setCookie } from '../utilities/storage.js';
 /**
  * @typedef {object} ThemeOptions
  * @property {string} [mode="dark"] 主题明暗模式，支持 light、dark、auto 或自定义值。
- * @property {string} [render="dark"] 实际渲染模式，mode 为 auto 时根据系统偏好生成。
  * @property {string} [theme="indigo"] 色彩主题名。
  * @property {string} [radius="sm"] 圆角等级。
  * @property {string} [shadow="sm"] 阴影等级。
@@ -27,7 +26,16 @@ import { getCookie, setCookie } from '../utilities/storage.js';
 /**
  * 主题管理组件。
  *
- * 负责把主题配置同步到 html 类名、Cookie 和可选的主题面板交互。
+ * 负责主题配置的实例化、主题面板交互和 Cookie 读写。实例初始化不修改 html
+ * 类名，仅在面板点击交互时同步当前点击项对应的 html class。
+ *
+ * 如需首屏按 Cookie 渲染 html class，可在 <head> 中放置：
+ *
+ * ```html
+ * <script>
+ * (function(d,k){var m=d.cookie.match(new RegExp('(?:^|; )'+k+'=([^;]*)'));if(!m)return;try{var o=JSON.parse(m[1]),r=o.mode==='auto'?(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):o.mode,h=d.documentElement;h.classList.add(r||'dark','j-theme-'+(o.theme||'indigo'),'j-radius-'+(o.radius||'sm'),'j-shadow-'+(o.shadow||'sm'),'j-font-'+(o.font||'sm'));}catch(e){}})(document,'jui-theme');
+ * </script>
+ * ```
  */
 class Theme {
   /**
@@ -37,60 +45,16 @@ class Theme {
   constructor(options = {}) {
     requireRenderDOM('Theme');
 
-    this.options = {
-      /**
-       * 模式
-       * @type {string}
-       * @default 'dark'
-       */
+    this.props = {
       mode: 'dark',
-
-      /**
-       * 渲染模式
-       * @type {string}
-       * @default 'dark'
-       */
-      render: 'dark',
-
-      /**
-       * 主题
-       * @type {string}
-       * @default 'indigo'
-       */
       theme: 'indigo',
-
-      /**
-       * 圆角
-       * @type {string}
-       * @default 'sm'
-       */
       radius: 'sm',
-
-      /**
-       * 阴影
-       * @type {string}
-       * @default 'sm'
-       */
       shadow: 'sm',
-
-      /**
-       * 字体大小
-       * @type {string}
-       * @default 'sm'
-       */
       font: 'sm',
-
-      /**
-       * 存储的key
-       * @type {string}
-       * @default 'jui-theme'
-       */
       key: 'jui-theme',
-
       ...options,
     };
 
-    // 语言配置
     this.languages = locales;
 
     this._init();
@@ -102,17 +66,11 @@ class Theme {
    * @returns {void}
    */
   _init() {
-    this.cleanup = {
-      events: createEventManager(),
-    };
-    this._destroyed = false;
-    // mq 用于监听系统配色变化（用于 mode === 'auto'）
-    this.mq =
-      window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)');
+    this.cleanup = { events: createEventManager() };
+    this.runtime = { destroyed: false };
     this._loadConfig();
-    this._applyConfig();
     this._bindEvent();
-    this._syncActiveButtons(document);
+    this._syncActiveButtons();
   }
 
   /**
@@ -132,9 +90,9 @@ class Theme {
    */
   _loadConfig() {
     try {
-      const result = getCookie(this.options.key);
+      const result = getCookie(this.props.key);
       if (result && result.trim()) {
-        this.options = Object.assign({}, this.options, JSON.parse(result));
+        this.props = Object.assign({}, this.props, JSON.parse(result));
       }
     } catch {}
   }
@@ -145,81 +103,23 @@ class Theme {
    * @returns {void}
    */
   _saveConfig() {
-    const actual = this.mq && this.mq.matches ? 'dark' : 'light';
-    this.options.render =
-      this.options.mode === 'auto' ? actual : this.options.mode;
-    const str = JSON.stringify(this.options);
-    setCookie(this.options.key, str);
-  }
-
-  /**
-   * 清理 html 上旧的主题相关类名。
-   * @private
-   * @returns {void}
-   */
-  _removePrefixedClasses() {
-    const toRemove = [];
-    const h = document.documentElement;
-    for (const c of h.classList) {
-      if (c === 'light' || c === 'dark') toRemove.push(c);
-      if (
-        c.startsWith('j-theme-') ||
-        c.startsWith('j-radius-') ||
-        c.startsWith('j-shadow-') ||
-        c.startsWith('j-font-')
-      )
-        toRemove.push(c);
-    }
-    if (toRemove.length) h.classList.remove(...toRemove);
-  }
-
-  /**
-   * 根据 mode 同步 html 的 light/dark 类名。
-   * @private
-   * @returns {void}
-   */
-  _applyMqClass() {
-    const h = document.documentElement;
-    const { mode } = this.options;
-    if (mode === 'auto') {
-      const actual = this.mq && this.mq.matches ? 'dark' : 'light';
-      h.classList.remove('light', 'dark');
-      h.classList.add(actual);
-    } else {
-      h.classList.remove('light', 'dark');
-      h.classList.add(mode === 'dark' ? 'dark' : 'light');
-    }
-  }
-
-  /**
-   * 将当前配置应用到 html 类名。
-   * @private
-   * @returns {void}
-   */
-  _applyConfig() {
-    const { theme, radius, shadow, font } = this.options;
-    this._removePrefixedClasses();
-    this._applyMqClass();
-    const h = document.documentElement;
-    h.classList.add(
-      `j-theme-${theme}`,
-      `j-radius-${radius}`,
-      `j-shadow-${shadow}`,
-      `j-font-${font}`
+    const { mode, theme, radius, shadow, font } = this.props;
+    setCookie(
+      this.props.key,
+      JSON.stringify({ mode, theme, radius, shadow, font })
     );
   }
 
   /**
    * 同步主题面板按钮激活态。
    * @private
-   * @param {Document|Element} [scope=document] 需要同步的 DOM 范围。
    * @returns {void}
    */
-  _syncActiveButtons(scope = document) {
-    const items = all('.palette-item', scope);
+  _syncActiveButtons() {
+    const items = all('.palette-item');
     for (const item of items) {
       const type = item.dataset.palette;
-      const val = this.options[type];
+      const val = this.props[type];
       const buttons = all('button[data-palette]', item);
       for (const btn of buttons) {
         const v = btn.dataset.palette;
@@ -236,13 +136,11 @@ class Theme {
    */
   _bindEvent() {
     this.cleanup.events.on('palette', document.body, 'click', (e) => {
-      // 主题面板内的按钮。
       const btn = e.target.closest(
         '.palette-item .items > button[data-palette]'
       );
       if (!btn) return;
 
-      // 主题面板内的配置分组。
       const groupEl = btn.closest('.palette-item');
       if (!groupEl) return;
 
@@ -251,8 +149,36 @@ class Theme {
 
       if (btn.classList.contains('is-active')) return;
 
-      this.options[type] = value;
-      this._applyConfig();
+      const previous = this.props[type];
+      this.props[type] = value;
+
+      const h = document.documentElement;
+      if (type === 'mode') {
+        const actual =
+          value === 'auto'
+            ? window.matchMedia?.('(prefers-color-scheme: dark)')?.matches
+              ? 'dark'
+              : 'light'
+            : value;
+        h.classList.remove('light', 'dark', previous);
+        if (actual) h.classList.add(actual);
+      } else {
+        const prefixes = {
+          theme: 'j-theme-',
+          radius: 'j-radius-',
+          shadow: 'j-shadow-',
+          font: 'j-font-',
+        };
+        const prefix = prefixes[type];
+        if (prefix) {
+          const toRemove = Array.from(h.classList).filter((c) =>
+            c.startsWith(prefix)
+          );
+          if (toRemove.length) h.classList.remove(...toRemove);
+          h.classList.add(`${prefix}${value}`);
+        }
+      }
+
       this._saveConfig();
       this._syncActiveButtons();
     });
@@ -264,7 +190,7 @@ class Theme {
    * @returns {void}
    */
   _unbindEvent() {
-    this.cleanup?.events.clear();
+    this.cleanup.events.clear();
   }
 
   /**
@@ -357,7 +283,6 @@ class Theme {
             marginTop: 0,
             fontSize: 'var(--text-sm, 0.875rem)',
           },
-          // className: 'mt-0 text-sm',
           children: this._t('d'),
         }),
         jsx('div', {
@@ -372,15 +297,14 @@ class Theme {
                   className: 'items',
                   children: group.buttons.map(([val, label]) => {
                     const isActive =
-                      String(this.options[group.type]) === String(val);
+                      String(this.props[group.type]) === String(val);
                     return jsx('button', {
                       className: `j-button is-default${isActive ? ' is-active' : ''}`,
                       'data-palette': val,
                       children: [
                         group.type === 'theme'
                           ? jsx('span', {
-                              // className: `el-prefix item-hex bg-${val}-10`,
-                              className: `el-prefix item-hex`,
+                              className: 'el-prefix item-hex',
                               style: {
                                 backgroundColor: `var(--ui-${val})`,
                               },
@@ -404,15 +328,14 @@ class Theme {
   }
 
   /**
-   * 更新主题配置并立即应用。
+   * 更新主题配置并写入 Cookie。
    * @param {Partial<ThemeOptions>} newConfig 需要覆盖的主题配置。
    * @returns {void}
    */
   setConfig(newConfig) {
-    this.options = Object.assign({}, this.options, newConfig);
-    this._applyConfig();
+    this.props = Object.assign({}, this.props, newConfig);
     this._saveConfig();
-    this._syncActiveButtons(document);
+    this._syncActiveButtons();
   }
 
   /**
@@ -420,14 +343,10 @@ class Theme {
    * @returns {void}
    */
   destroy() {
-    if (this._destroyed) return;
-    this._destroyed = true;
-
+    if (this.runtime.destroyed) return;
+    this.runtime.destroyed = true;
     this._unbindEvent();
-    this.options = {};
-    this.languages = {};
     this.cleanup = null;
-    this.mq = null;
   }
 }
 

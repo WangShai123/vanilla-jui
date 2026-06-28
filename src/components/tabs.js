@@ -12,6 +12,7 @@ import Component from '../core/Component.js';
 import { randomId, resolveProps, validateParam } from '../utilities/core.js';
 import {
   isRenderableContent,
+  createLoading,
   normalizeContentNodes,
   q,
   requireContainer,
@@ -56,6 +57,10 @@ function cloneTabItems(tabs) {
   return Array.isArray(tabs) ? tabs.map((t) => ({ ...t })) : [];
 }
 
+function normalizeTtl(ttl) {
+  return typeof ttl === 'number' && ttl > 0 ? ttl : 0;
+}
+
 /**
  * 标签页组件，继承 Component。
  *
@@ -84,7 +89,11 @@ class Tabs extends Component {
       disabled: this._parseDisabled(props.disabled),
       isVertical: props.direction === 'left' || props.direction === 'right',
       draggable: false,
+      loading: false,
     });
+
+    this.cache = { panels: new Map() };
+    this.runtime.panelLoadId = 0;
 
     try {
       this.onInit(props);
@@ -130,11 +139,12 @@ class Tabs extends Component {
 
     this.dom.tabs = [];
     this.dom.panels = [];
+    this.dom.panelBodies = [];
 
     const tabFragment = document.createDocumentFragment();
     const panelFragment = document.createDocumentFragment();
 
-    this.props.tabs.forEach((item) => {
+    this.props.tabs.forEach((item, index) => {
       const name = item.name || randomId();
 
       const tab = jsx('div', {
@@ -146,15 +156,25 @@ class Tabs extends Component {
       });
 
       this.dom.tabs.push(tab);
+      const body = jsx('div');
       this.dom.panels.push(
         jsx('div', {
           className: 'panel-item',
           role: 'tabpanel',
-          children: jsx('div', {
-            children: normalizeContentNodes(item.panel, { tabs: this, item }),
-          }),
+          children: body,
         })
       );
+      this.dom.panelBodies.push(body);
+      if (typeof item.panel !== 'function') {
+        body.append(
+          ...normalizeContentNodes(item.panel, {
+            tabs: this,
+            item,
+            index,
+            name,
+          })
+        );
+      }
       tabFragment.append(tab);
       panelFragment.append(this.dom.panels[this.dom.panels.length - 1]);
     });
@@ -233,6 +253,103 @@ class Tabs extends Component {
     };
   }
 
+  _getPanelKey(item, index) {
+    return item.name || this.dom.tabs[index]?.dataset.tab || String(index);
+  }
+
+  _getCachedPanel(item, index) {
+    if (!item?.cache) return null;
+
+    const entry = this.cache.panels.get(this._getPanelKey(item, index));
+    if (!entry) return null;
+
+    const ttl = normalizeTtl(item.ttl);
+    if (ttl && Date.now() - entry.updatedAt > ttl) {
+      this.cache.panels.delete(this._getPanelKey(item, index));
+      return null;
+    }
+
+    return entry;
+  }
+
+  _setCachedPanel(item, index, content) {
+    if (!item?.cache) return;
+
+    this.cache.panels.set(this._getPanelKey(item, index), {
+      content,
+      updatedAt: Date.now(),
+    });
+  }
+
+  _renderPanelContent(index, content) {
+    const body = this.dom.panelBodies[index];
+    const item = this.props.tabs[index];
+    if (!body || !item) return;
+
+    body.textContent = '';
+    body.append(
+      ...normalizeContentNodes(content, {
+        tabs: this,
+        item,
+        index,
+        name: this.dom.tabs[index]?.dataset.tab || item.name || index,
+      })
+    );
+  }
+
+  async _loadPanel(index) {
+    const item = this.props.tabs[index];
+    const body = this.dom.panelBodies[index];
+    if (!item || !body || typeof item.panel !== 'function') {
+      this.runtime.panelLoadId += 1;
+      flushSync(() => {
+        this.state.loading = false;
+      });
+      return;
+    }
+
+    const cached = this._getCachedPanel(item, index);
+    if (cached) {
+      this.runtime.panelLoadId += 1;
+      flushSync(() => {
+        this.state.loading = false;
+      });
+      this._renderPanelContent(index, cached.content);
+      return;
+    }
+
+    const loadId = ++this.runtime.panelLoadId;
+    flushSync(() => {
+      this.state.loading = true;
+    });
+    body.textContent = '';
+    body.style.minHeight = '80px';
+    body.appendChild(createLoading());
+
+    try {
+      const content = await Promise.resolve(
+        item.panel({
+          tabs: this,
+          item,
+          index,
+          name: this.dom.tabs[index]?.dataset.tab || item.name || index,
+        })
+      );
+
+      if (this.runtime.destroyed || loadId !== this.runtime.panelLoadId) return;
+
+      this._setCachedPanel(item, index, content);
+      this._renderPanelContent(index, content);
+    } finally {
+      if (!this.runtime.destroyed && loadId === this.runtime.panelLoadId) {
+        flushSync(() => {
+          this.state.loading = false;
+          body.style.minHeight = '';
+        });
+      }
+    }
+  }
+
   get activeIndex() {
     return this.state.current.index;
   }
@@ -290,6 +407,8 @@ class Tabs extends Component {
       this._syncCurrent(index);
     });
 
+    await this._loadPanel(index);
+
     if (fireEvent && this.props.onChange) {
       const tabEl = this.dom.tabs[index];
       const panelEl = this.dom.panels[index];
@@ -326,6 +445,7 @@ class Tabs extends Component {
 
     tabConfig.name = tabConfig.name || randomId();
     this.props.tabs = [...cloneTabItems(this.props.tabs), tabConfig];
+    this.cache.panels.clear();
 
     this.rebuildItems();
     this.syncActiveNames(this.resolveActiveNames(this.props.active));
@@ -357,6 +477,7 @@ class Tabs extends Component {
     const { onRemove } = this.props;
 
     this.props.tabs = this.props.tabs.filter((_, i) => i !== index);
+    this.cache.panels.delete(removedName);
 
     if (this.state.current.index >= this.props.tabs.length) {
       flushSync(() => {
@@ -370,6 +491,8 @@ class Tabs extends Component {
 
     this.rebuildItems();
     this.bindEvents();
+
+    await this._loadPanel(this.state.current.index);
 
     this._refreshDrag();
 
@@ -443,6 +566,8 @@ class Tabs extends Component {
     this.rebuildItems();
     this.syncActiveNames(this.resolveActiveNames(this.props.active));
     this.bindEvents();
+
+    await this._loadPanel(this.state.current.index);
 
     this._refreshDrag();
   }
@@ -605,6 +730,7 @@ class Tabs extends Component {
     this._removeDragEvents();
     this.cleanup.bindings?.();
     this.cleanup.bindings = null;
+    this.cache.panels?.clear();
     cancelAnimationFrame(this.raf);
     cancelAnimationFrame(this._resizeRaf);
     this.cleanup.events.off('resize');

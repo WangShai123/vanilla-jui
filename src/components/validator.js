@@ -581,3 +581,7 @@ class Validator {
   }
 }
 export default Validator;
+
+export function createValidator(element, options = {}, bindEvents = false) {
+  return new Validator(element, options, bindEvents);
+}

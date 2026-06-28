@@ -1119,3 +1119,7 @@ class Swiper extends Component {
 }
 
 export default Swiper;
+
+export function createSwiper(container, input = {}) {
+  return new Swiper(input);
+}

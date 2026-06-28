@@ -240,3 +240,7 @@ class Offcanvas extends Component {
 }
 
 export default Offcanvas;
+
+export function createOffcanvas(options = {}) {
+  return new Offcanvas(options);
+}

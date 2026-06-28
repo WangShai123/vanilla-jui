@@ -13,6 +13,8 @@
 组件特性：
 
 - 支持 `string`、`Node`、`Array<Node>`、函数返回节点等内容表达
+- 支持函数型 `panel` 在激活时懒加载，可返回 Promise
+- 支持函数型 `panel` 的缓存和 TTL
 - 支持 `top`、`bottom`、`left`、`right` 四种方向
 - 支持按索引或名称激活、禁用、启用
 - 支持动态新增、删除、重初始化
@@ -82,11 +84,32 @@ tabs.render();
 
 ### `TabItem`
 
-| 字段    | 类型                                          | 必填 | 说明                           |
-| ------- | --------------------------------------------- | ---- | ------------------------------ |
-| `name`  | `string`                                      | 否   | 标签唯一名称。不传时自动生成。 |
-| `title` | `string \| Node \| Array \| Function \| null` | 是   | 标签头内容。                   |
-| `panel` | `string \| Node \| Array \| Function \| null` | 是   | 面板内容。                     |
+| 字段    | 类型                                          | 必填 | 说明                                       |
+| ------- | --------------------------------------------- | ---- | ------------------------------------------ |
+| `name`  | `string`                                      | 否   | 标签唯一名称。不传时自动生成。             |
+| `title` | `string \| Node \| Array \| Function \| null` | 是   | 标签头内容。                               |
+| `panel` | `string \| Node \| Array \| Function \| null` | 是   | 面板内容。函数型 panel 在激活时懒执行。    |
+| `cache` | `boolean`                                     | 否   | 函数型 panel 是否缓存加载结果。            |
+| `ttl`   | `number`                                      | 否   | 缓存有效时间，单位毫秒。`0` 或省略不过期。 |
+
+函数型 `panel` 会收到一个上下文对象：
+
+```js
+{
+  tabs,  // Tabs 实例
+  item,  // 当前 TabItem
+  index, // 当前索引
+  name,  // 当前标签名称
+}
+```
+
+函数可以直接返回可渲染内容，也可以返回 Promise。异步执行期间，当前面板内容区会显示：
+
+```js
+createLoading(); // <div class="j-loading is-active" aria-live="polite">...</div>
+```
+
+`state.loading` 会在异步加载期间为 `true`，加载完成后恢复为 `false`。当 `cache: true` 且缓存仍在 `ttl` 有效期内时，切回该标签不会再次执行 `panel` 函数，而是直接使用缓存结果。
 
 ## 实例属性
 
@@ -122,6 +145,7 @@ tabs.render();
 | `state.disabled`         | `object`         | 禁用项集合。                                 |
 | `state.disabled.names`   | `string[]`       | 当前禁用标签名称集合。                       |
 | `state.disabled.indexes` | `number[]`       | 当前禁用标签索引集合。                       |
+| `state.loading`          | `boolean`        | 当前是否存在正在加载的函数型面板。           |
 
 ### 兼容只读属性
 
@@ -335,4 +359,25 @@ console.log(tabs.state.disabled.names);
 console.log(tabs.state.disabled.indexes);
 console.log(tabs.state.isVertical);
 console.log(tabs.state.draggable);
+```
+
+### 异步懒加载面板
+
+```js
+const tabs = new Tabs('#demo', {
+  active: 'overview',
+  tabs: [
+    { name: 'overview', title: 'Overview', panel: 'Overview content' },
+    {
+      name: 'reports',
+      title: 'Reports',
+      cache: true,
+      ttl: 60 * 1000,
+      panel: async ({ name }) => {
+        const res = await fetch(`/api/tabs/${name}`);
+        return await res.text();
+      },
+    },
+  ],
+});
 ```

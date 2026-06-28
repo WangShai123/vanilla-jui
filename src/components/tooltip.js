@@ -82,3 +82,7 @@ class Tooltip {
 }
 
 export default Tooltip;
+
+export function createTooltip(element, props = {}) {
+  return new Tooltip(element, props);
+}

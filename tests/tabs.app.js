@@ -1,6 +1,6 @@
 import { createDeepStore, flushSync, jsx, Show, render } from 'vanilla-signal';
 
-import { Tabs } from '../dist/index.js?v=4';
+import { Tabs } from '../dist/index.js?v=13';
 import { equal, hasClass, textOf, truthy, dateTime } from './helpers.js';
 
 const tabsConfig = () => [
@@ -15,12 +15,14 @@ const tabs2Config = () => [
 ];
 
 let demoTabs = null;
+let asyncDemoTabs = null;
 
 const ui = createDeepStore({
   created: false,
   multiple: false,
   disabled: false,
   reinited: true,
+  asyncCreated: false,
 });
 
 function mountButtons() {
@@ -36,7 +38,7 @@ function mountButtons() {
             id: 'btn-create',
             type: 'button',
             className: 'j-button is-primary is-sm',
-            children: '创建实例',
+            children: '创建普通实例',
           }),
         fallback: () =>
           jsx('div', {
@@ -94,6 +96,33 @@ function mountButtons() {
   );
 }
 
+function mountAsyncButtons() {
+  const container = document.getElementById('async-buttons');
+  if (!container) return;
+
+  render(
+    () =>
+      Show({
+        when: () => !ui.asyncCreated,
+        children: () =>
+          jsx('button', {
+            id: 'btn-create-async',
+            type: 'button',
+            className: 'j-button is-primary is-sm',
+            children: '创建异步实例',
+          }),
+        fallback: () =>
+          jsx('button', {
+            id: 'btn-destroy-async',
+            type: 'button',
+            className: 'j-button is-error is-sm',
+            children: '销毁异步实例',
+          }),
+      }),
+    container
+  );
+}
+
 function mountDemo() {
   const container = document.getElementById('manual-demo');
   if (!container) return;
@@ -115,12 +144,54 @@ function mountDemo() {
   );
 }
 
+function mountAsyncDemo() {
+  const container = document.getElementById('async-demo');
+  if (!container) return;
+
+  render(
+    () =>
+      Show({
+        when: () => ui.asyncCreated,
+        children: () =>
+          jsx('div', {
+            ref: (el) => {
+              if (el && asyncDemoTabs && !el.contains(asyncDemoTabs.root)) {
+                el.appendChild(asyncDemoTabs.root);
+              }
+            },
+          }),
+      }),
+    container
+  );
+}
+
 function syncState() {
   flushSync(() => {
     ui.created = !!demoTabs;
     ui.multiple = demoTabs ? demoTabs.props.tabs.length > 1 : false;
     ui.disabled = demoTabs ? demoTabs.state.disabled.names.length > 0 : false;
+    ui.asyncCreated = !!asyncDemoTabs;
   });
+}
+
+function createAsyncTabsConfig(runner) {
+  return [
+    { name: 'intro', title: 'Intro', panel: '普通同步面板' },
+    {
+      name: 'request',
+      title: '异步请求',
+      cache: true,
+      ttl: 5000,
+      panel: () =>
+        new Promise((resolve) => {
+          runner.log(`${dateTime()} 开始模拟异步请求`);
+          setTimeout(() => {
+            runner.log(`${dateTime()} 模拟异步请求完成`);
+            resolve(`异步内容 ${dateTime()}`);
+          }, 2000);
+        }),
+    },
+  ];
 }
 
 function bindEvents(runner) {
@@ -218,19 +289,63 @@ function bindEvents(runner) {
   });
 }
 
+function bindAsyncEvents(runner) {
+  const container = document.getElementById('async-buttons');
+  if (!container) return;
+
+  container.addEventListener('click', (e) => {
+    const id = e.target.id;
+
+    if (id === 'btn-create-async') {
+      if (asyncDemoTabs) {
+        runner.log(
+          `${dateTime()} 异步实例已存在, ID ${asyncDemoTabs.props.id}`
+        );
+        return;
+      }
+
+      asyncDemoTabs = new Tabs('#async-demo', {
+        tabs: createAsyncTabsConfig(runner),
+        active: 'intro',
+      });
+      runner.log(`${dateTime()} 异步实例已创建, ID ${asyncDemoTabs.props.id}`);
+      syncState();
+      mountAsyncButtons();
+      mountAsyncDemo();
+    }
+
+    if (id === 'btn-destroy-async' && asyncDemoTabs) {
+      const id = asyncDemoTabs.props.id;
+      asyncDemoTabs.destroy();
+      asyncDemoTabs = null;
+      runner.log(`${dateTime()} 异步实例已销毁, ID ${id}`);
+      syncState();
+      mountAsyncButtons();
+      mountAsyncDemo();
+    }
+  });
+}
+
 function resetManual() {
   if (demoTabs) {
     demoTabs.destroy();
     demoTabs = null;
+  }
+  if (asyncDemoTabs) {
+    asyncDemoTabs.destroy();
+    asyncDemoTabs = null;
   }
   flushSync(() => {
     ui.created = false;
     ui.multiple = false;
     ui.disabled = false;
     ui.reinited = true;
+    ui.asyncCreated = false;
   });
   mountButtons();
   mountDemo();
+  mountAsyncButtons();
+  mountAsyncDemo();
 }
 
 export function tabsApp(runner) {
@@ -247,6 +362,7 @@ export function tabsApp(runner) {
     equal(tabs.state.current.index, 1, 'current index');
     equal(tabs.state.current.name, 'two', 'current name');
     equal(textOf(tabs.dom.panels[1]), 'No 2 Panel', 'html content');
+    equal(textOf(tabs.dom.panels[2]), '', 'function panel lazy initially');
 
     const root = tabs.root;
     tabs.destroy();
@@ -266,12 +382,65 @@ export function tabsApp(runner) {
     equal(tabs.state.current.index, 2, 'active by name');
     equal(tabs.state.current.name, 'three', 'active name');
     tabs.dom.tabs[1].click();
+    await Promise.resolve();
     equal(tabs.state.current.index, 1, 'click switch');
     equal(tabs.state.current.name, 'two', 'click switch name');
     truthy(hasClass(tabs.dom.tabs[1], 'is-active'), 'second tab active');
 
     tabs.destroy();
   });
+
+  runner.add(
+    '异步面板缓存',
+    '验证 loading、lazy panel 和 ttl cache',
+    async () => {
+      let calls = 0;
+      let resolvePanel;
+      const pendingPanel = new Promise((resolve) => {
+        resolvePanel = resolve;
+      });
+
+      const tabs = new Tabs(document.body, {
+        tabs: [
+          { name: 'sync', title: 'Sync', panel: 'Sync Panel' },
+          {
+            name: 'async',
+            title: 'Async',
+            cache: true,
+            ttl: 1000,
+            panel: async () => {
+              calls += 1;
+              return pendingPanel;
+            },
+          },
+        ],
+        active: 'sync',
+      });
+      tabs.render();
+      tabs.root.dataset.test = 'async-cache';
+
+      const activating = tabs.activate('async');
+      equal(tabs.state.loading, true, 'loading true before resolve');
+      truthy(
+        tabs.dom.panels[1].querySelector('.j-loading.is-active'),
+        'loading node visible'
+      );
+
+      resolvePanel('Async Panel');
+      await activating;
+
+      equal(tabs.state.loading, false, 'loading false after resolve');
+      equal(textOf(tabs.dom.panels[1]), 'Async Panel', 'async content');
+      equal(calls, 1, 'first call');
+
+      await tabs.activate('sync');
+      await tabs.activate('async');
+      equal(calls, 1, 'cache hit skips panel callback');
+      equal(textOf(tabs.dom.panels[1]), 'Async Panel', 'cached content');
+
+      tabs.destroy();
+    }
+  );
 
   runner.add('禁用与启用', '验证 disabled、disable、enable', async () => {
     const tabs = new Tabs(document.body, {
@@ -286,6 +455,7 @@ export function tabsApp(runner) {
     equal(tabs.state.current.index, 0, 'disabled tab should not activate');
     tabs.enable('two');
     tabs.dom.tabs[1].click();
+    await Promise.resolve();
     equal(tabs.state.current.index, 1, 'enabled tab can activate');
     tabs.disable('three');
     truthy(hasClass(tabs.dom.tabs[2], 'is-disabled'), 'third tab disabled');
@@ -335,9 +505,23 @@ export function tabsApp(runner) {
 }
 
 export function tabsSetup(runner) {
+  const testWrap = document.querySelector('.test-wrap');
+  if (testWrap && !document.getElementById('async-buttons')) {
+    const asyncBox = document.createElement('div');
+    asyncBox.className = 'test-box';
+    asyncBox.innerHTML = `
+      <div id="async-buttons" class="demo-buttons"></div>
+      <div id="async-demo" class="fixture-box"></div>
+    `;
+    testWrap.appendChild(asyncBox);
+  }
+
   mountButtons(runner);
   mountDemo();
   bindEvents(runner);
+  mountAsyncButtons();
+  mountAsyncDemo();
+  bindAsyncEvents(runner);
 }
 
 export function tabsReset() {

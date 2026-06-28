@@ -415,3 +415,7 @@ class Menu {
 }
 
 export default Menu;
+
+export function createMenu(element, options = {}) {
+  return new Menu(element, options);
+}

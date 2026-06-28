@@ -369,3 +369,7 @@ class Accordion extends Component {
 }
 
 export default Accordion;
+
+export function createAccordion(container, input = {}) {
+  return new Accordion(container, input);
+}

@@ -82,6 +82,7 @@
   .j-tabs .tab-panel .panel-item {
     display: none;
     margin: var(--tab-panel-item-margin, 0);
+    position: relative;
   }
 
   .j-tabs .tab-panel .panel-item.is-active {

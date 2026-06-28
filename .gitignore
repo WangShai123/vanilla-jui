@@ -6,7 +6,7 @@ src/utilities/debug.js
 vite.config.debug.mode.ts
 
 docs/audits
-src/css_副本
+src/css_*
 demo
 
 tests/*

@@ -119,6 +119,13 @@ export function normalizeContentNodes(content, context) {
 /**
  * 将 DOM 引用解析为节点列表。
  *
+ * 支持的输入类型：
+ * - **Node**: 包装为单元素数组，如 `document.body`
+ * - **Element**: 包装为单元素数组，如 `div`
+ * - **string**: CSS 选择器，如 `'div'`, `'.class'`, `'#id'`
+ * - **Array**: 扁平化为节点数组，如 `[el1, [el2, el3]]`
+ * - **false/null/undefined**: 返回 null
+ *
  * @param {Element|Node|string|Array|false|null|undefined} ref 元素引用、选择器、节点或空值。
  * @param {string} [namespace='Component'] 错误命名空间。
  * @returns {Node[]|null}
@@ -145,6 +152,12 @@ export function resolveNodeList(ref, _namespace = 'Component') {
 /**
  * 将 DOM 引用解析为节点。
  *
+ * 支持的输入类型：
+ * - **Node/Element**: 直接返回，如 `document.body`, `div`
+ * - **string**: CSS 选择器，如 `'div'`, `'.class'`, `'#id'`
+ * - **Array**: 返回第一个节点，如 `[el1, el2]`
+ * - **false/null/undefined**: 返回 null
+ *
  * @param {Element|Node|string|Array|false|null|undefined} ref 元素引用、选择器、节点或空值。
  * @param {string} [namespace='Component'] 错误命名空间。
  * @returns {Node|null}
@@ -167,6 +180,12 @@ export function resolveNode(ref, namespace = 'Component') {
 
 /**
  * 将 DOM 引用解析为元素。
+ *
+ * 支持的输入类型：
+ * - **Element**: 直接返回，如 `document.querySelector('#app')`
+ * - **string**: CSS 选择器，如 `'div'`, `'.class'`, `'#id'`
+ * - **Array**: 返回第一个 Element，如 `[el1, el2]`
+ * - **false/null/undefined**: 返回 null
  *
  * @param {Element|Node|string|Array|false|null|undefined} ref 元素引用、选择器、节点或空值。
  * @param {string} [namespace='Component'] 错误命名空间。
@@ -259,9 +278,21 @@ export function isRenderableContent(value) {
 }
 
 /**
- * @deprecated 请使用 utilities/events.js 的 listen。
+ * 创建通用加载状态节点。
+ * @param {string} [className='j-loading is-active'] 容器类名。
+ * @returns {HTMLElement}
  */
-// export { listen as on, unlisten as off } from './events.js';
+export function createLoading(className = 'j-loading is-active') {
+  const loading = document.createElement('div');
+  loading.className = className;
+  loading.setAttribute('aria-live', 'polite');
+
+  const spinner = document.createElement('div');
+  spinner.className = 'loading-spinner';
+  loading.appendChild(spinner);
+
+  return loading;
+}
 
 /**
  * 根据 CSS 选择器获取第一个匹配的元素。
