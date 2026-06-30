@@ -126,7 +126,7 @@ function resolveSwiperRoot(container) {
  * 支持链接 slide、图片 lazyload、分页、导航、loop 和桌面/移动端拖拽滑动。
  * 使用 vanilla-signal 响应式管理 pagination 和 navigation 状态。
  */
-class Swiper extends Component {
+export class Swiper extends Component {
   /**
    * 创建轮播实例。
    * @param {Element|Node|string|Array} container 挂载容器、选择器或 JSX/h 返回节点。
@@ -1117,8 +1117,6 @@ class Swiper extends Component {
     return this;
   }
 }
-
-export default Swiper;
 
 export function createSwiper(container, input = {}) {
   return new Swiper(input);

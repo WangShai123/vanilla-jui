@@ -9,6 +9,7 @@ export default [
   { name: 'Validator', slug: 'validator', extends: null },
   { name: 'Modal', slug: 'modal', extends: 'Component' },
   { name: 'Menu', slug: 'menu', extends: null },
+  { name: 'Pagination', slug: 'pagination', extends: 'Component' },
   { name: 'Parabola', slug: 'parabola', extends: null },
   { name: 'Swiper', slug: 'swiper', extends: 'Component' },
 ];

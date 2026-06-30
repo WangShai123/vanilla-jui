@@ -189,6 +189,10 @@
   }
 
   /* status */
+  .j-button:not(:disabled) {
+    cursor: pointer;
+  }
+
   .j-button:not(:disabled):hover {
     opacity: var(--opacity-hover);
   }

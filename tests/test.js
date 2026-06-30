@@ -1,12 +1,7 @@
-import {
-  createDeepStore,
-  createEffect,
-  flushSync,
-  jsx,
-} from 'vanilla-signal';
+import { createDeepStore, createEffect, flushSync, jsx } from 'vanilla-signal';
 
-import { Offcanvas, q } from '../dist/index.js?v=1';
-import config from './config.test.js';
+import { Offcanvas, q } from '../dist/index.js?v=2';
+import config from './config.test.js?v=1';
 import { TestRunner, dateTime } from './helpers.js';
 
 // ========== SPA Router ==========

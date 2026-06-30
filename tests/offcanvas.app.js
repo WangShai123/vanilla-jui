@@ -1,6 +1,6 @@
 import { createDeepStore, flushSync, jsx, Show, render } from 'vanilla-signal';
 
-import { Offcanvas } from '../dist/index.js?v=2';
+import { Offcanvas } from '../dist/index.js?v=4';
 import { equal, hasClass, textOf, truthy, dateTime } from './helpers.js';
 
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -13,6 +13,10 @@ function cleanup() {
   if (pushInstance) {
     pushInstance.destroy();
     pushInstance = null;
+  }
+  if (asyncInstance) {
+    asyncInstance.destroy();
+    asyncInstance = null;
   }
   document
     .querySelectorAll('.j-offcanvas, .j-offcanvas-overlay')
@@ -31,8 +35,9 @@ function cleanup() {
 
 let slideInstance = null;
 let pushInstance = null;
+let asyncInstance = null;
 
-const ui = createDeepStore({ created: false });
+const ui = createDeepStore({ created: false, asyncCreated: false });
 
 function mountButtons() {
   const container = document.getElementById('manual-buttons');
@@ -78,6 +83,44 @@ function mountButtons() {
   );
 }
 
+function mountAsyncButtons() {
+  const container = document.getElementById('async-buttons');
+  if (!container) return;
+
+  render(
+    () =>
+      Show({
+        when: () => !ui.asyncCreated,
+        children: () =>
+          jsx('button', {
+            id: 'btn-oc-create-async',
+            type: 'button',
+            className: 'j-button is-primary is-sm',
+            children: '创建异步实例',
+          }),
+        fallback: () =>
+          jsx('div', {
+            className: 'demo-buttons',
+            children: [
+              jsx('button', {
+                id: 'btn-oc-show-async',
+                type: 'button',
+                className: 'j-button is-outline is-sm',
+                children: '显示异步面板',
+              }),
+              jsx('button', {
+                id: 'btn-oc-destroy-async',
+                type: 'button',
+                className: 'j-button is-error is-sm',
+                children: '销毁异步实例',
+              }),
+            ],
+          }),
+      }),
+    container
+  );
+}
+
 function bindEvents(runner) {
   const container = document.getElementById('manual-buttons');
   if (!container) return;
@@ -98,7 +141,7 @@ function bindEvents(runner) {
 
       slideInstance = new Offcanvas({
         animation: 'slide',
-        direction: 'bottom',
+        direction: 'left',
         content:
           '<div style="padding: 16px"><button data-action="close" class="j-button is-outline is-sm">关闭</button><p>Slide Offcanvas 内容</p></div>',
         onShown: () => {
@@ -142,6 +185,66 @@ function bindEvents(runner) {
       });
       runner.log(`${dateTime()} 已销毁 2 个 Offcanvas 实例`);
       mountButtons(runner);
+    }
+  });
+}
+
+function bindAsyncEvents(runner) {
+  const container = document.getElementById('async-buttons');
+  if (!container) return;
+
+  container.addEventListener('click', (e) => {
+    const id = e.target.id;
+
+    if (id === 'btn-oc-create-async') {
+      if (asyncInstance) {
+        runner.log(`${dateTime()} 异步实例已存在`);
+        return;
+      }
+
+      flushSync(() => {
+        ui.asyncCreated = true;
+      });
+      mountAsyncButtons(runner);
+
+      asyncInstance = new Offcanvas({
+        animation: 'slide',
+        direction: 'right',
+        cache: true,
+        ttl: 5000,
+        content: () =>
+          new Promise((resolve) => {
+            runner.log(`${dateTime()} Offcanvas 开始模拟异步请求`);
+            setTimeout(() => {
+              runner.log(`${dateTime()} Offcanvas 模拟异步请求完成`);
+              resolve(
+                `<div style="padding: 16px"><button data-action="close" class="j-button is-outline is-sm">关闭</button><p>异步 Offcanvas 内容 ${dateTime()}</p></div>`
+              );
+            }, 2000);
+          }),
+        onShown: () => {
+          runner.log(`${dateTime()} 异步 Offcanvas 已显示`);
+        },
+        onHidden: () => {
+          runner.log(`${dateTime()} 异步 Offcanvas 已关闭`);
+        },
+      });
+
+      runner.log(`${dateTime()} 已创建异步 Offcanvas 实例`);
+    }
+
+    if (id === 'btn-oc-show-async' && asyncInstance) {
+      asyncInstance.show();
+    }
+
+    if (id === 'btn-oc-destroy-async' && asyncInstance) {
+      asyncInstance.destroy();
+      asyncInstance = null;
+      flushSync(() => {
+        ui.asyncCreated = false;
+      });
+      runner.log(`${dateTime()} 已销毁异步 Offcanvas 实例`);
+      mountAsyncButtons(runner);
     }
   });
 }
@@ -190,6 +293,56 @@ export function offcanvasApp(runner) {
     offcanvas.destroy();
   });
 
+  runner.add(
+    '异步内容缓存',
+    '验证 loading、异步 content 和 ttl cache',
+    async () => {
+      cleanup();
+      let calls = 0;
+      let resolveContent;
+      const pendingContent = new Promise((resolve) => {
+        resolveContent = resolve;
+      });
+
+      const offcanvas = new Offcanvas({
+        overlay: false,
+        cache: true,
+        ttl: 1000,
+        content: async () => {
+          calls += 1;
+          return pendingContent;
+        },
+      });
+
+      const showing = offcanvas.show();
+      await wait(20);
+      equal(offcanvas.state.loading, true, 'loading true before resolve');
+      truthy(
+        offcanvas.root.querySelector('.j-loading.is-active'),
+        'loading node visible'
+      );
+
+      resolveContent('Async Offcanvas Content');
+      await showing;
+
+      equal(offcanvas.state.loading, false, 'loading false after resolve');
+      equal(textOf(offcanvas.root), 'Async Offcanvas Content', 'async content');
+      equal(calls, 1, 'first call');
+
+      await offcanvas.hide();
+      await wait(130);
+      await offcanvas.show();
+      equal(calls, 1, 'cache hit skips content callback');
+      equal(
+        textOf(offcanvas.root),
+        'Async Offcanvas Content',
+        'cached content'
+      );
+
+      offcanvas.destroy();
+    }
+  );
+
   runner.add('销毁清理', '验证 body 和 DOM 清理', async () => {
     cleanup();
     const offcanvas = new Offcanvas({
@@ -216,14 +369,29 @@ export function offcanvasApp(runner) {
 }
 
 export function offcanvasSetup(runner) {
+  const testWrap = document.querySelector('.test-wrap');
+  if (testWrap && !document.getElementById('async-buttons')) {
+    const asyncBox = document.createElement('div');
+    asyncBox.className = 'test-box';
+    asyncBox.innerHTML = `
+      <div id="async-buttons" class="demo-buttons"></div>
+      <div id="async-demo" class="fixture-box"></div>
+    `;
+    testWrap.appendChild(asyncBox);
+  }
+
   mountButtons(runner);
   bindEvents(runner);
+  mountAsyncButtons();
+  bindAsyncEvents(runner);
 }
 
 export function offcanvasReset() {
   cleanup();
   flushSync(() => {
     ui.created = false;
+    ui.asyncCreated = false;
   });
   mountButtons();
+  mountAsyncButtons();
 }

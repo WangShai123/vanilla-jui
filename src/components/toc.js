@@ -37,7 +37,7 @@ function normalizeHeading(element, index) {
  *
  * 扫描内容区域内的标题，生成锚点列表，并随页面滚动更新 active 状态。
  */
-class Toc extends Component {
+export class Toc extends Component {
   /**
    * 创建 Toc 实例。
    * @param {object} [input={}] Toc 配置。
@@ -221,13 +221,6 @@ class Toc extends Component {
   }
 }
 
-/**
- * 创建 Toc 实例。
- * @param {object} [props={}] Toc 配置。
- * @returns {Toc}
- */
 export function createToc(props = {}) {
   return new Toc(props);
 }
-
-export default Toc;

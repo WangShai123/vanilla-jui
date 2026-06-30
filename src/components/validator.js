@@ -45,7 +45,7 @@ const VALIDATOR_OPTIONS_SCHEMA = {
  *
  * 支持绑定表单 submit/reset 事件，也可以手动调用 validate/reset。
  */
-class Validator {
+export class Validator {
   /**
    * 创建表单校验实例。
    * @param {HTMLFormElement|Node|string|Array} element 表单元素、选择器或 JSX/h 返回节点。
@@ -580,7 +580,6 @@ class Validator {
     this.cleanup = null;
   }
 }
-export default Validator;
 
 export function createValidator(element, options = {}, bindEvents = false) {
   return new Validator(element, options, bindEvents);

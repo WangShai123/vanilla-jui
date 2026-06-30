@@ -187,7 +187,3 @@ const validator = new Validator(
 | `destroy()`  | 解绑事件并清理实例     |
 
 `validate()` 返回 `boolean`，全部字段通过时调用 `onSubmit` 回调。
-
-## 测试
-
-可视化半自动测试页面：`tests/validator.test.html`。

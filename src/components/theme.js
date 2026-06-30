@@ -37,7 +37,7 @@ import { getCookie, setCookie } from '../utilities/storage.js';
  * </script>
  * ```
  */
-class Theme {
+export class Theme {
   /**
    * 创建主题实例。
    * @param {ThemeOptions} [options={}] 主题配置。
@@ -349,5 +349,3 @@ class Theme {
     this.cleanup = null;
   }
 }
-
-export default Theme;

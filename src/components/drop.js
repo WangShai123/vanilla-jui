@@ -78,7 +78,7 @@ const DROP_PROPS_SCHEMA = {
  *
  * 可用于菜单、提示、下拉面板等场景，支持点击或 hover 触发，并自动计算视口内位置。
  */
-class Drop {
+export class Drop {
   /**
    * 创建浮层实例。
    * @param {Element|Node|string|Array} element 触发元素、选择器或 JSX/h 返回节点。
@@ -431,8 +431,6 @@ class Drop {
     this.cleanup = null;
   }
 }
-
-export default Drop;
 
 export function createDrop(container, input = {}) {
   return new Drop(container, input);

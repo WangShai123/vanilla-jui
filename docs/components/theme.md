@@ -59,7 +59,3 @@ document.body.appendChild(theme.createPanel());
 | `setConfig(config)`                        | 更新配置并写入 Cookie  |
 | `createPanel(containerClass, panelConfig)` | 创建主题面板 DOM       |
 | `destroy()`                                | 解绑全局事件并移除实例 |
-
-## 测试
-
-可视化半自动测试页面：`tests/theme.test.html`。

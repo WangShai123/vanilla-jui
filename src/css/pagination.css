@@ -2,11 +2,13 @@
   .j-pagination {
     font-size: var(--pagination-font-size, var(--font-size));
   }
+
   .j-pagination a {
     text-decoration: none;
     color: var(--pagination-link-color, var(--ui-fg));
   }
-  .pagination {
+
+  .j-pagination .pagination {
     list-style: none;
     display: flex;
     justify-content: center;
@@ -15,7 +17,9 @@
     margin: 0;
     padding: 0;
   }
-  .pagination .more span:active {
-    outline: none;
+
+  .j-pagination .more span,
+  .j-pagination .is-active {
+    cursor: default;
   }
 }

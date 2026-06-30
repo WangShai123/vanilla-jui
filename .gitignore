@@ -16,5 +16,7 @@ tests/*
 !tests/helpers.js
 !tests/config.test.js
 !tests/*.app.js
+!tests/dashboard.html
+!tests/dashboard.min.js
 
 AGENTS.md

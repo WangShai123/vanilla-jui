@@ -22,7 +22,3 @@ await ball.show();
 ```
 
 动画结束后实例会自动销毁。也可以手动调用 `destroy()`。
-
-## 测试
-
-可视化半自动测试页面：`tests/parabola.test.html`。

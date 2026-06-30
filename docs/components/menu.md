@@ -94,7 +94,3 @@ const menu = new Menu(
 | `.sub-menu`                         | 子菜单 `<ul>`                         |
 | `.menu-item.back`                   | 移动端动态注入的返回按钮              |
 | `.is-active`                        | 当前展开/激活的菜单项                 |
-
-## 测试
-
-可视化半自动测试页面：`index.html#menu`。

@@ -92,7 +92,7 @@ function normalizeItems(items) {
  *
  * DOM 创建一次，通过 createEffect 细粒度更新 class/ARIA。
  */
-class Accordion extends Component {
+export class Accordion extends Component {
   /**
    * @param {Element|Node|string|Array} container 挂载容器（元素、选择器或 JSX/h 返回节点）。
    * @param {object} [input={}] 手风琴配置。
@@ -367,8 +367,6 @@ class Accordion extends Component {
     }
   }
 }
-
-export default Accordion;
 
 export function createAccordion(container, input = {}) {
   return new Accordion(container, input);

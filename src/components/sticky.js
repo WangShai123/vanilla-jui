@@ -118,7 +118,7 @@ function getElementHeight(element) {
  * 用于给一个或多个元素应用 `position: sticky`，并按顺序计算 `top`
  * 偏移，适合页面侧边栏中多个 widget 的堆叠吸附场景。
  */
-class Sticky extends Component {
+export class Sticky extends Component {
   /**
    * 创建 Sticky 实例。
    * @param {object} [input={}] Sticky 配置。
@@ -266,13 +266,6 @@ class Sticky extends Component {
   }
 }
 
-/**
- * 创建 Sticky 实例。
- * @param {object} [props={}] Sticky 配置。
- * @returns {Sticky}
- */
 export function createSticky(props = {}) {
   return new Sticky(props);
 }
-
-export default Sticky;

@@ -195,7 +195,7 @@ const FLOW_OPTIONS_SCHEMA = {
  *
  * 适合在 Modal、Offcanvas、页面表单或任意业务组件中复用 next/back/goTo、步骤缓存和生命周期。
  */
-class Flow {
+export class Flow {
   /**
    * 创建 Flow 实例。
    * @param {FlowOptions} [options={}] Flow 配置。
@@ -1128,9 +1128,6 @@ class Flow {
  * @param {FlowOptions} options Flow 配置。
  * @returns {Flow}
  */
-function createFlow(options) {
+export function createFlow(options) {
   return new Flow(options);
 }
-
-export { createFlow };
-export default Flow;

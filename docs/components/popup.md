@@ -23,7 +23,3 @@ popup.hide();
 ```
 
 `lazy: true` 时会延迟到首次 `show()` 才创建 DOM。
-
-## 测试
-
-可视化半自动测试页面：`tests/popup.test.html`。

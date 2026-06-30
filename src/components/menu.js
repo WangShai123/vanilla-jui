@@ -41,7 +41,7 @@ const MENU_ITEMS_RULE = { type: 'array' };
  *
  * 支持绑定已有菜单 DOM，也支持通过配置动态创建移动菜单或底部菜单。
  */
-class Menu {
+export class Menu {
   /**
    * 创建菜单实例。
    * @param {MenuOptions} [options={}] 菜单配置。
@@ -413,8 +413,6 @@ class Menu {
     this.options = null;
   }
 }
-
-export default Menu;
 
 export function createMenu(element, options = {}) {
   return new Menu(element, options);

@@ -27,7 +27,7 @@ const LITE_DURATION_RULE = {
  *
  * 以静态方法方式使用，支持多类型堆叠消息和单实例轻提示。
  */
-class Toast {
+export class Toast {
   /**
    * 当前 Toast 使用的 timer key 集合，用于统一清理。
    * @type {Set<string>}
@@ -252,14 +252,4 @@ class Toast {
     q('.j-toast-container')?.remove();
     q('.j-toast-lite')?.remove();
   }
-
-  /**
-   * clearAll 的语义化别名。
-   * @returns {void}
-   */
-  static destroyAll() {
-    Toast.clearAll();
-  }
 }
-
-export default Toast;

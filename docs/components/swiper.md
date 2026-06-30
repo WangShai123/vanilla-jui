@@ -780,7 +780,3 @@ destroy()
 | 导航禁用     | 非 loop 模式下首尾时添加 `disabled` 属性 + `is-disabled` class  |
 
 ---
-
-## 测试
-
-- 可视化半自动测试：`tests/index.html#swiper`。

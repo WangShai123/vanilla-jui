@@ -3,6 +3,7 @@ import { createDeepStore, flushSync, jsx } from 'vanilla-signal';
 import Component from '../core/Component.js';
 import { randomId, resolveProps, timer } from '../utilities/core.js';
 import {
+  createLoading,
   isRenderableContent,
   normalizeContentNodes,
   requireRenderDOM,
@@ -16,6 +17,8 @@ const OFFCANVAS_PROPS_SCHEMA = {
   },
   overlay: { default: true, type: 'boolean' },
   filter: { default: true, type: 'boolean' },
+  cache: { default: false, type: 'boolean' },
+  ttl: { default: 0, type: 'number' },
   direction: {
     default: 'left',
     type: 'string',
@@ -44,12 +47,16 @@ const OFFCANVAS_PROPS_SCHEMA = {
   onHidden: { default: null, types: ['function', 'null'] },
 };
 
+function normalizeTtl(ttl) {
+  return typeof ttl === 'number' && ttl > 0 ? ttl : 0;
+}
+
 /**
  * 侧滑面板组件，继承 Component。
  *
  * 适用于侧边菜单、筛选面板、移动端抽屉等场景。
  */
-class Offcanvas extends Component {
+export class Offcanvas extends Component {
   /**
    * 创建侧滑面板实例。
    * @param {object} [input={}] 面板配置。
@@ -61,8 +68,14 @@ class Offcanvas extends Component {
     super(props);
 
     this._overlay = null;
+    this.runtime.cache = {
+      content: null,
+      hasContent: false,
+      updatedAt: 0,
+    };
+    this.runtime.contentLoadId = 0;
 
-    this.state = createDeepStore({ visible: false });
+    this.state = createDeepStore({ visible: false, loading: false });
 
     this.onInit(props);
   }
@@ -84,14 +97,82 @@ class Offcanvas extends Component {
   }
 
   _buildRoot(props) {
+    const content = jsx('div', {
+      className: 'offcanvas-content',
+    });
+    this.dom.content = content;
+
+    if (typeof props.content !== 'function') {
+      content.append(...normalizeContentNodes(props.content, this));
+    }
+
     return jsx('div', {
       className: `j-offcanvas is-${props.direction} is-${props.animation}`,
       id: props.id,
-      children: jsx('div', {
-        className: 'offcanvas-content',
-        children: normalizeContentNodes(props.content, this),
-      }),
+      children: content,
     });
+  }
+
+  _isCacheValid() {
+    if (!this.props.cache || !this.runtime.cache.hasContent) return false;
+
+    const ttl = normalizeTtl(this.props.ttl);
+    return !ttl || Date.now() - this.runtime.cache.updatedAt <= ttl;
+  }
+
+  _renderContent(content) {
+    if (!this.dom.content) return;
+
+    this.dom.content.textContent = '';
+    this.dom.content.append(...normalizeContentNodes(content, this));
+  }
+
+  async _loadContent() {
+    const { content, cache } = this.props;
+    if (typeof content !== 'function') {
+      this.runtime.contentLoadId += 1;
+      flushSync(() => {
+        this.state.loading = false;
+      });
+      return;
+    }
+
+    if (this._isCacheValid()) {
+      this.runtime.contentLoadId += 1;
+      this._renderContent(this.runtime.cache.content);
+      flushSync(() => {
+        this.state.loading = false;
+      });
+      return;
+    }
+
+    const loadId = ++this.runtime.contentLoadId;
+    flushSync(() => {
+      this.state.loading = true;
+    });
+    this.dom.content.textContent = '';
+    this.dom.content.appendChild(createLoading());
+
+    try {
+      const result = await Promise.resolve(content(this));
+
+      if (this.runtime.destroyed || loadId !== this.runtime.contentLoadId) {
+        return;
+      }
+
+      if (cache) {
+        this.runtime.cache.content = result;
+        this.runtime.cache.hasContent = true;
+        this.runtime.cache.updatedAt = Date.now();
+      }
+      this._renderContent(result);
+    } finally {
+      if (!this.runtime.destroyed && loadId === this.runtime.contentLoadId) {
+        flushSync(() => {
+          this.state.loading = false;
+        });
+      }
+    }
   }
 
   _bindEvents() {
@@ -186,6 +267,8 @@ class Offcanvas extends Component {
       this.state.visible = true;
     });
 
+    await this._loadContent();
+
     timer.start(`oc-shown-${id}`, 300, () => {
       if (this.runtime.destroyed) return;
       if (onShown) onShown();
@@ -201,6 +284,11 @@ class Offcanvas extends Component {
 
     const { onHide, onHidden } = this.props;
     if (onHide) await Promise.resolve(onHide());
+
+    this.runtime.contentLoadId += 1;
+    flushSync(() => {
+      this.state.loading = false;
+    });
 
     this.unbindEvents();
     this._remove();
@@ -238,8 +326,6 @@ class Offcanvas extends Component {
     this._overlay = null;
   }
 }
-
-export default Offcanvas;
 
 export function createOffcanvas(options = {}) {
   return new Offcanvas(options);

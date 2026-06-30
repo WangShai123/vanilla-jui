@@ -225,7 +225,7 @@ export default class Component {
    */
   destroy() {
     if (this.runtime.destroyed) return;
-    this.runtime.destroyed = true;
+    this.runtime = { destroyed: true };
 
     if (typeof this.onDestroy === 'function') this.onDestroy();
     this.emit('destroy');

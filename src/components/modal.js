@@ -215,7 +215,7 @@ const MODAL_UPDATE_RULE = {
 let modalScrollLockCount = 0;
 let modalBodyOverflow = '';
 
-class Modal extends Component {
+export class Modal extends Component {
   constructor(input = {}) {
     const props = resolveProps(input, MODAL_PROPS_SCHEMA, 'Modal');
     super(props);
@@ -1326,8 +1326,6 @@ class Modal extends Component {
     return this;
   }
 }
-
-export default Modal;
 
 export function createModal(input) {
   return new Modal(input);

@@ -55,7 +55,7 @@
 
   .j-toast.is-success {
     color: var(--toast-success-color, var(--state-success));
-    background-color: var(--toast-success-background, var(--state-success-muted));
+    background-color: var(--toast-success-background, var(--state-success-weak));
     border: 1px solid var(--toast-success-border-color, var(--state-success-border));
   }
 
@@ -65,7 +65,7 @@
 
   .j-toast.is-error {
     color: var(--toast-error-color, var(--state-danger));
-    background-color: var(--toast-error-background, var(--state-danger-muted));
+    background-color: var(--toast-error-background, var(--state-danger-weak));
     border: 1px solid var(--toast-error-border-color, var(--state-danger-border));
   }
 
@@ -75,7 +75,7 @@
 
   .j-toast.is-warning {
     color: var(--toast-warning-color, var(--state-warning));
-    background-color: var(--toast-warning-background, var(--state-warning-muted));
+    background-color: var(--toast-warning-background, var(--state-warning-weak));
     border: 1px solid var(--toast-warning-border-color, var(--state-warning-border));
   }
 
@@ -95,9 +95,11 @@
 
   .j-toast.is-primary {
     color: var(--toast-info-color, var(--tone-solid));
-    background-color: var(--toast-info-background, var(--tone-muted));
+    /* background-color: var(--toast-info-background, var(--tone-muted)); */
+    background-color: var(--toast-info-background, var(--tone-weak));
     border: 1px solid var(--toast-info-border-color, var(--tone-border));
   }
+
   .j-toast.is-primary .toast-icon {
     color: var(--toast-info-icon-color, var(--tone-solid));
   }

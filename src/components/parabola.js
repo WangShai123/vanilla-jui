@@ -63,7 +63,7 @@ const PARABOLA_OPTIONS_SCHEMA = {
  *
  * 用于实现“加入购物车”等从一个元素飞向另一个元素的小球动画。
  */
-class Parabola {
+export class Parabola {
   /**
    * 创建抛物线动画实例。
    * @param {ParabolaOptions} options 动画配置。
@@ -289,7 +289,6 @@ class Parabola {
     return this.show();
   }
 }
-export default Parabola;
 
 export function createParabola(options = {}) {
   return new Parabola(options);

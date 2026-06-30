@@ -5,7 +5,10 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: var(--offcanvas-overlay-background, var(--ui-overlay-muted));
+    background-color: var(
+      --offcanvas-overlay-background,
+      var(--ui-overlay-muted)
+    );
     z-index: var(--z-index-overlay);
     opacity: 0;
     transition: opacity 0.3s ease;
@@ -98,5 +101,6 @@
     height: 100%;
     overflow-y: auto;
     box-sizing: border-box;
+    position: relative;
   }
 }

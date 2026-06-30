@@ -1,7 +1,7 @@
 import { jsx } from 'vanilla-signal';
 
 import { resolveProps } from '../utilities/core.js';
-import Drop from './drop.js';
+import { Drop } from './drop.js';
 
 const TOOLTIP_OPTIONS_SCHEMA = {
   name: { default: null, types: ['string', 'null'] },
@@ -26,7 +26,7 @@ const TOOLTIP_OPTIONS_SCHEMA = {
  *
  * 基于 Drop 实现，提供更轻量的文本提示封装。
  */
-class Tooltip {
+export class Tooltip {
   /**
    * 创建 Tooltip 实例。
    * @param {HTMLElement} element 目标元素。
@@ -80,8 +80,6 @@ class Tooltip {
     this.drop = null;
   }
 }
-
-export default Tooltip;
 
 export function createTooltip(element, props = {}) {
   return new Tooltip(element, props);

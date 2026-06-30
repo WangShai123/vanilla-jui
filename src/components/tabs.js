@@ -66,7 +66,7 @@ function normalizeTtl(ttl) {
  *
  * DOM 创建一次，通过 createEffect 细粒度更新 class/ARIA。
  */
-class Tabs extends Component {
+export class Tabs extends Component {
   /**
    * @param {Element|Node|string|Array} container 挂载容器（元素、选择器或 JSX/h 返回节点）。
    * @param {object} [input={}] 标签页配置。
@@ -92,7 +92,7 @@ class Tabs extends Component {
       loading: false,
     });
 
-    this.cache = { panels: new Map() };
+    this.runtime.cache = { panels: new Map() };
     this.runtime.panelLoadId = 0;
 
     try {
@@ -260,12 +260,12 @@ class Tabs extends Component {
   _getCachedPanel(item, index) {
     if (!item?.cache) return null;
 
-    const entry = this.cache.panels.get(this._getPanelKey(item, index));
+    const entry = this.runtime.cache.panels.get(this._getPanelKey(item, index));
     if (!entry) return null;
 
     const ttl = normalizeTtl(item.ttl);
     if (ttl && Date.now() - entry.updatedAt > ttl) {
-      this.cache.panels.delete(this._getPanelKey(item, index));
+      this.runtime.cache.panels.delete(this._getPanelKey(item, index));
       return null;
     }
 
@@ -275,7 +275,7 @@ class Tabs extends Component {
   _setCachedPanel(item, index, content) {
     if (!item?.cache) return;
 
-    this.cache.panels.set(this._getPanelKey(item, index), {
+    this.runtime.cache.panels.set(this._getPanelKey(item, index), {
       content,
       updatedAt: Date.now(),
     });
@@ -445,7 +445,7 @@ class Tabs extends Component {
 
     tabConfig.name = tabConfig.name || randomId();
     this.props.tabs = [...cloneTabItems(this.props.tabs), tabConfig];
-    this.cache.panels.clear();
+    this.runtime.cache.panels.clear();
 
     this.rebuildItems();
     this.syncActiveNames(this.resolveActiveNames(this.props.active));
@@ -477,7 +477,7 @@ class Tabs extends Component {
     const { onRemove } = this.props;
 
     this.props.tabs = this.props.tabs.filter((_, i) => i !== index);
-    this.cache.panels.delete(removedName);
+    this.runtime.cache.panels.delete(removedName);
 
     if (this.state.current.index >= this.props.tabs.length) {
       flushSync(() => {
@@ -730,7 +730,7 @@ class Tabs extends Component {
     this._removeDragEvents();
     this.cleanup.bindings?.();
     this.cleanup.bindings = null;
-    this.cache.panels?.clear();
+    // this.runtime.cache.panels?.clear();
     cancelAnimationFrame(this.raf);
     cancelAnimationFrame(this._resizeRaf);
     this.cleanup.events.off('resize');
@@ -740,7 +740,7 @@ class Tabs extends Component {
     }
   }
 }
-export default Tabs;
+
 export function createTabs(container, input = {}) {
   return new Tabs(container, input);
 }
