@@ -20,7 +20,7 @@
     border-width: var(--drop-border-width, 1px);
     border-style: var(--drop-border-style, solid);
     border-color: var(--drop-border-color, var(--ui-border));
-    border-radius: var(--radius);
+    border-radius: var(--radius-md);
     background-color: var(--drop-background, var(--ui-bg));
     color: var(--drop-foreground, var(--ui-fg));
     box-shadow: var(--drop-box-shadow, var(--shadow-sm));

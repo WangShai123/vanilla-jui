@@ -51,7 +51,7 @@ export class Menu {
     this.options = resolveProps(options, MENU_OPTIONS_SCHEMA, 'Menu.options');
     this._element = element;
 
-    this.root = null;
+    this.dom.root = null;
     this.cleanup = {
       events: createEventManager(),
     };
@@ -81,10 +81,10 @@ export class Menu {
     requireRenderDOM('Menu');
 
     if (this._element === false) {
-      this.root = this._buildRoot();
+      this.dom.root = this._buildRoot();
       this._bound = true;
     } else {
-      this.root = resolveElement(this._element, 'Menu.element');
+      this.dom.root = resolveElement(this._element, 'Menu.element');
       this._bound = true;
     }
 
@@ -160,10 +160,10 @@ export class Menu {
    * @returns {void}
    */
   _bindEvents() {
-    if (!this.root) return;
+    if (!this.dom.root) return;
 
     if (this.options.type === 'mobile') {
-      this.cleanup.events.on('mobile', this.root, 'click', (e) => {
+      this.cleanup.events.on('mobile', this.dom.root, 'click', (e) => {
         const target = e.target;
 
         if (target.closest('.menu-item.back')) {
@@ -206,7 +206,9 @@ export class Menu {
           this._toggleActive(firstLevelMenuItem);
         } else {
           // 点击其他地方移除所有 is-active
-          q('.menu-item.is-active', this.root)?.classList.remove('is-active');
+          q('.menu-item.is-active', this.dom.root)?.classList.remove(
+            'is-active'
+          );
         }
       });
     }
@@ -233,15 +235,15 @@ export class Menu {
     this.cleanup.items?.();
     this.cleanup.items = null;
 
-    if (this._element === false && this.root?.parentElement) {
-      this.root.remove();
+    if (this._element === false && this.dom.root?.parentElement) {
+      this.dom.root.remove();
     }
 
     if (!keepElement) {
       this._element = null;
     }
 
-    this.root = null;
+    this.dom.root = null;
     this._bound = false;
   }
 
@@ -313,7 +315,7 @@ export class Menu {
     const isActive = menuItem.classList.contains('is-active');
 
     // 移除其他所有 is-active
-    q('.menu-item.is-active', this.root)?.classList.remove('is-active');
+    q('.menu-item.is-active', this.dom.root)?.classList.remove('is-active');
 
     // 切换当前项的 is-active
     if (!isActive) {
@@ -339,12 +341,12 @@ export class Menu {
         this.build();
       } else {
         const rootIsList =
-          this.root.matches?.('.menu') ||
-          this.root.matches?.('ul') ||
-          this.root.matches?.('ol');
+          this.dom.root.matches?.('.menu') ||
+          this.dom.root.matches?.('ul') ||
+          this.dom.root.matches?.('ol');
         const list = rootIsList
-          ? this.root
-          : q(':scope > .menu', this.root) || q('.menu', this.root);
+          ? this.dom.root
+          : q(':scope > .menu', this.dom.root) || q('.menu', this.dom.root);
 
         if (!list) {
           throw new Error('Menu: .menu element not found for setItems().');
@@ -369,9 +371,9 @@ export class Menu {
    * @returns {Menu}
    */
   removeItem(id) {
-    if (!this.root) return this;
+    if (!this.dom.root) return this;
 
-    const item = q(`[id^="menu-item-${id}"]`, this.root);
+    const item = q(`[id^="menu-item-${id}"]`, this.dom.root);
 
     if (item) {
       item.remove();
@@ -405,7 +407,7 @@ export class Menu {
       this._teardown();
     } else {
       this._element = null;
-      this.root = null;
+      this.dom.root = null;
       this.cleanup.events.clear();
     }
 

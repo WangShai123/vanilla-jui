@@ -1,8 +1,8 @@
 @layer components {
   .j-modal {
     --modal-background: var(--ui-bg);
-    --modal-border-radius: var(--radius);
-    --modal-box-shadow: var(--shadow);
+    --modal-border-radius: var(--radius-md);
+    --modal-box-shadow: var(--shadow-md);
     --modal-min-width: 300px;
     --modal-max-width: 500px;
     --modal-max-height: 90vh;
@@ -11,7 +11,7 @@
 
     --modal-header-padding: calc(var(--space) * 2) calc(var(--space) * 3);
     --modal-header-gap: var(--space);
-    --modal-title-font-size: var(--font-size);
+    --modal-title-font-size: var(--font-size-md);
     --modal-close-icon-size: var(--el-height-3xs);
     --modal-close-font-size: var(--font-size-lg);
     --modal-close-color: var(--ui-fg-muted);

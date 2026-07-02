@@ -5,10 +5,8 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: var(
-      --offcanvas-overlay-background,
-      var(--ui-overlay-muted)
-    );
+    background-color: var(--offcanvas-overlay-background,
+        var(--ui-overlay-muted));
     z-index: var(--z-index-overlay);
     opacity: 0;
     transition: opacity 0.3s ease;
@@ -22,7 +20,7 @@
     position: fixed;
     z-index: var(--z-index-offcanvas);
     background: var(--offcanvas-background, var(--ui-bg));
-    box-shadow: var(--offcanvas-box-shadow, var(--shadow));
+    box-shadow: var(--offcanvas-box-shadow, var(--shadow-md));
     --offcanvas-border: 1px solid var(--ui-border-subtle);
   }
 

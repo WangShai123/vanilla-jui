@@ -4,7 +4,7 @@
     display: block;
     width: 100%;
     overflow: hidden;
-    border-radius: var(--swiper-radius, var(--radius));
+    border-radius: var(--swiper-radius, var(--radius-md));
     touch-action: pan-y;
     user-select: none;
   }
@@ -88,10 +88,8 @@
 
   .j-swiper .swiper-pagination-indicator:hover,
   .j-swiper .swiper-pagination-indicator:focus-visible {
-    background: var(
-      --swiper-indicator-hover-background,
-      rgb(255 255 255 / 86%)
-    );
+    background: var(--swiper-indicator-hover-background,
+        rgb(255 255 255 / 86%));
   }
 
   .j-swiper .swiper-pagination-indicator.is-active,
@@ -152,7 +150,7 @@
       right: calc(var(--space) * 2);
       bottom: calc(var(--space) * 2);
       left: calc(var(--space) * 2);
-      font-size: var(--font-size);
+      font-size: var(--font-size-md);
     }
 
     .j-swiper .swiper-navigation {

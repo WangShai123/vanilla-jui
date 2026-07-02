@@ -1,6 +1,5 @@
 @layer components {
   .j-skeleton {
-    /* --skeleton-background: rgb(148 163 184 / 22%); */
     --skeleton-background: var(--ui-surface-muted);
     --skeleton-radius: var(--radius-sm, 4px);
     --skeleton-duration: 1.5s;
@@ -28,21 +27,19 @@
   }
 
   .j-skeleton.skeleton-text {
-    width: 100%;
-    height: var(--el-height-xs);
-    min-height: var(--el-height-xs);
-  }
-
-  .j-skeleton.skeleton-title {
-    width: 60%;
     height: var(--el-height-sm);
     min-height: var(--el-height-sm);
   }
 
+  .j-skeleton.skeleton-title {
+    width: 60%;
+    height: var(--el-height-md);
+    min-height: var(--el-height-md);
+  }
+
   .j-skeleton.skeleton-block {
-    width: 100%;
-    height: calc(var(--el-height-sm) * 4);
-    min-height: calc(var(--el-height-sm) * 4);
+    height: calc(var(--el-height-md) * 4);
+    min-height: calc(var(--el-height-md) * 4);
   }
 
   .j-skeleton.skeleton-avatar,
@@ -52,13 +49,13 @@
   }
 
   .j-skeleton.skeleton-avatar {
-    width: var(--el-height);
-    min-height: var(--el-height);
+    width: var(--el-height-md);
+    min-height: var(--el-height-md);
   }
 
   .j-skeleton.skeleton-button {
-    width: 5.5rem;
-    min-height: var(--el-height-sm);
+    width: 5rem;
+    min-height: var(--el-height-md);
   }
 
   .j-skeleton.skeleton-image {
@@ -70,11 +67,6 @@
   .j-skeleton[aria-busy='false'] {
     animation: none;
   }
-
-  /* .dark .j-skeleton,
-  [data-theme='dark'] .j-skeleton {
-    --skeleton-background: rgb(148 163 184 / 18%);
-  } */
 
   @media (prefers-reduced-motion: reduce) {
     .j-skeleton {

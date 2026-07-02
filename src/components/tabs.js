@@ -430,7 +430,7 @@ export class Tabs extends Component {
   /**
    * 将组件挂载到构造器指定的容器中。
    */
-  render() {
+  build() {
     this.assertActive('render');
     insert(this.dom.container, () => this.root);
   }

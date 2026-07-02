@@ -52,7 +52,7 @@
   body {
     min-width: var(--screen-xs, 320px);
     min-height: 100vh;
-    font-size: var(--font-size);
+    font-size: var(--font-size-md);
     text-rendering: optimizeSpeed;
     margin: 0;
   }

@@ -1,10 +1,10 @@
 @layer components {
   .j-avatar {
-    --avatar-size: var(--el-height);
+    --avatar-size: var(--el-height-md);
 
     display: inline-block;
     vertical-align: middle;
-    border-radius: var(--avatar-border-radius, var(--radius));
+    border-radius: var(--avatar-border-radius, var(--radius-md));
     width: var(--avatar-size);
     height: var(--avatar-size);
     overflow: hidden;
@@ -23,7 +23,7 @@
   }
 
   .j-avatar.is-lg {
-    --avatar-size: var(--el-height-md);
+    --avatar-size: var(--el-height-lg);
   }
 
   .j-avatar.is-round {

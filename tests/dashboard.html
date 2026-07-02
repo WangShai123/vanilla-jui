@@ -14,10 +14,11 @@
       type="images/x-icon"
       href="../assets/favicon.ico"
     />
-    <link rel="stylesheet" href="../dist/style.css?v=1" />
+    <!-- <link rel="stylesheet" href="../dist/style.css?v=1" /> -->
+     <link rel="stylesheet" href="../src/css/index.css">
      <script src="https://unpkg.com/vanilla-signal/dist/index.umd.js"></script>
      <script src="https://unpkg.com/vanilla-signal-i18n/dist/index.umd.js"></script>
-    <script src="../dist/index.umd.js?v=3"></script>
+    <script src="../dist/index.umd.js"></script>
     <meta name="author" content="JEALER" />
     <script>
       (function(d,k){var m=d.cookie.match(new RegExp('(?:^|; )'+k+'=([^;]*)'));if(!m)return;try{var o=JSON.parse(m[1]),r=o.mode==='auto'?(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):o.mode,h=d.documentElement;h.classList.add(r||'dark','j-theme-'+(o.theme||'indigo'),'j-radius-'+(o.radius||'sm'),'j-shadow-'+(o.shadow||'sm'),'j-font-'+(o.font||'sm'));}catch(e){}})(document,'jui-theme');
@@ -30,397 +31,6 @@
     <div class="main-container container">
 
 
-
-
-      <section>
-        <h2 id="offcanvas">Offcanvas</h2>
-        <h3>animation</h3>
-        <div class="actions">
-          <button class="j-button is-default example-offcanvas-slide">
-            slide
-          </button>
-          <button class="j-button is-default example-offcanvas-push">
-            push
-          </button>
-        </div>
-        <h3>direction</h3>
-        <div class="actions">
-          <button class="j-button is-default example-offcanvas-top">top</button>
-          <button class="j-button is-default example-offcanvas-bottom">
-            bottom
-          </button>
-          <button class="j-button is-default example-offcanvas-right">
-            right
-          </button>
-        </div>
-      </section>
-
-      <section>
-        <h2 id="accordion">Accordion</h2>
-        <div class="example-accordion"></div>
-      </section>
-
-      <section>
-        <h2 id="drop">Drop</h2>
-        <h3>trigger modes</h3>
-        <div class="actions">
-          <button class="j-button is-default drop-auto">hover</button>
-          <button class="j-button is-default drop-click">click</button>
-        </div>
-        <h3>positions</h3>
-        <div class="actions">
-          <button class="j-button is-default drop-top-left">top-left</button>
-          <button class="j-button is-default drop-top-center">
-            top-center
-          </button>
-          <button class="j-button is-default drop-top-right">top-right</button>
-          <button class="j-button is-default drop-bottom-left">
-            bottom-left
-          </button>
-          <button class="j-button is-default drop-bottom-center">
-            bottom-center
-          </button>
-          <button class="j-button is-default drop-bottom-right">
-            bottom-right
-          </button>
-          <button class="j-button is-default drop-left">left</button>
-          <button class="j-button is-default drop-right">right</button>
-        </div>
-      </section>
-
-      <section>
-        <h2 id="tooltip">Tooltip</h2>
-        <h3>trigger modes</h3>
-        <div class="actions">
-          <button class="j-button is-default tooltip-auto">hover</button>
-          <button class="j-button is-default tooltip-click">click</button>
-        </div>
-        <h3>positions</h3>
-        <div class="actions">
-          <button class="j-button is-default tooltip-top-left">top-left</button>
-          <button class="j-button is-default tooltip-top-center">
-            top-center
-          </button>
-          <button class="j-button is-default tooltip-top-right">
-            top-right
-          </button>
-          <button class="j-button is-default tooltip-bottom-left">
-            bottom-left
-          </button>
-          <button class="j-button is-default tooltip-bottom-center">
-            bottom-center
-          </button>
-          <button class="j-button is-default tooltip-bottom-right">
-            bottom-right
-          </button>
-          <button class="j-button is-default tooltip-left">left</button>
-          <button class="j-button is-default tooltip-right">right</button>
-        </div>
-      </section>
-
-      <section>
-        <h2 id="parabola">Parabola</h2>
-        <div style="width: 280px">
-          <div
-            style="
-              margin-bottom: 120px;
-              display: flex;
-              justify-content: space-between;
-            "
-          >
-            <button type="button" class="j-button is-default" id="from-point">
-              Start 1
-            </button>
-            <button type="button" class="j-button is-outline" id="end-point-2">
-              End 2
-            </button>
-          </div>
-          <div style="display: flex; justify-content: space-between">
-            <button type="button" class="j-button is-default" id="from-point-2">
-              Start 2
-            </button>
-            <button type="button" class="j-button is-outline" id="end-point">
-              End 1
-            </button>
-          </div>
-        </div>
-      </section>
-
-      <section>
-        <h2 id="menu">Menu</h2>
-
-        <h3>horizontal menu (desktop)</h3>
-        <div class="block">
-          <nav class="j-menu">
-            <ul class="menu">
-              <li class="menu-item current-menu-item">
-                <a>
-                  <icon class="el-icon el-prefix">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 24 24"
-                      fill="currentColor"
-                    >
-                      <path
-                        d="M19 21H5C4.44772 21 4 20.5523 4 20V11L1 11L11.3273 1.6115C11.7087 1.26475 12.2913 1.26475 12.6727 1.6115L23 11L20 11V20C20 20.5523 19.5523 21 19 21ZM6 19H18V9.15745L12 3.7029L6 9.15745V19ZM8 15H16V17H8V15Z"
-                      ></path>
-                    </svg>
-                  </icon>
-                  <span class="is-text">menu</span>
-                </a>
-              </li>
-              <li class="menu-item"><a>level-one</a></li>
-              <li class="menu-item menu-item-has-children">
-                <a href="#">has-children</a>
-                <ul class="sub-menu">
-                  <li class="menu-item"><a>child one</a></li>
-                  <li class="menu-item"><a>child two</a></li>
-                  <li class="menu-item">
-                    <a
-                      >child three: long text, it'll be automatically wrapped</a
-                    >
-                  </li>
-                  <li class="menu-item"><a>child four</a></li>
-                </ul>
-              </li>
-              <li class="menu-item">no-link-notice</li>
-              <li class="menu-item menu-item-has-children list-card-menu">
-                <a href="#">list-card</a>
-                <ul class="sub-menu">
-                  <li class="menu-item"><a>child one</a></li>
-                  <li class="menu-item"><a>child two</a></li>
-                  <li class="menu-item">
-                    <a>child three: calmp 1 while triming</a>
-                  </li>
-                  <li class="menu-item"><a>child four</a></li>
-                  <li class="menu-item"><a>child five</a></li>
-                  <li class="menu-item"><a>child six</a></li>
-                  <li class="menu-item"><a>child seven</a></li>
-                  <li class="menu-item"><a>child eight</a></li>
-                  <li class="menu-item"><a>child nine</a></li>
-                  <li class="menu-item"><a>child ten</a></li>
-                </ul>
-              </li>
-              <li class="menu-item menu-item-has-children advanced-card-menu">
-                <a href="#">advanced-card</a>
-                <ul class="sub-menu">
-                  <li class="menu-item"><a>child one</a></li>
-                  <li class="menu-item">
-                    <a>
-                      <img
-                        src="https://placehold.co/300x200/lightgray/gray?text=Option-2"
-                        alt=""
-                      />
-                    </a>
-                  </li>
-                  <li class="menu-item">
-                    <a>
-                      <img
-                        src="https://placehold.co/300x200/lightgray/gray?text=Option-3"
-                        alt=""
-                      />
-                    </a>
-                  </li>
-                  <li class="menu-item"><a>child four</a></li>
-                  <li class="menu-item"><a>child five</a></li>
-                  <li class="menu-item"><a>child six</a></li>
-                  <li class="menu-item">
-                    <a>
-                      <img
-                        src="https://placehold.co/300x200/lightgray/gray?text=Option-7"
-                        alt=""
-                      />
-                    </a>
-                  </li>
-                  <li class="menu-item">
-                    <a>
-                      <img
-                        src="https://placehold.co/300x200/lightgray/gray?text=Option-8"
-                        alt=""
-                      />
-                    </a>
-                  </li>
-                  <li class="menu-item"><a>child nine</a></li>
-                  <li class="menu-item"><a>child ten</a></li>
-                </ul>
-              </li>
-              <li class="menu-item">
-                <a>
-                  <span class="el-icon el-prefix">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 24 24"
-                      fill="currentColor"
-                    >
-                      <path
-                        d="M3 12H5V21H3V12ZM19 8H21V21H19V8ZM11 2H13V21H11V2Z"
-                      ></path>
-                    </svg>
-                  </span>
-                  <span class="menu-text">level-one</span>
-                </a>
-              </li>
-            </ul>
-          </nav>
-        </div>
-
-        <h3>vertical menu (mobile)</h3>
-        <div
-          class="block"
-          style="border: 1px solid var(--border-color-sm); width: 240px"
-        >
-          <nav class="j-mobile-menu" id="mobile-menu">
-            <ul class="menu">
-              <li class="menu-item">
-                <a>
-                  <icon class="el-icon el-prefix">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 24 24"
-                      fill="currentColor"
-                    >
-                      <path
-                        d="M19 21H5C4.44772 21 4 20.5523 4 20V11L1 11L11.3273 1.6115C11.7087 1.26475 12.2913 1.26475 12.6727 1.6115L23 11L20 11V20C20 20.5523 19.5523 21 19 21ZM6 19H18V9.15745L12 3.7029L6 9.15745V19ZM8 15H16V17H8V15Z"
-                      ></path>
-                    </svg>
-                  </icon>
-                  <span class="menu-text">menu</span>
-                </a>
-              </li>
-              <li class="menu-item">
-                <a><span class="menu-text">level-one</span></a>
-              </li>
-              <li class="menu-item menu-item-has-children">
-                <a href="#">has-children</a>
-                <ul class="sub-menu">
-                  <li class="menu-item">
-                    <a><span class="menu-text">child one</span></a>
-                  </li>
-                  <li class="menu-item menu-item-has-children">
-                    <a>child two</a>
-                    <ul class="sub-menu">
-                      <li class="menu-item"><a>sub child one</a></li>
-                      <li class="menu-item"><a>sub child two</a></li>
-                      <li class="menu-item">
-                        <a>
-                          <span class="menu-text">
-                            sub child three: long text, it'll be automatically
-                            wrapped
-                          </span>
-                        </a>
-                      </li>
-                      <li class="menu-item"><a>sub child four</a></li>
-                      <li class="menu-item"><a>sub child five</a></li>
-                    </ul>
-                  </li>
-                  <li class="menu-item">
-                    <a>
-                      <span class="menu-text"
-                        >child three: long text, it'll be automatically wrapped
-                      </span>
-                    </a>
-                  </li>
-                  <li class="menu-item"><a>child four</a></li>
-                  <li class="menu-item"><a>child five</a></li>
-                </ul>
-              </li>
-              <li class="menu-item">no-link-notice</li>
-              <li class="menu-item">
-                <a href="#">
-                  <span class="el-icon el-prefix">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 24 24"
-                      fill="currentColor"
-                    >
-                      <path
-                        d="M3 12H5V21H3V12ZM19 8H21V21H19V8ZM11 2H13V21H11V2Z"
-                      ></path>
-                    </svg>
-                  </span>
-                  <span class="menu-text">level-one</span>
-                </a>
-              </li>
-              <li class="menu-item">
-                <a><span class="menu-text">level-one</span></a>
-              </li>
-              <li class="menu-item">
-                <a><span class="menu-text">level-one</span></a>
-              </li>
-            </ul>
-          </nav>
-        </div>
-
-        <h3>sidebar menu (bottom)</h3>
-        <div class="actions">
-          <button class="j-button is-default" id="createMenu">
-            create menu
-          </button>
-          <button class="j-button is-danger" id="destroyMenu">
-            destroy menu
-          </button>
-        </div>
-
-        <h3>drop menu</h3>
-        <div class="block">
-          <div class="drop-container drop-menu">
-            <ul class="menu">
-              <li class="menu-item">
-                <a>
-                  <span class="el-icon">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 24 24"
-                      fill="currentColor"
-                    >
-                      <path
-                        d="M6.9998 6V3C6.9998 2.44772 7.44752 2 7.9998 2H19.9998C20.5521 2 20.9998 2.44772 20.9998 3V17C20.9998 17.5523 20.5521 18 19.9998 18H16.9998V20.9991C16.9998 21.5519 16.5499 22 15.993 22H4.00666C3.45059 22 3 21.5554 3 20.9991L3.0026 7.00087C3.0027 6.44811 3.45264 6 4.00942 6H6.9998ZM5.00242 8L5.00019 20H14.9998V8H5.00242ZM8.9998 6H16.9998V16H18.9998V4H8.9998V6Z"
-                      ></path>
-                    </svg>
-                  </span>
-                  <span class="menu-text">copy</span>
-                </a>
-              </li>
-              <li class="menu-item">
-                <a>
-                  <span class="el-icon">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 24 24"
-                      fill="currentColor"
-                    >
-                      <path
-                        d="M7 4V2H17V4H20.0066C20.5552 4 21 4.44495 21 4.9934V21.0066C21 21.5552 20.5551 22 20.0066 22H3.9934C3.44476 22 3 21.5551 3 21.0066V4.9934C3 4.44476 3.44495 4 3.9934 4H7ZM7 6H5V20H19V6H17V8H7V6ZM9 4V6H15V4H9Z"
-                      ></path>
-                    </svg>
-                  </span>
-                  <span class="menu-text">clipboard</span>
-                </a>
-              </li>
-              <li class="menu-item menu-heading">Heading</li>
-              <li class="menu-item">
-                <a>
-                  <span class="el-icon">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 24 24"
-                      fill="currentColor"
-                    >
-                      <path
-                        d="M7 4V2H17V4H20.0066C20.5552 4 21 4.44495 21 4.9934V21.0066C21 21.5552 20.5551 22 20.0066 22H3.9934C3.44476 22 3 21.5551 3 21.0066V4.9934C3 4.44476 3.44495 4 3.9934 4H7ZM7 6H5V20H19V6H17V8H7V6ZM9 4V6H15V4H9Z"
-                      ></path>
-                    </svg>
-                  </span>
-                  <span class="menu-text">clipboard</span>
-                  <span class="menu-addon">
-                    <span class="bdk-cmd">C</span>
-                  </span>
-                </a>
-              </li>
-            </ul>
-          </div>
-        </div>
-      </section>
 
       <section>
         <h2 id="form">Form</h2>
@@ -2937,8 +2547,8 @@ disabled</textarea
       <section>
         <h2 id="skeleton">Skeleton</h2>
         <div class="j-content">
-          <div><code>.j-skeleton</code></div>
           <div class="actions block">
+            <code>.j-skeleton</code>
             <code>.skeleton-title</code>
             <code>.skeleton-text</code>
             <code>.skeleton-block</code>
@@ -2954,7 +2564,7 @@ disabled</textarea
             <p class="header-title j-skeleton skeleton-title"></p>
             <p class="header-description j-skeleton skeleton-text"></p>
           </div>
-          <div class="card-content" style="display:flex;gap:8px;align-items:start;"> 
+          <div class="card-content" style="display:flex;gap:16px;align-items:start;"> 
             <div class="j-skeleton skeleton-avatar"></div>
             <div class="j-skeleton skeleton-block"></div>
           </div>
@@ -4230,7 +3840,7 @@ disabled</textarea
             行内引用：<q>所见即所得</q> 是 <code>富文本编辑</code> 的核心理念。
           </p>
 
-          <pre><code>&lt;!-- 示例 HTML 结构 --&gt;
+          <pre><code class="language-html">&lt;!-- 示例 HTML 结构 --&gt;
 &lt;div class="j-content"&gt;
   &lt;h1&gt;标题&lt;/h1&gt;
   &lt;p&gt;段落内容...&lt;/p&gt;
@@ -4409,7 +4019,7 @@ disabled</textarea
       }
       header h1 {
         margin: 0;
-        font-size: var(--font-size);
+        font-size: var(--font-size-md);
       }
 
       .main-container {
@@ -4465,8 +4075,20 @@ disabled</textarea
       .gap-4 {
         gap: calc(var(--space) * 4);
       }
+      .p-2 {
+        padding: calc(var(--space) * 2);
+      }
+      .drop-wrap {
+        padding: calc(var(--space) * 4);
+        margin:0;
+        width: 200px;
+      }
     </style>
 
-    <script src="./dashboard.min.js?v=34"></script>
+
+    <!-- <link rel="stylesheet" href="https://unpkg.com/@highlightjs/cdn-assets@11.11.1/styles/atom-one-dark.min.css"> -->
+<!-- <script src="https://unpkg.com/@highlightjs/cdn-assets@11.11.1/highlight.min.js"></script> -->
+    <script src="./dashboard.min.js"></script>
+    <!-- <script>hljs.highlightAll();</script> -->
   </body>
 </html>

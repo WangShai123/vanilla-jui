@@ -17,9 +17,9 @@
     display: flex;
     align-items: center;
     padding: var(--toast-padding, calc(var(--space) * 3) calc(var(--space) * 4));
-    border-radius: var(--toast-border-radius, var(--radius));
-    box-shadow: var(--toast-box-shadow, var(--shadow));
-    font-size: var(--toast-font-size, var(--font-size));
+    border-radius: var(--toast-border-radius, var(--radius-md));
+    box-shadow: var(--toast-box-shadow, var(--shadow-md));
+    font-size: var(--toast-font-size, var(--font-size-md));
     font-weight: var(--toast-font-weight, var(--font-medium));
     opacity: 0;
 
@@ -112,11 +112,11 @@
     transition: opacity var(--speed-sm) ease-in-out;
     opacity: 0;
     z-index: var(--z-index-toast);
-    font-size: var(--toast-lite-font-size, var(--font-size));
+    font-size: var(--toast-lite-font-size, var(--font-size-md));
     text-align: center;
     color: var(--toast-lite-color, #fff);
     background: var(--toast-lite-background, rgba(0, 0, 0, 0.8));
-    border-radius: var(--toast-lite-border-radius, var(--radius));
+    border-radius: var(--toast-lite-border-radius, var(--radius-md));
     padding: var(--toast-lite-padding, calc(var(--space) * 2) calc(var(--space) * 3));
     max-width: var(--toast-lite-max-width, calc(var(--screen-sm) / 2));
     user-select: none;

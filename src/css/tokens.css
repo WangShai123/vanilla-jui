@@ -14,7 +14,7 @@
     --z-index-0: 0;
     --z-index-1: 1;
     --z-index-badge: 2;
-    --z-index-toolbar-container: 2;
+    --z-index-toolbar: 2;
     --z-index-submenu: 5;
     --z-index-drop: 9900;
     --z-index-overlay: 9950;
@@ -27,7 +27,6 @@
 
     /* --- Transitions --- */
     --speed-sm: 0.15s;
-    --speed: 0.25s;
     --speed-md: 0.25s;
     --speed-lg: 0.5s;
     --speed-xl: 0.75s;
@@ -35,7 +34,6 @@
     /* --- Typography Scale --- */
     --text-xs: 0.75rem;
     --text-sm: 0.875rem;
-    --text: 1rem;
     --text-md: 1rem;
     --text-lg: 1.125rem;
     --text-xl: 1.25rem;
@@ -71,37 +69,43 @@
     /* --- Container Widths --- */
     --columns-xs: 20rem;
     --columns-sm: 24rem;
-    --columns: 28rem;
-    --columns-md: 32rem;
-    --columns-lg: 36rem;
-    --columns-xl: 42rem;
-    --columns-2xl: 48rem;
-    --columns-3xl: 56rem;
-    --columns-4xl: 64rem;
+    --columns-md: 28rem;
+    --columns-lg: 32rem;
+    --columns-xl: 36rem;
+    --columns-2xl: 42rem;
+    --columns-3xl: 48rem;
+    --columns-4xl: 56rem;
+    --columns-5xl: 64rem;
 
     /* --- Border Radius --- */
-    --radius-xs: 0.125rem;
-    --radius-sm: 0.25rem;
-    --radius: 0.375rem;
+    /* 2px */
+    --radius-2xs: 0.125rem;
+    /* 4px */
+    --radius-xs: 0.25rem;
+    /* 6px */
+    --radius-sm: 0.375rem;
+    /* 8px */
     --radius-md: 0.5rem;
+    /* 12px */
     --radius-lg: 0.75rem;
+    /* 16px */
     --radius-xl: 1rem;
+    /* 24px */
     --radius-2xl: 1.5rem;
     --radius-full: 9999px;
 
     /* --- Element Heights --- */
-    --el-height-3xs: 1.5rem;
-    --el-height-2xs: 1.75rem;
-    --el-height-xs: 2rem;
-    --el-height-sm: 2.25rem;
-    --el-height: 2rem;
-    --el-height-md: 2.25rem;
-    --el-height-lg: 2.5rem;
+    --el-height-3xs: 1rem;
+    --el-height-2xs: 1.25rem;
+    --el-height-xs: 1.5rem;
+    --el-height-sm: 1.75rem;
+    --el-height-md: 2rem;
+    --el-height-lg: 2.25rem;
+    --el-height-xl: 2.5rem;
 
     /* --- Font Sizes --- */
-    --font-size-xs: 0.75rem;
-    --font-size-sm: 0.875rem;
-    --font-size: 0.875rem;
+    --font-size-xs: 0.625rem;
+    --font-size-sm: 0.75rem;
     --font-size-md: 0.875rem;
     --font-size-lg: 1rem;
     --font-size-xl: 1.125rem;
@@ -419,7 +423,6 @@
     /* Shadows */
     --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.3);
     --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.4), 0 1px 2px -1px rgb(0 0 0 / 0.3);
-    --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3);
     --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3);
     --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.4);
     --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.5), 0 8px 10px -6px rgb(0 0 0 / 0.4);
@@ -1043,55 +1046,55 @@
   .j-radius-none {
     --radius-xs: 0;
     --radius-sm: 0;
-    --radius: 0;
     --radius-md: 0;
     --radius-lg: 0;
     --radius-xl: 0;
+    --radius-2xl: 0;
   }
 
   .j-radius-sm {
     --radius-xs: 0.0625rem;
     --radius-sm: 0.125rem;
-    --radius: 0.25rem;
-    --radius-md: 0.375rem;
+    --radius-md: 0.25rem;
     --radius-lg: 0.5rem;
     --radius-xl: 0.75rem;
+    --radius-2xl: 1rem;
   }
 
   .j-radius-md {
     --radius-xs: 0.125rem;
     --radius-sm: 0.25rem;
-    --radius: 0.375rem;
     --radius-md: 0.5rem;
     --radius-lg: 0.75rem;
     --radius-xl: 1rem;
+    --radius-2xl: 1.25rem;
   }
 
   .j-radius-lg {
     --radius-xs: 0.25rem;
     --radius-sm: 0.5rem;
-    --radius: 0.75rem;
-    --radius-md: 1rem;
-    --radius-lg: 1.25rem;
-    --radius-xl: 1.5rem;
+    --radius-md: 0.75rem;
+    --radius-lg: 1rem;
+    --radius-xl: 1.25rem;
+    --radius-2xl: 1.5rem;
   }
 
   .j-radius-xl {
-    --radius-xs: 0.375rem;
+    --radius-xs: 0.5rem;
     --radius-sm: 0.75rem;
-    --radius: 1rem;
-    --radius-md: 1.25rem;
-    --radius-lg: 1.5rem;
-    --radius-xl: 2rem;
+    --radius-md: 1rem;
+    --radius-lg: 1.25rem;
+    --radius-xl: 1.5rem;
+    --radius-2xl: 1.75rem;
   }
 
   .j-radius-round {
     --radius-xs: 9999px;
     --radius-sm: 9999px;
-    --radius: 9999px;
     --radius-md: 9999px;
     --radius-lg: 9999px;
     --radius-xl: 9999px;
+    --radius-2xl: 9999px;
   }
 
 
@@ -1102,7 +1105,6 @@
   .j-shadow-none {
     --shadow-xs: none;
     --shadow-sm: none;
-    --shadow: none;
     --shadow-md: none;
     --shadow-lg: none;
     --shadow-xl: none;
@@ -1111,8 +1113,7 @@
   .j-shadow-sm {
     --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.03);
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.06);
-    --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.08);
-    --shadow-md: 0 2px 4px -1px rgb(0 0 0 / 0.08);
+    --shadow-md: 0 2px 3px -1px rgb(0 0 0 / 0.08);
     --shadow-lg: 0 4px 6px -1px rgb(0 0 0 / 0.1);
     --shadow-xl: 0 8px 10px -3px rgb(0 0 0 / 0.1);
   }
@@ -1120,8 +1121,7 @@
   .j-shadow-md {
     --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
     --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1);
-    --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-    --shadow-md: 0 4px 8px -2px rgb(0 0 0 / 0.1);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
     --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
     --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
   }
@@ -1129,8 +1129,7 @@
   .j-shadow-lg {
     --shadow-xs: 0 1px 3px 0 rgb(0 0 0 / 0.08);
     --shadow-sm: 0 2px 4px 0 rgb(0 0 0 / 0.12);
-    --shadow: 0 4px 8px -1px rgb(0 0 0 / 0.15);
-    --shadow-md: 0 6px 12px -2px rgb(0 0 0 / 0.15);
+    --shadow-md: 0 4px 8px -2px rgb(0 0 0 / 0.15);
     --shadow-lg: 0 12px 20px -4px rgb(0 0 0 / 0.18);
     --shadow-xl: 0 24px 38px -6px rgb(0 0 0 / 0.2);
   }
@@ -1138,8 +1137,7 @@
   .dark .j-shadow-sm {
     --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.2);
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
-    --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.4);
-    --shadow-md: 0 2px 4px -1px rgb(0 0 0 / 0.4);
+    --shadow-md: 0 2px 3px -1px rgb(0 0 0 / 0.4);
     --shadow-lg: 0 4px 6px -1px rgb(0 0 0 / 0.5);
     --shadow-xl: 0 8px 10px -3px rgb(0 0 0 / 0.5);
   }
@@ -1147,8 +1145,7 @@
   .dark .j-shadow-md {
     --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.25);
     --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.35);
-    --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.4);
-    --shadow-md: 0 4px 8px -2px rgb(0 0 0 / 0.45);
+    --shadow-md: 0 4px 6px -2px rgb(0 0 0 / 0.45);
     --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5);
     --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.55);
   }
@@ -1156,8 +1153,7 @@
   .dark .j-shadow-lg {
     --shadow-xs: 0 1px 3px 0 rgb(0 0 0 / 0.3);
     --shadow-sm: 0 2px 4px 0 rgb(0 0 0 / 0.4);
-    --shadow: 0 4px 8px -1px rgb(0 0 0 / 0.5);
-    --shadow-md: 0 6px 12px -2px rgb(0 0 0 / 0.55);
+    --shadow-md: 0 4px 8px -2px rgb(0 0 0 / 0.55);
     --shadow-lg: 0 12px 20px -4px rgb(0 0 0 / 0.6);
     --shadow-xl: 0 24px 38px -6px rgb(0 0 0 / 0.65);
   }
@@ -1168,36 +1164,34 @@
      ============================================ */
 
   .j-font-sm {
-    --font-size-xs: 0.6875rem;
+    --font-size-xs: 0.625rem;
     --font-size-sm: 0.75rem;
-    --font-size: 0.875rem;
     --font-size-md: 0.875rem;
     --font-size-lg: 1rem;
     --font-size-xl: 1.125rem;
     --font-size-2xl: 1.25rem;
-    --el-height-3xs: 1.5rem;
-    --el-height-2xs: 1.75rem;
-    --el-height-xs: 2rem;
-    --el-height-sm: 2.25rem;
-    --el-height: 2rem;
-    --el-height-md: 2.25rem;
-    --el-height-lg: 2.5rem;
+    --el-height-3xs: 1rem;
+    --el-height-2xs: 1.25rem;
+    --el-height-xs: 1.5rem;
+    --el-height-sm: 1.75rem;
+    --el-height-md: 2rem;
+    --el-height-lg: 2.25rem;
+    --el-height-xl: 2.5rem;
   }
 
   .j-font-md {
     --font-size-xs: 0.75rem;
     --font-size-sm: 0.875rem;
-    --font-size: 1rem;
     --font-size-md: 1rem;
     --font-size-lg: 1.125rem;
     --font-size-xl: 1.25rem;
     --font-size-2xl: 1.5rem;
-    --el-height-3xs: 1.75rem;
-    --el-height-2xs: 2rem;
-    --el-height-xs: 2.25rem;
-    --el-height-sm: 2.5rem;
-    --el-height: 2.25rem;
-    --el-height-md: 2.5rem;
-    --el-height-lg: 2.75rem;
+    --el-height-3xs: 1.25rem;
+    --el-height-2xs: 1.5rem;
+    --el-height-xs: 1.75rem;
+    --el-height-sm: 2rem;
+    --el-height-md: 2.25rem;
+    --el-height-lg: 2.5rem;
+    --el-height-xl: 2.75rem;
   }
 }

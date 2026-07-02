@@ -1,6 +1,6 @@
 @layer components {
   .j-pagination {
-    font-size: var(--pagination-font-size, var(--font-size));
+    font-size: var(--pagination-font-size, var(--font-size-md));
   }
 
   .j-pagination a {

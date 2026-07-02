@@ -7,12 +7,12 @@
     color: var(--card-color, var(--ui-fg));
     background-color: var(--card-background, var(--ui-bg));
     border: 1px solid var(--card-border-color, var(--ui-border));
-    border-radius: var(--card-border-radius, var(--radius));
+    border-radius: var(--card-border-radius, var(--radius-md));
     box-shadow: var(--shadow-sm);
   }
 
   .border-radius {
-    border-radius: var(--radius);
+    border-radius: var(--radius-md);
     overflow: hidden;
   }
 
@@ -27,7 +27,7 @@
     align-items: center;
     flex-grow: 1;
     color: var(--card-header-color, var(--ui-fg));
-    font-size: var(--font-size);
+    font-size: var(--font-size-md);
     font-weight: var(--card-header-weight, var(--font-medium));
     padding: var(--card-header-padding, calc(var(--space) * 3) calc(var(--space) * 4));
     margin: 0;
@@ -78,8 +78,8 @@
   }
 
   .j-card .card-media:first-child img {
-    border-start-end-radius: var(--card-border-radius, var(--radius));
-    border-start-start-radius: var(--card-border-radius, var(--radius));
+    border-start-end-radius: var(--card-border-radius, var(--radius-md));
+    border-start-start-radius: var(--card-border-radius, var(--radius-md));
   }
 
   .j-card .card-content {
@@ -91,15 +91,15 @@
   .j-card .card-content:last-child,
   .j-card .card-footer:last-child,
   .j-card .card-header:last-child {
-    border-end-end-radius: var(--card-border-radius, var(--radius));
-    border-end-start-radius: var(--card-border-radius, var(--radius));
+    border-end-end-radius: var(--card-border-radius, var(--radius-md));
+    border-end-start-radius: var(--card-border-radius, var(--radius-md));
   }
 
   .j-card .card-content:first-child,
   .j-card .card-footer:first-child,
   .j-card .card-header:first-child {
-    border-start-end-radius: var(--card-border-radius, var(--radius));
-    border-start-start-radius: var(--card-border-radius, var(--radius));
+    border-start-end-radius: var(--card-border-radius, var(--radius-md));
+    border-start-start-radius: var(--card-border-radius, var(--radius-md));
   }
 
   .j-card .card-footer {

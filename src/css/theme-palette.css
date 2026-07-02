@@ -3,7 +3,7 @@
     padding: var(--palette-padding, calc(var(--space) * 4));
   }
 
-  .j-theme-palette > h3 {
+  .j-theme-palette>h3 {
     margin: var(--palette-title-margin, calc(var(--space) * 2) 0);
   }
 
@@ -20,7 +20,7 @@
   }
 
   .j-theme-palette .palette-container .palette-item .item-title {
-    font-size: var(--palette-item-title-font-size, var(--font-size));
+    font-size: var(--palette-item-title-font-size, var(--font-size-md));
     line-height: var(--line-height);
     margin: 0;
     font-weight: var(--font-bold);
@@ -32,18 +32,18 @@
     gap: var(--space);
   }
 
-  .j-theme-palette .palette-container .palette-item .items > button {
+  .j-theme-palette .palette-container .palette-item .items>button {
     padding-left: calc(var(--space) * 2);
     padding-right: calc(var(--space) * 2);
     min-width: 0;
     overflow: hidden;
   }
 
-  .j-theme-palette .palette-container .palette-item[data-palette='theme'] .items > button {
+  .j-theme-palette .palette-container .palette-item[data-palette='theme'] .items>button {
     justify-content: flex-start;
   }
 
-  .j-theme-palette .palette-container .palette-item .items > button span.item-hex {
+  .j-theme-palette .palette-container .palette-item .items>button span.item-hex {
     display: inline-block;
     width: var(--font-size-sm);
     height: var(--font-size-sm);
@@ -52,7 +52,7 @@
     margin-right: var(--space);
   }
 
-  .j-theme-palette .palette-container .palette-item .items > button span.button-text {
+  .j-theme-palette .palette-container .palette-item .items>button span.button-text {
     overflow: hidden;
     text-overflow: ellipsis;
   }

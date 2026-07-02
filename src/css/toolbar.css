@@ -3,7 +3,7 @@
     position: var(--toolbar-container-position, sticky);
     top: 0;
     width: 100%;
-    z-index: var(--z-index-toolbar-container);
+    z-index: var(--z-index-toolbar);
     overflow: hidden;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
@@ -14,6 +14,7 @@
     background: var(--toolbar-container-background, var(--ui-bg));
     border-bottom: var(--toolbar-container-border, 1px solid var(--ui-border));
   }
+
   .j-toolbar {
     position: relative;
     /* width: 100%; */
@@ -24,18 +25,22 @@
     padding: var(--toolbar-padding, calc(var(--space) * 2));
     box-shadow: var(--toolbar-box-shadow, var(--shadow-sm));
   }
+
   @media screen and (max-width: 992px) {
     .j-toolbar {
       justify-content: flex-start;
     }
   }
+
   .j-toolbar button svg {
     width: var(--toolbar-icon-size, var(--font-size-xl));
     height: var(--toolbar-icon-size, var(--font-size-xl));
   }
+
   .j-toolbar button.is-sm svg {
     --toolbar-icon-size: var(--font-size-lg);
   }
+
   .j-toolbar button.is-lg svg {
     --toolbar-icon-size: var(--font-size-2xl);
   }

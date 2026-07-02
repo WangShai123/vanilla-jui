@@ -1,3 +1,5 @@
+import { jsx } from 'vanilla-signal';
+
 /**
  * 判断当前环境是否可访问 DOM。
  * @returns {boolean}
@@ -283,15 +285,11 @@ export function isRenderableContent(value) {
  * @returns {HTMLElement}
  */
 export function createLoading(className = 'j-loading is-active') {
-  const loading = document.createElement('div');
-  loading.className = className;
-  loading.setAttribute('aria-live', 'polite');
-
-  const spinner = document.createElement('div');
-  spinner.className = 'loading-spinner';
-  loading.appendChild(spinner);
-
-  return loading;
+  return jsx('div', {
+    className,
+    'aria-live': 'polite',
+    children: jsx('div', { className: 'loading-spinner' }),
+  });
 }
 
 /**

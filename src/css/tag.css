@@ -9,7 +9,7 @@
     line-height: var(--tag-line-height, var(--line-height-self));
     font-size: var(--tag-font-size, var(--font-size-sm));
     font-weight: var(--font-normal);
-    border-radius: var(--tag-radius, var(--radius));
+    border-radius: var(--tag-radius, var(--radius-md));
     border: 1px solid var(--tag-border-color, var(--ui-border));
     color: var(--tag-foreground, var(--ui-fg));
     background-color: var(--tag-background, var(--ui-bg));
@@ -68,6 +68,7 @@
   .j-tag.is-default:hover {
     background-color: var(--ui-surface-hover);
   }
+
   .j-tag.is-outline:hover,
   .j-tag.is-ghost:hover {
     background-color: var(--tone-subtle);
@@ -84,10 +85,12 @@
     background-color: var(--ui-fg);
     color: var(--ui-bg-subtle);
   }
+
   .j-tag.is-contrast .el-icon[data-action='close']:hover {
     color: var(--ui-fg);
     background-color: var(--ui-bg);
   }
+
   .j-tag.is-primary .el-icon[data-action='close']:hover {
     color: var(--tone-solid);
     background-color: var(--tone-fg);

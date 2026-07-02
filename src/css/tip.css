@@ -6,13 +6,13 @@
     grid-template-columns: 0 1fr;
     align-items: flex-start;
     row-gap: var(--tip-gap, calc(var(--space, 0.25rem) * 2));
-    border-radius: var(--tip-border-radius, var(--radius));
+    border-radius: var(--tip-border-radius, var(--radius-md));
     border-style: var(--tip-border-style, solid);
     border-width: var(--tip-border-width, 1px);
     border-color: var(--tip-border-color, var(--ui-border));
     padding-inline: calc(var(--space, 0.25rem) * 4);
     padding-block: calc(var(--space, 0.25rem) * 3);
-    font-size: var(--tip-font-size, var(--font-size));
+    font-size: var(--tip-font-size, var(--font-size-md));
     color: var(--tip-color, var(--ui-fg));
     background-color: var(--tip-background, var(--ui-bg));
     box-shadow: var(--tip-box-shadow, var(--shadow-sm));
@@ -60,22 +60,25 @@
     margin: 0;
   }
 
-  .j-tip .tip-content > * {
+  .j-tip .tip-content>* {
     margin: 0;
   }
 
   .j-tip.is-success {
     --tip-border-color: var(--state-success);
     --tip-icon-color: var(--state-success);
+    --tip-background: var(--state-success-muted);
   }
 
   .j-tip.is-warning {
     --tip-border-color: var(--state-warning);
     --tip-icon-color: var(--state-warning);
+    --tip-background: var(--state-warning-muted);
   }
 
   .j-tip.is-danger {
     --tip-border-color: var(--state-danger);
     --tip-icon-color: var(--state-danger);
+    --tip-background: var(--state-danger-muted);
   }
 }

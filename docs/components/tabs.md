@@ -38,7 +38,7 @@ const tabs = new Tabs('#demo', {
   ],
 });
 
-tabs.render();
+tabs.build();
 ```
 
 ## 容器参数
@@ -57,17 +57,17 @@ tabs.render();
 ```js
 const mount = document.getElementById('demo');
 const tabs = new Tabs(mount, { tabs: [...] });
-tabs.render();
+tabs.build();
 ```
 
 ## 实例化参数
 
 ### `new Tabs(container, options)`
 
-| 参数        | 类型                                 | 必填 | 说明                                             |
-| ----------- | ------------------------------------ | ---- | ------------------------------------------------ |
-| `container` | `Element \| Node \| string \| Array` | 是   | 挂载容器。调用 `render()` 时会把根节点插入这里。 |
-| `options`   | `object`                             | 否   | Tabs 配置对象。                                  |
+| 参数        | 类型                                 | 必填 | 说明                                            |
+| ----------- | ------------------------------------ | ---- | ----------------------------------------------- |
+| `container` | `Element \| Node \| string \| Array` | 是   | 挂载容器。调用 `build()` 时会把根节点插入这里。 |
+| `options`   | `object`                             | 否   | Tabs 配置对象。                                 |
 
 ### `options`
 
@@ -158,12 +158,12 @@ createLoading(); // <div class="j-loading is-active" aria-live="polite">...</div
 
 ## 实例方法
 
-### `render()`
+### `build()`
 
 把根节点挂载到构造器传入的 `container`。
 
 ```js
-tabs.render();
+tabs.build();
 ```
 
 | 项     | 说明                       |
@@ -347,7 +347,7 @@ const tabs = new Tabs('#demo', {
   ],
 });
 
-tabs.render();
+tabs.build();
 ```
 
 ### 查看当前状态

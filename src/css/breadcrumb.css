@@ -2,7 +2,7 @@
 
   .j-breadcrumb,
   .j-breadcrumb.is-md {
-    font-size: var(--breadcrumb-font-size, var(--font-size));
+    font-size: var(--breadcrumb-font-size, var(--font-size-md));
     color: var(--breadcrumb-color, var(--ui-fg-muted));
     white-space: nowrap;
     user-select: none;
@@ -18,8 +18,8 @@
 
   .j-breadcrumb svg,
   .j-breadcrumb.is-md svg {
-    width: var(--breadcrumb-icon-size, var(--font-size));
-    height: var(--breadcrumb-icon-size, var(--font-size));
+    width: var(--breadcrumb-icon-size, var(--font-size-md));
+    height: var(--breadcrumb-icon-size, var(--font-size-md));
   }
 
   .j-breadcrumb.is-sm svg {

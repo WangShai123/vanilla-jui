@@ -58,6 +58,7 @@ const pager = new Pagination('#pager', {
   total: 20,
   page: { size: 2, current: 1 },
   count: { sibling: 1, boundary: 1 },
+  lock: true,
   async onChange(page) {
     const rows = await getRows({ page, size: 2 });
     renderRows(rows);
@@ -71,6 +72,8 @@ const pager = new Pagination('#pager', {
 loadPage(1);
 pager.build();
 ```
+
+默认 `lock: true`。如果 `onChange` 返回 Promise，Promise settled 前会锁定分页控件，阻止用户继续点击切换。同步 `onChange` 会立即释放锁。
 
 ## DOM 和 ARIA
 
@@ -103,6 +106,7 @@ pager.build();
 - 当前页使用 `span` 和 `aria-current="page"`。
 - 可点击页码使用 `a[data-page]`，并带有 `aria-label="Go to page N"`。
 - 上一页/下一页禁用时会设置 `.is-disabled`、`aria-disabled="true"` 和 `tabindex="-1"`。
+- `lock` 生效期间，上一页/下一页和可点击页码同样会进入禁用状态。
 
 ## 页码窗口
 
@@ -136,6 +140,7 @@ new Pagination('#pager', {
 | `total`    | `number`           | `0`                           | 总数据数，必须是大于等于 `0` 的有限数     |
 | `page`     | `object`           | `{ size: 10, current: 1 }`    | 分页状态配置                              |
 | `count`    | `object`           | `{ sibling: 1, boundary: 1 }` | 页码窗口配置                              |
+| `lock`     | `boolean`          | `true`                        | 异步切换未完成前是否锁定分页              |
 | `onChange` | `Function \| null` | `null`                        | 页码变化后触发，参数为 `(page, instance)` |
 
 ### `page`
@@ -162,6 +167,8 @@ new Pagination('#pager', {
 | `instance` | `Pagination` | 当前 Pagination 实例 |
 
 `go()` 传入当前页时不会触发 `onChange`。
+
+当 `lock: true` 且 `onChange` 返回 Promise 时，Promise settled 前继续调用 `go()` 或点击页码都会被忽略。
 
 ## 返回值
 
@@ -193,12 +200,13 @@ const pagination = createPagination('#pager', props);
 
 ### `props`
 
-| 属性             | 类型               | 说明             |
-| ---------------- | ------------------ | ---------------- |
-| `props.total`    | `number`           | 总数据数         |
-| `props.page`     | `object`           | 当前分页配置     |
-| `props.count`    | `object`           | 当前页码窗口配置 |
-| `props.onChange` | `Function \| null` | 页码变化回调     |
+| 属性             | 类型               | 说明               |
+| ---------------- | ------------------ | ------------------ |
+| `props.total`    | `number`           | 总数据数           |
+| `props.page`     | `object`           | 当前分页配置       |
+| `props.count`    | `object`           | 当前页码窗口配置   |
+| `props.lock`     | `boolean`          | 是否启用异步切换锁 |
+| `props.onChange` | `Function \| null` | 页码变化回调       |
 
 ### `dom`
 
@@ -213,14 +221,15 @@ const pagination = createPagination('#pager', props);
 
 ### `state`
 
-| 属性                   | 类型     | 说明                       |
-| ---------------------- | -------- | -------------------------- |
-| `state.total`          | `number` | 总数据数                   |
-| `state.page.size`      | `number` | 每页数据量                 |
-| `state.page.current`   | `number` | 当前页码                   |
-| `state.count.sibling`  | `number` | 当前页左右相邻页数         |
-| `state.count.boundary` | `number` | 首尾边界页数               |
-| `state.pageCount`      | `number` | 计算后的总页数，最小为 `1` |
+| 属性                   | 类型      | 说明                       |
+| ---------------------- | --------- | -------------------------- |
+| `state.total`          | `number`  | 总数据数                   |
+| `state.page.size`      | `number`  | 每页数据量                 |
+| `state.page.current`   | `number`  | 当前页码                   |
+| `state.count.sibling`  | `number`  | 当前页左右相邻页数         |
+| `state.count.boundary` | `number`  | 首尾边界页数               |
+| `state.pageCount`      | `number`  | 计算后的总页数，最小为 `1` |
+| `state.locked`         | `boolean` | 当前是否处于异步切换锁定中 |
 
 ### `runtime`
 
@@ -231,6 +240,7 @@ const pagination = createPagination('#pager', props);
 | `runtime.destroyed` | `boolean` | 实例是否已销毁               |
 | `runtime.built`     | `boolean` | 是否已经调用并完成 `build()` |
 | `runtime.itemsKey`  | `string`  | 当前页码窗口的内部缓存键     |
+| `runtime.changeId`  | `number`  | 异步切换锁的内部序号         |
 
 ## 实例方法
 
@@ -263,6 +273,8 @@ pagination.go(3);
 | 返回值 | `Pagination` 当前实例                |
 
 `page` 会被限制到有效范围内。页码实际变化后会更新 `state.page.current`、`props.page.current`，并触发 `onChange(newPage, instance)`。
+
+如果 `lock: true` 且上一次异步 `onChange` 尚未完成，`go(page)` 会直接返回当前实例，不改变页码。
 
 ### `update(newProps)`
 

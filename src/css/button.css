@@ -7,15 +7,15 @@
     gap: var(--button-gap, calc(var(--space) * 1) calc(var(--space) * 1.5));
     white-space: nowrap;
     font-weight: var(--button-font-weight, var(--font-medium));
-    font-size: var(--button-font-size, var(--font-size));
-    height: var(--button-height, var(--el-height));
+    font-size: var(--button-font-size, var(--font-size-md));
+    height: var(--button-height, var(--el-height-md));
     line-height: var(--button-line-height, var(--line-height-self));
     background-color: var(--button-background, transparent);
     padding: var(--button-padding, 0 calc(var(--space) * 3));
     border-width: var(--button-border-width, 1px);
     border-style: var(--button-border-style, solid);
     border-color: var(--button-border-color, transparent);
-    border-radius: var(--button-border-radius, var(--radius));
+    border-radius: var(--button-border-radius, var(--radius-md));
     box-shadow: var(--button-box-shadow, var(--shadow-sm));
     appearance: button;
     user-select: none;
@@ -27,7 +27,7 @@
   }
 
   .j-button svg {
-    width: var(--font-size);
+    width: var(--font-size-md);
     fill: currentColor;
   }
 
@@ -39,13 +39,13 @@
   /* size */
   .j-button.is-sm {
     font-size: var(--font-size-sm);
-    height: var(--button-height-sm, var(--el-height-2xs));
+    height: var(--button-height-sm, var(--el-height-sm));
     padding: var(--button-padding-sm, calc(var(--space) * 1) calc(var(--space) * 2));
   }
 
   .j-button.is-lg {
     font-size: var(--font-size-lg);
-    height: var(--button-height-lg, var(--el-height-md));
+    height: var(--button-height-lg, var(--el-height-lg));
     padding: var(--button-padding-lg, calc(var(--space) * 3) calc(var(--space) * 4));
   }
 
@@ -176,11 +176,11 @@
   }
 
   .j-button-group.is-vertical .j-button:first-child {
-    border-top-right-radius: var(--radius);
+    border-top-right-radius: var(--radius-md);
   }
 
   .j-button-group.is-vertical .j-button:last-child {
-    border-bottom-left-radius: var(--radius);
+    border-bottom-left-radius: var(--radius-md);
   }
 
   /* disabled */
@@ -275,10 +275,20 @@
   }
 
   .j-button-group .j-button.is-primary:not(:disabled):active,
-  .j-button-group .j-button.is-primary:not(:disabled):focus-visible {
+  .j-button-group .j-button.is-primary:not(:disabled):focus-visible,
+  .j-button-group .j-button:focus-within {
     outline: 2px solid var(--button-ring, var(--tone-solid));
     outline-offset: 1px;
     --button-border-color: transparent;
     --button-box-shadow: var(--shadow-sm);
+  }
+
+  .j-button-group .j-button:focus-within {
+    z-index: 1;
+    --button-border-color: transparent
+  }
+
+  .j-button-group.is-vertical .j-button:focus-within {
+    z-index: auto
   }
 }

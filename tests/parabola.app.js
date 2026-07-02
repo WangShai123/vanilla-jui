@@ -47,7 +47,7 @@ function mountUI() {
         children: () =>
           jsx('div', {
             style:
-              'position:relative;width:100%;max-width:300px;height:200px;border:1px dashed var(--gray-6,#ccc);border-radius:var(--radius-sm,4px)',
+              'position:relative;width:100%;max-width:300px;height:200px;border:1px dashed #ccc;border-radius:var(--radius-xs)',
             children: [
               jsx('button', {
                 id: 'from-point',

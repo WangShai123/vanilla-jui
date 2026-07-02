@@ -53,6 +53,7 @@ const PAGINATION_PROPS_SCHEMA = {
     factory: true,
     ...COUNT_RULE,
   },
+  lock: { default: true, type: 'boolean' },
   onChange: { default: null, types: ['function', 'null'] },
 };
 
@@ -167,6 +168,7 @@ export class Pagination extends Component {
 
     this.runtime.built = false;
     this.runtime.itemsKey = '';
+    this.runtime.changeId = 0;
 
     this.state = createDeepStore({
       total: props.total,
@@ -179,6 +181,7 @@ export class Pagination extends Component {
         boundary: props.count.boundary,
       },
       pageCount,
+      locked: false,
     });
 
     this.props.page.current = current;
@@ -236,16 +239,50 @@ export class Pagination extends Component {
       'Pagination.go'
     );
 
+    if (this._isLocked()) return this;
+
     const nextPage = clamp(page, 1, this.state.pageCount);
     if (nextPage === this.state.page.current) return this;
 
+    const shouldLock =
+      this.props.lock && typeof this.props.onChange === 'function';
+    const changeId = shouldLock
+      ? ++this.runtime.changeId
+      : this.runtime.changeId;
+
     flushSync(() => {
       this.state.page.current = nextPage;
+      if (shouldLock) this.state.locked = true;
     });
     this.props.page.current = nextPage;
 
     if (typeof this.props.onChange === 'function') {
-      this.props.onChange(nextPage, this);
+      let result;
+      try {
+        result = this.props.onChange(nextPage, this);
+      } catch (error) {
+        if (shouldLock && changeId === this.runtime.changeId) {
+          flushSync(() => {
+            this.state.locked = false;
+          });
+        }
+        throw error;
+      }
+
+      if (shouldLock && result && typeof result.then === 'function') {
+        const unlock = () => {
+          if (!this.runtime.destroyed && changeId === this.runtime.changeId) {
+            flushSync(() => {
+              this.state.locked = false;
+            });
+          }
+        };
+        void Promise.resolve(result).then(unlock, unlock);
+      } else if (shouldLock && changeId === this.runtime.changeId) {
+        flushSync(() => {
+          this.state.locked = false;
+        });
+      }
     }
 
     return this;
@@ -267,6 +304,7 @@ export class Pagination extends Component {
 
     const props = normalizeProps({
       total: newProps.total ?? this.props.total,
+      lock: Object.hasOwn(newProps, 'lock') ? newProps.lock : this.props.lock,
       onChange: Object.hasOwn(newProps, 'onChange')
         ? newProps.onChange
         : this.props.onChange,
@@ -290,6 +328,7 @@ export class Pagination extends Component {
       this.state.count.sibling = props.count.sibling;
       this.state.count.boundary = props.count.boundary;
       this.state.pageCount = pageCount;
+      if (!props.lock) this.state.locked = false;
     });
 
     return this;
@@ -310,24 +349,29 @@ export class Pagination extends Component {
   _getItemsKey() {
     return [
       this.state.page.current,
+      this._isLocked() ? 'locked' : 'unlocked',
       ...this._getPageItems().map((item) => item.key),
     ].join('|');
   }
 
+  _isLocked() {
+    return this.props.lock && this.state.locked;
+  }
+
   _isPrevDisabled() {
-    return this.state.page.current <= 1;
+    return this._isLocked() || this.state.page.current <= 1;
   }
 
   _isNextDisabled() {
-    return this.state.page.current >= this.state.pageCount;
+    return this._isLocked() || this.state.page.current >= this.state.pageCount;
   }
 
   _buildControlItem(type) {
     const item = jsx('li', {
       className: 'item',
-      children: jsx('a', {
+      children: jsx('button', {
         className: 'j-button is-icon is-ghost',
-        href: '#',
+        type: 'button',
         'data-page-action': type,
         children: icon(type === 'prev' ? 'arrow-left' : 'arrow-right'),
       }),
@@ -337,12 +381,16 @@ export class Pagination extends Component {
   }
 
   _buildPageItem(item) {
+    const disabled = this._isLocked();
+
     if (item.type === 'more') {
       return jsx('li', {
         className: 'item more',
         'aria-hidden': 'true',
-        children: jsx('span', {
+        children: jsx('button', {
           className: 'j-button is-icon is-ghost',
+          type: 'button',
+          disabled,
           children: icon('more'),
         }),
       });
@@ -359,11 +407,14 @@ export class Pagination extends Component {
               'aria-label': `Page ${item.page}, current page`,
               children: String(item.page),
             })
-          : jsx('a', {
+          : jsx('button', {
               className: 'j-button is-icon is-ghost',
-              href: '#',
+              type: 'button',
               'data-page': String(item.page),
               'aria-label': `Go to page ${item.page}`,
+              'aria-disabled': disabled ? 'true' : null,
+              disabled,
+              tabindex: disabled ? '-1' : null,
               children: String(item.page),
             }),
     });
@@ -376,7 +427,8 @@ export class Pagination extends Component {
       const next = this.dom.next?.querySelector('[data-page-action]');
 
       if (prev) {
-        bindClass(prev, 'is-disabled', () => this._isPrevDisabled());
+        // bindClass(prev, 'is-disabled', () => this._isPrevDisabled());
+        bindAttr(prev, 'disabled', () => this._isPrevDisabled());
         bindAttr(prev, 'aria-disabled', () =>
           this._isPrevDisabled() ? 'true' : 'false'
         );
@@ -387,7 +439,8 @@ export class Pagination extends Component {
       }
 
       if (next) {
-        bindClass(next, 'is-disabled', () => this._isNextDisabled());
+        // bindClass(next, 'is-disabled', () => this._isNextDisabled());
+        bindAttr(next, 'disabled', () => this._isNextDisabled());
         bindAttr(next, 'aria-disabled', () =>
           this._isNextDisabled() ? 'true' : 'false'
         );
@@ -464,6 +517,7 @@ export class Pagination extends Component {
 
     this.runtime.built = false;
     this.runtime.itemsKey = '';
+    this.runtime.changeId = 0;
     this.dom.container = null;
     this.dom.list = null;
     this.dom.prev = null;

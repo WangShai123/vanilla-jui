@@ -329,8 +329,8 @@ export class Accordion extends Component {
   /**
    * 将组件挂载到构造器指定的容器中。
    */
-  render() {
-    this.assertActive('render');
+  build() {
+    this.assertActive('build');
     insert(this.dom.container, () => this.root);
   }
 

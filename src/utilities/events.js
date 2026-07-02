@@ -80,22 +80,6 @@ export function listen(target, type, handler, options) {
 }
 
 /**
- * 按原参数解绑事件。
- * @param {EventTarget} target 事件目标。
- * @param {string} type 事件类型。
- * @param {EventListenerOrEventListenerObject} handler 事件处理器。
- * @param {EventListenerOptions|boolean} [options] 事件选项。
- * @returns {void}
- */
-export function unlisten(target, type, handler, options) {
-  target = resolveEventTarget(target);
-  assertTarget(target, 'unlisten');
-  assertType(type, 'unlisten');
-  assertHandler(handler, 'unlisten');
-  target.removeEventListener(type, handler, options);
-}
-
-/**
  * 创建实例级事件管理器。
  *
  * - `on()` 绑定事件并自动记录解绑函数。

@@ -41,7 +41,7 @@
 
   .j-form.is-horizontal .form-item .item-label {
     align-items: center;
-    height: var(--horizontal-form-label-height, var(--el-height));
+    height: var(--horizontal-form-label-height, var(--el-height-md));
   }
 
   label.is-required::after {
@@ -78,8 +78,8 @@
     border-width: var(--input-border-width, 1px);
     border-style: var(--input-border-style, solid);
     border-color: var(--input-border-color, var(--ui-input-border));
-    border-radius: var(--input-border-radius, var(--radius));
-    height: var(--input-height, var(--el-height));
+    border-radius: var(--input-border-radius, var(--radius-md));
+    height: var(--input-height, var(--el-height-md));
     line-height: var(--input-line-height, var(--line-height));
     box-shadow: var(--input-box-shadow, var(--shadow-sm));
     background-color: inherit;
@@ -87,17 +87,17 @@
   }
 
   .j-input:not([type='file']) {
-    font-size: var(--input-font-size, var(--font-size));
+    font-size: var(--input-font-size, var(--font-size-md));
   }
 
   .j-input.is-sm {
-    height: var(--input-height-sm, var(--el-height-2xs));
+    height: var(--input-height-sm, var(--el-height-sm));
     font-size: var(--input-font-size-sm, var(--font-size-sm, 0.75rem));
     line-height: var(--input-line-height-sm, var(--line-height-self));
   }
 
   .j-input.is-lg {
-    height: var(--input-height-lg, var(--el-height-md));
+    height: var(--input-height-lg, var(--el-height-lg));
     font-size: var(--input-font-size-lg, var(--font-size-lg, 1rem));
     line-height: var(--input-line-height-lg, var(--line-height));
   }
@@ -155,19 +155,23 @@
 
   /* input validate */
   .j-input.is-valid,
-  .j-input.is-invalid {
+  .j-input.is-invalid,
+  .j-select.is-valid,
+  .j-select.is-invalid {
     padding-right: calc(1.4285714286em + 0.875rem);
     background-repeat: no-repeat;
     background-position: right calc(0.3571428572em + 0.21875rem) center;
     background-size: calc(0.7142857143em + 0.4375rem) calc(0.7142857143em + 0.4375rem);
   }
 
-  .j-input.is-valid {
+  .j-input.is-valid,
+  .j-select.is-valid {
     border-color: var(--form-valid-border-color, var(--state-success));
     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%232fb344' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='20 6 9 17 4 12'%3e%3c/polyline%3e%3c/svg%3e");
   }
 
-  .j-input.is-invalid {
+  .j-input.is-invalid,
+  .j-select.is-invalid {
     border-color: var(--form-invalid-border-color, var(--state-danger));
     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23d63939' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cline x1='18' y1='6' x2='6' y2='18'%3e%3c/line%3e%3cline x1='6' y1='6' x2='18' y2='18'%3e%3c/line%3e%3c/svg%3e");
   }
@@ -180,26 +184,32 @@
   /* type radio */
   .j-radio {
     display: flex;
-    gap: var(--radio-gap);
+    /* gap: var(--radio-gap); */
     flex-wrap: wrap;
   }
 
   .j-radio.is-vertical {
     flex-direction: column;
-    --radio-gap: calc(var(--space) * 3);
+    /* --radio-gap: calc(var(--space) * 3); */
   }
 
   .j-radio,
   .j-radio.is-horizontal {
     flex-direction: row;
-    --radio-gap: calc(var(--space) * 4);
+    /* --radio-gap: calc(var(--space) * 4); */
   }
 
   .j-radio label {
     display: flex;
     align-items: center;
-    gap: var(--radio-label-gap, calc(var(--space) * 1));
-    font-size: var(--font-size);
+    gap: var(--radio-label-gap, calc(var(--space) * 2));
+    font-size: var(--font-size-md);
+    padding: calc(var(--space)*2);
+    border-radius: var(--radius-md);
+  }
+
+  .j-radio label:not(:has(input[type='radio']:disabled)):hover {
+    background-color: var(--ui-surface-hover);
   }
 
   .j-radio label input[type='radio'] {
@@ -270,11 +280,11 @@
     width: 1px;
   }
 
-  .j-radio.is-group label.radio-label span.radio-text {
+  .j-radio.is-group label span.radio-text {
     cursor: pointer;
     background-color: var(--ui-bg);
     padding: var(--radio-group-padding, calc(var(--space) * 1.5) calc(var(--space) * 3));
-    height: var(--el-height);
+    height: var(--el-height-md);
     line-height: var(--line-height);
     position: relative;
     box-shadow: 0 0 0 0.0625em var(--ui-input-border);
@@ -285,7 +295,7 @@
     align-items: center;
   }
 
-  .j-radio.is-group label.radio-label:not(:first-child) span.radio-text {
+  .j-radio.is-group label:not(:first-child) span.radio-text {
     margin-left: 1px;
   }
 
@@ -296,60 +306,73 @@
     color: var(--tone-fg);
   }
 
-  .j-radio.is-group label.radio-label:first-child span {
-    border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+  .j-radio.is-group label:first-child span {
+    border-radius: var(--radius-md) 0 0 var(--radius-md);
   }
 
-  .j-radio.is-group label.radio-label:last-child span {
-    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  .j-radio.is-group label:last-child span {
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
   }
 
   .j-radio.is-group.is-sm label {
     font-size: var(--font-size-sm);
   }
 
-  .j-radio.is-group.is-sm label.radio-label span.radio-text {
+  .j-radio.is-group.is-sm label span.radio-text {
     --radio-group-padding: calc(var(--space) * 1) calc(var(--space) * 2);
-    height: var(--el-height-2xs);
+    height: var(--el-height-sm);
   }
 
   .j-radio.is-group label {
     font-size: var(--font-size-md);
+    padding: 0;
   }
 
   .j-radio.is-group.is-lg label {
     font-size: var(--font-size-lg);
   }
 
-  .j-radio.is-group.is-lg label.radio-label span.radio-text {
+  .j-radio.is-group.is-lg label span.radio-text {
     --radio-group-padding: calc(var(--space) * 3) calc(var(--space) * 4);
-    height: var(--el-height-md);
+    height: var(--el-height-lg);
   }
 
   /* type checkbox */
   .j-checkbox {
     display: flex;
-    gap: var(--checkbox-gap);
+    /* gap: var(--checkbox-gap); */
     flex-wrap: wrap;
     margin: 0;
   }
 
   .j-checkbox.is-vertical {
     flex-direction: column;
-    --checkbox-gap: calc(var(--space) * 3);
+    /* --checkbox-gap: calc(var(--space) * 3); */
   }
 
   .j-checkbox,
   .j-checkbox.is-horizontal {
     flex-direction: row;
-    --checkbox-gap: calc(var(--space) * 4);
+    /* --checkbox-gap: calc(var(--space) * 4); */
   }
 
   .j-checkbox label {
     display: flex;
     align-items: center;
-    gap: var(--checkbox-label-gap, calc(var(--space) * 1));
-    font-size: var(--checkbox-label-font-size, var(--font-size));
+    gap: var(--checkbox-label-gap, calc(var(--space) * 2));
+    font-size: var(--checkbox-label-font-size, var(--font-size-md));
+    height: var(--el-height-md);
+    padding: calc(var(--space)*2);
+    border-radius: var(--checkbox-label-border-radius, var(--radius-md));
+  }
+
+  .j-radio label,
+  .j-checkbox label {
+    width: fit-content;
+  }
+
+  .j-checkbox label:not(:has(input[type='checkbox']:disabled)):hover {
+    background-color: var(--checkbox-hover-bg-color, var(--ui-surface-hover));
   }
 
   .j-checkbox input[type='checkbox'] {
@@ -360,7 +383,7 @@
     border-width: var(--input-border-width, 1px);
     border-style: var(--input-border-style, solid);
     border-color: var(--input-border-color, var(--ui-input-border));
-    border-radius: var(--input-border-radius, var(--radius-sm));
+    border-radius: var(--input-border-radius, var(--radius-md));
     cursor: pointer;
     position: relative;
     margin: 0;
@@ -368,7 +391,7 @@
 
   .j-checkbox input[type='checkbox']:checked {
     border-color: transparent;
-    border-radius: var(--radius);
+    border-radius: var(--radius-md);
     background-color: var(--tone-solid);
     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' width='16' height='16'%3e%3cpath fill='none' stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M4 8.5l2.5 2.5l5.5 -5.5'/%3e%3c/svg%3e");
     background-repeat: no-repeat;
@@ -574,22 +597,22 @@
     border-width: var(--input-border-width, 1px);
     border-style: var(--input-border-style, solid);
     border-color: var(--input-border-color, var(--ui-input-border));
-    border-radius: var(--input-border-radius, var(--radius));
-    height: var(--input-height, var(--el-height-xs));
+    border-radius: var(--input-border-radius, var(--radius-md));
+    height: var(--input-height, var(--el-height-md));
     line-height: var(--input-line-height, var(--line-height));
     box-shadow: var(--input-box-shadow, var(--shadow-sm));
     background-color: inherit;
-    font-size: var(--input-font-size, var(--font-size));
+    font-size: var(--input-font-size, var(--font-size-md));
   }
 
   select.j-select.is-sm {
-    --input-height: var(--el-height-2xs);
+    --input-height: var(--el-height-sm);
     --input-padding: calc(var(--space) * 1) calc(var(--space) * 1);
     --input-font-size: var(--font-size-sm);
   }
 
   select.j-select.is-lg {
-    --input-height: var(--el-height-sm);
+    --input-height: var(--el-height-lg);
     --input-padding: calc(var(--space) * 2) calc(var(--space) * 2);
     --input-font-size: var(--font-size-lg);
   }
@@ -602,19 +625,19 @@
     border-width: var(--input-border-width, 1px);
     border-style: var(--input-border-style, solid);
     border-color: var(--input-border-color, var(--ui-input-border));
-    border-radius: var(--textarea-border-radius, var(--radius));
+    border-radius: var(--textarea-border-radius, var(--radius-md));
     background-color: var(--textarea-background, var(--ui-bg));
     color: var(--textarea-color, var(--ui-input-color));
     resize: vertical;
     padding: var(--textarea-padding, calc(var(--space) * 2));
     font-family: inherit;
-    font-size: var(--font-size);
+    font-size: var(--font-size-md);
     line-height: var(--line-height);
+    box-shadow: var(--shadow-sm);
   }
 
   textarea.j-textarea:focus {
-    border-color: var(--ui-input-focus-border);
-    box-shadow: var(--ui-input-focus-ring);
+    border-color: transparent;
   }
 
   textarea.j-textarea:disabled {
@@ -661,17 +684,17 @@
     color: var(--ui-fg-muted);
     background-color: var(--input-group-text-addon-background, var(--ui-bg-muted));
     padding: var(--input-group-text-addon-padding, 0.5rem 0.75rem);
-    height: var(--button-height, var(--el-height));
+    height: var(--button-height, var(--el-height-md));
     border-width: var(--border-width, 1px);
     border-style: var(--border-style, solid);
     border-color: var(--input-border-color, var(--ui-input-border));
-    border-radius: var(--button-border-radius, var(--radius));
+    border-radius: var(--button-border-radius, var(--radius-md));
     box-shadow: var(--shadow-sm);
     user-select: none;
   }
 
   .input-group>.el-addon>.is-text.icon-close {
-    width: var(--button-height, var(--el-height));
+    width: var(--button-height, var(--el-height-md));
   }
 
   .input-group>*:not(:first-child) {
@@ -700,6 +723,11 @@
     border-bottom-right-radius: 0;
   }
 
+  .input-group select.j-select:focus {
+    border-color: transparent;
+    z-index: 1;
+  }
+
   /* input inner group */
   .input-inner-group {
     position: relative;
@@ -711,11 +739,11 @@
   }
 
   .input-inner-group>input.j-input:not(:last-child) {
-    padding-right: var(--el-height);
+    padding-right: var(--el-height-md);
   }
 
   .input-inner-group>input.j-input:not(:first-child) {
-    padding-left: var(--el-height);
+    padding-left: var(--el-height-md);
   }
 
   .input-inner-group>.el-addon {
@@ -726,7 +754,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    min-width: var(--el-height);
+    min-width: var(--el-height-md);
     color: var(--ui-fg-subtle);
     font-size: 0.875em;
   }
@@ -775,12 +803,14 @@
     box-shadow: var(--input-focus-shadow, none);
   }
 
-  .j-input.is-valid:focus-within {
+  .j-input.is-valid:focus-within,
+  .j-select.is-valid:focus-within {
     border-color: transparent;
     outline-color: var(--form-valid-border-color, var(--state-success));
   }
 
-  .j-input.is-invalid:focus-within {
+  .j-input.is-invalid:focus-within,
+  .j-select.is-invalid:focus-within {
     border-color: transparent;
     outline-color: var(--form-invalid-border-color, var(--state-danger));
   }
@@ -840,7 +870,7 @@
     border-color: var(--ui-border);
   }
 
-  .j-radio.is-group label.radio-label input[type='radio']:disabled+.radio-text {
+  .j-radio.is-group label input[type='radio']:disabled+.radio-text {
     cursor: not-allowed;
     background-color: var(--ui-disabled-bg);
     opacity: var(--opacity-disabled);

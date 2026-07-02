@@ -1,6 +1,6 @@
 import { createDeepStore, flushSync, render, For, jsx } from 'vanilla-signal';
 
-import { Pagination } from '../dist/index.js?v=1';
+import { Pagination } from '../dist/index.js?v=2';
 import { createLoading } from '../src/utilities/dom.js';
 import { dateTime, equal, hasClass, sleep, textOf, truthy } from './helpers.js';
 
@@ -12,7 +12,9 @@ const records = Array.from({ length: PAGE_SIZE * TOTAL_PAGES }, (_, index) => ({
 }));
 
 let manualPagination = null;
+let manualUnlockedPagination = null;
 let manualLoadId = 0;
+let manualUnlockedLoadId = 0;
 
 const manualState = createDeepStore({
   created: false,
@@ -21,15 +23,14 @@ const manualState = createDeepStore({
   items: [],
 });
 
-async function fetchPage(page) {
-  // return sleep(1000).then(() => {
-  //   const start = (page - 1) * PAGE_SIZE;
-  //   return {
-  //     page,
-  //     total: records.length,
-  //     items: records.slice(start, start + PAGE_SIZE),
-  //   };
+const manualUnlockedState = createDeepStore({
+  created: false,
+  loading: false,
+  page: 1,
+  items: [],
+});
 
+async function fetchPage(page) {
   await sleep(1000);
   const start = (page - 1) * PAGE_SIZE;
   return {
@@ -41,11 +42,12 @@ async function fetchPage(page) {
 
 function cleanup() {
   manualPagination?.destroy();
+  manualUnlockedPagination?.destroy();
   manualPagination = null;
+  manualUnlockedPagination = null;
   manualLoadId += 1;
-  document
-    .querySelectorAll('.pagination-fixture')
-    .forEach((node) => node.remove());
+  manualUnlockedLoadId += 1;
+  document.querySelector('#manual-demo .test-wrap')?.remove();
 }
 
 function mountDemo() {
@@ -53,28 +55,39 @@ function mountDemo() {
   if (!container) return;
 
   container.innerHTML = `
-    <div class="pagination-fixture">
-      <div id="pagination-buttons" class="demo-buttons">
-        <button id="btn-pagination-create" class="j-button is-primary is-sm" type="button">创建分页实例</button>
+    <div class="test-wrap">
+      <div class="test-box">
+        <div id="pagination-buttons" class="demo-buttons">
+          <button id="btn-pagination-create" class="j-button is-primary is-sm" type="button">创建默认分页实例</button>
+        </div>
+        <div class="fixture-box">
+          <div id="pagination-result" class="help-block" style="position:relative"></div>
+          <div id="pagination-demo"></div>
+        </div>
       </div>
-      <div class="fixture-box">
-        <div id="pagination-result" class="help-block" style="position:relative"></div>
-        <div id="pagination-demo"></div>
+      <div class="test-box">
+        <div id="pagination-unlocked-buttons" class="demo-buttons">
+          <button id="btn-pagination-unlocked-create" class="j-button is-primary is-sm" type="button">创建分页实例 lock:false</button>
+        </div>
+        <div class="fixture-box">
+          <div id="pagination-unlocked-result" class="help-block" style="position:relative"></div>
+          <div id="pagination-unlocked-demo"></div>
+        </div>
       </div>
     </div>
   `;
 }
 
-function renderManualResult() {
-  const result = document.getElementById('pagination-result');
+function renderResult(state, resultId) {
+  const result = document.getElementById(resultId);
   if (!result) return;
 
-  if (!manualState.created) {
+  if (!state.created) {
     result.textContent = '';
     return;
   }
 
-  if (manualState.loading) {
+  if (state.loading) {
     // result.textContent = `正在加载第 ${manualState.page} 页数据...`;
     render(() => {
       result.style.position = 'relative';
@@ -90,7 +103,7 @@ function renderManualResult() {
     return jsx('ul', {
       children: jsx`
           ${For({
-            each: manualState.items,
+            each: state.items,
             key: (item) => item.id,
             children: (item) => jsx`
             <li>${() => item().title}</li>
@@ -100,13 +113,41 @@ function renderManualResult() {
   }, result);
 }
 
-function renderManualButtons() {
-  const buttons = document.getElementById('pagination-buttons');
+function renderManualResult() {
+  renderResult(manualState, 'pagination-result');
+}
+
+function renderManualUnlockedResult() {
+  renderResult(manualUnlockedState, 'pagination-unlocked-result');
+}
+
+function renderButtons(state, buttonsId, createId, destroyId, createText) {
+  const buttons = document.getElementById(buttonsId);
   if (!buttons) return;
 
-  buttons.innerHTML = manualState.created
-    ? '<button id="btn-pagination-destroy" class="j-button is-error is-sm" type="button">销毁实例</button>'
-    : '<button id="btn-pagination-create" class="j-button is-primary is-sm" type="button">创建分页实例</button>';
+  buttons.innerHTML = state.created
+    ? `<button id="${destroyId}" class="j-button is-error is-sm" type="button">销毁实例</button>`
+    : `<button id="${createId}" class="j-button is-primary is-sm" type="button">${createText}</button>`;
+}
+
+function renderManualButtons() {
+  renderButtons(
+    manualState,
+    'pagination-buttons',
+    'btn-pagination-create',
+    'btn-pagination-destroy',
+    '创建默认分页实例'
+  );
+}
+
+function renderManualUnlockedButtons() {
+  renderButtons(
+    manualUnlockedState,
+    'pagination-unlocked-buttons',
+    'btn-pagination-unlocked-create',
+    'btn-pagination-unlocked-destroy',
+    '创建分页实例 lock:false'
+  );
 }
 
 async function loadManualPage(page, runner) {
@@ -129,6 +170,26 @@ async function loadManualPage(page, runner) {
   runner.log(`${dateTime()} 第 ${result.page} 页数据加载完成`);
 }
 
+async function loadManualUnlockedPage(page, runner) {
+  const loadId = ++manualUnlockedLoadId;
+  flushSync(() => {
+    manualUnlockedState.loading = true;
+    manualUnlockedState.page = page;
+  });
+  renderManualUnlockedResult();
+
+  const result = await fetchPage(page);
+  if (loadId !== manualUnlockedLoadId || !manualUnlockedPagination) return;
+
+  flushSync(() => {
+    manualUnlockedState.loading = false;
+    manualUnlockedState.page = result.page;
+    manualUnlockedState.items = result.items;
+  });
+  renderManualUnlockedResult();
+  runner.log(`${dateTime()} lock:false 第 ${result.page} 页数据加载完成`);
+}
+
 function createManualPagination(runner) {
   if (manualPagination) return;
 
@@ -138,9 +199,10 @@ function createManualPagination(runner) {
     page: { size: PAGE_SIZE, current: 1 },
     count: { sibling: 1, boundary: 1 },
     onChange: (page) => {
-      void loadManualPage(page, runner);
+      return loadManualPage(page, runner);
     },
-  }).build();
+  });
+  manualPagination.build();
 
   flushSync(() => {
     manualState.created = true;
@@ -150,6 +212,31 @@ function createManualPagination(runner) {
   renderManualButtons();
   void loadManualPage(1, runner);
   runner.log(`${dateTime()} Pagination 已创建`);
+}
+
+function createManualUnlockedPagination(runner) {
+  if (manualUnlockedPagination) return;
+
+  const target = document.getElementById('pagination-unlocked-demo');
+  manualUnlockedPagination = new Pagination(target, {
+    total: records.length,
+    lock: false,
+    page: { size: PAGE_SIZE, current: 1 },
+    count: { sibling: 1, boundary: 1 },
+    onChange: (page) => {
+      return loadManualUnlockedPage(page, runner);
+    },
+  });
+  manualUnlockedPagination.build();
+
+  flushSync(() => {
+    manualUnlockedState.created = true;
+    manualUnlockedState.items = [];
+    manualUnlockedState.page = 1;
+  });
+  renderManualUnlockedButtons();
+  void loadManualUnlockedPage(1, runner);
+  runner.log(`${dateTime()} Pagination lock:false 已创建`);
 }
 
 function destroyManualPagination(runner) {
@@ -169,6 +256,23 @@ function destroyManualPagination(runner) {
   runner.log(`${dateTime()} Pagination 已销毁`);
 }
 
+function destroyManualUnlockedPagination(runner) {
+  if (!manualUnlockedPagination) return;
+
+  manualUnlockedPagination.destroy();
+  manualUnlockedPagination = null;
+  manualUnlockedLoadId += 1;
+  flushSync(() => {
+    manualUnlockedState.created = false;
+    manualUnlockedState.loading = false;
+    manualUnlockedState.page = 1;
+    manualUnlockedState.items = [];
+  });
+  renderManualUnlockedButtons();
+  renderManualUnlockedResult();
+  runner.log(`${dateTime()} Pagination lock:false 已销毁`);
+}
+
 function bindEvents(runner) {
   const container = document.getElementById('manual-demo');
   if (!container) return;
@@ -177,6 +281,13 @@ function bindEvents(runner) {
     const id = event.target.id;
     if (id === 'btn-pagination-create') createManualPagination(runner);
     if (id === 'btn-pagination-destroy') destroyManualPagination(runner);
+    if (id === 'btn-pagination-create-go') createManualPagination(runner);
+    if (id === 'btn-pagination-unlocked-create')
+      createManualUnlockedPagination(runner);
+    if (id === 'btn-pagination-unlocked-destroy')
+      destroyManualUnlockedPagination(runner);
+    if (id === 'btn-pagination-unlocked-create-go')
+      createManualUnlockedPagination(runner);
   });
 }
 
@@ -365,6 +476,82 @@ export function paginationApp(runner) {
     result.remove();
   });
 
+  runner.add(
+    'lock 默认阻止连续切换',
+    '验证异步 onChange 返回前不允许再次翻页',
+    async () => {
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const changes = [];
+      let resolveLoad;
+      const loading = new Promise((resolve) => {
+        resolveLoad = resolve;
+      });
+
+      const pagination = new Pagination(container, {
+        total: records.length,
+        page: { size: PAGE_SIZE, current: 1 },
+        count: { sibling: 1, boundary: 1 },
+        onChange: (page) => {
+          changes.push(page);
+          return loading;
+        },
+      }).build();
+
+      pagination.go(2);
+      pagination.go(3);
+
+      equal(pagination.state.page.current, 2, 'locked current');
+      equal(pagination.state.locked, true, 'locked state');
+      equal(changes.join(','), '2', 'single change');
+      equal(
+        pagination.root
+          .querySelector('[data-page-action="next"]')
+          .getAttribute('aria-disabled'),
+        'true',
+        'next locked'
+      );
+
+      resolveLoad();
+      await sleep(0);
+
+      equal(pagination.state.locked, false, 'unlocked state');
+      pagination.go(3);
+      equal(pagination.state.page.current, 3, 'go after unlock');
+      equal(changes.join(','), '2,3', 'second change after unlock');
+
+      pagination.destroy();
+      container.remove();
+    }
+  );
+
+  runner.add('lock false 允许连续切换', '验证禁用锁定后可连续翻页', () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const changes = [];
+
+    const pagination = new Pagination(container, {
+      total: records.length,
+      lock: false,
+      page: { size: PAGE_SIZE, current: 1 },
+      count: { sibling: 1, boundary: 1 },
+      onChange: (page) => {
+        changes.push(page);
+        return sleep(1000);
+      },
+    }).build();
+
+    pagination.go(2);
+    pagination.go(3);
+
+    equal(pagination.state.page.current, 3, 'current page');
+    equal(pagination.state.locked, false, 'unlocked state');
+    equal(changes.join(','), '2,3', 'continuous changes');
+
+    pagination.destroy();
+    container.remove();
+  });
+
   runner.add('destroy 清理 DOM', '验证销毁后容器清空', () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
@@ -390,6 +577,7 @@ export function paginationSetup(runner) {
   mountDemo();
   bindEvents(runner);
   renderManualResult();
+  renderManualUnlockedResult();
 }
 
 export function paginationReset() {
@@ -399,7 +587,12 @@ export function paginationReset() {
     manualState.loading = false;
     manualState.page = 1;
     manualState.items = [];
+    manualUnlockedState.created = false;
+    manualUnlockedState.loading = false;
+    manualUnlockedState.page = 1;
+    manualUnlockedState.items = [];
   });
   mountDemo();
   renderManualResult();
+  renderManualUnlockedResult();
 }
