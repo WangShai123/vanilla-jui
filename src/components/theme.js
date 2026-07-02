@@ -104,10 +104,17 @@ export class Theme {
    */
   _saveConfig() {
     const { mode, theme, radius, shadow, font } = this.props;
+    const render = this._scheme();
     setCookie(
       this.props.key,
-      JSON.stringify({ mode, theme, radius, shadow, font })
+      JSON.stringify({ mode, theme, radius, shadow, font, render })
     );
+  }
+
+  _scheme() {
+    return window?.matchMedia('(prefers-color-scheme: dark)')?.matches
+      ? 'dark'
+      : 'light';
   }
 
   /**
@@ -154,12 +161,7 @@ export class Theme {
 
       const h = document.documentElement;
       if (type === 'mode') {
-        const actual =
-          value === 'auto'
-            ? window.matchMedia?.('(prefers-color-scheme: dark)')?.matches
-              ? 'dark'
-              : 'light'
-            : value;
+        const actual = value === 'auto' ? this._scheme() : value;
         h.classList.remove('light', 'dark', previous);
         if (actual) h.classList.add(actual);
       } else {
