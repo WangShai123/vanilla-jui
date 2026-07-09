@@ -30,7 +30,7 @@ const MENU_ITEMS_RULE = { type: 'array' };
 
 /**
  * @typedef {object} MenuOptions
- * @property {string} [type="mobile"] 菜单类型，对应 `j-${type}-menu` 类名。
+ * @property {string} [type="mobile"] 菜单类型，对应 `j-${type}-menu` 类名，可选值为 `mobile` 或 `bottom`。
  * @property {string} [id] 菜单 ul 节点 id，不传时自动生成。
  * @property {MenuItem[]} [items=[]] 菜单数据。
  * @property {string} [backText="Back"] 移动端子菜单返回按钮文案。
@@ -50,8 +50,9 @@ export class Menu {
   constructor(options = {}, element = false) {
     this.options = resolveProps(options, MENU_OPTIONS_SCHEMA, 'Menu.options');
     this._element = element;
-
-    this.dom.root = null;
+    this.dom = {
+      root: null,
+    };
     this.cleanup = {
       events: createEventManager(),
     };
@@ -129,14 +130,28 @@ export class Menu {
       classes.push(...item.classes);
     }
 
-    const children = [
-      jsx('a', {
-        className: 'menu-link',
-        href: item.url || '#',
-        ...(item.target && { target: item.target }),
-        children: item.title,
-      }),
-    ];
+    // const children = [
+    //   jsx('a', {
+    //     className: 'menu-link',
+    //     ...(item.url && { href: item.url }),
+    //     ...(item.target && { target: item.target }),
+    //     children: item.title,
+    //   }),
+    // ];
+
+    const children = [];
+    if (item.url) {
+      children.push(
+        jsx('a', {
+          className: 'menu-link',
+          href: item.url,
+          ...(item.target && { target: item.target }),
+          children: item.title,
+        })
+      );
+    } else {
+      children.push(jsx`${item.title}`);
+    }
 
     if (hasChildren) {
       children.push(

@@ -11,14 +11,17 @@
     --content-paragraph-spacing: 1.25em;
     --content-heading-spacing: 1.5em;
     --content-block-spacing: 1.5em;
-    --content-list-spacing: 0.5em;
+    --content-list-spacing: 0.125em;
 
     line-height: var(--content-line-height);
     letter-spacing: var(--content-letter-spacing);
     word-spacing: var(--content-word-spacing);
+    word-break: break-word;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    outline: 0;
+    position: relative;
   }
 
   /* --- Size Modes --- */
@@ -74,7 +77,7 @@
   .j-content h4,
   .j-content h5,
   .j-content h6 {
-    margin: var(--content-heading-spacing) 0 calc(var(--content-heading-spacing) * 0.5);
+    margin: var(--content-heading-spacing) 0 calc(var(--content-heading-spacing) * 0.75);
     font-weight: 600;
     line-height: 1.3;
     color: var(--tone-heading);
@@ -223,6 +226,7 @@
   .j-content ol {
     margin: 0 0 var(--content-paragraph-spacing);
     padding-left: 1.75em;
+    font-size: 0.875em;
   }
 
   .j-content ul li,
@@ -289,6 +293,11 @@
 
   .j-content dd+dt {
     margin-top: 1em;
+  }
+
+  /* checkbox - 任务列表 */
+  .j-content .j-checkbox {
+    margin-block: var(--content-paragraph-spacing);
   }
 
   /* ============================================
@@ -365,13 +374,145 @@
     background: none;
     color: inherit;
     font-size: inherit;
-    border-radius: var(--radius-lg);
+  }
+
+  .j-content pre.j-code-editor {
+    position: relative;
+    margin-block: 1rem;
+    overflow: auto;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--ui-border);
+  }
+
+  .j-content pre.j-code-editor.hljs {
+    color: var(--ui-fg);
+    background-color: var(--ui-bg-subtle);
+    white-space: break-spaces;
+  }
+
+  .j-content pre.j-code-editor select.language-selector {
+    --input-background-color: var(--ui-bg-subtle);
+    --input-box-shadow: none;
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 1;
   }
 
   .j-content pre code[class*="language-"] {
     display: block;
     overflow-x: auto;
     padding: 1.25em 1.5em;
+  }
+
+  .hljs-doctag,
+  .hljs-keyword,
+  .hljs-meta .hljs-keyword,
+  .hljs-template-tag,
+  .hljs-template-variable,
+  .hljs-type,
+  .hljs-variable.language_ {
+    /* prettylights-syntax-keyword */
+    color: var(--ui-tomato)
+  }
+
+  .hljs-title,
+  .hljs-title.class_,
+  .hljs-title.class_.inherited__,
+  .hljs-title.function_ {
+    /* prettylights-syntax-entity */
+    color: var(--ui-violet)
+  }
+
+  .hljs-attr,
+  .hljs-attribute,
+  .hljs-literal,
+  .hljs-meta,
+  .hljs-number,
+  .hljs-operator,
+  .hljs-variable,
+  .hljs-selector-attr,
+  .hljs-selector-class,
+  .hljs-selector-id {
+    /* prettylights-syntax-constant */
+    color: var(--ui-teal)
+  }
+
+  .hljs-regexp,
+  .hljs-string,
+  .hljs-meta .hljs-string {
+    /* prettylights-syntax-string */
+    color: var(--ui-pink)
+  }
+
+  .hljs-built_in,
+  .hljs-symbol {
+    /* prettylights-syntax-variable */
+    color: var(--ui-orange)
+  }
+
+  .hljs-comment,
+  .hljs-code,
+  .hljs-formula {
+    /* prettylights-syntax-comment */
+    color: var(--ui-olive)
+  }
+
+  .hljs-name,
+  .hljs-quote,
+  .hljs-selector-tag,
+  .hljs-selector-pseudo {
+    /* prettylights-syntax-entity-tag */
+    color: var(--ui-indigo);
+  }
+
+  .hljs-subst {
+    /* prettylights-syntax-storage-modifier-import */
+    color: var(--ui-fg)
+  }
+
+  .hljs-section {
+    /* prettylights-syntax-markup-heading */
+    color: var(--ui-teal);
+    font-weight: bold
+  }
+
+  .hljs-bullet {
+    /* prettylights-syntax-markup-list */
+    color: var(--ui-gold)
+  }
+
+  .hljs-emphasis {
+    /* prettylights-syntax-markup-italic */
+    color: var(--ui-fg);
+    font-style: italic
+  }
+
+  .hljs-strong {
+    /* prettylights-syntax-markup-bold */
+    color: var(--ui-fg);
+    font-weight: bold
+  }
+
+  .hljs-addition {
+    /* prettylights-syntax-markup-inserted */
+    color: var(--ui-indigo);
+    background-color: #f0fff4
+  }
+
+  .hljs-deletion {
+    /* prettylights-syntax-markup-deleted */
+    color: var(--ui-ruby);
+    background-color: #ffeef0;
+  }
+
+  .hljs-char.escape_,
+  .hljs-link,
+  .hljs-params,
+  .hljs-property,
+  .hljs-punctuation,
+  .hljs-tag {
+    /* purposely ignored */
   }
 
   /* ============================================

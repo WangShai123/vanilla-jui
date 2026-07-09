@@ -517,6 +517,7 @@
     padding: calc(var(--space) * 2);
     font-size: var(--font-size-md);
     background-color: var(--ui-surface-subtle);
+    border-radius: var(--radius-sm);
   }
 
   .drop-menu ul,

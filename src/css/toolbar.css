@@ -44,4 +44,72 @@
   .j-toolbar button.is-lg svg {
     --toolbar-icon-size: var(--font-size-2xl);
   }
+
+  .j-toolbar .divider {
+    width: 1px;
+    height: 16px;
+    background-color: var(--ui-fg);
+  }
+
+  /* 编辑器区域 */
+  #editor {
+    max-width: 880px;
+    border-left: 1px solid var(--ui-border);
+    border-right: 1px solid var(--ui-border);
+    min-height: calc(100vh - 51px);
+    padding: 1.5rem 1.5rem 4rem;
+  }
+
+  .ProseMirror {
+    outline: 0;
+  }
+
+  .heading-drop-menu,
+  .editor-size-menu,
+  .color-drop-menu {
+    background: var(--ui-bg-subtle);
+    padding: var(--space);
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--ui-border);
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-md)
+  }
+
+  .heading-drop-menu a,
+  .editor-size-menu a {
+    padding-block: calc(var(--space) * 1);
+  }
+
+  .color-drop-menu .color-panel {
+    padding: .5rem;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: .5rem;
+  }
+
+  .color-drop-menu .color-panel button.color-btn {
+    padding: 0;
+    margin: 0;
+    outline: none;
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--ui-border);
+    cursor: pointer;
+  }
+
+  .color-drop-menu .color-panel button.color-btn.color-btn-clear::after {
+    content: '🚫';
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 30px;
+    background-color: var(--ui-bg-subtle);
+    border-radius: var(--radius-sm);
+  }
+
+  .color-drop-menu .color-panel .color-btn:last-of-type {
+    grid-column: span 5;
+    width: auto;
+  }
 }

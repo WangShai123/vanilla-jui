@@ -157,7 +157,9 @@
   .j-input.is-valid,
   .j-input.is-invalid,
   .j-select.is-valid,
-  .j-select.is-invalid {
+  .j-select.is-invalid,
+  .j-textarea.is-valid,
+  .j-textarea.is-invalid {
     padding-right: calc(1.4285714286em + 0.875rem);
     background-repeat: no-repeat;
     background-position: right calc(0.3571428572em + 0.21875rem) center;
@@ -165,13 +167,15 @@
   }
 
   .j-input.is-valid,
-  .j-select.is-valid {
+  .j-select.is-valid,
+  .j-textarea.is-valid {
     border-color: var(--form-valid-border-color, var(--state-success));
     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%232fb344' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='20 6 9 17 4 12'%3e%3c/polyline%3e%3c/svg%3e");
   }
 
   .j-input.is-invalid,
-  .j-select.is-invalid {
+  .j-select.is-invalid,
+  .j-textarea.is-invalid {
     border-color: var(--form-invalid-border-color, var(--state-danger));
     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23d63939' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cline x1='18' y1='6' x2='6' y2='18'%3e%3c/line%3e%3cline x1='6' y1='6' x2='18' y2='18'%3e%3c/line%3e%3c/svg%3e");
   }
@@ -601,7 +605,7 @@
     height: var(--input-height, var(--el-height-md));
     line-height: var(--input-line-height, var(--line-height));
     box-shadow: var(--input-box-shadow, var(--shadow-sm));
-    background-color: inherit;
+    background-color: var(--input-background-color, inherit);
     font-size: var(--input-font-size, var(--font-size-md));
   }
 
@@ -625,15 +629,15 @@
     border-width: var(--input-border-width, 1px);
     border-style: var(--input-border-style, solid);
     border-color: var(--input-border-color, var(--ui-input-border));
-    border-radius: var(--textarea-border-radius, var(--radius-md));
-    background-color: var(--textarea-background, var(--ui-bg));
-    color: var(--textarea-color, var(--ui-input-color));
+    border-radius: var(--input-border-radius, var(--radius-md));
+    background-color: var(--input-background-color, var(--ui-bg));
+    color: var(--input-color, var(--ui-input-color));
     resize: vertical;
     padding: var(--textarea-padding, calc(var(--space) * 2));
     font-family: inherit;
-    font-size: var(--font-size-md);
-    line-height: var(--line-height);
-    box-shadow: var(--shadow-sm);
+    font-size: var(--textarea-font-size, var(--font-size-md));
+    line-height: var(--textarea-line-height, var(--line-height));
+    box-shadow: var(--textarea-box-shadow, var(--shadow-sm));
   }
 
   textarea.j-textarea:focus {
@@ -907,9 +911,9 @@
   }
 
   /* status placeholder shown */
-  input.j-input:not([type='file']):not(:placeholder-shown),
   /* input.j-input[type='file']:valid, */
-  select.j-select:valid {
+  /* select.j-select:valid, */
+  input.j-input:not([type='file']):not(:placeholder-shown) {
     background-color: var(--tone-subtle);
   }
 }

@@ -347,3 +347,156 @@ export function randomId(length = 8) {
 
   return result;
 }
+
+/**
+ * 创建防抖函数，确保在连续调用时，只有在指定的等待时间后才会执行一次。
+ * @param {Function} func 要防抖的函数
+ * @param {number} wait 等待时间，单位为毫秒
+ * @param {Object} options 配置选项
+ * @param {boolean} [options.leading=false] 是否在等待时间的开始调用函数
+ * @param {boolean} [options.trailing=true] 是否在等待时间的结束调用函数
+ * @param {number} [options.maxWait] 最大等待时间，确保函数在最长等待时间内至少执行一次
+ * @returns {Function} 返回一个新的防抖函数
+ */
+export function debounce(func, wait = 0, options = {}) {
+  if (typeof func !== 'function') {
+    throw new TypeError('Expected a function');
+  }
+
+  const delay = Number(wait) || 0;
+  const settings = options && typeof options === 'object' ? options : {};
+  const leading = !!settings.leading;
+  const trailing = hasOwn(settings, 'trailing') ? !!settings.trailing : true;
+  const maxing = hasOwn(settings, 'maxWait');
+  const maxWait = maxing ? Math.max(Number(settings.maxWait) || 0, delay) : 0;
+
+  let lastArgs;
+  let lastThis;
+  let result;
+  let timerId;
+  let lastCallTime;
+  let lastInvokeTime = 0;
+
+  function invokeFunc(time) {
+    const args = lastArgs;
+    const thisArg = lastThis;
+    lastArgs = undefined;
+    lastThis = undefined;
+    lastInvokeTime = time;
+    result = func.apply(thisArg, args);
+    return result;
+  }
+
+  function leadingEdge(time) {
+    lastInvokeTime = time;
+    timerId = setTimeout(timerExpired, delay);
+    return leading ? invokeFunc(time) : result;
+  }
+
+  function remainingWait(time) {
+    const timeSinceLastCall = time - lastCallTime;
+    const timeSinceLastInvoke = time - lastInvokeTime;
+    const timeWaiting = delay - timeSinceLastCall;
+    return maxing
+      ? Math.min(timeWaiting, maxWait - timeSinceLastInvoke)
+      : timeWaiting;
+  }
+
+  function shouldInvoke(time) {
+    const timeSinceLastCall = time - lastCallTime;
+    const timeSinceLastInvoke = time - lastInvokeTime;
+
+    return (
+      lastCallTime === undefined ||
+      timeSinceLastCall >= delay ||
+      timeSinceLastCall < 0 ||
+      (maxing && timeSinceLastInvoke >= maxWait)
+    );
+  }
+
+  function timerExpired() {
+    const time = Date.now();
+    if (shouldInvoke(time)) {
+      return trailingEdge(time);
+    }
+    timerId = setTimeout(timerExpired, remainingWait(time));
+  }
+
+  function trailingEdge(time) {
+    timerId = undefined;
+
+    if (trailing && lastArgs) {
+      return invokeFunc(time);
+    }
+    lastArgs = undefined;
+    lastThis = undefined;
+    return result;
+  }
+
+  function cancel() {
+    if (timerId !== undefined) {
+      clearTimeout(timerId);
+    }
+    lastInvokeTime = 0;
+    lastCallTime = undefined;
+    timerId = undefined;
+    lastArgs = undefined;
+    lastThis = undefined;
+  }
+
+  function flush() {
+    return timerId === undefined ? result : trailingEdge(Date.now());
+  }
+
+  function debounced(...args) {
+    const time = Date.now();
+    const isInvoking = shouldInvoke(time);
+
+    lastArgs = args;
+    lastThis = this;
+    lastCallTime = time;
+
+    if (isInvoking) {
+      if (timerId === undefined) {
+        return leadingEdge(lastCallTime);
+      }
+      if (maxing) {
+        timerId = setTimeout(timerExpired, delay);
+        return invokeFunc(lastCallTime);
+      }
+    }
+
+    if (timerId === undefined) {
+      timerId = setTimeout(timerExpired, delay);
+    }
+    return result;
+  }
+
+  debounced.cancel = cancel;
+  debounced.flush = flush;
+  return debounced;
+}
+
+/**
+ * 创建节流函数，确保在指定时间间隔内只执行一次。
+ * 该函数基于防抖函数实现，适用于需要限制函数调用频率的场景。
+ * @param {Function} func
+ * @param {number} wait
+ * @param {Object} options
+ * @returns {Function}
+ */
+export function throttle(func, wait = 0, options = {}) {
+  if (typeof func !== 'function') {
+    throw new TypeError('Expected a function');
+  }
+
+  const settings = options && typeof options === 'object' ? options : {};
+  const leading = hasOwn(settings, 'leading') ? !!settings.leading : true;
+  const trailing = hasOwn(settings, 'trailing') ? !!settings.trailing : true;
+
+  return debounce(func, wait, {
+    leading,
+    trailing,
+    maxWait: wait,
+  });
+}

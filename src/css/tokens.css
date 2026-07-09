@@ -112,11 +112,11 @@
     --font-size-2xl: 1.25rem;
 
     /* Shadows */
-    --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.3);
-    --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.4), 0 1px 2px -1px rgb(0 0 0 / 0.3);
-    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3);
-    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.4);
-    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.5), 0 8px 10px -6px rgb(0 0 0 / 0.4);
+    --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
   }
 
 
@@ -151,7 +151,7 @@
     --ui-disabled-fg: #9ca3af;
     --ui-overlay: rgba(0, 0, 0, 0.5);
     --ui-overlay-muted: rgba(0, 0, 0, 0.25);
-    --ui-popup-background: rgba(255, 255, 255, 0.15);
+    --ui-popup-background: rgba(0, 0, 0, 0.0625);
     --ui-input-color: #111827;
     --ui-input-border: rgba(0, 0, 0, 0.15);
     --ui-input-focus-border: #3b82f6;
@@ -310,7 +310,7 @@
     --ui-disabled-fg: #6b7280;
     --ui-overlay: rgba(0, 0, 0, 0.7);
     --ui-overlay-muted: rgba(0, 0, 0, 0.5);
-    --ui-popup-background: rgba(17, 24, 39, 0.1);
+    --ui-popup-background: rgba(255, 255, 255, 0.0625);
     --ui-input-color: #f9fafb;
     --ui-input-border: rgba(255, 255, 255, 0.15);
     --ui-input-focus-border: #818cf8;
@@ -426,6 +426,13 @@
     --state-info-muted: rgba(96, 165, 250, 0.2);
     --state-info-border: rgba(96, 165, 250, 0.25);
     --state-info-ring: rgba(96, 165, 250, 0.4);
+
+    /* shadow */
+    --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+    --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.4), 0 1px 2px -1px rgb(0 0 0 / 0.3);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.4);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.5), 0 8px 10px -6px rgb(0 0 0 / 0.4);
   }
 
 
@@ -738,7 +745,7 @@
      6. Dark Theme Variants
      ============================================ */
 
-  .dark .j-theme-gray,
+  .dark.j-theme-gray,
   .dark-theme.j-theme-gray {
     --tone-subtle: rgba(255, 255, 255, 0.06);
     --tone-soft: rgba(255, 255, 255, 0.1);
@@ -758,7 +765,7 @@
     --tone-link-visited: #9ca3af;
   }
 
-  .dark .j-theme-olive,
+  .dark.j-theme-olive,
   .dark-theme.j-theme-olive {
     --tone-subtle: rgba(180, 188, 162, 0.1);
     --tone-soft: rgba(180, 188, 162, 0.15);
@@ -778,7 +785,7 @@
     --tone-link-visited: #a8b092;
   }
 
-  .dark .j-theme-tomato,
+  .dark.j-theme-tomato,
   .dark-theme.j-theme-tomato {
     --tone-subtle: rgba(248, 113, 113, 0.1);
     --tone-soft: rgba(248, 113, 113, 0.15);
@@ -798,7 +805,7 @@
     --tone-link-visited: #f87171;
   }
 
-  .dark .j-theme-ruby,
+  .dark.j-theme-ruby,
   .dark-theme.j-theme-ruby {
     --tone-subtle: rgba(251, 113, 133, 0.1);
     --tone-soft: rgba(251, 113, 133, 0.15);
@@ -818,7 +825,7 @@
     --tone-link-visited: #fb7185;
   }
 
-  .dark .j-theme-pink,
+  .dark.j-theme-pink,
   .dark-theme.j-theme-pink {
     --tone-subtle: rgba(244, 114, 182, 0.1);
     --tone-soft: rgba(244, 114, 182, 0.15);
@@ -838,7 +845,7 @@
     --tone-link-visited: #f472b6;
   }
 
-  .dark .j-theme-violet,
+  .dark.j-theme-violet,
   .dark-theme.j-theme-violet {
     --tone-subtle: rgba(167, 139, 250, 0.1);
     --tone-soft: rgba(167, 139, 250, 0.15);
@@ -858,7 +865,7 @@
     --tone-link-visited: #a78bfa;
   }
 
-  .dark .j-theme-indigo,
+  .dark.j-theme-indigo,
   .dark-theme.j-theme-indigo {
     --tone-subtle: rgba(129, 140, 248, 0.1);
     --tone-soft: rgba(129, 140, 248, 0.15);
@@ -878,7 +885,7 @@
     --tone-link-visited: #818cf8;
   }
 
-  .dark .j-theme-blue,
+  .dark.j-theme-blue,
   .dark-theme.j-theme-blue {
     --tone-subtle: rgba(96, 165, 250, 0.1);
     --tone-soft: rgba(96, 165, 250, 0.15);
@@ -898,7 +905,7 @@
     --tone-link-visited: #60a5fa;
   }
 
-  .dark .j-theme-teal,
+  .dark.j-theme-teal,
   .dark-theme.j-theme-teal {
     --tone-subtle: rgba(45, 212, 191, 0.1);
     --tone-soft: rgba(45, 212, 191, 0.15);
@@ -918,7 +925,7 @@
     --tone-link-visited: #2dd4bf;
   }
 
-  .dark .j-theme-grass,
+  .dark.j-theme-grass,
   .dark-theme.j-theme-grass {
     --tone-subtle: rgba(74, 222, 128, 0.1);
     --tone-soft: rgba(74, 222, 128, 0.15);
@@ -938,7 +945,7 @@
     --tone-link-visited: #4ade80;
   }
 
-  .dark .j-theme-mint,
+  .dark.j-theme-mint,
   .dark-theme.j-theme-mint {
     --tone-subtle: rgba(34, 211, 238, 0.1);
     --tone-soft: rgba(34, 211, 238, 0.15);
@@ -958,7 +965,7 @@
     --tone-link-visited: #22d3ee;
   }
 
-  .dark .j-theme-lime,
+  .dark.j-theme-lime,
   .dark-theme.j-theme-lime {
     --tone-subtle: rgba(163, 230, 53, 0.1);
     --tone-soft: rgba(163, 230, 53, 0.15);
@@ -978,7 +985,7 @@
     --tone-link-visited: #a3e635;
   }
 
-  .dark .j-theme-yellow,
+  .dark.j-theme-yellow,
   .dark-theme.j-theme-yellow {
     --tone-subtle: rgba(250, 204, 21, 0.1);
     --tone-soft: rgba(250, 204, 21, 0.15);
@@ -998,7 +1005,7 @@
     --tone-link-visited: #facc15;
   }
 
-  .dark .j-theme-orange,
+  .dark.j-theme-orange,
   .dark-theme.j-theme-orange {
     --tone-subtle: rgba(251, 146, 60, 0.1);
     --tone-soft: rgba(251, 146, 60, 0.15);
@@ -1018,7 +1025,7 @@
     --tone-link-visited: #fb923c;
   }
 
-  .dark .j-theme-gold,
+  .dark.j-theme-gold,
   .dark-theme.j-theme-gold {
     --tone-subtle: rgba(217, 119, 6, 0.1);
     --tone-soft: rgba(217, 119, 6, 0.15);

@@ -85,7 +85,6 @@ src/css/
 | ----------------- | ---------- | ----------- | ---------- | ----- |
 | `--font-size-xs`  | `0.75rem`  | `0.6875rem` | `0.75rem`  | 超小  |
 | `--font-size-sm`  | `0.875rem` | `0.75rem`   | `0.875rem` | 小    |
-| `--font-size`     | `0.875rem` | `0.875rem`  | `1rem`     | 基础  |
 | `--font-size-md`  | `0.875rem` | `0.875rem`  | `1rem`     | 中等  |
 | `--font-size-lg`  | `1rem`     | `1rem`      | `1.125rem` | 大    |
 | `--font-size-xl`  | `1.125rem` | `1.125rem`  | `1.25rem`  | 超大  |
@@ -147,7 +146,6 @@ src/css/
 | ------------- | -------- |
 | `--shadow-xs` | 最小阴影 |
 | `--shadow-sm` | 小阴影   |
-| `--shadow`    | 基础阴影 |
 | `--shadow-md` | 中等阴影 |
 | `--shadow-lg` | 大阴影   |
 | `--shadow-xl` | 超大阴影 |

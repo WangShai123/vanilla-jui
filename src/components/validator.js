@@ -109,7 +109,7 @@ export class Validator {
 
     this.cleanup.events.on('submit', this.root, 'submit', (e) => {
       e.preventDefault();
-      this.runtime.validate();
+      this.validate();
     });
     this.cleanup.events.on('reset', this.root, 'reset', () => {
       this.reset();

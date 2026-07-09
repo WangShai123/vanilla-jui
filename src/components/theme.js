@@ -104,7 +104,7 @@ export class Theme {
    */
   _saveConfig() {
     const { mode, theme, radius, shadow, font } = this.props;
-    const render = this._scheme();
+    const render = mode === 'auto' ? this._scheme() : mode;
     setCookie(
       this.props.key,
       JSON.stringify({ mode, theme, radius, shadow, font, render })
