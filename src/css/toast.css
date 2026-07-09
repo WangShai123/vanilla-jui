@@ -114,8 +114,8 @@
     z-index: var(--z-index-toast);
     font-size: var(--toast-lite-font-size, var(--font-size-md));
     text-align: center;
-    color: var(--toast-lite-color, #fff);
-    background: var(--toast-lite-background, rgba(0, 0, 0, 0.8));
+    color: var(--toast-lite-color, var(--ui-bg));
+    background: var(--toast-lite-background, var(--ui-fg));
     border-radius: var(--toast-lite-border-radius, var(--radius-md));
     padding: var(--toast-lite-padding, calc(var(--space) * 2) calc(var(--space) * 3));
     max-width: var(--toast-lite-max-width, calc(var(--screen-sm) / 2));
@@ -141,6 +141,7 @@
     background-color: var(--toast-info-background, var(--ui-bg));
     border: 1px solid var(--toast-info-border-color, var(--ui-border));
     min-width: 280px;
+    cursor: default;
   }
 
   .j-toast.is-action .toast-action {

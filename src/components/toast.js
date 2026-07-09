@@ -49,11 +49,7 @@ export class Toast {
     validateParam('duration', duration, TOAST_DURATION_RULE, 'Toast.show');
     validateParam('type', type, TOAST_TYPE_RULE, 'Toast.show');
 
-    let toastContainer = q('.j-toast-container');
-    if (!toastContainer) {
-      toastContainer = jsx('div', { className: 'j-toast-container' });
-      document.body.appendChild(toastContainer);
-    }
+    const toastContainer = Toast._getOrCreateContainer();
 
     const id = randomId();
     const toast = jsx('div', {
@@ -223,6 +219,8 @@ export class Toast {
 
   // action 模式不支持自动关闭，必须通过按钮点击触发关闭。
   static action(message = '', props = {}) {
+    requireRenderDOM('Toast');
+
     // DOM 结构如下：
     //  <div class="j-toast-container">
     //     <div class="j-toast is-action is-shown">
@@ -237,11 +235,7 @@ export class Toast {
     // const existing = q('.j-toast.is-action');
     // if (existing) existing.remove();
 
-    let toastContainer = q('.j-toast-container');
-    if (!toastContainer) {
-      toastContainer = jsx('div', { className: 'j-toast-container' });
-      document.body.appendChild(toastContainer);
-    }
+    const toastContainer = Toast._getOrCreateContainer();
 
     const id = randomId();
     const action = jsx('div', {
@@ -273,9 +267,28 @@ export class Toast {
         }),
       ],
     });
-    action.classList.add('is-shown');
     toastContainer.appendChild(action);
+
+    // 在挂载后异步添加显示态，确保 CSS transition 能从初始态过渡。
+    Toast._setTimer(
+      id,
+      'show',
+      () => {
+        action.classList.add('is-shown');
+      },
+      10
+    );
+
     return action;
+  }
+
+  static _getOrCreateContainer() {
+    let toastContainer = q('.j-toast-container');
+    if (!toastContainer) {
+      toastContainer = jsx('div', { className: 'j-toast-container' });
+      document.body.appendChild(toastContainer);
+    }
+    return toastContainer;
   }
 
   /**
