@@ -74,7 +74,7 @@ export class Toast {
       id,
       'show',
       () => {
-        toast.classList.add('toast-show');
+        toast.classList.add('is-shown');
       },
       10
     );
@@ -158,8 +158,8 @@ export class Toast {
       Toast.disposers.get(toast)?.();
       Toast.disposers.delete(toast);
 
-      toast.classList.remove('toast-show');
-      toast.classList.add('toast-hide');
+      toast.classList.remove('is-shown');
+      toast.classList.add('is-hidden');
 
       const id = toast.dataset.toast;
       Toast._setTimer(
@@ -219,6 +219,63 @@ export class Toast {
     );
 
     return lite;
+  }
+
+  // action 模式不支持自动关闭，必须通过按钮点击触发关闭。
+  static action(message = '', props = {}) {
+    // DOM 结构如下：
+    //  <div class="j-toast-container">
+    //     <div class="j-toast is-action is-shown">
+    //       <div class="toast-message">这是一条成功提示消息。</div>
+    //       <div class="toast-action">
+    //           <button class="j-button is-sm is-ghost">cancel</button>
+    //           <button class="j-button is-sm is-outline">action</button>
+    //       </div>
+    //     </div>
+    //   </div>
+
+    // const existing = q('.j-toast.is-action');
+    // if (existing) existing.remove();
+
+    let toastContainer = q('.j-toast-container');
+    if (!toastContainer) {
+      toastContainer = jsx('div', { className: 'j-toast-container' });
+      document.body.appendChild(toastContainer);
+    }
+
+    const id = randomId();
+    const action = jsx('div', {
+      className: 'j-toast is-action',
+      'data-toast': id,
+      children: [
+        jsx('div', { className: 'toast-message', children: message }),
+        jsx('div', {
+          className: 'toast-action',
+          children: [
+            jsx('button', {
+              className: 'j-button is-sm is-ghost',
+              children: props.text.cancel || 'cancel',
+              onClick: () => {
+                action.classList.remove('is-shown');
+                action.classList.add('is-hidden');
+                Toast.hide(action);
+              },
+            }),
+            jsx('button', {
+              className: 'j-button is-sm is-outline',
+              children: props.text.action || 'action',
+              onClick: async () => {
+                await props.onAction?.();
+                Toast.hide(action);
+              },
+            }),
+          ],
+        }),
+      ],
+    });
+    action.classList.add('is-shown');
+    toastContainer.appendChild(action);
+    return action;
   }
 
   /**

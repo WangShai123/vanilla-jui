@@ -34,12 +34,12 @@
     pointer-events: auto;
   }
 
-  .j-toast.toast-show {
+  .j-toast.is-shown {
     opacity: 1;
     transform: translateY(0);
   }
 
-  .j-toast.toast-hide {
+  .j-toast.is-hidden {
     opacity: 0;
     transform: translateY(-100%);
   }
@@ -131,5 +131,22 @@
   .j-toast-lite.is-hidden {
     opacity: 0;
     transform: scale(0.9);
+  }
+
+  .j-toast.is-action {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: calc(var(--space)*4);
+    color: var(--toast-info-color, var(--ui-fg));
+    background-color: var(--toast-info-background, var(--ui-bg));
+    border: 1px solid var(--toast-info-border-color, var(--ui-border));
+    min-width: 280px;
+  }
+
+  .j-toast.is-action .toast-action {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space);
   }
 }
