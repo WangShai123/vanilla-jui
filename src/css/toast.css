@@ -144,7 +144,7 @@
     cursor: default;
   }
 
-  .j-toast.is-action .toast-action {
+  .j-toast.is-action .toast-actions {
     width: 100%;
     display: flex;
     justify-content: flex-end;

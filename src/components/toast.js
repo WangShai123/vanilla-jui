@@ -244,11 +244,12 @@ export class Toast {
       children: [
         jsx('div', { className: 'toast-message', children: message }),
         jsx('div', {
-          className: 'toast-action',
+          className: 'toast-actions',
           children: [
             jsx('button', {
               className: 'j-button is-sm is-ghost',
               children: props.text.cancel || 'cancel',
+              'data-action': 'cancel',
               onClick: () => {
                 action.classList.remove('is-shown');
                 action.classList.add('is-hidden');
@@ -258,6 +259,7 @@ export class Toast {
             jsx('button', {
               className: 'j-button is-sm is-outline',
               children: props.text.action || 'action',
+              'data-action': 'toast-action',
               onClick: async () => {
                 await props.onAction?.();
                 Toast.hide(action);
@@ -275,6 +277,8 @@ export class Toast {
       'show',
       () => {
         action.classList.add('is-shown');
+        const actionButton = q('[data-action="toast-action"]', action);
+        actionButton?.focus();
       },
       10
     );

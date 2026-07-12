@@ -1,6 +1,5 @@
 import {
   bindAttr,
-  bindClass,
   createDeepStore,
   createEffect,
   createRoot,
@@ -405,7 +404,12 @@ export class Pagination extends Component {
               'data-current-page': String(item.page),
               'aria-current': 'page',
               'aria-label': `Page ${item.page}, current page`,
-              children: String(item.page),
+              children: disabled
+                ? jsx('i', {
+                    className: 'animate-spin',
+                    children: icon('loader'),
+                  })
+                : String(item.page),
             })
           : jsx('button', {
               className: 'j-button is-icon is-ghost',
