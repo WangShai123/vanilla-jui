@@ -51,6 +51,7 @@
 
   .j-toast .toast-message {
     flex: 1;
+    word-break: normal;
   }
 
   .j-toast.is-success {

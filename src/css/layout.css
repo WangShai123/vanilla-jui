@@ -12,18 +12,21 @@
   }
 
   html:not(.wp-toolbar) {
-    -webkit-text-size-adjust: 100%;
-    tab-size: 4;
-    text-rendering: optimizeLegibility;
-    -webkit-font-smoothing: antialiased;
-    scroll-behavior: smooth;
-
     /* font-family:
       ui-sans-serif, system-ui, apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue',
       Helvetica, 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', Arial, sans-serif,
       'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'; */
 
-    font-family:
+    /* font-family:
+      "Source Han Sans CN",
+      "Inter",
+      "PingFang SC",
+      "Helvetica Neue",
+      Emoji,
+      Arial,
+      sans-serif; */
+
+    /* font-family:
       system-ui,
       -apple-system,
       Segoe UI,
@@ -31,12 +34,7 @@
       Emoji,
       Helvetica,
       Arial,
-      sans-serif;
-
-    font-feature-settings: normal;
-    font-variation-settings: normal;
-    color: var(--ui-fg);
-    background-color: var(--ui-bg);
+      sans-serif; */
   }
 
   html.light,
@@ -50,11 +48,28 @@
   }
 
   body {
+    -webkit-text-size-adjust: 100%;
+    tab-size: 4;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    scroll-behavior: smooth;
+    font-family:
+      "Source Han Sans CN",
+      "Inter",
+      "PingFang SC",
+      "Helvetica Neue",
+      Emoji,
+      Arial,
+      sans-serif;
+    font-feature-settings: normal;
+    font-variation-settings: normal;
+    color: var(--ui-fg);
+    background-color: var(--ui-bg);
+
     min-width: var(--screen-xs, 320px);
     min-height: 100vh;
     font-size: var(--font-size-md);
-    text-rendering: optimizeSpeed;
-    margin: 0;
+    /* text-rendering: optimizeSpeed; */
   }
 
   img,

@@ -5,6 +5,7 @@
     align-items: center;
     flex-wrap: nowrap;
     gap: var(--button-gap, calc(var(--space) * 1) calc(var(--space) * 1.5));
+    position: relative;
     white-space: nowrap;
     font-weight: var(--button-font-weight, var(--font-medium));
     font-size: var(--button-font-size, var(--font-size-md));
@@ -24,6 +25,7 @@
 
   .j-button .button-content {
     display: contents;
+    position: relative;
   }
 
   .j-button svg {
@@ -285,7 +287,7 @@
 
   .j-button-group .j-button:focus-within {
     z-index: 1;
-    --button-border-color: transparent
+    --button-border-color: transparent;
   }
 
   .j-button-group.is-vertical .j-button:focus-within {
