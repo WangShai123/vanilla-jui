@@ -3,7 +3,6 @@ import {
   createEffect,
   createRoot,
   flushSync,
-  // html,
   jsx,
   onCleanup,
   render,
@@ -27,6 +26,7 @@ import {
   isNode,
   requireRenderDOM,
 } from '../utilities/dom.js';
+import { Form } from './form.js';
 import { icon } from './icons.js';
 
 const HIDE_DURATION = 300;
@@ -50,11 +50,6 @@ function cloneProps(props) {
       ? cloneFields(props.fields)
       : props.fields,
   };
-}
-
-function normalizeOption(option) {
-  if (option && typeof option === 'object') return option;
-  return { value: option, text: option };
 }
 
 function isModalContent(content) {
@@ -225,6 +220,7 @@ export class Modal extends Component {
     this.dom.body = null;
     this.dom.footer = null;
     this.dom.form = null;
+    this.dom.formContainer = null;
 
     this.cleanup.visibility = null;
     this.cleanup.view = null;
@@ -379,135 +375,45 @@ export class Modal extends Component {
 
   bodyView() {
     if (this.isFormMode()) return this.formView();
-    this.dom.form = null;
+    this.destroyForm();
     return this.contentView(this.state.content);
-    // return () => {
-    //   if (this.isFormMode()) return this.formView();
-    //   this.dom.form = null;
-    //   return this.contentView(this.state.content);
-    // };
   }
 
   formView() {
     return jsx('div', {
       className: 'modal-form-container',
-      children: jsx('form', {
-        id: this.cache.formId,
-        className: 'j-form is-vertical is-item-vertical',
-        ref: (element) => {
-          this.dom.form = element;
-        },
-        onSubmit: (event) => this.handleFormSubmit(event),
-        onKeyDown: (event) => this.handleFormKeydown(event),
-        children: (this.state.fields || []).map((field, index) =>
-          this.fieldView(field, index)
-        ),
-      }),
+      ref: (element) => {
+        this.mountForm(element);
+      },
     });
   }
 
-  fieldView(field, index) {
-    const id = this.resolveFieldId(field, index);
-    const label = this.labelView(field, id);
-    return jsx('div', {
-      className: 'form-item',
-      style: { display: field.type === 'hidden' ? 'none' : '' },
-      children: [
-        label,
-        jsx('div', {
-          className: 'form-control',
-          children: this.controlView(field, id),
-        }),
-      ],
-    });
-  }
+  mountForm(container) {
+    if (!container) return;
+    this.dom.formContainer = container;
 
-  labelView(field, id) {
-    return jsx('label', {
-      className: `item-label ${field.required ? 'is-required' : ''}`,
-      for: id,
-      style: { display: field.label === undefined ? 'none' : '' },
-      children: field.label === undefined ? '' : field.label,
-    });
-  }
-
-  resolveFieldId(field, index) {
-    if (field.id) return field.id;
-
-    const key = field.name || index;
-    if (!this.cache.fieldIds.has(key)) {
-      this.cache.fieldIds.set(
-        key,
-        `${this.state.id}_field_${index}_${randomId()}`
-      );
+    const props = this.createFormProps();
+    if (this.dom.form) {
+      this.dom.form.update(props);
+      return;
     }
-    return this.cache.fieldIds.get(key);
+
+    this.dom.form = new Form(props, container).build();
   }
 
-  controlView(field, id) {
-    switch (field.type) {
-      case 'textarea':
-        return this.textareaView(field, id);
-      case 'select':
-        return this.selectView(field, id);
-      default:
-        return this.inputView(field, id);
-    }
-  }
-
-  inputView(field, id) {
-    const type = field.type || 'text';
-    const props = {
-      type,
-      className: 'j-input',
-      name: field.name,
-      id,
-      placeholder: field.placeholder || '',
-      value: field.value ?? '',
-      autocomplete: field.autocomplete || this.autoComplete(type),
-      required: !!field.required,
-      disabled: !!field.disabled,
-      readonly: !!field.readonly,
+  createFormProps() {
+    return {
+      id: this.cache.formId,
+      fields: this.state.fields || [],
+      buttons: false,
+      onSubmit: (data) => this.handleFormSubmit(data),
     };
-
-    if (field.checked !== undefined) props.checked = !!field.checked;
-    return jsx('input', props);
   }
 
-  textareaView(field, id) {
-    return jsx('textarea', {
-      className: 'j-textarea',
-      name: field.name,
-      id,
-      placeholder: field.placeholder || '',
-      value: field.value ?? '',
-      required: !!field.required,
-      disabled: !!field.disabled,
-      readonly: !!field.readonly,
-    });
-  }
-
-  selectView(field, id) {
-    const value = field.value;
-    return jsx('select', {
-      className: 'j-select',
-      name: field.name,
-      id,
-      autocomplete: 'off',
-      required: !!field.required,
-      disabled: !!field.disabled,
-      readonly: !!field.readonly,
-      multiple: !!field.multiple,
-      children: (field.options || []).map((option) => {
-        const item = normalizeOption(option);
-        return jsx('option', {
-          value: item.value ?? '',
-          disabled: !!item.disabled,
-          selected: this.isSelected(value, item.value),
-          children: item.text ?? item.label ?? item.value ?? '',
-        });
-      }),
-    });
+  destroyForm() {
+    this.dom.form?.destroy();
+    this.dom.form = null;
+    this.dom.formContainer = null;
   }
 
   contentView(content) {
@@ -546,23 +452,6 @@ export class Modal extends Component {
       const style = this.state.style;
       if (this.dom.modal) this.applyStyle(this.dom.modal, style);
     });
-  }
-
-  autoComplete(type) {
-    switch (type) {
-      case 'password':
-        return 'current-password';
-      case 'email':
-        return 'email';
-      default:
-        return 'on';
-    }
-  }
-
-  isSelected(value, optionValue) {
-    if (Array.isArray(value))
-      return value.map(String).includes(String(optionValue));
-    return value == optionValue;
   }
 
   isFormMode() {
@@ -649,6 +538,10 @@ export class Modal extends Component {
       (hasOwn(patch, 'bgClose') || hasOwn(patch, 'escClose'))
     ) {
       this.bindEvents(this.root);
+    }
+
+    if (this.dom.form && hasFields) {
+      this.dom.form.update(this.createFormProps());
     }
 
     return this;
@@ -843,65 +736,19 @@ export class Modal extends Component {
       return;
     }
 
-    if (typeof this.dom.form.requestSubmit === 'function') {
-      this.dom.form.requestSubmit();
-      return;
-    }
-
-    const event = new Event('submit', { bubbles: true, cancelable: true });
-    this.dom.form.dispatchEvent(event);
+    this.dom.form.requestSubmit();
   }
 
-  async handleFormSubmit(event) {
-    event.preventDefault();
+  async handleFormSubmit(formData) {
     if (this.isBusy()) return;
 
-    const form = event.currentTarget;
-    if (!form.checkValidity()) {
-      form.reportValidity();
-      return;
-    }
-
-    const data = mergeExtraData(
-      this.collectFormData(form),
-      this.state.extraData
-    );
+    const data = mergeExtraData(formData, this.state.extraData);
 
     flushSync(() => {
       this.state.data = data;
     });
 
     await this.handleSubmit(data);
-  }
-
-  handleFormKeydown(event) {
-    if (event.key !== 'Enter' || event.isComposing || this.isBusy()) return;
-    const target = event.target;
-    const tagName = target?.tagName?.toLowerCase();
-    const type = target?.type?.toLowerCase();
-
-    if (tagName === 'textarea') return;
-    if (type === 'button' || type === 'submit' || type === 'reset') return;
-
-    event.preventDefault();
-    this.requestSubmit();
-  }
-
-  collectFormData(form) {
-    const data = {};
-    const formData = new FormData(form);
-
-    for (const [key, value] of formData.entries()) {
-      if (hasOwn(data, key)) {
-        data[key] = Array.isArray(data[key])
-          ? [...data[key], value]
-          : [data[key], value];
-      } else {
-        data[key] = value;
-      }
-    }
-
-    return data;
   }
 
   async handleNext() {
@@ -948,15 +795,9 @@ export class Modal extends Component {
 
     const form = this.dom.form;
     if (!form) return this.state.data || null;
-    if (!form.checkValidity()) {
-      form.reportValidity();
-      return false;
-    }
+    if (!form.validate()) return false;
 
-    const data = mergeExtraData(
-      this.collectFormData(form),
-      this.state.extraData
-    );
+    const data = mergeExtraData(form.collectData(), this.state.extraData);
     flushSync(() => {
       this.state.data = data;
     });
@@ -1111,7 +952,7 @@ export class Modal extends Component {
 
   focusFirst() {
     if (!this.dom.modal) return;
-    const focusRoot = this.dom.form || this.dom.modal;
+    const focusRoot = this.dom.form?.root || this.dom.modal;
     const firstFocusable = q(
       'input:not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]):not([data-action=close]), [tabindex]:not([tabindex="-1"])',
       focusRoot
@@ -1302,6 +1143,7 @@ export class Modal extends Component {
 
     this.cancelHideTimer();
     this.clearEvents();
+    this.destroyForm();
     this.unlockScroll();
     this.cleanup.visibility?.();
     this.cleanup.visibility = null;

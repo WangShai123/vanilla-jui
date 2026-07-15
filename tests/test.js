@@ -1,7 +1,7 @@
 import { createDeepStore, createEffect, flushSync, jsx } from 'vanilla-signal';
 
 import { Offcanvas, q } from '../dist/index.js?v=2';
-import config from './config.test.js?v=1';
+import config from './config.test.js?v=2';
 import { TestRunner, dateTime } from './helpers.js';
 
 // ========== SPA Router ==========
@@ -40,14 +40,15 @@ async function loadApp(slug) {
   if (!entry) return null;
 
   try {
-    const mod = await import(`./${slug}.app.js`);
+    const mod = await import(`./${slug}.app.js?v=form-build-api`);
     appModules[slug] = {
       mount: mod[`${slug}App`],
       setup: mod[`${slug}Setup`],
       reset: mod[`${slug}Reset`],
     };
     return appModules[slug];
-  } catch {
+  } catch (error) {
+    console.warn(`Failed to load ${slug}.app.js`, error);
     return null;
   }
 }

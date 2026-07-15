@@ -6,6 +6,7 @@ export default [
   { name: 'Tooltip', slug: 'tooltip', extends: 'Drop' },
   { name: 'Offcanvas', slug: 'offcanvas', extends: 'Component' },
   { name: 'Flow', slug: 'flow', extends: null },
+  { name: 'Form', slug: 'form', extends: 'Component' },
   { name: 'Validator', slug: 'validator', extends: null },
   { name: 'Modal', slug: 'modal', extends: 'Component' },
   { name: 'Menu', slug: 'menu', extends: null },

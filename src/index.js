@@ -31,6 +31,7 @@ export * from './components/pagination.js';
 export * from './components/drop.js';
 export * from './components/tooltip.js';
 export * from './components/flow.js';
+export * from './components/form.js';
 export * from './components/menu.js';
 export * from './components/modal.js';
 export * from './components/parabola.js';

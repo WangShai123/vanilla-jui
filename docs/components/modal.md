@@ -66,7 +66,7 @@ modal.setState({ loading: false });
 
 ## 表单弹窗
 
-传入 `fields` 数组后进入表单模式。确认按钮会提交表单，浏览器原生校验通过后触发 `onSubmit(data)`。
+传入 `fields` 数组后进入表单模式。Modal 内部会复用 Form 组件渲染表单，确认按钮会调用 Form 的 `requestSubmit()`，提交通过后触发 `onSubmit(data)`。
 
 ```js
 const editor = new Modal({
@@ -99,7 +99,7 @@ const editor = new Modal({
 editor.show();
 ```
 
-同名字段会合并为数组。`addFields(data)` 可以给下一次提交额外合并业务字段。
+同名字段会合并为数组。`addFields(data)` 可以给下一次提交额外合并业务字段。更复杂的独立表单建议直接使用 `Form` / `createForm()`，调用 `build(false)` 后把 `form.root` 作为普通内容传给 Modal。
 
 ## 动态更新
 
@@ -225,17 +225,17 @@ modal.show();
 
 ## Field 配置
 
-| 参数          | 类型                 | 说明                                                                       |
-| ------------- | -------------------- | -------------------------------------------------------------------------- |
-| `label`       | `string`             | 表单项标签，不传则隐藏 label                                               |
-| `name`        | `string`             | 字段名，会作为 `FormData` 的 key                                           |
-| `id`          | `string`             | 控件 id，不传会自动生成稳定 id                                             |
-| `type`        | `string`             | 支持 `text`、`password`、`email`、`tel`、`hidden`、`textarea`、`select` 等 |
-| `value`       | `string \| string[]` | 初始值                                                                     |
-| `placeholder` | `string`             | 占位文本                                                                   |
-| `required`    | `boolean`            | 是否必填                                                                   |
-| `disabled`    | `boolean`            | 是否禁用                                                                   |
-| `readonly`    | `boolean`            | 是否只读                                                                   |
-| `checked`     | `boolean`            | checkbox/radio 初始选中状态                                                |
-| `options`     | `Array`              | `select` 选项                                                              |
-| `multiple`    | `boolean`            | `select` 是否多选                                                          |
+| 参数          | 类型                 | 说明                                                                                                      |
+| ------------- | -------------------- | --------------------------------------------------------------------------------------------------------- |
+| `label`       | `string`             | 表单项标签，不传则隐藏 label                                                                              |
+| `name`        | `string`             | 字段名，会作为 `FormData` 的 key                                                                          |
+| `id`          | `string`             | 控件 id，不传会自动生成稳定 id                                                                            |
+| `type`        | `string`             | 支持 `text`、`password`、`email`、`tel`、`hidden`、`textarea`、`select`、`radio`、`checkbox`、`switch` 等 |
+| `value`       | `string \| string[]` | 初始值                                                                                                    |
+| `placeholder` | `string`             | 占位文本                                                                                                  |
+| `required`    | `boolean`            | 是否必填                                                                                                  |
+| `disabled`    | `boolean`            | 是否禁用                                                                                                  |
+| `readonly`    | `boolean`            | 是否只读                                                                                                  |
+| `checked`     | `boolean`            | checkbox/radio 初始选中状态                                                                               |
+| `options`     | `Array`              | `select`、`radio`、多选 `checkbox` 选项                                                                   |
+| `multiple`    | `boolean`            | `select` 是否多选                                                                                         |

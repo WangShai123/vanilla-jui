@@ -1,6 +1,12 @@
 import { createDeepStore, flushSync, jsx, Show, render } from 'vanilla-signal';
 
-import { Modal, Toast, Flow, icon, timer } from '../dist/index.js?v=1';
+import {
+  Modal,
+  Toast,
+  Flow,
+  icon,
+  timer,
+} from '../dist/index.js?v=form-build-api';
 import { equal, truthy, dateTime, wait } from './helpers.js';
 
 // ========== 手动测试 UI ==========
@@ -436,7 +442,9 @@ export function modalApp(runner) {
       modal.show();
       await wait(0);
 
-      const nameInput = modal.dom.form?.querySelector('input[name="username"]');
+      const nameInput = modal.dom.form?.root?.querySelector(
+        'input[name="username"]'
+      );
       truthy(!!nameInput, 'username input exists');
 
       nameInput.value = 'alice';
