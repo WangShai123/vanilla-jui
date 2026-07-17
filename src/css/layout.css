@@ -11,32 +11,6 @@
     box-sizing: border-box;
   }
 
-  html:not(.wp-toolbar) {
-    /* font-family:
-      ui-sans-serif, system-ui, apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue',
-      Helvetica, 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', Arial, sans-serif,
-      'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'; */
-
-    /* font-family:
-      "Source Han Sans CN",
-      "Inter",
-      "PingFang SC",
-      "Helvetica Neue",
-      Emoji,
-      Arial,
-      sans-serif; */
-
-    /* font-family:
-      system-ui,
-      -apple-system,
-      Segoe UI,
-      Roboto,
-      Emoji,
-      Helvetica,
-      Arial,
-      sans-serif; */
-  }
-
   html.light,
   html.theme-light {
     color-scheme: light;
@@ -69,6 +43,7 @@
     min-width: var(--screen-xs, 320px);
     min-height: 100vh;
     font-size: var(--font-size-md);
+    margin: 0;
     /* text-rendering: optimizeSpeed; */
   }
 
