@@ -384,6 +384,10 @@
     border: 1px solid var(--ui-border);
   }
 
+  html.j-radius-round .j-content pre.j-code-editor {
+    border-radius: 1.25rem;
+  }
+
   .j-content pre.j-code-editor.hljs {
     color: var(--ui-fg);
     background-color: var(--ui-bg-subtle);

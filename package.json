@@ -1,6 +1,6 @@
 {
   "name": "vanilla-jui",
-  "version": "1.3.5",
+  "version": "1.3.6",
   "private": false,
   "description": "A lightweight vanilla JavaScript UI plugin library.",
   "keywords": [
@@ -25,6 +25,10 @@
   },
   "license": "ISC",
   "author": "Wang Shai <hiwangshai@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/WangShai123/vanilla-jui.git"
+  },
   "files": [
     "dist"
   ],
