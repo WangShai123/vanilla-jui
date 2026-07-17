@@ -11,7 +11,7 @@
     --content-paragraph-spacing: 1.25em;
     --content-heading-spacing: 1.5em;
     --content-block-spacing: 1.5em;
-    --content-list-spacing: 0.125em;
+    --content-list-spacing: 0.5em;
 
     line-height: var(--content-line-height);
     letter-spacing: var(--content-letter-spacing);
@@ -226,7 +226,7 @@
   .j-content ol {
     margin: 0 0 var(--content-paragraph-spacing);
     padding-left: 1.75em;
-    font-size: 0.875em;
+    /* font-size: 0.875em; */
   }
 
   .j-content ul li,
