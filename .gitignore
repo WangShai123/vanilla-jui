@@ -1,22 +1,13 @@
 .DS_Store
 node_modules
 
-src/index.runtime.js
-src/utilities/debug.js
 vite.config.debug.mode.ts
 
-docs/audits
-src/css_*
+docs
 demo
 
-tests/*
-!tests/index.html
-!tests/test.css
-!tests/test.js
-!tests/helpers.js
-!tests/config.test.js
-!tests/*.app.js
-!tests/dashboard.html
-!tests/dashboard.min.js
+tests/dashboard.*
 
 AGENTS.md
+
+demo*.html

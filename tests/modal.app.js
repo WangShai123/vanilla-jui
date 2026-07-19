@@ -523,7 +523,7 @@ export function modalApp(runner) {
     modal.root.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     await wait(0);
     equal(modal.state.visible, false, 'overlay click closes modal');
-
+    document.body.style = null;
     modal.destroy();
   });
 

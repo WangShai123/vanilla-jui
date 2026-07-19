@@ -1,6 +1,6 @@
 import { createDeepStore, createEffect, flushSync, jsx } from 'vanilla-signal';
 
-import { Offcanvas, q } from '../dist/index.js?v=2';
+import { Offcanvas, q } from '../dist/index.js?v=3';
 import config from './config.test.js?v=2';
 import { TestRunner, dateTime } from './helpers.js';
 
