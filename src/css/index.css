@@ -1,6 +1,7 @@
 @layer config, layout, content, icon, font, components, menu, form, animation, status;
 
 @import url('./tokens.css');
+@import url('./gradient.css');
 @import url('./layout.css');
 @import url('./icon.css');
 @import url('./font.css');

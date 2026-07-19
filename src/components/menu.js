@@ -130,28 +130,14 @@ export class Menu {
       classes.push(...item.classes);
     }
 
-    // const children = [
-    //   jsx('a', {
-    //     className: 'menu-link',
-    //     ...(item.url && { href: item.url }),
-    //     ...(item.target && { target: item.target }),
-    //     children: item.title,
-    //   }),
-    // ];
-
-    const children = [];
-    if (item.url) {
-      children.push(
-        jsx('a', {
-          className: 'menu-link',
-          href: item.url,
-          ...(item.target && { target: item.target }),
-          children: item.title,
-        })
-      );
-    } else {
-      children.push(jsx`${item.title}`);
-    }
+    const children = [
+      jsx('a', {
+        className: 'menu-link',
+        href: item.url || '',
+        ...(item.target && { target: item.target }),
+        children: item.title,
+      }),
+    ];
 
     if (hasChildren) {
       children.push(

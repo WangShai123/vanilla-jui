@@ -1,12 +1,45 @@
 {
-    "cSpell.words": [
-        "abcdefghijkmnpqrstuvwxyz",
-        "cpolyline",
-        "hoverable",
-        "iemobile",
-        "labelledby",
-        "maxlength"
-    ],
+  "cSpell.words": [
+    "abcdefghijkmnpqrstuvwxyz",
+    "cpolyline",
+    "hoverable",
+    "iemobile",
+    "labelledby",
+    "maxlength"
+  ],
+
+  "textMinify.suffix": "min",
+  "textMinify.dropConsole": false,
+  "textMinify.fileExtensions": {
+    "css": false,
+    "js": false,
+    "json": false
+  },
+  "jsMinifyObfuscator.enableAutoSave": true,
+  "jsMinifyObfuscator.enableMinify": true,
+  "jsMinifyObfuscator.minifySuffix": ".min",
+  "jsMinifyObfuscator.enableObfuscator": false,
+  "jsMinifyObfuscator.enableTsNoCheck": false,
+  "jsMinifyObfuscator.obfuscatorLevel": "high",
+  "jsMinifyObfuscator.customObfuscatorOptions": {
+    "compact": true,
+    "controlFlowFlattening": false,
+    "deadCodeInjection": false,
+    "debugProtection": false,
+    "stringArray": false,
+    "identifierNamesGenerator": "mangled",
+    "renameGlobals": true
+  },
+  "jsMinifyObfuscator.minifyTerserOptions": {
+    "compress": {
+      "drop_console": true,
+      "drop_debugger": true
+    },
+    "mangle": {
+      "toplevel": true
+    }
+  },
+
   "npm.scriptRunner": "vp",
   "editor.defaultFormatter": "oxc.oxc-vscode",
   "[javascript]": {
@@ -27,5 +60,4 @@
   "editor.codeActionsOnSave": {
     "source.fixAll.oxc": "explicit"
   }
-
 }
