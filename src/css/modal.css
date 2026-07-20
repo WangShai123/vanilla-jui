@@ -2,18 +2,18 @@
   .j-modal {
     --modal-border: var(--modal-border-width, 1px) var(--modal-border-style, solid) var(--modal-border-color, transparent);
 
-    --modal-header-padding: calc(var(--space) * 4) calc(var(--space) * 4) 0;
+    --modal-header-padding: var(--s4) var(--s4) 0;
     --modal-header-gap: var(--space);
     --modal-title-font-size: var(--font-size-md);
     --modal-close-icon-size: var(--el-height-3xs);
     --modal-close-font-size: var(--font-size-lg);
     --modal-close-color: var(--ui-fg-muted);
 
-    --modal-body-padding: calc(var(--space) * 4);
+    --modal-body-padding: var(--s4);
     --modal-body-line-height: var(--line-height-paragraph);
 
-    --modal-footer-padding: 0 calc(var(--space) * 4) calc(var(--space) * 4);
-    --modal-footer-gap: calc(var(--space) * 2);
+    --modal-footer-padding: 0 var(--s4) var(--s4);
+    --modal-footer-gap: var(--s2);
 
     background: var(--modal-background, var(--ui-bg));
     border: var(--modal-border, 1px solid var(--ui-border));
@@ -56,27 +56,6 @@
     font-weight: 500;
   }
 
-  .j-modal .modal-header .modal-close {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: var(--modal-close-icon-size);
-    height: var(--modal-close-icon-size);
-    font-size: var(--modal-close-font-size);
-    color: var(--modal-close-color);
-    text-align: center;
-  }
-
-  .j-modal .modal-header .modal-close:focus-within {
-    outline: 2px solid var(--tone-solid);
-    color: var(--tone-solid);
-  }
-
-  .j-modal .modal-header .modal-close:hover {
-    color: var(--tone-solid);
-    background-color: var(--tone-subtle);
-  }
-
   .j-modal .modal-body {
     padding: var(--modal-body-padding);
     overflow-y: auto;
@@ -90,7 +69,11 @@
   }
 
   .j-modal.is-fullscreen .modal-header {
-    --modal-header-padding: calc(var(--space) * 4);
+    --modal-header-padding: var(--s4);
+  }
+
+  .j-modal:not(.is-fullscreen) .modal-header:has(.modal-close) {
+    --modal-header-padding: var(--s3) var(--s4) 0;
   }
 
   .j-modal.is-fullscreen .modal-body {
@@ -98,7 +81,7 @@
   }
 
   .j-modal.is-fullscreen .modal-footer {
-    --modal-footer-padding: calc(var(--space) * 4);
+    --modal-footer-padding: var(--s4);
   }
 
   .j-modal .modal-footer {

@@ -336,7 +336,7 @@ export class Modal extends Component {
         this.state.showClose
           ? jsx('button', {
               type: 'button',
-              className: 'is-reset modal-close',
+              className: 'modal-close j-button is-icon is-ghost is-sm',
               'data-action': 'close',
               'aria-label': 'close',
               children: icon('close'),
@@ -570,13 +570,13 @@ export class Modal extends Component {
     this.cache.baseStyle = element.getAttribute('style') || '';
   }
 
-  normalizeIcon(element) {
-    if (!(element instanceof Element)) return;
-    const iconElement = q('.modal-close', element);
-    if (iconElement) {
-      iconElement.style.transform = `translateX(${iconElement.clientHeight / 3}px)`;
-    }
-  }
+  // normalizeIcon(element) {
+  //   if (!(element instanceof Element)) return;
+  //   const iconElement = q('.modal-close', element);
+  //   if (iconElement) {
+  //     iconElement.style.transform = `translateX(${iconElement.clientHeight / 3}px)`;
+  //   }
+  // }
 
   bindReactiveVisibility() {
     this.cleanup.visibility = createRoot((dispose) => {
@@ -617,7 +617,7 @@ export class Modal extends Component {
     this.lockScroll();
     this.runtime.visibleApplied = true;
 
-    this.normalizeIcon(this.dom.modal);
+    // this.normalizeIcon(this.dom.modal);
     this.bindEvents(this.root);
     this.focusFirst();
 

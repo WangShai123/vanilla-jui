@@ -1,12 +1,12 @@
 @layer components {
   .j-toast-container {
     position: fixed;
-    top: var(--toast-container-offset, calc(var(--space) * 2));
-    right: var(--toast-container-offset, calc(var(--space) * 2));
-    z-index: var(--z-index-toast);
+    top: var(--toast-container-offset, var(--s2));
+    right: var(--toast-container-offset, var(--s2));
+    z-index: var(--z-toast);
     display: flex;
     flex-direction: column;
-    gap: var(--toast-container-gap, calc(var(--space) * 2));
+    gap: var(--toast-container-gap, var(--s2));
     align-items: center;
     left: 50%;
     transform: translateX(-50%);
@@ -16,7 +16,7 @@
   .j-toast {
     display: flex;
     align-items: center;
-    padding: var(--toast-padding, calc(var(--space) * 3) calc(var(--space) * 4));
+    padding: var(--toast-padding, var(--s3) var(--s4));
     border-radius: var(--toast-border-radius, var(--radius-md));
     box-shadow: var(--toast-box-shadow, var(--shadow-md));
     font-size: var(--toast-font-size, var(--font-size-md));
@@ -45,7 +45,7 @@
   }
 
   .j-toast .toast-icon {
-    margin-right: calc(var(--space) * 2);
+    margin-right: var(--s2);
     width: var(--toast-icon-size, var(--font-size-lg));
   }
 
@@ -112,13 +112,13 @@
     transform: translate(-50%, -50%);
     transition: opacity var(--speed-sm) ease-in-out;
     opacity: 0;
-    z-index: var(--z-index-toast);
+    z-index: var(--z-toast);
     font-size: var(--toast-lite-font-size, var(--font-size-md));
     text-align: center;
     color: var(--toast-lite-color, var(--ui-bg));
     background: var(--toast-lite-background, var(--ui-fg));
     border-radius: var(--toast-lite-border-radius, var(--radius-md));
-    padding: var(--toast-lite-padding, calc(var(--space) * 2) calc(var(--space) * 3));
+    padding: var(--toast-lite-padding, var(--s2) var(--s3));
     max-width: var(--toast-lite-max-width, calc(var(--screen-sm) / 2));
     user-select: none;
     pointer-events: none;

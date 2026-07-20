@@ -4,7 +4,7 @@
     justify-content: center;
     align-items: center;
     flex-wrap: nowrap;
-    gap: var(--button-gap, calc(var(--space) * 1) calc(var(--space) * 1.5));
+    gap: var(--button-gap, var(--space) calc(var(--space) * 1.5));
     position: relative;
     white-space: nowrap;
     font-weight: var(--button-font-weight, var(--font-medium));
@@ -12,7 +12,7 @@
     height: var(--button-height, var(--el-height-md));
     line-height: var(--button-line-height, var(--line-height-self));
     background-color: var(--button-background, transparent);
-    padding: var(--button-padding, 0 calc(var(--space) * 3));
+    padding: var(--button-padding, 0 var(--s3));
     border-width: var(--button-border-width, 1px);
     border-style: var(--button-border-style, solid);
     border-color: var(--button-border-color, transparent);
@@ -42,13 +42,13 @@
   .j-button.is-sm {
     font-size: var(--font-size-sm);
     height: var(--button-height-sm, var(--el-height-sm));
-    padding: var(--button-padding-sm, calc(var(--space) * 1) calc(var(--space) * 2));
+    padding: var(--button-padding-sm, var(--space) var(--s2));
   }
 
   .j-button.is-lg {
     font-size: var(--font-size-lg);
     height: var(--button-height-lg, var(--el-height-lg));
-    padding: var(--button-padding-lg, calc(var(--space) * 3) calc(var(--space) * 4));
+    padding: var(--button-padding-lg, var(--s3) var(--s4));
   }
 
   /* variant */
@@ -136,7 +136,7 @@
 
   /* group */
   .j-button-group {
-    --button-padding: 0 calc(var(--space) * 2);
+    --button-padding: 0 var(--s2);
     display: flex;
     margin: 0;
   }

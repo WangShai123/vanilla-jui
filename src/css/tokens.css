@@ -11,19 +11,26 @@
 
   :root {
     /* --- Z-Index --- */
-    --z-index-0: 0;
-    --z-index-1: 1;
-    --z-index-badge: 2;
-    --z-index-toolbar: 2;
-    --z-index-submenu: 5;
-    --z-index-drop: 9900;
-    --z-index-overlay: 9950;
-    --z-index-offcanvas: 9960;
-    --z-index-popup: 9970;
-    --z-index-toast: 9980;
+    --z-0: 0;
+    --z-1: 1;
+    --z-badge: 2;
+    --z-toolbar: 2;
+    --z-submenu: 5;
+    --z-drop: 9900;
+    --z-overlay: 9950;
+    --z-offcanvas: 9960;
+    --z-popup: 9970;
+    --z-toast: 9980;
 
     /* --- Spacing --- */
     --space: 0.25rem;
+    --s2: 0.5rem;
+    --s3: 0.75rem;
+    --s4: 1rem;
+    --s5: 1.25rem;
+    --s6: 1.5rem;
+    --s7: 1.75rem;
+    --s8: 2rem;
 
     /* --- Transitions --- */
     --speed-sm: 0.15s;
@@ -67,6 +74,11 @@
     --screen-xl: 1200px;
 
     /* --- Container Widths --- */
+    --columns-6xs: 10rem;
+    --columns-5xs: 12rem;
+    --columns-4xs: 14rem;
+    --columns-3xs: 16rem;
+    --columns-2xs: 18px;
     --columns-xs: 20rem;
     --columns-sm: 24rem;
     --columns-md: 28rem;
@@ -76,47 +88,10 @@
     --columns-3xl: 48rem;
     --columns-4xl: 56rem;
     --columns-5xl: 64rem;
+    --columns-6xl: 72rem;
 
     /* --- Border Radius --- */
-    /* 2px */
-    --radius-2xs: 0.125rem;
-    /* 4px */
-    --radius-xs: 0.25rem;
-    /* 6px */
-    --radius-sm: 0.375rem;
-    /* 8px */
-    --radius-md: 0.5rem;
-    /* 12px */
-    --radius-lg: 0.75rem;
-    /* 16px */
-    --radius-xl: 1rem;
-    /* 24px */
-    --radius-2xl: 1.5rem;
     --radius-full: 9999px;
-
-    /* --- Element Heights --- */
-    --el-height-3xs: 1rem;
-    --el-height-2xs: 1.25rem;
-    --el-height-xs: 1.5rem;
-    --el-height-sm: 1.75rem;
-    --el-height-md: 2rem;
-    --el-height-lg: 2.25rem;
-    --el-height-xl: 2.5rem;
-
-    /* --- Font Sizes --- */
-    --font-size-xs: 0.625rem;
-    --font-size-sm: 0.75rem;
-    --font-size-md: 0.875rem;
-    --font-size-lg: 1rem;
-    --font-size-xl: 1.125rem;
-    --font-size-2xl: 1.25rem;
-
-    /* Shadows */
-    --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-    --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1);
-    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
-    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
   }
 
 
@@ -162,80 +137,50 @@
 
     /* --- Fixed Theme Colors (15 themes) --- */
     --ui-gray: #374151;
-    --ui-gray-light: #6b7280;
-    --ui-gray-heavy: #111827;
+    --ui-gray-tint: #6b7280;
+    --ui-gray-shade: #111827;
     --ui-olive: #717762;
-    --ui-olive-light: #8a927d;
-    --ui-olive-heavy: #4d5440;
+    --ui-olive-tint: #8a927d;
+    --ui-olive-shade: #4d5440;
     --ui-tomato: #ef4444;
-    --ui-tomato-light: #f87171;
-    --ui-tomato-heavy: #b91c1c;
+    --ui-tomato-tint: #f87171;
+    --ui-tomato-shade: #b91c1c;
     --ui-ruby: #f43f5e;
-    --ui-ruby-light: #fb7185;
-    --ui-ruby-heavy: #be123c;
+    --ui-ruby-tint: #fb7185;
+    --ui-ruby-shade: #be123c;
     --ui-pink: #ec4899;
-    --ui-pink-light: #f472b6;
-    --ui-pink-heavy: #be185d;
+    --ui-pink-tint: #f472b6;
+    --ui-pink-shade: #be185d;
     --ui-violet: #8b5cf6;
-    --ui-violet-light: #a78bfa;
-    --ui-violet-heavy: #6d28d9;
+    --ui-violet-tint: #a78bfa;
+    --ui-violet-shade: #6d28d9;
     --ui-indigo: #6366f1;
-    --ui-indigo-light: #818cf8;
-    --ui-indigo-heavy: #4338ca;
+    --ui-indigo-tint: #818cf8;
+    --ui-indigo-shade: #4338ca;
     --ui-blue: #3b82f6;
-    --ui-blue-light: #60a5fa;
-    --ui-blue-heavy: #1d4ed8;
+    --ui-blue-tint: #60a5fa;
+    --ui-blue-shade: #1d4ed8;
     --ui-teal: #14b8a6;
-    --ui-teal-light: #2dd4bf;
-    --ui-teal-heavy: #0f766e;
+    --ui-teal-tint: #2dd4bf;
+    --ui-teal-shade: #0f766e;
     --ui-grass: #22c55e;
-    --ui-grass-light: #4ade80;
-    --ui-grass-heavy: #15803d;
+    --ui-grass-tint: #4ade80;
+    --ui-grass-shade: #15803d;
     --ui-mint: #06b6d4;
-    --ui-mint-light: #22d3ee;
-    --ui-mint-heavy: #0e7490;
+    --ui-mint-tint: #22d3ee;
+    --ui-mint-shade: #0e7490;
     --ui-lime: #84cc16;
-    --ui-lime-light: #a3e635;
-    --ui-lime-heavy: #4d7c0f;
+    --ui-lime-tint: #a3e635;
+    --ui-lime-shade: #4d7c0f;
     --ui-yellow: #eab308;
-    --ui-yellow-light: #facc15;
-    --ui-yellow-heavy: #a16207;
+    --ui-yellow-tint: #facc15;
+    --ui-yellow-shade: #a16207;
     --ui-orange: #f97316;
-    --ui-orange-light: #fb923c;
-    --ui-orange-heavy: #c2410c;
+    --ui-orange-tint: #fb923c;
+    --ui-orange-shade: #c2410c;
     --ui-gold: #b45309;
-    --ui-gold-light: #d97706;
-    --ui-gold-heavy: #78350f;
-    --ui-gray-tint: var(--ui-gray-light);
-    --ui-gray-shade: var(--ui-gray-heavy);
-    --ui-olive-tint: var(--ui-olive-light);
-    --ui-olive-shade: var(--ui-olive-heavy);
-    --ui-tomato-tint: var(--ui-tomato-light);
-    --ui-tomato-shade: var(--ui-tomato-heavy);
-    --ui-ruby-tint: var(--ui-ruby-light);
-    --ui-ruby-shade: var(--ui-ruby-heavy);
-    --ui-pink-tint: var(--ui-pink-light);
-    --ui-pink-shade: var(--ui-pink-heavy);
-    --ui-violet-tint: var(--ui-violet-light);
-    --ui-violet-shade: var(--ui-violet-heavy);
-    --ui-indigo-tint: var(--ui-indigo-light);
-    --ui-indigo-shade: var(--ui-indigo-heavy);
-    --ui-blue-tint: var(--ui-blue-light);
-    --ui-blue-shade: var(--ui-blue-heavy);
-    --ui-teal-tint: var(--ui-teal-light);
-    --ui-teal-shade: var(--ui-teal-heavy);
-    --ui-grass-tint: var(--ui-grass-light);
-    --ui-grass-shade: var(--ui-grass-heavy);
-    --ui-mint-tint: var(--ui-mint-light);
-    --ui-mint-shade: var(--ui-mint-heavy);
-    --ui-lime-tint: var(--ui-lime-light);
-    --ui-lime-shade: var(--ui-lime-heavy);
-    --ui-yellow-tint: var(--ui-yellow-light);
-    --ui-yellow-shade: var(--ui-yellow-heavy);
-    --ui-orange-tint: var(--ui-orange-light);
-    --ui-orange-shade: var(--ui-orange-heavy);
-    --ui-gold-tint: var(--ui-gold-light);
-    --ui-gold-shade: var(--ui-gold-heavy);
+    --ui-gold-tint: #d97706;
+    --ui-gold-shade: #78350f;
 
     /* Theme Color (default indigo) */
     --tone-subtle: rgba(99, 102, 241, 0.05);
@@ -246,6 +191,8 @@
     --tone-border: rgba(99, 102, 241, 0.2);
     --tone-border-strong: rgba(99, 102, 241, 0.35);
     --tone-solid: #6366f1;
+    --tone-tint: #a78bfa;
+    --tone-shade: #6d28d9;
     --tone-solid-hover: #4f46e5;
     --tone-solid-active: #4338ca;
     --tone-text: #4f46e5;
@@ -381,80 +328,50 @@
 
     /* --- Fixed Theme Colors (15 themes) --- */
     --ui-gray: #e5e7eb;
-    --ui-gray-light: #f3f4f6;
-    --ui-gray-heavy: #9ca3af;
+    --ui-gray-tint: #f3f4f6;
+    --ui-gray-shade: #9ca3af;
     --ui-olive: #d4d9cc;
-    --ui-olive-light: #e5e7db;
-    --ui-olive-heavy: #a8b092;
+    --ui-olive-tint: #e5e7db;
+    --ui-olive-shade: #a8b092;
     --ui-tomato: #fca5a5;
-    --ui-tomato-light: #fecaca;
-    --ui-tomato-heavy: #f87171;
+    --ui-tomato-tint: #fecaca;
+    --ui-tomato-shade: #f87171;
     --ui-ruby: #fda4af;
-    --ui-ruby-light: #fecdd3;
-    --ui-ruby-heavy: #fb7185;
+    --ui-ruby-tint: #fecdd3;
+    --ui-ruby-shade: #fb7185;
     --ui-pink: #f9a8d4;
-    --ui-pink-light: #fbcfe8;
-    --ui-pink-heavy: #f472b6;
+    --ui-pink-tint: #fbcfe8;
+    --ui-pink-shade: #f472b6;
     --ui-violet: #c4b5fd;
-    --ui-violet-light: #ddd6fe;
-    --ui-violet-heavy: #a78bfa;
+    --ui-violet-tint: #ddd6fe;
+    --ui-violet-shade: #a78bfa;
     --ui-indigo: #a5b4fc;
-    --ui-indigo-light: #c7d2fe;
-    --ui-indigo-heavy: #818cf8;
+    --ui-indigo-tint: #c7d2fe;
+    --ui-indigo-shade: #818cf8;
     --ui-blue: #93c5fd;
-    --ui-blue-light: #bfdbfe;
-    --ui-blue-heavy: #60a5fa;
+    --ui-blue-tint: #bfdbfe;
+    --ui-blue-shade: #60a5fa;
     --ui-teal: #5eead4;
-    --ui-teal-light: #99f6e4;
-    --ui-teal-heavy: #2dd4bf;
+    --ui-teal-tint: #99f6e4;
+    --ui-teal-shade: #2dd4bf;
     --ui-grass: #86efac;
-    --ui-grass-light: #bbf7d0;
-    --ui-grass-heavy: #4ade80;
+    --ui-grass-tint: #bbf7d0;
+    --ui-grass-shade: #4ade80;
     --ui-mint: #67e8f9;
-    --ui-mint-light: #a5f3fc;
-    --ui-mint-heavy: #22d3ee;
+    --ui-mint-tint: #a5f3fc;
+    --ui-mint-shade: #22d3ee;
     --ui-lime: #bef264;
-    --ui-lime-light: #d9f99d;
-    --ui-lime-heavy: #a3e635;
+    --ui-lime-tint: #d9f99d;
+    --ui-lime-shade: #a3e635;
     --ui-yellow: #fde047;
-    --ui-yellow-light: #fef08a;
-    --ui-yellow-heavy: #facc15;
+    --ui-yellow-tint: #fef08a;
+    --ui-yellow-shade: #facc15;
     --ui-orange: #fdba74;
-    --ui-orange-light: #fed7aa;
-    --ui-orange-heavy: #fb923c;
+    --ui-orange-tint: #fed7aa;
+    --ui-orange-shade: #fb923c;
     --ui-gold: #fbbf24;
-    --ui-gold-light: #fcd34d;
-    --ui-gold-heavy: #d97706;
-    --ui-gray-tint: var(--ui-gray-light);
-    --ui-gray-shade: var(--ui-gray-heavy);
-    --ui-olive-tint: var(--ui-olive-light);
-    --ui-olive-shade: var(--ui-olive-heavy);
-    --ui-tomato-tint: var(--ui-tomato-light);
-    --ui-tomato-shade: var(--ui-tomato-heavy);
-    --ui-ruby-tint: var(--ui-ruby-light);
-    --ui-ruby-shade: var(--ui-ruby-heavy);
-    --ui-pink-tint: var(--ui-pink-light);
-    --ui-pink-shade: var(--ui-pink-heavy);
-    --ui-violet-tint: var(--ui-violet-light);
-    --ui-violet-shade: var(--ui-violet-heavy);
-    --ui-indigo-tint: var(--ui-indigo-light);
-    --ui-indigo-shade: var(--ui-indigo-heavy);
-    --ui-blue-tint: var(--ui-blue-light);
-    --ui-blue-shade: var(--ui-blue-heavy);
-    --ui-teal-tint: var(--ui-teal-light);
-    --ui-teal-shade: var(--ui-teal-heavy);
-    --ui-grass-tint: var(--ui-grass-light);
-    --ui-grass-shade: var(--ui-grass-heavy);
-    --ui-mint-tint: var(--ui-mint-light);
-    --ui-mint-shade: var(--ui-mint-heavy);
-    --ui-lime-tint: var(--ui-lime-light);
-    --ui-lime-shade: var(--ui-lime-heavy);
-    --ui-yellow-tint: var(--ui-yellow-light);
-    --ui-yellow-shade: var(--ui-yellow-heavy);
-    --ui-orange-tint: var(--ui-orange-light);
-    --ui-orange-shade: var(--ui-orange-heavy);
-    --ui-gold-tint: var(--ui-gold-light);
-    --ui-gold-shade: var(--ui-gold-heavy);
+    --ui-gold-tint: #fcd34d;
+    --ui-gold-shade: #d97706;
 
     /* Theme Color (default indigo) */
     --tone-subtle: rgba(129, 140, 248, 0.1);
@@ -465,6 +382,8 @@
     --tone-border: rgba(129, 140, 248, 0.25);
     --tone-border-strong: rgba(129, 140, 248, 0.4);
     --tone-solid: #818cf8;
+    --tone-tint: #c7d2fe;
+    --tone-shade: #818cf8;
     --tone-solid-hover: #a5b4fc;
     --tone-solid-active: #c7d2fe;
     --tone-text: #a5b4fc;
@@ -568,7 +487,9 @@
     --tone-wash: rgba(0, 0, 0, 0.02);
     --tone-border: rgba(0, 0, 0, 0.12);
     --tone-border-strong: rgba(0, 0, 0, 0.2);
-    --tone-solid: #374151;
+    --tone-solid: var(--ui-gray);
+    --tone-tint: var(--ui-gray-tint);
+    --tone-shade: var(--ui-gray-shade);
     --tone-solid-hover: #4b5563;
     --tone-solid-active: #6b7280;
     --tone-text: #374151;
@@ -588,7 +509,9 @@
     --tone-wash: rgba(113, 119, 98, 0.03);
     --tone-border: rgba(113, 119, 98, 0.2);
     --tone-border-strong: rgba(113, 119, 98, 0.35);
-    --tone-solid: #717762;
+    --tone-solid: var(--ui-olive);
+    --tone-tint: var(--ui-olive-tint);
+    --tone-shade: var(--ui-olive-shade);
     --tone-solid-hover: #5f6651;
     --tone-solid-active: #4d5440;
     --tone-text: #5f6651;
@@ -608,7 +531,9 @@
     --tone-wash: rgba(239, 68, 68, 0.03);
     --tone-border: rgba(239, 68, 68, 0.2);
     --tone-border-strong: rgba(239, 68, 68, 0.35);
-    --tone-solid: #ef4444;
+    --tone-solid: var(--ui-tomato);
+    --tone-tint: var(--ui-tomato-tint);
+    --tone-shade: var(--ui-tomato-shade);
     --tone-solid-hover: #dc2626;
     --tone-solid-active: #b91c1c;
     --tone-text: #dc2626;
@@ -628,7 +553,9 @@
     --tone-wash: rgba(244, 63, 94, 0.03);
     --tone-border: rgba(244, 63, 94, 0.2);
     --tone-border-strong: rgba(244, 63, 94, 0.35);
-    --tone-solid: #f43f5e;
+    --tone-solid: var(--ui-ruby);
+    --tone-tint: var(--ui-ruby-tint);
+    --tone-shade: var(--ui-ruby-shade);
     --tone-solid-hover: #e11d48;
     --tone-solid-active: #be123c;
     --tone-text: #e11d48;
@@ -648,7 +575,9 @@
     --tone-wash: rgba(236, 72, 153, 0.03);
     --tone-border: rgba(236, 72, 153, 0.2);
     --tone-border-strong: rgba(236, 72, 153, 0.35);
-    --tone-solid: #ec4899;
+    --tone-solid: var(--ui-pink);
+    --tone-tint: var(--ui-pink-tint);
+    --tone-shade: var(--ui-pink-shade);
     --tone-solid-hover: #db2777;
     --tone-solid-active: #be185d;
     --tone-text: #db2777;
@@ -668,7 +597,9 @@
     --tone-wash: rgba(139, 92, 246, 0.03);
     --tone-border: rgba(139, 92, 246, 0.2);
     --tone-border-strong: rgba(139, 92, 246, 0.35);
-    --tone-solid: #8b5cf6;
+    --tone-solid: var(--ui-violet);
+    --tone-tint: var(--ui-violet-tint);
+    --tone-shade: var(--ui-violet-shade);
     --tone-solid-hover: #7c3aed;
     --tone-solid-active: #6d28d9;
     --tone-text: #7c3aed;
@@ -688,7 +619,9 @@
     --tone-wash: rgba(99, 102, 241, 0.03);
     --tone-border: rgba(99, 102, 241, 0.2);
     --tone-border-strong: rgba(99, 102, 241, 0.35);
-    --tone-solid: #6366f1;
+    --tone-solid: var(--ui-indigo);
+    --tone-tint: var(--ui-indigo-tint);
+    --tone-shade: var(--ui-indigo-shade);
     --tone-solid-hover: #4f46e5;
     --tone-solid-active: #4338ca;
     --tone-text: #4f46e5;
@@ -708,7 +641,9 @@
     --tone-wash: rgba(59, 130, 246, 0.03);
     --tone-border: rgba(59, 130, 246, 0.2);
     --tone-border-strong: rgba(59, 130, 246, 0.35);
-    --tone-solid: #3b82f6;
+    --tone-solid: var(--ui-blue);
+    --tone-tint: var(--ui-blue-tint);
+    --tone-shade: var(--ui-blue-shade);
     --tone-solid-hover: #2563eb;
     --tone-solid-active: #1d4ed8;
     --tone-text: #2563eb;
@@ -728,7 +663,9 @@
     --tone-wash: rgba(20, 184, 166, 0.03);
     --tone-border: rgba(20, 184, 166, 0.2);
     --tone-border-strong: rgba(20, 184, 166, 0.35);
-    --tone-solid: #14b8a6;
+    --tone-solid: var(--ui-teal);
+    --tone-tint: var(--ui-teal-tint);
+    --tone-shade: var(--ui-teal-shade);
     --tone-solid-hover: #0d9488;
     --tone-solid-active: #0f766e;
     --tone-text: #0d9488;
@@ -748,7 +685,9 @@
     --tone-wash: rgba(34, 197, 94, 0.03);
     --tone-border: rgba(34, 197, 94, 0.2);
     --tone-border-strong: rgba(34, 197, 94, 0.35);
-    --tone-solid: #22c55e;
+    --tone-solid: var(--ui-grass);
+    --tone-tint: var(--ui-grass-tint);
+    --tone-shade: var(--ui-grass-shade);
     --tone-solid-hover: #16a34a;
     --tone-solid-active: #15803d;
     --tone-text: #16a34a;
@@ -768,7 +707,9 @@
     --tone-wash: rgba(6, 182, 212, 0.03);
     --tone-border: rgba(6, 182, 212, 0.2);
     --tone-border-strong: rgba(6, 182, 212, 0.35);
-    --tone-solid: #06b6d4;
+    --tone-solid: var(--ui-mint);
+    --tone-tint: var(--ui-mint-tint);
+    --tone-shade: var(--ui-mint-shade);
     --tone-solid-hover: #0891b2;
     --tone-solid-active: #0e7490;
     --tone-text: #0891b2;
@@ -788,7 +729,9 @@
     --tone-wash: rgba(132, 204, 22, 0.03);
     --tone-border: rgba(132, 204, 22, 0.2);
     --tone-border-strong: rgba(132, 204, 22, 0.35);
-    --tone-solid: #84cc16;
+    --tone-solid: var(--ui-lime);
+    --tone-tint: var(--ui-lime-tint);
+    --tone-shade: var(--ui-lime-shade);
     --tone-solid-hover: #65a30d;
     --tone-solid-active: #4d7c0f;
     --tone-text: #65a30d;
@@ -808,7 +751,9 @@
     --tone-wash: rgba(234, 179, 8, 0.03);
     --tone-border: rgba(234, 179, 8, 0.2);
     --tone-border-strong: rgba(234, 179, 8, 0.35);
-    --tone-solid: #eab308;
+    --tone-solid: var(--ui-yellow);
+    --tone-tint: var(--ui-yellow-tint);
+    --tone-shade: var(--ui-yellow-shade);
     --tone-solid-hover: #ca8a04;
     --tone-solid-active: #a16207;
     --tone-text: #ca8a04;
@@ -828,7 +773,9 @@
     --tone-wash: rgba(249, 115, 22, 0.03);
     --tone-border: rgba(249, 115, 22, 0.2);
     --tone-border-strong: rgba(249, 115, 22, 0.35);
-    --tone-solid: #f97316;
+    --tone-solid: var(--ui-orange);
+    --tone-tint: var(--ui-orange-tint);
+    --tone-shade: var(--ui-orange-shade);
     --tone-solid-hover: #ea580c;
     --tone-solid-active: #c2410c;
     --tone-text: #ea580c;
@@ -848,7 +795,9 @@
     --tone-wash: rgba(180, 83, 9, 0.03);
     --tone-border: rgba(180, 83, 9, 0.2);
     --tone-border-strong: rgba(180, 83, 9, 0.35);
-    --tone-solid: #b45309;
+    --tone-solid: var(--ui-gold);
+    --tone-tint: var(--ui-gold-tint);
+    --tone-shade: var(--ui-gold-shade);
     --tone-solid-hover: #92400e;
     --tone-solid-active: #78350f;
     --tone-text: #92400e;
@@ -873,7 +822,7 @@
     --tone-wash: rgba(255, 255, 255, 0.03);
     --tone-border: rgba(255, 255, 255, 0.12);
     --tone-border-strong: rgba(255, 255, 255, 0.2);
-    --tone-solid: #e5e7eb;
+    /* --tone-solid: #e5e7eb; */
     --tone-solid-hover: #d1d5db;
     --tone-solid-active: #9ca3af;
     --tone-text: #e5e7eb;
@@ -893,7 +842,7 @@
     --tone-wash: rgba(180, 188, 162, 0.05);
     --tone-border: rgba(180, 188, 162, 0.25);
     --tone-border-strong: rgba(180, 188, 162, 0.4);
-    --tone-solid: #b4bc9e;
+    /* --tone-solid: #b4bc9e; */
     --tone-solid-hover: #c8cfb5;
     --tone-solid-active: #dce2cc;
     --tone-text: #c8cfb5;
@@ -913,7 +862,7 @@
     --tone-wash: rgba(248, 113, 113, 0.05);
     --tone-border: rgba(248, 113, 113, 0.25);
     --tone-border-strong: rgba(248, 113, 113, 0.4);
-    --tone-solid: #f87171;
+    /* --tone-solid: #f87171; */
     --tone-solid-hover: #fca5a5;
     --tone-solid-active: #fecaca;
     --tone-text: #fca5a5;
@@ -933,7 +882,7 @@
     --tone-wash: rgba(251, 113, 133, 0.05);
     --tone-border: rgba(251, 113, 133, 0.25);
     --tone-border-strong: rgba(251, 113, 133, 0.4);
-    --tone-solid: #fb7185;
+    /* --tone-solid: #fb7185; */
     --tone-solid-hover: #fda4af;
     --tone-solid-active: #fecdd3;
     --tone-text: #fda4af;
@@ -953,7 +902,7 @@
     --tone-wash: rgba(244, 114, 182, 0.05);
     --tone-border: rgba(244, 114, 182, 0.25);
     --tone-border-strong: rgba(244, 114, 182, 0.4);
-    --tone-solid: #f472b6;
+    /* --tone-solid: #f472b6; */
     --tone-solid-hover: #f9a8d4;
     --tone-solid-active: #fbcfe8;
     --tone-text: #f9a8d4;
@@ -973,7 +922,7 @@
     --tone-wash: rgba(167, 139, 250, 0.05);
     --tone-border: rgba(167, 139, 250, 0.25);
     --tone-border-strong: rgba(167, 139, 250, 0.4);
-    --tone-solid: #a78bfa;
+    /* --tone-solid: #a78bfa; */
     --tone-solid-hover: #c4b5fd;
     --tone-solid-active: #ddd6fe;
     --tone-text: #c4b5fd;
@@ -993,7 +942,7 @@
     --tone-wash: rgba(129, 140, 248, 0.05);
     --tone-border: rgba(129, 140, 248, 0.25);
     --tone-border-strong: rgba(129, 140, 248, 0.4);
-    --tone-solid: #818cf8;
+    /* --tone-solid: #818cf8; */
     --tone-solid-hover: #a5b4fc;
     --tone-solid-active: #c7d2fe;
     --tone-text: #a5b4fc;
@@ -1013,7 +962,7 @@
     --tone-wash: rgba(96, 165, 250, 0.05);
     --tone-border: rgba(96, 165, 250, 0.25);
     --tone-border-strong: rgba(96, 165, 250, 0.4);
-    --tone-solid: #60a5fa;
+    /* --tone-solid: #60a5fa; */
     --tone-solid-hover: #93bbfd;
     --tone-solid-active: #bfdbfe;
     --tone-text: #93bbfd;
@@ -1033,7 +982,7 @@
     --tone-wash: rgba(45, 212, 191, 0.05);
     --tone-border: rgba(45, 212, 191, 0.25);
     --tone-border-strong: rgba(45, 212, 191, 0.4);
-    --tone-solid: #2dd4bf;
+    /* --tone-solid: #2dd4bf; */
     --tone-solid-hover: #5eead4;
     --tone-solid-active: #99f6e4;
     --tone-text: #5eead4;
@@ -1053,7 +1002,7 @@
     --tone-wash: rgba(74, 222, 128, 0.05);
     --tone-border: rgba(74, 222, 128, 0.25);
     --tone-border-strong: rgba(74, 222, 128, 0.4);
-    --tone-solid: #4ade80;
+    /* --tone-solid: #4ade80; */
     --tone-solid-hover: #86efac;
     --tone-solid-active: #bbf7d0;
     --tone-text: #86efac;
@@ -1073,7 +1022,7 @@
     --tone-wash: rgba(34, 211, 238, 0.05);
     --tone-border: rgba(34, 211, 238, 0.25);
     --tone-border-strong: rgba(34, 211, 238, 0.4);
-    --tone-solid: #22d3ee;
+    /* --tone-solid: #22d3ee; */
     --tone-solid-hover: #67e8f9;
     --tone-solid-active: #a5f3fc;
     --tone-text: #67e8f9;
@@ -1093,7 +1042,7 @@
     --tone-wash: rgba(163, 230, 53, 0.05);
     --tone-border: rgba(163, 230, 53, 0.25);
     --tone-border-strong: rgba(163, 230, 53, 0.4);
-    --tone-solid: #a3e635;
+    /* --tone-solid: #a3e635; */
     --tone-solid-hover: #bef264;
     --tone-solid-active: #d9f99d;
     --tone-text: #bef264;
@@ -1113,7 +1062,7 @@
     --tone-wash: rgba(250, 204, 21, 0.05);
     --tone-border: rgba(250, 204, 21, 0.25);
     --tone-border-strong: rgba(250, 204, 21, 0.4);
-    --tone-solid: #facc15;
+    /* --tone-solid: #facc15; */
     --tone-solid-hover: #fde047;
     --tone-solid-active: #fef08a;
     --tone-text: #fde047;
@@ -1133,7 +1082,7 @@
     --tone-wash: rgba(251, 146, 60, 0.05);
     --tone-border: rgba(251, 146, 60, 0.25);
     --tone-border-strong: rgba(251, 146, 60, 0.4);
-    --tone-solid: #fb923c;
+    /* --tone-solid: #fb923c; */
     --tone-solid-hover: #fdba74;
     --tone-solid-active: #fed7aa;
     --tone-text: #fdba74;
@@ -1153,7 +1102,7 @@
     --tone-wash: rgba(217, 119, 6, 0.05);
     --tone-border: rgba(217, 119, 6, 0.25);
     --tone-border-strong: rgba(217, 119, 6, 0.4);
-    --tone-solid: #d97706;
+    /* --tone-solid: #d97706; */
     --tone-solid-hover: #f59e0b;
     --tone-solid-active: #fbbf24;
     --tone-text: #f59e0b;
@@ -1168,9 +1117,27 @@
 
   /* ============================================
      7. Radius Themes
-     ============================================ */
+  ============================================ */
+  :root,
+  .j-radius-md {
+    /* 2px */
+    --radius-2xs: 0.125rem;
+    /* 4px */
+    --radius-xs: 0.25rem;
+    /* 6px */
+    --radius-sm: 0.375rem;
+    /* 8px */
+    --radius-md: 0.5rem;
+    /* 12px */
+    --radius-lg: 0.75rem;
+    /* 16px */
+    --radius-xl: 1rem;
+    /* 24px */
+    --radius-2xl: 1.5rem;
+  }
 
   .j-radius-none {
+    --radius-2xs: 0;
     --radius-xs: 0;
     --radius-sm: 0;
     --radius-md: 0;
@@ -1180,42 +1147,37 @@
   }
 
   .j-radius-sm {
-    --radius-xs: 0.0625rem;
-    --radius-sm: 0.125rem;
-    --radius-md: 0.25rem;
+    --radius-2xs: 0.0625rem;
+    --radius-xs: 0.125rem;
+    --radius-sm: 0.25rem;
+    --radius-md: 0.375rem;
     --radius-lg: 0.5rem;
     --radius-xl: 0.75rem;
     --radius-2xl: 1rem;
   }
 
-  .j-radius-md {
-    --radius-xs: 0.125rem;
-    --radius-sm: 0.25rem;
-    --radius-md: 0.5rem;
-    --radius-lg: 0.75rem;
-    --radius-xl: 1rem;
-    --radius-2xl: 1.25rem;
-  }
-
   .j-radius-lg {
-    --radius-xs: 0.25rem;
+    --radius-2xs: 0.25rem;
+    --radius-xs: 0.375rem;
     --radius-sm: 0.5rem;
     --radius-md: 0.75rem;
     --radius-lg: 1rem;
-    --radius-xl: 1.25rem;
-    --radius-2xl: 1.5rem;
+    --radius-xl: 1.5rem;
+    --radius-2xl: 2rem;
   }
 
   .j-radius-xl {
+    --radius-2xs: 0.375rem;
     --radius-xs: 0.5rem;
     --radius-sm: 0.75rem;
     --radius-md: 1rem;
-    --radius-lg: 1.25rem;
-    --radius-xl: 1.5rem;
-    --radius-2xl: 1.75rem;
+    --radius-lg: 1.5rem;
+    --radius-xl: 2rem;
+    --radius-2xl: 2.5rem;
   }
 
   .j-radius-round {
+    --radius-2xs: 9999px;
     --radius-xs: 9999px;
     --radius-sm: 9999px;
     --radius-md: 9999px;
@@ -1228,6 +1190,15 @@
   /* ============================================
      8. Shadow Themes
      ============================================ */
+
+  :root,
+  .j-shadow-md {
+    --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+  }
 
   .j-shadow-none {
     --shadow-xs: none;
@@ -1243,14 +1214,6 @@
     --shadow-md: 0 2px 3px -1px rgb(0 0 0 / 0.08);
     --shadow-lg: 0 4px 6px -1px rgb(0 0 0 / 0.1);
     --shadow-xl: 0 8px 10px -3px rgb(0 0 0 / 0.1);
-  }
-
-  .j-shadow-md {
-    --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-    --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1);
-    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
-    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
   }
 
   .j-shadow-lg {
@@ -1288,8 +1251,9 @@
 
   /* ============================================
      9. Font Themes
-     ============================================ */
+  ============================================ */
 
+  :root,
   .j-font-sm {
     --font-size-xs: 0.625rem;
     --font-size-sm: 0.75rem;
@@ -1297,6 +1261,8 @@
     --font-size-lg: 1rem;
     --font-size-xl: 1.125rem;
     --font-size-2xl: 1.25rem;
+
+    /* --- Element Heights --- */
     --el-height-3xs: 1rem;
     --el-height-2xs: 1.25rem;
     --el-height-xs: 1.5rem;
@@ -1304,6 +1270,8 @@
     --el-height-md: 2rem;
     --el-height-lg: 2.25rem;
     --el-height-xl: 2.5rem;
+    --el-height-2xl: 2.75rem;
+    --el-height-3xl: 3rem;
   }
 
   .j-font-md {
@@ -1313,6 +1281,7 @@
     --font-size-lg: 1.125rem;
     --font-size-xl: 1.25rem;
     --font-size-2xl: 1.5rem;
+
     --el-height-3xs: 1.25rem;
     --el-height-2xs: 1.5rem;
     --el-height-xs: 1.75rem;
@@ -1320,5 +1289,7 @@
     --el-height-md: 2.25rem;
     --el-height-lg: 2.5rem;
     --el-height-xl: 2.75rem;
+    --el-height-2xl: 3rem;
+    --el-height-3xl: 3.25rem;
   }
 }

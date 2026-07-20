@@ -52,7 +52,7 @@
     justify-content: center;
     align-items: center;
     flex-wrap: nowrap;
-    gap: calc(var(--space) * 1);
+    gap: var(--space);
     white-space: nowrap;
     cursor: pointer;
     appearance: button;
@@ -106,7 +106,7 @@
     display: none;
     position: absolute;
     transform: translateY(1px);
-    padding: calc(var(--space) * 2) 0;
+    padding: var(--s2) 0;
     background-color: var(--ui-surface-subtle);
     border: 1px solid var(--ui-border);
     border-radius: var(--radius-md);
@@ -125,7 +125,7 @@
 
   .j-menu .menu .menu-item.menu-item-has-children:hover .sub-menu {
     display: block;
-    z-index: var(--z-index-submenu);
+    z-index: var(--z-submenu);
   }
 
   .j-menu .menu .menu-item .sub-menu .menu-item:hover a {
@@ -329,13 +329,13 @@
     justify-content: flex-start;
     align-items: center;
     flex-wrap: wrap;
-    gap: calc(var(--space) * 2);
+    gap: var(--s2);
     white-space: normal;
     appearance: button;
     touch-action: manipulation;
     color: currentColor;
-    min-height: var(--el-height-xl);
-    padding: calc(var(--space) * 2) calc(var(--space) * 4);
+    min-height: var(--el-height-2xl);
+    padding: var(--s2) var(--s4);
     line-height: var(--line-height-paragraph);
     position: relative;
     text-decoration: none;
@@ -394,7 +394,7 @@
     opacity: 1;
     transform: translateX(0);
     height: 100%;
-    z-index: var(--z-index-submenu);
+    z-index: var(--z-submenu);
   }
 
   /* bottom menu */
@@ -424,11 +424,11 @@
     gap: 1px;
     border-top: 1px solid var(--ui-border-subtle);
     background: linear-gradient(to bottom,
-        var(--ui-surface-subtle) 20%,
-        var(--ui-bg-muted) 40%,
-        var(--ui-surface-muted) 50%,
-        var(--ui-bg-muted) 60%,
-        var(--ui-surface-subtle) 80%);
+        var(--ui-bg-subtle) 20%,
+        var(--ui-border) 40%,
+        var(--ui-outline) 50%,
+        var(--ui-border) 60%,
+        var(--ui-bg-subtle) 80%);
     font-size: var(--font-size-md);
   }
 
@@ -444,11 +444,11 @@
     width: 100%;
     text-align: center;
     text-decoration: none;
-    height: var(--el-height-xl);
+    height: var(--el-height-2xl);
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: calc(var(--space) * 1);
+    gap: var(--space);
     color: var(--ui-fg);
     padding: calc(var(--space) * 1.5);
   }
@@ -475,9 +475,9 @@
     visibility: hidden;
     background: linear-gradient(to right,
         var(--ui-surface-subtle) 20%,
-        var(--ui-bg-muted) 40%,
-        var(--ui-surface-muted) 50%,
-        var(--ui-bg-muted) 60%,
+        var(--ui-border) 40%,
+        var(--ui-outline) 50%,
+        var(--ui-border) 60%,
         var(--ui-surface-subtle) 80%);
     border: 1px solid var(--ui-border-subtle);
     display: flex;
@@ -485,8 +485,8 @@
     align-items: center;
     justify-content: center;
     gap: 1px;
-    min-width: calc(var(--space) * 30);
-    max-width: calc(var(--space) * 76);
+    min-width: var(--columns-6xs);
+    max-width: var(--columns-2xs);
     position: absolute;
     left: 50%;
     transform: translateX(-50%);
@@ -507,14 +507,14 @@
   }
 
   .j-bottom-menu .menu .menu-item.menu-item-has-children>.sub-menu>.menu-item>a {
-    padding: calc(var(--space) * 1.5) calc(var(--space) * 3);
+    padding: calc(var(--space) * 1.5) var(--s3);
   }
 
   /* drop menu  */
   .drop-menu {
     min-width: 100px;
     max-width: 200px;
-    padding: calc(var(--space) * 2);
+    padding: var(--s2);
     font-size: var(--font-size-md);
     background-color: var(--ui-surface-subtle);
     border-radius: var(--radius-sm);
@@ -532,9 +532,9 @@
   .drop-menu .menu-item a {
     display: flex;
     align-items: center;
-    gap: var(--drop-menu-item-gap, calc(var(--space) * 2));
+    gap: var(--drop-menu-item-gap, var(--s2));
     width: 100%;
-    padding: calc(var(--space) * 1) calc(var(--space) * 2);
+    padding: var(--space) var(--s2);
     text-decoration: none;
     color: var(--ui-fg-muted);
     border-radius: var(--radius-md);
@@ -552,12 +552,12 @@
 
   .drop-menu .el-icon,
   .drop-menu svg {
-    width: var(--drop-menu-icon-size, calc(var(--space) * 4));
-    height: var(--drop-menu-icon-size, calc(var(--space) * 4));
+    width: var(--drop-menu-icon-size, var(--s4));
+    height: var(--drop-menu-icon-size, var(--s4));
   }
 
   .drop-menu .menu-item.menu-heading {
-    padding: var(--menu-item-heading, calc(var(--space) * 1) calc(var(--space) * 2));
+    padding: var(--menu-item-heading, var(--space) var(--s2));
     color: var(--ui-fg-soft);
     font-size: var(--font-size-sm);
   }

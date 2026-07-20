@@ -7,7 +7,7 @@
     height: 100%;
     background-color: var(--offcanvas-overlay-background,
         var(--ui-overlay-muted));
-    z-index: var(--z-index-overlay);
+    z-index: var(--z-overlay);
     opacity: 0;
     transition: opacity 0.3s ease;
   }
@@ -18,7 +18,7 @@
 
   .j-offcanvas {
     position: fixed;
-    z-index: var(--z-index-offcanvas);
+    z-index: var(--z-offcanvas);
     background: var(--offcanvas-background, var(--ui-bg));
     box-shadow: var(--offcanvas-box-shadow, var(--shadow-md));
     --offcanvas-border: 1px solid var(--ui-border-subtle);

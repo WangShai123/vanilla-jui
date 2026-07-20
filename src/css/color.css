@@ -43,10 +43,6 @@
 		--gray-a11: #0002119d;
 		--gray-a12: #000107e1;
 
-		--gray-contrast: #ffffff;
-		--gray-surface: #ffffffcc;
-		--gray-indicator: #8b8d98;
-		--gray-track: #8b8d98;
 
 		/* olive */
 		--olive-1: #fcfdfc;
@@ -209,36 +205,31 @@
 		--violet-track: #6e56cf;
 
 		/* indigo */
-		--indigo-1: #fdfdfe;
-		--indigo-2: #f7f9ff;
-		--indigo-3: #edf2fe;
-		--indigo-4: #dfeaff;
-		--indigo-5: #d0dfff;
-		--indigo-6: #bdd1ff;
-		--indigo-7: #a7bff9;
-		--indigo-8: #88a5ef;
-		--indigo-9: #3e63dd;
-		--indigo-10: #3657c3;
-		--indigo-11: #3a5bc7;
-		--indigo-12: #1d2d5c;
+		--indigo-1: #FDFDFF;
+		--indigo-2: #F7F8FF;
+		--indigo-3: #EFF1FF;
+		--indigo-4: #E3E8FF;
+		--indigo-5: #D5DDFF;
+		--indigo-6: #C5CEFF;
+		--indigo-7: #B0BBFF;
+		--indigo-8: #939FF8;
+		--indigo-9: #6366F1;
+		--indigo-10: #585BDA;
+		--indigo-11: #5051D0;
+		--indigo-12: #262866;
 
-		--indigo-a1: #00008002;
-		--indigo-a2: #0040ff08;
-		--indigo-a3: #0047f112;
-		--indigo-a4: #0058ff20;
-		--indigo-a5: #0052ff2f;
-		--indigo-a6: #004eff42;
-		--indigo-a7: #0046ee58;
-		--indigo-a8: #003fdd77;
-		--indigo-a9: #0031d2c1;
-		--indigo-a10: #002ab3c9;
-		--indigo-a11: #002bb7c5;
-		--indigo-a12: #001247e2;
-
-		--indigo-contrast: #fff;
-		--indigo-surface: #f5f8ffcc;
-		--indigo-indicator: #3e63dd;
-		--indigo-track: #3e63dd;
+		--indigo-a1: #0000FF02;
+		--indigo-a2: #0020FF08;
+		--indigo-a3: #0020FF10;
+		--indigo-a4: #002EFF1C;
+		--indigo-a5: #0031FF2A;
+		--indigo-a6: #0028FF3A;
+		--indigo-a7: #0024FF4F;
+		--indigo-a8: #001DEF6C;
+		--indigo-a9: #0005E89C;
+		--indigo-a10: #0005C7A7;
+		--indigo-a11: #0002BBAF;
+		--indigo-a12: #00024BD9;
 
 		/* blue */
 		--blue-1: #fbfdff;
@@ -790,36 +781,32 @@
 		--violet-track: #6e56cf;
 
 		/* indigo */
-		--indigo-1: #0c111c;
-		--indigo-2: #111725;
-		--indigo-3: #172448;
-		--indigo-4: #1d2e61;
-		--indigo-5: #253974;
-		--indigo-6: #2e4484;
-		--indigo-7: #375097;
-		--indigo-8: #415eb1;
-		--indigo-9: #3e63dd;
-		--indigo-10: #3f5cb0;
-		--indigo-11: #93b4ff;
-		--indigo-12: #d5e2ff;
+		--indigo-1: #0E101A;
+		--indigo-2: #141723;
+		--indigo-3: #1E2443;
+		--indigo-4: #272E5A;
+		--indigo-5: #30386B;
+		--indigo-6: #3A437A;
+		--indigo-7: #454F8D;
+		--indigo-8: #515DA5;
+		--indigo-9: #A5B4FC;
+		--indigo-10: #9BA9F0;
+		--indigo-11: #A3B1F9;
+		--indigo-12: #DAE0FA;
 
-		--indigo-a1: #0012fb0c;
-		--indigo-a2: #1156f916;
-		--indigo-a3: #2b64ff3b;
-		--indigo-a4: #3567ff56;
-		--indigo-a5: #4171fd6b;
-		--indigo-a6: #4d7afd7c;
-		--indigo-a7: #5581ff90;
-		--indigo-a8: #5883feac;
-		--indigo-a9: #4671ffdb;
-		--indigo-a10: #5580feab;
-		--indigo-a11: #93b4ff;
-		--indigo-a12: #d5e2ff;
+		--indigo-a1: #0000F70A;
+		--indigo-a2: #385EF714;
+		--indigo-a3: #4F6BFE36;
+		--indigo-a4: #586FFD4F;
+		--indigo-a5: #6277FD61;
+		--indigo-a6: #6E82FE71;
+		--indigo-a7: #7588FF85;
+		--indigo-a8: #788BFF9F;
+		--indigo-a9: #A7B6FFFC;
+		--indigo-a10: #A4B3FFEF;
+		--indigo-a11: #A7B5FFF9;
+		--indigo-a12: #DEE4FFFA;
 
-		--indigo-contrast: #fff;
-		--indigo-surface: #111d3980;
-		--indigo-indicator: #3e63dd;
-		--indigo-track: #3e63dd;
 
 		/* blue */
 		--blue-1: #08121c;

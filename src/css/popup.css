@@ -8,8 +8,8 @@
     background-color: var(--popup-background, var(--ui-popup-background));
     backdrop-filter: var(--popup-backdrop-filter, blur(4px));
     display: flex;
-    padding: var(--popup-layout-padding, calc(var(--space) * 4));
-    z-index: var(--z-index-popup);
+    padding: var(--popup-layout-padding, var(--s4));
+    z-index: var(--z-popup);
   }
 
   .j-popup-layout,

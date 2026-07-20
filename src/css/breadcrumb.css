@@ -74,7 +74,7 @@
     justify-content: center;
     gap: var(--space);
     color: var(--breadcrumb-link-color, var(--tone-text));
-    padding: var(--breadcrumb-item-padding-vertical, 0) var(--breadcrumb-item-padding-horizontal, calc(var(--space) * 2));
+    padding: var(--breadcrumb-item-padding-vertical, 0) var(--breadcrumb-item-padding-horizontal, var(--s2));
     text-decoration: none;
   }
 

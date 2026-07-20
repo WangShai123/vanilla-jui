@@ -449,7 +449,7 @@
   /* Grid 容器：自动 gap + 响应式列 */
   .grid-container {
     display: grid;
-    gap: var(--grid-container-gap, calc(var(--space) * 2));
+    gap: var(--grid-container-gap, var(--s2));
     width: 100%;
     /* 默认：单列（移动端友好） */
     grid-template-columns: 1fr;

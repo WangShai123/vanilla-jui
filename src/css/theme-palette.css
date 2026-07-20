@@ -1,22 +1,22 @@
 @layer components {
   .j-theme-palette {
-    padding: var(--palette-padding, calc(var(--space) * 4));
+    padding: var(--palette-padding, var(--s4));
   }
 
   .j-theme-palette>h3 {
-    margin: var(--palette-title-margin, calc(var(--space) * 2) 0);
+    margin: var(--palette-title-margin, var(--s2) 0);
   }
 
   .j-theme-palette .palette-container {
     display: flex;
     flex-direction: column;
-    gap: var(--palette-container-gap, calc(var(--space) * 4));
+    gap: var(--palette-container-gap, var(--s4));
   }
 
   .j-theme-palette .palette-container .palette-item {
     display: flex;
     flex-direction: column;
-    gap: var(--palette-item-gap, calc(var(--space) * 2));
+    gap: var(--palette-item-gap, var(--s2));
   }
 
   .j-theme-palette .palette-container .palette-item .item-title {
@@ -33,8 +33,8 @@
   }
 
   .j-theme-palette .palette-container .palette-item .items>button {
-    padding-left: calc(var(--space) * 2);
-    padding-right: calc(var(--space) * 2);
+    padding-left: var(--s2);
+    padding-right: var(--s2);
     min-width: 0;
     overflow: hidden;
   }

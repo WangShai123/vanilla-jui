@@ -5,20 +5,19 @@
     align-items: center;
     gap: var(--tag-gap, var(--space));
     padding: 0 var(--tag-padding, calc(var(--space) * 1.5));
-    height: var(--tag-height, calc(var(--space) * 6));
+    height: var(--tag-height, var(--el-height-xs));
     line-height: var(--tag-line-height, var(--line-height-self));
     font-size: var(--tag-font-size, var(--font-size-sm));
     font-weight: var(--font-normal);
     border-radius: var(--tag-radius, var(--radius-md));
     border: 1px solid var(--tag-border-color, var(--ui-border));
     color: var(--tag-foreground, var(--ui-fg));
-    background-color: var(--tag-background, var(--ui-bg));
+    background: var(--tag-background, var(--ui-bg));
     box-shadow: var(--tag-box-shadow, var(--shadow-sm));
   }
 
   .j-font-md .j-tag {
-    --tag-padding: calc(var(--space) * 2);
-    --tag-height: calc(var(--space) * 8);
+    --tag-padding: var(--s2);
   }
 
   .j-tag.is-contrast {

@@ -21,6 +21,19 @@
         background-color: var(--ui-bg);
     }
 
+    .bg-gradient-auto {
+        background:
+            radial-gradient(circle at 16% 16%,
+                color-mix(in srgb, var(--tone-solid) 30%, transparent),
+                transparent 34%),
+            radial-gradient(circle at 84% 0%,
+                color-mix(in srgb, var(--tone-tint) 24%, transparent),
+                transparent 30%),
+            linear-gradient(135deg,
+                color-mix(in srgb, var(--ui-bg) 78%, var(--ui-surface-raised)),
+                color-mix(in srgb, var(--ui-surface-raised) 86%, var(--tone-subtle)));
+    }
+
     .bg-gradient-sunrise {
         background:
             radial-gradient(circle at 16% 16%,
@@ -56,7 +69,7 @@
                 color-mix(in srgb, var(--ui-blue) 22%, transparent),
                 transparent 28%),
             linear-gradient(135deg,
-                color-mix(in srgb, var(--ui-bg) 76%, var(--ui-blue-light)),
+                color-mix(in srgb, var(--ui-bg) 76%, var(--ui-blue-tint)),
                 color-mix(in srgb, var(--ui-surface-raised) 84%, var(--ui-teal-subtle, var(--state-info-subtle))));
     }
 
@@ -70,7 +83,7 @@
                 transparent 30%),
             linear-gradient(135deg,
                 color-mix(in srgb, var(--ui-bg) 80%, var(--state-success-subtle)),
-                color-mix(in srgb, var(--ui-surface-raised) 84%, var(--ui-mint-light)));
+                color-mix(in srgb, var(--ui-surface-raised) 84%, var(--ui-mint-tint)));
     }
 
     .bg-gradient-ember {
@@ -109,7 +122,7 @@
                 transparent 28%),
             linear-gradient(135deg,
                 color-mix(in srgb, var(--ui-bg) 80%, var(--ui-gold-surface, var(--state-warning-subtle))),
-                color-mix(in srgb, var(--ui-surface-raised) 86%, var(--ui-gold-light)));
+                color-mix(in srgb, var(--ui-surface-raised) 86%, var(--ui-gold-tint)));
     }
 
     .bg-gradient-forest {
@@ -121,7 +134,7 @@
                 color-mix(in srgb, var(--state-success) 18%, transparent),
                 transparent 30%),
             linear-gradient(135deg,
-                color-mix(in srgb, var(--ui-bg) 80%, var(--ui-olive-light)),
+                color-mix(in srgb, var(--ui-bg) 80%, var(--ui-olive-tint)),
                 color-mix(in srgb, var(--ui-surface-raised) 86%, var(--state-success-subtle)));
     }
 

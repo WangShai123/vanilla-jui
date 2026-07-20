@@ -8,16 +8,16 @@
 
   .j-form.is-vertical {
     flex-direction: column;
-    gap: var(--form-gap-vertical, calc(var(--space) * 2));
+    gap: var(--form-gap-vertical, var(--s2));
   }
 
   .j-form.is-horizontal {
     flex-direction: row;
-    gap: var(--form-gap-horizontal, calc(var(--space) * 2));
+    gap: var(--form-gap-horizontal, var(--s2));
   }
 
   .j-form .form-item {
-    gap: var(--form-label-gap, calc(var(--space) * 1));
+    gap: var(--form-label-gap, var(--space));
     margin: 0;
   }
 
@@ -36,7 +36,7 @@
 
   .j-form .form-item .item-label,
   .j-form .form-item .form-control {
-    gap: var(--form-label-gap, calc(var(--space) * 1));
+    gap: var(--form-label-gap, var(--space));
   }
 
   .j-form.is-horizontal .form-item .item-label {
@@ -67,14 +67,14 @@
 
   .j-form .form-buttons {
     display: flex;
-    gap: var(--form-buttons-gap, calc(var(--space) * 2));
+    gap: var(--form-buttons-gap, var(--s2));
     margin: 0;
   }
 
   /* input */
   .j-input:not([type='checkbox']) {
     display: block;
-    padding: var(--input-padding, calc(var(--space) * 1.5) calc(var(--space) * 2));
+    padding: var(--input-padding, calc(var(--space) * 1.5) var(--s2));
     border-width: var(--input-border-width, 1px);
     border-style: var(--input-border-style, solid);
     border-color: var(--input-border-color, var(--ui-input-border));
@@ -121,8 +121,8 @@
     border-inline-end-width: 1px;
     border-radius: 0;
     margin: calc(var(--space) * -2);
-    margin-inline-end: calc(var(--space) * 2);
-    padding: calc(var(--space) * 2);
+    margin-inline-end: var(--s2);
+    padding: var(--s2);
     border-color: var(--input-border-color, var(--ui-input-border));
     background-color: var(--ui-surface-subtle);
     font-size: var(--font-size-sm, 0.75rem);
@@ -194,19 +194,19 @@
 
   .j-radio.is-vertical {
     flex-direction: column;
-    /* --radio-gap: calc(var(--space) * 3); */
+    /* --radio-gap: var(--s3); */
   }
 
   .j-radio,
   .j-radio.is-horizontal {
     flex-direction: row;
-    /* --radio-gap: calc(var(--space) * 4); */
+    /* --radio-gap: var(--s4); */
   }
 
   .j-radio label {
     display: flex;
     align-items: center;
-    gap: var(--radio-label-gap, calc(var(--space) * 2));
+    gap: var(--radio-label-gap, var(--s2));
     font-size: var(--font-size-md);
     padding: calc(var(--space)*2);
     border-radius: var(--radius-md);
@@ -287,7 +287,7 @@
   .j-radio.is-group label span.radio-text {
     cursor: pointer;
     background-color: var(--ui-bg);
-    padding: var(--radio-group-padding, calc(var(--space) * 1.5) calc(var(--space) * 3));
+    padding: var(--radio-group-padding, calc(var(--space) * 1.5) var(--s3));
     height: var(--el-height-md);
     line-height: var(--line-height);
     position: relative;
@@ -323,7 +323,7 @@
   }
 
   .j-radio.is-group.is-sm label span.radio-text {
-    --radio-group-padding: calc(var(--space) * 1) calc(var(--space) * 2);
+    --radio-group-padding: var(--space) var(--s2);
     height: var(--el-height-sm);
   }
 
@@ -337,7 +337,7 @@
   }
 
   .j-radio.is-group.is-lg label span.radio-text {
-    --radio-group-padding: calc(var(--space) * 3) calc(var(--space) * 4);
+    --radio-group-padding: var(--s3) var(--s4);
     height: var(--el-height-lg);
   }
 
@@ -351,19 +351,19 @@
 
   .j-checkbox.is-vertical {
     flex-direction: column;
-    /* --checkbox-gap: calc(var(--space) * 3); */
+    /* --checkbox-gap: var(--s3); */
   }
 
   .j-checkbox,
   .j-checkbox.is-horizontal {
     flex-direction: row;
-    /* --checkbox-gap: calc(var(--space) * 4); */
+    /* --checkbox-gap: var(--s4); */
   }
 
   .j-checkbox label {
     display: flex;
     align-items: center;
-    gap: var(--checkbox-label-gap, calc(var(--space) * 2));
+    gap: var(--checkbox-label-gap, var(--s2));
     font-size: var(--checkbox-label-font-size, var(--font-size-md));
     height: var(--el-height-md);
     padding: calc(var(--space)*2);
@@ -611,13 +611,13 @@
 
   select.j-select.is-sm {
     --input-height: var(--el-height-sm);
-    --input-padding: calc(var(--space) * 1) calc(var(--space) * 1);
+    --input-padding: var(--space) var(--space);
     --input-font-size: var(--font-size-sm);
   }
 
   select.j-select.is-lg {
     --input-height: var(--el-height-lg);
-    --input-padding: calc(var(--space) * 2) calc(var(--space) * 2);
+    --input-padding: var(--s2) var(--s2);
     --input-font-size: var(--font-size-lg);
   }
 
@@ -633,7 +633,7 @@
     background-color: var(--input-background-color, var(--ui-bg));
     color: var(--input-color, var(--ui-input-color));
     resize: vertical;
-    padding: var(--textarea-padding, calc(var(--space) * 2));
+    padding: var(--textarea-padding, var(--s2));
     font-family: inherit;
     font-size: var(--textarea-font-size, var(--font-size-md));
     line-height: var(--textarea-line-height, var(--line-height));

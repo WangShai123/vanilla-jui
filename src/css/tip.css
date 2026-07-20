@@ -20,7 +20,7 @@
 
   .j-tip:has(.tip-icon) {
     column-gap: calc(var(--space, 0.25rem) * 3);
-    grid-template-columns: calc(var(--space) * 4) 1fr;
+    grid-template-columns: var(--s4) 1fr;
   }
 
   .j-font-md .j-tip:has(.tip-icon) {
