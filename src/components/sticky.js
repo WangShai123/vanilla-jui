@@ -1,12 +1,12 @@
 import { createDeepStore } from 'vanilla-signal';
 
-import Component from '../core/Component.js';
-import { resolveProps } from '../utilities/core.js';
+import Component from '../core/Component.ts';
+import { resolveProps } from '../utilities/core.ts';
 import {
   isElement,
   requireContainer,
   requireRenderDOM,
-} from '../utilities/dom.js';
+} from '../utilities/dom.ts';
 
 const STICKY_PROPS_SCHEMA = {
   target: { default: null },

@@ -8,15 +8,15 @@ import {
   jsx,
 } from 'vanilla-signal';
 
-import Component from '../core/Component.js';
-import { randomId, resolveProps, validateParam } from '../utilities/core.js';
+import Component from '../core/Component.ts';
+import { randomId, resolveProps, validateParam } from '../utilities/core.ts';
 import {
   isRenderableContent,
   normalizeContentNodes,
   requireContainer,
   requireRenderDOM,
-} from '../utilities/dom.js';
-import { icon } from './icons.js';
+} from '../utilities/dom.ts';
+import { icon } from './icons.ts';
 
 const ACCORDION_PROPS_SCHEMA = {
   id: {

@@ -1,13 +1,13 @@
 import { createDeepStore, flushSync, jsx } from 'vanilla-signal';
 
-import Component from '../core/Component.js';
-import { randomId, resolveProps, timer } from '../utilities/core.js';
+import Component from '../core/Component.ts';
+import { randomId, resolveProps, timer } from '../utilities/core.ts';
 import {
   createLoading,
   isRenderableContent,
   normalizeContentNodes,
   requireRenderDOM,
-} from '../utilities/dom.js';
+} from '../utilities/dom.ts';
 
 const OFFCANVAS_PROPS_SCHEMA = {
   content: {

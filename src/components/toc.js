@@ -1,8 +1,8 @@
 import { createDeepStore, jsx } from 'vanilla-signal';
 
-import Component from '../core/Component.js';
-import { randomId, resolveProps } from '../utilities/core.js';
-import { requireContainer, requireRenderDOM } from '../utilities/dom.js';
+import Component from '../core/Component.ts';
+import { randomId, resolveProps } from '../utilities/core.ts';
+import { requireContainer, requireRenderDOM } from '../utilities/dom.ts';
 
 const TOC_PROPS_SCHEMA = {
   container: { default: null },

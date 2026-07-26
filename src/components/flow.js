@@ -12,8 +12,8 @@ import {
   randomId,
   resolveProps,
   validateParam,
-} from '../utilities/core.js';
-import { requireRenderDOM, resolveElement } from '../utilities/dom.js';
+} from '../utilities/core.ts';
+import { requireRenderDOM, resolveElement } from '../utilities/dom.ts';
 
 function isFlowRenderContent(content) {
   return (

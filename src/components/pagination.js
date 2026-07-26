@@ -7,10 +7,10 @@ import {
   jsx,
 } from 'vanilla-signal';
 
-import Component from '../core/Component.js';
-import { resolveProps, validateParam } from '../utilities/core.js';
-import { requireContainer, requireRenderDOM } from '../utilities/dom.js';
-import { icon } from './icons.js';
+import Component from '../core/Component.ts';
+import { resolveProps, validateParam } from '../utilities/core.ts';
+import { requireContainer, requireRenderDOM } from '../utilities/dom.ts';
+import { icon } from './icons.ts';
 
 const PAGE_RULE = {
   type: 'object',

@@ -9,14 +9,14 @@ import {
   untrack,
 } from 'vanilla-signal';
 
-import Component from '../core/Component.js';
+import Component from '../core/Component.ts';
 import {
   hasOwn,
   isPlainObject,
   randomId,
   resolveProps,
   validateParam,
-} from '../utilities/core.js';
+} from '../utilities/core.ts';
 import {
   all,
   q,
@@ -25,9 +25,9 @@ import {
   createLoading,
   isNode,
   requireRenderDOM,
-} from '../utilities/dom.js';
+} from '../utilities/dom.ts';
 import { Form } from './form.js';
-import { icon } from './icons.js';
+import { icon } from './icons.ts';
 
 const HIDE_DURATION = 300;
 

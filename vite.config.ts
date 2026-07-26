@@ -3,7 +3,7 @@ import { defineConfig } from 'vite-plus';
 export default defineConfig({
   pack: [
     {
-      entry: 'src/index.js',
+      entry: 'src/index.ts',
       outDir: 'dist',
       format: ['esm', 'umd'],
       globalName: 'jui',
@@ -11,8 +11,6 @@ export default defineConfig({
       platform: 'browser',
       minify: true,
       clean: true,
-      // dts: true,
-      // sourcemap: true,
       css: {
         minify: true,
       },
@@ -27,23 +25,15 @@ export default defineConfig({
           js: format === 'es' ? '.js' : '.js',
         };
       },
+      dts: true,
       exports: true,
+      sourcemap: false,
     },
   ],
 
   test: {
     include: ['tests/**/*.test.js'],
-    exclude: [
-      'tests/accordion.test.js',
-      'tests/config.test.js',
-      'tests/flow.test.js',
-      'tests/modal.test.js',
-      'tests/tabs.test.js',
-      'tests/toast.test.js',
-      'tests/swiper.test.js',
-      'tests/validator.test.js',
-      'tests/components/modal.test.js',
-    ],
+    exclude: [],
   },
 
   lint: {

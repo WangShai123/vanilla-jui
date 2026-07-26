@@ -1,9 +1,9 @@
 import { render, jsx } from 'vanilla-signal';
 
-import { randomId, resolveProps, validateParam } from '../utilities/core.js';
-import { q, requireRenderDOM, resolveElement } from '../utilities/dom.js';
-import { createEventManager } from '../utilities/events.js';
-import { icon } from './icons.js';
+import { randomId, resolveProps, validateParam } from '../utilities/core.ts';
+import { q, requireRenderDOM, resolveElement } from '../utilities/dom.ts';
+import { createEventManager } from '../utilities/events.ts';
+import { icon } from './icons.ts';
 
 const MENU_OPTIONS_SCHEMA = {
   type: { default: 'mobile', type: 'string' },

@@ -8,8 +8,8 @@ import {
   jsx,
 } from 'vanilla-signal';
 
-import Component from '../core/Component.js';
-import { randomId, resolveProps, validateParam } from '../utilities/core.js';
+import Component from '../core/Component.ts';
+import { randomId, resolveProps, validateParam } from '../utilities/core.ts';
 import {
   isRenderableContent,
   createLoading,
@@ -17,7 +17,7 @@ import {
   q,
   requireContainer,
   requireRenderDOM,
-} from '../utilities/dom.js';
+} from '../utilities/dom.ts';
 
 const TABS_PROPS_SCHEMA = {
   id: {

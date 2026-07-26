@@ -6,8 +6,8 @@ import {
   h,
 } from 'vanilla-signal';
 
-import Component from '../core/Component.js';
-import { resolveProps, validateParam } from '../utilities/core.js';
+import Component from '../core/Component.ts';
+import { resolveProps, validateParam } from '../utilities/core.ts';
 import {
   all,
   isElement,
@@ -16,8 +16,8 @@ import {
   q,
   requireContainer,
   requireRenderDOM,
-} from '../utilities/dom.js';
-import { icon } from './icons.js';
+} from '../utilities/dom.ts';
+import { icon } from './icons.ts';
 
 const SWIPE_THRESHOLD = 6;
 const AUTOPLAY_DELAY_FLOOR = 16;

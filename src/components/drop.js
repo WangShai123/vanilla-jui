@@ -1,14 +1,14 @@
 import { jsx } from 'vanilla-signal';
 
-import { randomId, resolveProps } from '../utilities/core.js';
+import { randomId, resolveProps } from '../utilities/core.ts';
 import {
   isNode,
   isRenderableContent,
   normalizeContentNodes,
   requireRenderDOM,
   resolveElement,
-} from '../utilities/dom.js';
-import { createEventManager } from '../utilities/events.js';
+} from '../utilities/dom.ts';
+import { createEventManager } from '../utilities/events.ts';
 
 const DROP_PROPS_SCHEMA = {
   name: { default: null, types: ['string', 'null'] },

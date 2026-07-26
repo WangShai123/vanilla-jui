@@ -7,20 +7,20 @@ import {
   render,
 } from 'vanilla-signal';
 
-import Component from '../core/Component.js';
+import Component from '../core/Component.ts';
 import {
   hasOwn,
   isPlainObject,
   randomId,
   resolveProps,
   validateParam,
-} from '../utilities/core.js';
+} from '../utilities/core.ts';
 import {
   isRenderableContent,
   normalizeContentNodes,
   requireContainer,
   requireRenderDOM,
-} from '../utilities/dom.js';
+} from '../utilities/dom.ts';
 import { Validator } from './validator.js';
 
 const DEFAULT_BUTTONS = [

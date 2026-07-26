@@ -1,7 +1,7 @@
 import { jsx } from 'vanilla-signal';
 
-import { resolveProps, timer } from '../utilities/core.js';
-import { isNode, requireRenderDOM, resolveElement } from '../utilities/dom.js';
+import { resolveProps, timer } from '../utilities/core.ts';
+import { isNode, requireRenderDOM, resolveElement } from '../utilities/dom.ts';
 
 const ELEMENT_REF_RULE = {
   validate: (value) =>

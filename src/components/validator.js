@@ -1,8 +1,8 @@
 import { jsx } from 'vanilla-signal';
 
-import { resolveProps, validateParam } from '../utilities/core.js';
-import { all, q, requireRenderDOM, resolveElement } from '../utilities/dom.js';
-import { createEventManager } from '../utilities/events.js';
+import { resolveProps, validateParam } from '../utilities/core.ts';
+import { all, q, requireRenderDOM, resolveElement } from '../utilities/dom.ts';
+import { createEventManager } from '../utilities/events.ts';
 
 const VALIDATOR_OPTIONS_SCHEMA = {
   rules: { default: {}, type: 'object' },

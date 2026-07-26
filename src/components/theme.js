@@ -1,10 +1,10 @@
 import { jsx } from 'vanilla-signal';
 import { t } from 'vanilla-signal-i18n';
 
-import locales from '../locales/index.js';
-import { all, requireRenderDOM } from '../utilities/dom.js';
-import { createEventManager } from '../utilities/events.js';
-import { getCookie, setCookie } from '../utilities/storage.js';
+import locales from '../locales/index.ts';
+import { all, requireRenderDOM } from '../utilities/dom.ts';
+import { createEventManager } from '../utilities/events.ts';
+import { getCookie, setCookie } from '../utilities/storage.ts';
 
 /**
  * @typedef {object} ThemeOptions
@@ -228,7 +228,7 @@ export class Theme {
         title: this._t('Radius'),
         type: 'radius',
         buttons: [
-          ['none', this._t('n')],
+          ['none', this._t('None')],
           ['sm', this._t('sm')],
           ['md', this._t('md')],
           ['lg', this._t('lg')],
@@ -240,7 +240,7 @@ export class Theme {
         title: this._t('Shadow'),
         type: 'shadow',
         buttons: [
-          ['none', this._t('n')],
+          ['none', this._t('None')],
           ['sm', this._t('sm')],
           ['md', this._t('md')],
           ['lg', this._t('lg')],

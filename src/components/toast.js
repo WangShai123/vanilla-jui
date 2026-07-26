@@ -1,9 +1,9 @@
 import { jsx } from 'vanilla-signal';
 
-import { randomId, timer, validateParam } from '../utilities/core.js';
-import { q, requireRenderDOM } from '../utilities/dom.js';
-import { listen } from '../utilities/events.js';
-import { icon } from './icons.js';
+import { randomId, timer, validateParam } from '../utilities/core.ts';
+import { q, requireRenderDOM } from '../utilities/dom.ts';
+import { listen } from '../utilities/events.ts';
+import { icon } from './icons.ts';
 
 const TOAST_TYPE_RULE = {
   type: 'string',

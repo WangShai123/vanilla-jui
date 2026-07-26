@@ -1,6 +1,6 @@
 import { jsx } from 'vanilla-signal';
 
-import { resolveProps } from '../utilities/core.js';
+import { resolveProps } from '../utilities/core.ts';
 import { Drop } from './drop.js';
 
 const TOOLTIP_OPTIONS_SCHEMA = {
