@@ -13,7 +13,7 @@ import { getCookie, setCookie } from '../utilities/storage.js';
  * @property {string} [radius="sm"] 圆角等级。
  * @property {string} [shadow="sm"] 阴影等级。
  * @property {string} [font="sm"] 字号等级。
- * @property {string} [key="jui-theme"] Cookie 存储 key。
+ * @property {string} [key="ui-theme"] Cookie 存储 key。
  */
 
 /**
@@ -33,7 +33,7 @@ import { getCookie, setCookie } from '../utilities/storage.js';
  *
  * ```html
  * <script>
- * (function(d,k){var m=d.cookie.match(new RegExp('(?:^|; )'+k+'=([^;]*)'));if(!m)return;try{var o=JSON.parse(m[1]),r=o.mode==='auto'?(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):o.mode,h=d.documentElement;h.classList.add(r||'dark','j-theme-'+(o.theme||'indigo'),'j-radius-'+(o.radius||'sm'),'j-shadow-'+(o.shadow||'sm'),'j-font-'+(o.font||'sm'));}catch(e){}})(document,'jui-theme');
+ * (function(d,k){var m=d.cookie.match(new RegExp('(?:^|; )'+k+'=([^;]*)'));if(!m)return;try{var o=JSON.parse(m[1]),r=o.mode==='auto'?(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):o.mode,h=d.documentElement;h.classList.add(r||'dark','j-theme-'+(o.theme||'indigo'),'j-radius-'+(o.radius||'sm'),'j-shadow-'+(o.shadow||'sm'),'j-font-'+(o.font||'sm'));}catch(e){}})(document,'ui-theme');
  * </script>
  * ```
  */
@@ -51,7 +51,7 @@ export class Theme {
       radius: 'sm',
       shadow: 'sm',
       font: 'sm',
-      key: 'jui-theme',
+      key: 'ui-theme',
       ...options,
     };
 

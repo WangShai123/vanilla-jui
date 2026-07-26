@@ -570,14 +570,6 @@ export class Modal extends Component {
     this.cache.baseStyle = element.getAttribute('style') || '';
   }
 
-  // normalizeIcon(element) {
-  //   if (!(element instanceof Element)) return;
-  //   const iconElement = q('.modal-close', element);
-  //   if (iconElement) {
-  //     iconElement.style.transform = `translateX(${iconElement.clientHeight / 3}px)`;
-  //   }
-  // }
-
   bindReactiveVisibility() {
     this.cleanup.visibility = createRoot((dispose) => {
       createEffect(() => {

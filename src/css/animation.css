@@ -1,4 +1,5 @@
 @layer animation {
+
   /* none */
   .animate-none {
     animation: none;
@@ -21,6 +22,7 @@
   }
 
   @keyframes animate-ping {
+
     75%,
     100% {
       transform: scale(2);
@@ -45,6 +47,7 @@
   }
 
   @keyframes animate-bounce {
+
     0%,
     100% {
       transform: translateY(-25%);
@@ -97,6 +100,7 @@
   }
 
   @keyframes animate-shake {
+
     0%,
     100% {
       transform: translateX(0);
@@ -172,6 +176,32 @@
 
     100% {
       transform: translateX(-100%);
+    }
+  }
+
+  /* reveal */
+  [data-reveal] {
+    opacity: 0;
+    transform: translateY(12px);
+    animation: reveal 0.62s ease forwards;
+  }
+
+  [data-reveal='2'] {
+    animation-delay: 0.08s;
+  }
+
+  [data-reveal='3'] {
+    animation-delay: 0.14s;
+  }
+
+  [data-reveal='4'] {
+    animation-delay: 0.2s;
+  }
+
+  @keyframes reveal {
+    to {
+      opacity: 1;
+      transform: translateY(0);
     }
   }
 }

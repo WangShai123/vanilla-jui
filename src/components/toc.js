@@ -1,4 +1,4 @@
-import { createDeepStore } from 'vanilla-signal';
+import { createDeepStore, jsx } from 'vanilla-signal';
 
 import Component from '../core/Component.js';
 import { randomId, resolveProps } from '../utilities/core.js';
@@ -16,6 +16,8 @@ const TOC_PROPS_SCHEMA = {
   },
   onUpdate: { default: null, types: ['function', 'null'] },
 };
+
+const ACTIVE_OFFSET_TOLERANCE = 1;
 
 function resolveHeadingLevel(element) {
   const match = /^H([1-6])$/.exec(element.tagName);
@@ -98,6 +100,9 @@ export class Toc extends Component {
     this.cleanup.events.on('scroll', window, 'scroll', () => this._onScroll(), {
       passive: true,
     });
+    this.cleanup.events.on('click', this.dom.list, 'click', (event) =>
+      this._onClick(event)
+    );
   }
 
   _onScroll() {
@@ -110,29 +115,65 @@ export class Toc extends Component {
     this.runtime.ticking = true;
   }
 
-  _buildLink(item) {
-    const link = document.createElement('a');
-    link.href = `#${item.id}`;
-    link.className = `toc-link is-level-${item.level}`;
-    link.textContent = item.text;
-    link.dataset.tocTarget = item.id;
+  _onClick(event) {
+    const link = event.target?.closest?.('[data-toc-index]');
+    if (!link || !this.dom.list?.contains(link)) return;
 
-    return link;
+    const index = Number(link.dataset.tocIndex);
+    const item = this.state.items[index];
+    if (!item) return;
+
+    event.preventDefault();
+    this._scrollToItem(item, { activeIndex: index, updateHash: true });
+  }
+
+  _scrollToItem(item, { activeIndex = -1, updateHash = false } = {}) {
+    if (!item?.element) return;
+
+    const scrollY = window.scrollY || window.pageYOffset || 0;
+    const top = Math.max(
+      0,
+      item.element.getBoundingClientRect().top + scrollY - this.props.offset
+    );
+
+    window.scrollTo({
+      top,
+      behavior: 'smooth',
+    });
+
+    if (activeIndex >= 0) this._setActive(activeIndex);
+
+    if (updateHash && window.history?.pushState) {
+      window.history.pushState(null, '', `#${item.id}`);
+    }
+  }
+
+  _buildLink(item, index) {
+    return jsx('a', {
+      className: `toc-link is-level-${item.level}`,
+      href: `#${item.id}`,
+      'data-toc-index': String(index),
+      'data-toc-target': item.id,
+      children: item.text,
+    });
   }
 
   _updateActive() {
     if (!this.runtime.built) return;
 
     let index = -1;
+    const activeOffset = this.props.offset + ACTIVE_OFFSET_TOLERANCE;
     for (let i = this.dom.headings.length - 1; i >= 0; i--) {
-      if (
-        this.dom.headings[i].getBoundingClientRect().top <= this.props.offset
-      ) {
+      if (this.dom.headings[i].getBoundingClientRect().top <= activeOffset) {
         index = i;
         break;
       }
     }
 
+    this._setActive(index);
+  }
+
+  _setActive(index) {
     if (index === this.state.current.index) return;
 
     const current = this.state.items[index] || null;
@@ -166,7 +207,7 @@ export class Toc extends Component {
       this.dom.target.querySelectorAll(this.props.headings)
     );
     const items = this.dom.headings.map(normalizeHeading);
-    this.dom.links = items.map((item) => this._buildLink(item));
+    this.dom.links = items.map((item, index) => this._buildLink(item, index));
 
     this.dom.list.innerHTML = '';
     for (const link of this.dom.links) this.dom.list.appendChild(link);
@@ -196,10 +237,7 @@ export class Toc extends Component {
       return this;
     }
 
-    this.dom.links[index].scrollIntoView({
-      behavior: 'smooth',
-      block: 'start',
-    });
+    this._scrollToItem(this.state.items[index]);
     return this;
   }
 

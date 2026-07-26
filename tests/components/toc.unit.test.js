@@ -9,9 +9,24 @@ const originalRequestAnimationFrame = global.requestAnimationFrame;
 
 class MockNode {}
 
+class MockTextNode extends MockNode {
+  constructor(text = '') {
+    super();
+    this.nodeType = 3;
+    this.data = String(text);
+    this.textContent = String(text);
+    this.parentNode = null;
+  }
+
+  contains(node) {
+    return node === this;
+  }
+}
+
 class MockElement extends MockNode {
   constructor(tagName = 'div', { matches = [], text = '', top = 0 } = {}) {
     super();
+    this.nodeType = 1;
     this.tagName = tagName.toUpperCase();
     this.children = [];
     this.parentNode = null;
@@ -22,6 +37,7 @@ class MockElement extends MockNode {
     this.textContent = text;
     this.matches = matches;
     this._top = top;
+    this._attributes = new Map();
     this._listeners = new Map();
     this.scrolled = false;
   }
@@ -81,6 +97,45 @@ class MockElement extends MockNode {
     this._listeners.delete(type);
   }
 
+  setAttribute(name, value) {
+    this._attributes.set(name, String(value));
+    if (name === 'class') this.className = String(value);
+    if (name === 'href') this.href = String(value);
+    if (name.startsWith('data-')) {
+      const key = name
+        .slice(5)
+        .replace(/-([a-z])/g, (_, char) => char.toUpperCase());
+      this.dataset[key] = String(value);
+    }
+  }
+
+  getAttribute(name) {
+    return this._attributes.get(name) || null;
+  }
+
+  removeAttribute(name) {
+    this._attributes.delete(name);
+  }
+
+  closest(selector) {
+    let node = this;
+    while (node) {
+      if (node._matchesSelector(selector)) return node;
+      node = node.parentNode;
+    }
+    return null;
+  }
+
+  _matchesSelector(selector) {
+    if (selector.startsWith('.')) {
+      return this.className?.split(/\s+/).includes(selector.slice(1));
+    }
+    if (selector.startsWith('[data-') && selector.endsWith(']')) {
+      return this.getAttribute(selector.slice(1, -1)) != null;
+    }
+    return this.tagName.toLowerCase() === selector.toLowerCase();
+  }
+
   getBoundingClientRect() {
     return { top: this._top };
   }
@@ -102,11 +157,22 @@ class MockElement extends MockNode {
 function createWindow() {
   return {
     listeners: new Map(),
+    scrollY: 0,
+    lastScrollTo: null,
+    history: {
+      lastUrl: null,
+      pushState(_state, _title, url) {
+        this.lastUrl = url;
+      },
+    },
     addEventListener(type, handler) {
       this.listeners.set(type, handler);
     },
     removeEventListener(type) {
       this.listeners.delete(type);
+    },
+    scrollTo(options) {
+      this.lastScrollTo = options;
     },
   };
 }
@@ -121,6 +187,9 @@ function createDocument(root) {
     },
     createElement(tag) {
       return new MockElement(tag);
+    },
+    createTextNode(text) {
+      return new MockTextNode(text);
     },
   };
 }
@@ -142,7 +211,7 @@ describe('Toc', () => {
     global.document = createDocument(root);
     global.requestAnimationFrame = (callback) => callback();
 
-    Toc = (await import('../../src/components/toc.js')).default;
+    Toc = (await import('../../src/components/toc.js')).Toc;
   });
 
   afterEach(() => {
@@ -217,18 +286,104 @@ describe('Toc', () => {
     expect(toc.state.items[1].text).toBe('More');
   });
 
-  it('activates a toc link by index', () => {
+  it('delegates link clicks and scrolls to the heading with offset', () => {
     const container = new MockElement('aside');
     const content = new MockElement('article');
-    const h2 = new MockElement('h2', { text: 'Intro', top: 20 });
+    const h2 = new MockElement('h2', { text: 'Intro', top: 180 });
     root.appendChild(container);
     root.appendChild(content);
     content.appendChild(h2);
 
-    const toc = new Toc({ container, target: content }).build();
+    const toc = new Toc({ container, target: content, offset: 80 }).build();
+    const child = new MockElement('span');
+    toc.dom.links[0].appendChild(child);
+    win.scrollY = 300;
+    const event = {
+      target: child,
+      preventDefault: vi.fn(),
+    };
+    toc.dom.list._listeners.get('click')(event);
+
+    expect(event.preventDefault).toHaveBeenCalledTimes(1);
+    expect(win.lastScrollTo).toEqual({ top: 400, behavior: 'smooth' });
+    expect(win.history.lastUrl).toBe(`#${h2.id}`);
+  });
+
+  it('sets the clicked link active immediately', () => {
+    const container = new MockElement('aside');
+    const content = new MockElement('article');
+    const h2 = new MockElement('h2', { text: 'Intro', top: 20 });
+    const h3 = new MockElement('h3', { text: 'Usage', top: 60 });
+    const h4 = new MockElement('h3', { text: 'API', top: 180 });
+    root.appendChild(container);
+    root.appendChild(content);
+    content.appendChild(h2);
+    content.appendChild(h3);
+    content.appendChild(h4);
+
+    const toc = new Toc({ container, target: content, offset: 80 }).build();
+    const event = {
+      target: toc.dom.links[2],
+      preventDefault: vi.fn(),
+    };
+    toc.dom.list._listeners.get('click')(event);
+
+    expect(toc.state.current.index).toBe(2);
+    expect(toc.dom.links[1].className).toBe('toc-link is-level-3');
+    expect(toc.dom.links[2].className).toBe('toc-link is-level-3 is-active');
+  });
+
+  it('allows a small offset tolerance when updating active link', () => {
+    const container = new MockElement('aside');
+    const content = new MockElement('article');
+    const h2 = new MockElement('h2', { text: 'Intro', top: 20 });
+    const h3 = new MockElement('h3', { text: 'Usage', top: 80.5 });
+    root.appendChild(container);
+    root.appendChild(content);
+    content.appendChild(h2);
+    content.appendChild(h3);
+
+    const toc = new Toc({ container, target: content, offset: 80 }).build();
+
+    expect(toc.state.current.index).toBe(1);
+    expect(toc.dom.links[1].className).toBe('toc-link is-level-3 is-active');
+  });
+
+  it('keeps active link clicks aligned to the heading offset', () => {
+    const container = new MockElement('aside');
+    const content = new MockElement('article');
+    const h2 = new MockElement('h2', { text: 'Intro', top: 80 });
+    root.appendChild(container);
+    root.appendChild(content);
+    content.appendChild(h2);
+
+    const toc = new Toc({ container, target: content, offset: 80 }).build();
+    win.scrollY = 240;
+    const event = {
+      target: toc.dom.links[0],
+      preventDefault: vi.fn(),
+    };
+    toc.dom.list._listeners.get('click')(event);
+
+    expect(toc.state.current.index).toBe(0);
+    expect(event.preventDefault).toHaveBeenCalledTimes(1);
+    expect(win.lastScrollTo).toEqual({ top: 240, behavior: 'smooth' });
+    expect(win.history.lastUrl).toBe(`#${h2.id}`);
+  });
+
+  it('activates a heading by index', () => {
+    const container = new MockElement('aside');
+    const content = new MockElement('article');
+    const h2 = new MockElement('h2', { text: 'Intro', top: 120 });
+    root.appendChild(container);
+    root.appendChild(content);
+    content.appendChild(h2);
+
+    const toc = new Toc({ container, target: content, offset: 80 }).build();
+    win.scrollY = 100;
     toc.activate(0);
 
-    expect(toc.dom.links[0].scrolled).toBe(true);
+    expect(win.lastScrollTo).toEqual({ top: 140, behavior: 'smooth' });
   });
 
   it('clears container on destroy', () => {

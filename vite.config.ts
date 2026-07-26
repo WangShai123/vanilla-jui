@@ -11,6 +11,8 @@ export default defineConfig({
       platform: 'browser',
       minify: true,
       clean: true,
+      // dts: true,
+      // sourcemap: true,
       css: {
         minify: true,
       },

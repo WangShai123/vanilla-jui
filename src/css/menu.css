@@ -1,4 +1,4 @@
-@layer menu {
+@layer components {
   .j-menu {
     width: 100%;
     white-space: nowrap;
