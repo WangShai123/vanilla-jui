@@ -7,30 +7,154 @@ import {
   jsx,
 } from 'vanilla-signal';
 
-import Component from '../core/Component.ts';
-import { resolveProps, validateParam } from '../utilities/core.ts';
-import { requireContainer, requireRenderDOM } from '../utilities/dom.ts';
+import Component, {
+  type ComponentDOM,
+  type ComponentRuntime,
+} from '../core/Component.ts';
+import {
+  type ResolveSchema,
+  hasOwn,
+  resolveProps,
+  validateParam,
+} from '../utilities/core.ts';
+import {
+  type DOMReference,
+  q,
+  requireContainer,
+  requireRenderDOM,
+} from '../utilities/dom.ts';
 import { icon } from './icons.ts';
+
+export interface PaginationPage {
+  size: number;
+  current: number;
+}
+
+export interface PaginationCount {
+  sibling: number;
+  boundary: number;
+}
+
+export interface PaginationClassNames {
+  root: string;
+  list: string;
+  item: string;
+  more: string;
+  button: string;
+  buttonIcon: string;
+  buttonGhost: string;
+  active: string;
+  loading: string;
+}
+
+export type PaginationClassNameConfig = Partial<PaginationClassNames>;
+
+export interface PaginationProps extends Record<string, unknown> {
+  total?: number;
+  page?: Partial<PaginationPage>;
+  count?: Partial<PaginationCount>;
+  lock?: boolean;
+  onChange?:
+    | ((page: number, instance: Pagination) => void | Promise<unknown>)
+    | null;
+  className?: PaginationClassNameConfig;
+}
+
+interface ResolvedPaginationProps extends Record<string, unknown> {
+  total: number;
+  page: PaginationPage;
+  count: PaginationCount;
+  lock: boolean;
+  onChange: NonNullable<PaginationProps['onChange']> | null;
+  className: PaginationClassNames;
+}
+
+interface PaginationState extends Record<string, unknown> {
+  total: number;
+  page: PaginationPage;
+  count: PaginationCount;
+  pageCount: number;
+  locked: boolean;
+}
+
+interface PageItem {
+  type: 'page';
+  key: string;
+  page: number;
+}
+
+interface MoreItem {
+  type: 'more';
+  key: string;
+}
+
+type PaginationItem = PageItem | MoreItem;
+type PageAction = 'prev' | 'next';
+type Dispose = () => void;
+type EffectDispose = { dispose: () => void };
+
+interface PaginationDOM extends ComponentDOM {
+  root: HTMLElement | null;
+  container: Element | null;
+  list: HTMLElement | null;
+  prev: HTMLElement | null;
+  next: HTMLElement | null;
+  pageNodes: HTMLElement[];
+  items: PaginationItem[];
+}
+
+interface PaginationRuntime extends ComponentRuntime {
+  built: boolean;
+  itemsKey: string;
+  changeId: number;
+}
+
+interface PaginationCleanupExtras {
+  controls?: Dispose | null;
+  itemsEffect?: EffectDispose | null;
+}
+
+const DEFAULT_CLASS_NAMES: PaginationClassNames = {
+  root: 'j-pagination',
+  list: 'pagination',
+  item: 'item',
+  more: 'more',
+  button: 'j-button',
+  buttonIcon: 'is-icon',
+  buttonGhost: 'is-ghost',
+  active: 'is-active',
+  loading: 'animate-spin',
+};
 
 const PAGE_RULE = {
   type: 'object',
   required: true,
-  validate: (value) =>
-    Number.isInteger(value.size) &&
-    value.size > 0 &&
-    Number.isInteger(value.current) &&
-    value.current > 0,
+  validate: (value: unknown) => {
+    const page = value as Partial<PaginationPage>;
+    return (
+      !!page &&
+      Number.isInteger(page.size) &&
+      Number(page.size) > 0 &&
+      Number.isInteger(page.current) &&
+      Number(page.current) > 0
+    );
+  },
   message: 'expects { size, current } with positive integers.',
 };
 
 const COUNT_RULE = {
   type: 'object',
   required: true,
-  validate: (value) =>
-    Number.isInteger(value.sibling) &&
-    value.sibling >= 0 &&
-    Number.isInteger(value.boundary) &&
-    value.boundary >= 0,
+  validate: (value: unknown) => {
+    const count = value as Partial<PaginationCount>;
+    return (
+      !!count &&
+      Number.isInteger(count.sibling) &&
+      Number(count.sibling) >= 0 &&
+      Number.isInteger(count.boundary) &&
+      Number(count.boundary) >= 0
+    );
+  },
   message:
     'expects { sibling, boundary } with integers greater than or equal 0.',
 };
@@ -39,7 +163,7 @@ const PAGINATION_PROPS_SCHEMA = {
   total: {
     default: 0,
     type: 'number',
-    validate: (value) => Number.isFinite(value) && value >= 0,
+    validate: (value: unknown) => Number.isFinite(value) && Number(value) >= 0,
     message: 'expects a non-negative finite number.',
   },
   page: {
@@ -54,40 +178,53 @@ const PAGINATION_PROPS_SCHEMA = {
   },
   lock: { default: true, type: 'boolean' },
   onChange: { default: null, types: ['function', 'null'] },
-};
+  className: {
+    default: DEFAULT_CLASS_NAMES,
+    type: 'object',
+    normalize: (value: unknown) => ({
+      ...DEFAULT_CLASS_NAMES,
+      ...(value && typeof value === 'object' ? value : {}),
+    }),
+  },
+} satisfies ResolveSchema<PaginationProps>;
 
-function clamp(value, min, max) {
+function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max);
 }
 
-function normalizeProps(input = {}) {
+function normalizeProps(input: PaginationProps = {}): ResolvedPaginationProps {
   const props = resolveProps(
     input,
     PAGINATION_PROPS_SCHEMA,
     'Pagination.props'
-  );
+  ) as ResolvedPaginationProps;
   return {
     ...props,
     page: { ...props.page },
     count: { ...props.count },
+    className: { ...props.className },
   };
 }
 
-function createMoreItem(key) {
+function createMoreItem(key: string): MoreItem {
   return { type: 'more', key };
 }
 
-function createPageItem(page) {
+function createPageItem(page: number): PageItem {
   return { type: 'page', key: `page-${page}`, page };
 }
 
-function pageRange(start, end) {
-  const pages = [];
+function pageRange(start: number, end: number): number[] {
+  const pages: number[] = [];
   for (let page = start; page <= end; page++) pages.push(page);
   return pages;
 }
 
-function resolvePageItems(current, pageCount, count) {
+function resolvePageItems(
+  current: number,
+  pageCount: number,
+  count: PaginationCount
+): PaginationItem[] {
   if (pageCount <= 0) return [];
 
   const boundary = Math.max(0, count.boundary);
@@ -98,7 +235,7 @@ function resolvePageItems(current, pageCount, count) {
     return pageRange(1, pageCount).map(createPageItem);
   }
 
-  const pages = new Set();
+  const pages = new Set<number>();
 
   for (let page = 1; page <= Math.min(boundary, pageCount); page++) {
     pages.add(page);
@@ -121,7 +258,7 @@ function resolvePageItems(current, pageCount, count) {
   }
 
   const sorted = Array.from(pages).sort((a, b) => a - b);
-  const items = [];
+  const items: PaginationItem[] = [];
 
   for (const page of sorted) {
     const previous = items.at(-1);
@@ -144,11 +281,17 @@ function resolvePageItems(current, pageCount, count) {
  * 构造器只验证和保存配置；调用 build() 后才挂载 DOM 和绑定交互。
  */
 export class Pagination extends Component {
+  declare props: ResolvedPaginationProps;
+  declare state: PaginationState;
+  declare dom: PaginationDOM;
+  declare runtime: PaginationRuntime;
+  declare cleanup: Component['cleanup'] & PaginationCleanupExtras;
+
   /**
    * @param {Element|Node|string|Array} container 挂载容器。
    * @param {object} [input={}] 分页配置。
    */
-  constructor(container, input = {}) {
+  constructor(container: DOMReference, input: PaginationProps = {}) {
     requireRenderDOM('Pagination');
 
     const el = requireContainer(container, 'Pagination.container');
@@ -190,28 +333,32 @@ export class Pagination extends Component {
    * 构建分页 DOM 并绑定事件。
    * @returns {Pagination} 当前实例。
    */
-  build() {
+  build(): this {
     this._assertActive('build');
     if (this.runtime.built) return this;
 
     this.init(this.props);
     this.root = jsx('div', {
-      className: 'j-pagination',
+      className: this.props.className.root,
       role: 'navigation',
       'aria-label': 'Pagination',
+      'data-pagination': 'root',
       children: jsx('ul', {
-        className: 'pagination',
+        className: this.props.className.list,
+        'data-pagination-list': '',
         'aria-live': 'polite',
       }),
-    });
+    }) as HTMLElement;
 
-    this.dom.list = this.root.querySelector('.pagination');
+    this.dom.list = q<HTMLElement>('[data-pagination-list]', this.root);
     this.dom.prev = this._buildControlItem('prev');
     this.dom.next = this._buildControlItem('next');
-    this.dom.list.append(this.dom.prev, this.dom.next);
+    this.dom.list?.append(this.dom.prev, this.dom.next);
 
-    this.dom.container.textContent = '';
-    this.dom.container.appendChild(this.root);
+    const container = this.dom.container;
+    if (!container) return this;
+    container.textContent = '';
+    container.appendChild(this.root);
     this.runtime.built = true;
 
     this._bindControlState();
@@ -225,7 +372,7 @@ export class Pagination extends Component {
    * @param {number} page 新页码。
    * @returns {Pagination} 当前实例。
    */
-  go(page) {
+  go(page: number): this {
     this._assertActive('go');
     validateParam(
       'page',
@@ -256,7 +403,7 @@ export class Pagination extends Component {
     this.props.page.current = nextPage;
 
     if (typeof this.props.onChange === 'function') {
-      let result;
+      let result: void | Promise<unknown>;
       try {
         result = this.props.onChange(nextPage, this);
       } catch (error) {
@@ -292,7 +439,7 @@ export class Pagination extends Component {
    * @param {object} [newProps={}] 新配置，会与当前 props 合并。
    * @returns {Pagination} 当前实例。
    */
-  update(newProps = {}) {
+  update(newProps: PaginationProps = {}): this {
     this._assertActive('update');
     validateParam(
       'newProps',
@@ -303,10 +450,14 @@ export class Pagination extends Component {
 
     const props = normalizeProps({
       total: newProps.total ?? this.props.total,
-      lock: Object.hasOwn(newProps, 'lock') ? newProps.lock : this.props.lock,
-      onChange: Object.hasOwn(newProps, 'onChange')
+      lock: hasOwn(newProps, 'lock') ? newProps.lock : this.props.lock,
+      onChange: hasOwn(newProps, 'onChange')
         ? newProps.onChange
         : this.props.onChange,
+      className: {
+        ...this.props.className,
+        ...newProps.className,
+      },
       page: {
         ...this.props.page,
         ...newProps.page,
@@ -333,11 +484,11 @@ export class Pagination extends Component {
     return this;
   }
 
-  _getPageCount(total, size) {
+  _getPageCount(total: number, size: number): number {
     return Math.max(1, Math.ceil(total / size));
   }
 
-  _getPageItems() {
+  _getPageItems(): PaginationItem[] {
     return resolvePageItems(
       this.state.page.current,
       this.state.pageCount,
@@ -345,7 +496,7 @@ export class Pagination extends Component {
     );
   }
 
-  _getItemsKey() {
+  _getItemsKey(): string {
     return [
       this.state.page.current,
       this._isLocked() ? 'locked' : 'unlocked',
@@ -353,66 +504,84 @@ export class Pagination extends Component {
     ].join('|');
   }
 
-  _isLocked() {
+  _isLocked(): boolean {
     return this.props.lock && this.state.locked;
   }
 
-  _isPrevDisabled() {
+  _isPrevDisabled(): boolean {
     return this._isLocked() || this.state.page.current <= 1;
   }
 
-  _isNextDisabled() {
+  _isNextDisabled(): boolean {
     return this._isLocked() || this.state.page.current >= this.state.pageCount;
   }
 
-  _buildControlItem(type) {
+  _buttonClass(...extra: string[]): string {
+    const { button, buttonIcon, buttonGhost } = this.props.className;
+    return [button, buttonIcon, buttonGhost, ...extra]
+      .filter(Boolean)
+      .join(' ');
+  }
+
+  _buildControlItem(type: PageAction): HTMLElement {
     const item = jsx('li', {
-      className: 'item',
+      className: this.props.className.item,
+      'data-pagination-control': type,
       children: jsx('button', {
-        className: 'j-button is-icon is-ghost',
+        className: this._buttonClass(),
         type: 'button',
         'data-page-action': type,
         children: icon(type === 'prev' ? 'arrow-left' : 'arrow-right'),
       }),
-    });
+    }) as HTMLElement;
 
     return item;
   }
 
-  _buildPageItem(item) {
+  _buildPageItem(item: PaginationItem): HTMLElement {
     const disabled = this._isLocked();
 
     if (item.type === 'more') {
       return jsx('li', {
-        className: 'item more',
+        className: [this.props.className.item, this.props.className.more]
+          .filter(Boolean)
+          .join(' '),
+        'data-pagination-more': item.key,
         'aria-hidden': 'true',
         children: jsx('button', {
-          className: 'j-button is-icon is-ghost',
+          className: this._buttonClass(),
           type: 'button',
           disabled,
           children: icon('more'),
         }),
-      });
+      }) as HTMLElement;
     }
 
     return jsx('li', {
-      className: 'item',
+      className: this.props.className.item,
+      'data-pagination-item': String(item.page),
       children:
         item.page === this.state.page.current
           ? jsx('span', {
-              className: 'j-button is-icon is-active',
+              className: [
+                this.props.className.button,
+                this.props.className.buttonIcon,
+                this.props.className.active,
+              ]
+                .filter(Boolean)
+                .join(' '),
               'data-current-page': String(item.page),
               'aria-current': 'page',
               'aria-label': `Page ${item.page}, current page`,
               children: disabled
                 ? jsx('i', {
-                    className: 'animate-spin',
+                    className: this.props.className.loading,
                     children: icon('loader'),
                   })
                 : String(item.page),
             })
           : jsx('button', {
-              className: 'j-button is-icon is-ghost',
+              className: this._buttonClass(),
               type: 'button',
               'data-page': String(item.page),
               'aria-label': `Go to page ${item.page}`,
@@ -421,17 +590,20 @@ export class Pagination extends Component {
               tabindex: disabled ? '-1' : null,
               children: String(item.page),
             }),
-    });
+    }) as HTMLElement;
   }
 
-  _bindControlState() {
+  _bindControlState(): void {
     this.cleanup.controls?.();
     this.cleanup.controls = createRoot((dispose) => {
-      const prev = this.dom.prev?.querySelector('[data-page-action]');
-      const next = this.dom.next?.querySelector('[data-page-action]');
+      const prev = this.dom.prev
+        ? q<HTMLButtonElement>('[data-page-action]', this.dom.prev)
+        : null;
+      const next = this.dom.next
+        ? q<HTMLButtonElement>('[data-page-action]', this.dom.next)
+        : null;
 
       if (prev) {
-        // bindClass(prev, 'is-disabled', () => this._isPrevDisabled());
         bindAttr(prev, 'disabled', () => this._isPrevDisabled());
         bindAttr(prev, 'aria-disabled', () =>
           this._isPrevDisabled() ? 'true' : 'false'
@@ -443,7 +615,6 @@ export class Pagination extends Component {
       }
 
       if (next) {
-        // bindClass(next, 'is-disabled', () => this._isNextDisabled());
         bindAttr(next, 'disabled', () => this._isNextDisabled());
         bindAttr(next, 'aria-disabled', () =>
           this._isNextDisabled() ? 'true' : 'false'
@@ -458,7 +629,7 @@ export class Pagination extends Component {
     });
   }
 
-  _bindPageItems() {
+  _bindPageItems(): void {
     this.cleanup.itemsEffect?.dispose();
     this.cleanup.itemsEffect = createEffect(() => {
       const nextKey = this._getItemsKey();
@@ -469,8 +640,9 @@ export class Pagination extends Component {
     });
   }
 
-  _renderPageItems() {
+  _renderPageItems(): void {
     this.dom.items = [];
+    if (!this.dom.list || !this.dom.next) return;
 
     const items = this._getPageItems();
     const nodes = items.map((item) => this._buildPageItem(item));
@@ -480,10 +652,17 @@ export class Pagination extends Component {
     for (const node of nodes) this.dom.list.insertBefore(node, this.dom.next);
   }
 
-  _bindEvents() {
-    this.cleanup.events.on('click', this.root, 'click', (event) => {
-      const target = event.target.closest('[data-page], [data-page-action]');
-      if (!target || !this.root.contains(target)) return;
+  _bindEvents(): void {
+    const root = this.root;
+    if (!root) return;
+    this.cleanup.events.on('click', root, 'click', (event) => {
+      const source = event.target;
+      if (!(source instanceof Element)) return;
+
+      const target = source.closest<HTMLElement>(
+        '[data-page], [data-page-action]'
+      );
+      if (!target || !root.contains(target)) return;
 
       event.preventDefault();
 
@@ -504,13 +683,13 @@ export class Pagination extends Component {
     });
   }
 
-  _assertActive(method) {
+  _assertActive(method: string): void {
     if (this.runtime.destroyed) {
       throw new Error(`Pagination.${method}: instance has been destroyed.`);
     }
   }
 
-  onDestroy() {
+  protected onDestroy(): void {
     this.cleanup.events.clear();
     this.cleanup.controls?.();
     this.cleanup.itemsEffect?.dispose();
@@ -531,6 +710,9 @@ export class Pagination extends Component {
   }
 }
 
-export function createPagination(container, props = {}) {
+export function createPagination(
+  container: DOMReference,
+  props: PaginationProps = {}
+): Pagination {
   return new Pagination(container, props);
 }

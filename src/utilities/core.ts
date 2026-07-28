@@ -45,10 +45,11 @@ export type ResolvedProps<TSchema extends object> = LooseRecord & {
 };
 
 /**
- * 判断对象是否包含指定属性。
- * @param {object} obj - 待检查的对象。
- * @param {string} key - 属性名。
- * @returns {boolean} - 如果对象包含指定属性，则返回 true；否则返回 false。
+ * 判断对象是否包含指定的自有属性。
+ * @template T - 对象类型
+ * @param obj - 待检查的对象
+ * @param key - 属性名
+ * @returns 如果对象包含指定自有属性则返回 true，否则返回 false
  */
 export const hasOwn = <T extends object>(
   obj: T,
@@ -56,9 +57,10 @@ export const hasOwn = <T extends object>(
 ): key is keyof T => Object.prototype.hasOwnProperty.call(obj, key);
 
 /**
- * 创建一个去重后的数组，并移除“假值”（如 null、undefined、false、0、NaN、空字符串）。
- * @param {Array} list - 待去重的数组。
- * @returns {Array} - 去重后的数组。
+ * 创建去重后的数组，并移除假值（null、undefined、false、0、NaN、空字符串）。
+ * @template T - 数组元素类型
+ * @param list - 待去重的数组
+ * @returns 去重后的新数组
  */
 export const uniq = <T>(list: readonly T[]): T[] =>
   Array.from(new Set(list.filter(Boolean)));
@@ -104,8 +106,9 @@ export const timer = {
 
 /**
  * 获取值的增强类型名称。
- * @param {*} val 需要判断类型的值。
- * @returns {string} 类型名称，如 array、null、HTMLElement、Node、string 等。
+ * 支持识别 null、array、HTMLElement、Node 等特殊类型。
+ * @param val - 需要判断类型的值
+ * @returns 类型名称（如 array、null、HTMLElement、Node、string）
  */
 export const getType = (val: unknown): string => {
   if (val === null) return 'null';
@@ -118,9 +121,9 @@ export const getType = (val: unknown): string => {
 };
 
 /**
- * 判断是否为普通可构造函数。
- * @param {*} fn 需要判断的值。
- * @returns {boolean}
+ * 判断是否为普通可构造函数（排除箭头函数和类）。
+ * @param fn - 需要判断的值
+ * @returns 如果是普通函数则返回 true，否则返回 false
  */
 export const isFunction = (
   fn: unknown
@@ -136,9 +139,9 @@ export const isFunction = (
 };
 
 /**
- * 判断是否为类。
- * @param {Function} fn 函数。
- * @returns {boolean}
+ * 判断是否为类（使用 class 语法定义）。
+ * @param fn - 需要判断的值
+ * @returns 如果是类则返回 true，否则返回 false
  */
 export const isClass = (
   fn: unknown
@@ -150,9 +153,9 @@ export const isClass = (
 };
 
 /**
- * 判断是否为普通对象。
- * @param {*} value 需要判断的值。
- * @returns {boolean}
+ * 判断是否为普通对象（纯对象字面量或通过 Object.create(null) 创建）。
+ * @param value - 需要判断的值
+ * @returns 如果是普通对象则返回 true，否则返回 false
  */
 export function isPlainObject(
   value: unknown
@@ -236,15 +239,18 @@ function formatValidateName(namespace: string, name: string): string {
 }
 
 /**
- * 按规则校验参数。
+ * 校验单个参数。
  *
- * rule 可包含 type/types、required、enum、conditions、validate、message 等字段。
- * @param {string} name 参数名。
- * @param {*} value 参数值。
- * @param {NormalizedRule} rule 校验规则。
- * @param {string} [namespace=""] 错误命名空间。
- * @returns {*} 校验通过后的原值。
- * @throws {Error} 校验失败时抛出。
+ * 支持的校验规则包括：type/types（类型）、required（必填）、enum（枚举）、
+ * conditions（条件）、validate（自定义校验函数）、message（错误消息）。
+ *
+ * @template TInput - 输入对象类型
+ * @param name - 参数名
+ * @param value - 参数值
+ * @param [rule] - 校验规则
+ * @param [namespace] - 错误命名空间，用于错误消息前缀
+ * @returns 校验通过后的原值
+ * @throws {Error} 校验失败时抛出错误
  */
 export function validateParam<TInput extends LooseRecord = LooseRecord>(
   name: string,
@@ -296,27 +302,18 @@ export function validateParam<TInput extends LooseRecord = LooseRecord>(
 }
 
 /**
- * 合并默认值、执行 normalize 并校验配置。
+ * 合并默认值、执行 normalize 并校验配置对象。
  *
- * schema 的每一项可同时定义 default、factory、normalize 和校验规则。
- * @param {object} [input={}] 用户传入配置。
- * @param {Record<string, object|string|string[]>} [schema={}] 配置 schema。
- * @param {string} [namespace="Options"] 错误命名空间。
- * @returns {object} 合并并校验后的配置。
+ * schema 的每一项可同时定义：default（默认值）、factory（是否为工厂函数）、
+ * normalize（标准化函数）和校验规则（type、required、enum 等）。
+ *
+ * @template TInput - 输入对象类型
+ * @template TSchema - 配置 schema 类型
+ * @param [input={}] - 用户传入的配置对象
+ * @param [schema={}] - 配置 schema 定义
+ * @param [namespace="Options"] - 错误命名空间，用于错误消息前缀
+ * @returns 合并并校验后的配置对象
  */
-export function resolveProps(
-  input: null | undefined,
-  schema?: ResolveSchema,
-  namespace?: string
-): ResolvedProps<ResolveSchema>;
-export function resolveProps<
-  TInput extends LooseRecord,
-  TSchema extends ResolveSchema<TInput>,
->(
-  input?: TInput | null,
-  schema?: TSchema,
-  namespace?: string
-): TInput & ResolvedProps<TSchema>;
 export function resolveProps<
   TInput extends LooseRecord,
   TSchema extends ResolveSchema<TInput>,
@@ -364,8 +361,12 @@ export function resolveProps<
 }
 
 /**
- * 生成标准 UUID。
- * @returns {string}
+ * 生成标准 UUID v4 字符串。
+ *
+ * 优先使用浏览器原生的 crypto.randomUUID()，
+ * 不支持时使用 polyfill 实现。
+ *
+ * @returns UUID v4 字符串（如 xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx）
  */
 export function uuid(): string {
   if (typeof crypto.randomUUID === 'function') {
@@ -392,33 +393,31 @@ export function uuid(): string {
 
 /**
  * 生成适合 DOM id 的随机字符串。
- * @param {number} [length=8] 字符串长度，范围 1 到 32。
- * @returns {string}
+ *
+ * 使用安全的随机数生成器，生成的字符串适合作为 HTML 元素的 id 属性。
+ *
+ * @param [length=8] - 字符串长度，范围 1 到 87381
+ * @returns 随机字符串
+ * @throws {Error} 长度不在有效范围内时抛出错误
  */
-export function randomId(length = 8): string {
-  if (!Number.isInteger(length) || length < 1 || length > 32) {
-    throw new Error('Length must be an integer between 1 and 32');
+export function randomId(length: number = 8): string {
+  if (!Number.isInteger(length) || length < 1 || length > 87381) {
+    throw new Error('Length must be an integer between 1 and 87381');
   }
-  const chars = 'abcdefghijkmnpqrstuvwxyz23456789';
-  const bytes = new Uint8Array(length);
+
+  const byteLength = Math.ceil((length * 3) / 4);
+  const bytes = new Uint8Array(byteLength);
   crypto.getRandomValues(bytes);
-  let result = '';
-  for (let i = 0; i < length; i++) {
-    result += chars[bytes[i] & 31];
+
+  let binary = '';
+  for (const byte of bytes) {
+    binary += String.fromCharCode(byte);
   }
-  return result;
+  const base64 = btoa(binary);
+
+  return base64.substring(0, length).replace(/\+/g, '-').replace(/\//g, '_');
 }
 
-/**
- * 创建防抖函数，确保在连续调用时，只有在指定的等待时间后才会执行一次。
- * @param {Function} func 要防抖的函数
- * @param {number} wait 等待时间，单位为毫秒
- * @param {Object} options 配置选项
- * @param {boolean} [options.leading=false] 是否在等待时间的开始调用函数
- * @param {boolean} [options.trailing=true] 是否在等待时间的结束调用函数
- * @param {number} [options.maxWait] 最大等待时间，确保函数在最长等待时间内至少执行一次
- * @returns {Function} 返回一个新的防抖函数
- */
 interface PendingCall<T extends AnyFunction> {
   receiver: ThisParameterType<T>;
   args: Parameters<T>;
@@ -439,6 +438,18 @@ export type DebouncedFunction<T extends AnyFunction> = {
   flush: () => ReturnType<T> | undefined;
 };
 
+/**
+ * 创建防抖函数，延迟调用 `func` 直到自上次调用以来已经过了 `wait` 毫秒。
+ *
+ * @template T - 要防抖的函数类型
+ * @param func - 要防抖的函数
+ * @param [wait=0] - 延迟时间（毫秒）
+ * @param [options] - 防抖配置选项
+ * @param [options.leading=false] - 是否在超时开始时调用（前沿触发）
+ * @param [options.trailing=true] - 是否在超时结束时调用（后沿触发）
+ * @param [options.maxWait] - 函数被延迟调用的最大时间
+ * @returns 新的防抖函数，包含 cancel 和 flush 方法
+ */
 export function debounce<T extends AnyFunction>(
   func: T,
   wait = 0,
@@ -560,12 +571,18 @@ export function debounce<T extends AnyFunction>(
 }
 
 /**
- * 创建节流函数，确保在指定时间间隔内只执行一次。
- * 该函数基于防抖函数实现，适用于需要限制函数调用频率的场景。
- * @param {Function} func
- * @param {number} wait
- * @param {Object} options
- * @returns {Function}
+ * 创建节流函数，确保在指定时间间隔内函数只执行一次。
+ *
+ * 节流原理：在连续触发事件时，函数在指定时间间隔内只会执行一次。
+ * 适用于滚动事件、鼠标移动事件等需要限制调用频率的场景。
+ *
+ * @template T - 要节流的函数类型
+ * @param func - 要节流的函数
+ * @param [wait=0] - 时间间隔（毫秒），在此期间函数只会执行一次
+ * @param [options] - 节流配置选项
+ * @param [options.leading=true] - 是否在时间间隔开始时调用（前沿触发）
+ * @param [options.trailing=true] - 是否在时间间隔结束时调用（后沿触发）
+ * @returns 新的节流函数，包含 cancel 和 flush 方法
  */
 export function throttle<T extends AnyFunction>(
   func: T,

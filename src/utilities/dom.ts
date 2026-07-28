@@ -1,4 +1,12 @@
+import { jsx } from 'vanilla-signal';
+
 export type ContainerExpect = 'node' | 'element' | 'array';
+export type ResolveContainerResult<
+  TExpect extends ContainerExpect = 'element',
+> = TExpect extends 'array' ? Node[] : TExpect extends 'node' ? Node : Element;
+export type RequireContainerResult<
+  TExpect extends ContainerExpect = 'element',
+> = NonNullable<ResolveContainerResult<TExpect>>;
 export type DOMReference =
   | Node
   | string
@@ -27,6 +35,12 @@ export interface LazyRenderOptions {
   waitForDOM?: boolean;
 }
 
+const CONTAINER_EXPECTS = ['node', 'element', 'array'] as const;
+
+function isContainerExpect(value: unknown): value is ContainerExpect {
+  return CONTAINER_EXPECTS.includes(value as ContainerExpect);
+}
+
 /**
  * 判断当前环境是否可访问 DOM。
  * @returns {boolean}
@@ -53,7 +67,7 @@ export function canRenderDOM(): boolean {
  * @returns {true}
  * @throws {Error} 当前环境不可渲染 DOM 时抛出。
  */
-export function requireRenderDOM(namespace = 'Component'): true {
+export function requireRenderDOM(namespace: string = 'Component'): true {
   if (!canRenderDOM()) {
     throw new Error(`${namespace}: DOM render environment is required.`);
   }
@@ -211,7 +225,7 @@ export function resolveNodeList(
  */
 export function resolveNode(
   ref: DOMReference,
-  namespace = 'Component'
+  namespace: string = 'Component'
 ): Node | null {
   if (isElement(ref) || isNode(ref)) return ref;
 
@@ -243,7 +257,7 @@ export function resolveNode(
  */
 export function resolveElement(
   ref: DOMReference,
-  namespace = 'Component'
+  namespace: string = 'Component'
 ): Element | null {
   if (!isContainerLike(ref)) return null;
 
@@ -269,27 +283,12 @@ export function resolveElement(
  * @param {'node'|'element'|'array'} [expect='element'] 期望返回类型。
  * @returns {Node|Element|Node[]|null}
  */
-export function resolveContainer(
+export function resolveContainer<TExpect extends ContainerExpect = 'element'>(
   container: DOMReference,
-  namespace: string | undefined,
-  expect: 'array'
-): Node[] | null;
-export function resolveContainer(
-  container: DOMReference,
-  namespace: string | undefined,
-  expect: 'node'
-): Node | null;
-export function resolveContainer(
-  container: DOMReference,
-  namespace?: string,
-  expect?: 'element'
-): Element | null;
-export function resolveContainer(
-  container: DOMReference,
-  namespace = 'Component',
-  expect: ContainerExpect = 'element'
-): Node | Element | Node[] | null {
-  if (!['node', 'element', 'array'].includes(expect)) {
+  namespace: string = 'Component',
+  expect: TExpect = 'element' as TExpect
+): ResolveContainerResult<TExpect> | null {
+  if (!isContainerExpect(expect)) {
     throw new Error(
       `${namespace}: expect must be one of 'node', 'element', 'array'.`
     );
@@ -298,14 +297,23 @@ export function resolveContainer(
   if (!isContainerLike(container)) return null;
 
   if (expect === 'array') {
-    return resolveNodeList(container, namespace);
+    return resolveNodeList(
+      container,
+      namespace
+    ) as ResolveContainerResult<TExpect> | null;
   }
 
   if (expect === 'node') {
-    return resolveNode(container, namespace);
+    return resolveNode(
+      container,
+      namespace
+    ) as ResolveContainerResult<TExpect> | null;
   }
 
-  return resolveElement(container, namespace);
+  return resolveElement(
+    container,
+    namespace
+  ) as ResolveContainerResult<TExpect> | null;
 }
 
 /**
@@ -316,36 +324,16 @@ export function resolveContainer(
  * @param {'node'|'element'|'array'} [expect='element'] 期望返回类型。
  * @returns {Node|Element|Node[]}
  */
-export function requireContainer(
+export function requireContainer<TExpect extends ContainerExpect = 'element'>(
   container: DOMReference,
-  namespace: string | undefined,
-  expect: 'array'
-): Node[];
-export function requireContainer(
-  container: DOMReference,
-  namespace: string | undefined,
-  expect: 'node'
-): Node;
-export function requireContainer(
-  container: DOMReference,
-  namespace?: string,
-  expect?: 'element'
-): Element;
-export function requireContainer(
-  container: DOMReference,
-  namespace = 'Component',
-  expect: ContainerExpect = 'element'
-): Node | Element | Node[] {
-  const resolved =
-    expect === 'array'
-      ? resolveContainer(container, namespace, 'array')
-      : expect === 'node'
-        ? resolveContainer(container, namespace, 'node')
-        : resolveContainer(container, namespace, 'element');
+  namespace: string = 'Component',
+  expect: TExpect = 'element' as TExpect
+): RequireContainerResult<TExpect> {
+  const resolved = resolveContainer(container, namespace, expect);
   if (resolved == null) {
     throw new Error(`${namespace}: container not found.`);
   }
-  return resolved;
+  return resolved as RequireContainerResult<TExpect>;
 }
 
 /**
@@ -373,17 +361,13 @@ export function isRenderableContent(
  * @returns {HTMLElement}
  */
 export function createLoading(
-  className = 'j-loading is-active'
+  className: string = 'j-loading is-active'
 ): HTMLDivElement {
-  const root = document.createElement('div');
-  root.className = className;
-  root.setAttribute('aria-live', 'polite');
-
-  const spinner = document.createElement('div');
-  spinner.className = 'loading-spinner';
-  root.appendChild(spinner);
-
-  return root;
+  return jsx('div', {
+    className,
+    'aria-live': 'polite',
+    children: jsx`<div className="loading-spinner"></div>`,
+  });
 }
 
 /**

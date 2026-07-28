@@ -1,4 +1,4 @@
-import { Form, Toast } from '../dist/index.js';
+import { Form, Toast } from '../../dist/index.js';
 import { equal, truthy, hasClass, dateTime } from './helpers.js';
 
 let formInstance = null;
@@ -164,8 +164,11 @@ export function formApp(runner) {
     truthy(form.root, 'form root should exist');
     truthy(hasClass(form.root, 'j-form'), 'root should have j-form class');
     truthy(hasClass(form.root, 'is-vertical'), 'root should be vertical');
-    equal(form.root.querySelectorAll('.form-item').length, FORM_FIELDS.length);
-    equal(form.root.querySelectorAll('.form-buttons button').length, 2);
+    equal(
+      form.root.querySelectorAll('[data-form-item]').length,
+      FORM_FIELDS.length
+    );
+    equal(form.root.querySelectorAll('[data-form-buttons] button').length, 2);
     cleanup();
   });
 
@@ -207,8 +210,33 @@ export function formApp(runner) {
       ],
     });
 
-    equal(form.root.querySelectorAll('.form-item').length, 2);
+    equal(form.root.querySelectorAll('[data-form-item]').length, 2);
     truthy(form.root.querySelector('textarea[name="bio"]'));
+    cleanup();
+  });
+
+  runner.add('自定义样式类', 'className 覆盖默认类但 data 标记保持稳定', () => {
+    cleanup();
+    const holder = mountDemoShell();
+    const form = new Form(
+      {
+        fields: [{ label: 'Name', name: 'name' }],
+        className: {
+          form: 'x-form',
+          vertical: 'x-stack',
+          item: 'x-item',
+          control: 'x-control',
+          buttons: 'x-actions',
+        },
+      },
+      holder
+    ).build();
+
+    truthy(hasClass(form.root, 'x-form'), 'custom root class');
+    truthy(hasClass(form.root, 'x-stack'), 'custom layout class');
+    equal(form.root.querySelectorAll('[data-form-item]').length, 1);
+    truthy(form.root.querySelector('[data-form-control="name"]'));
+    truthy(form.root.querySelector('[data-form-buttons]'));
     cleanup();
   });
 

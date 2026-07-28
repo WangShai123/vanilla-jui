@@ -1,6 +1,6 @@
 import { createDeepStore, flushSync, jsx, Show, render } from 'vanilla-signal';
 
-import { Validator, Toast } from '../dist/index.js';
+import { Validator, Toast } from '../../dist/index.js';
 import { equal, hasClass, truthy, textOf, dateTime } from './helpers.js';
 
 // ========== 手动测试 UI ==========

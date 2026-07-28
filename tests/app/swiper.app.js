@@ -1,6 +1,6 @@
 import { createDeepStore, flushSync, jsx, Show, render } from 'vanilla-signal';
 
-import { Swiper } from '../dist/index.js';
+import { Swiper } from '../../dist/index.js';
 import { equal, truthy, falsy, hasClass, wait, dateTime } from './helpers.js';
 
 function cleanup() {
@@ -22,13 +22,14 @@ function freshMount() {
     mountUI();
   }
   const el = document.getElementById('swiper-mount');
-  if (el && !el.querySelector('.swiper-wrapper')) {
+  if (el && !el.querySelector('[data-swiper-wrapper]')) {
     const wrapper = document.createElement('div');
     wrapper.className = 'swiper-wrapper';
+    wrapper.setAttribute('data-swiper-wrapper', '');
     wrapper.innerHTML = `
-      <a href="#slide-1" class="swiper-slide"><span>1</span></a>
-      <a href="#slide-2" class="swiper-slide"><span>2</span></a>
-      <a href="#slide-3" class="swiper-slide"><span>3</span></a>
+      <a href="#slide-1" class="swiper-slide" data-swiper-slide><span>1</span></a>
+      <a href="#slide-2" class="swiper-slide" data-swiper-slide><span>2</span></a>
+      <a href="#slide-3" class="swiper-slide" data-swiper-slide><span>3</span></a>
     `;
     el.appendChild(wrapper);
   }
@@ -289,30 +290,34 @@ export function swiperApp(runner) {
     swiper.destroy();
   });
 
-  runner.add('绑定已有 DOM', '验证容器内唯一 .j-swiper 会作为 root', () => {
-    const mount = freshMount();
-    mount.textContent = '';
-    mount.innerHTML = `
-      <section class="j-swiper">
-        <div class="swiper-wrapper">
-          <div class="swiper-slide">Static 1</div>
-          <div class="swiper-slide">Static 2</div>
+  runner.add(
+    '绑定已有 DOM',
+    '验证容器内唯一 data-swiper=root 会作为 root',
+    () => {
+      const mount = freshMount();
+      mount.textContent = '';
+      mount.innerHTML = `
+      <section class="j-swiper" data-swiper="root">
+        <div class="swiper-wrapper" data-swiper-wrapper>
+          <div class="swiper-slide" data-swiper-slide>Static 1</div>
+          <div class="swiper-slide" data-swiper-slide>Static 2</div>
         </div>
       </section>
     `;
 
-    const root = mount.querySelector('.j-swiper');
-    const swiper = new Swiper(mount, {
-      autoplay: false,
-      loop: false,
-    }).build();
+      const root = mount.querySelector('[data-swiper="root"]');
+      const swiper = new Swiper(mount, {
+        autoplay: false,
+        loop: false,
+      }).build();
 
-    equal(swiper.dom.root, root, 'inner .j-swiper is used as root');
-    equal(swiper.dom.mountTarget, null, 'existing DOM has no mount target');
-    equal(swiper.dom.slides.length, 2, 'existing slides are detected');
+      equal(swiper.dom.root, root, 'inner data-swiper root is used as root');
+      equal(swiper.dom.mountTarget, null, 'existing DOM has no mount target');
+      equal(swiper.dom.slides.length, 2, 'existing slides are detected');
 
-    swiper.destroy();
-  });
+      swiper.destroy();
+    }
+  );
 
   runner.add('loop 模式', '验证 loop 克隆 slide', () => {
     const mount = freshMount();

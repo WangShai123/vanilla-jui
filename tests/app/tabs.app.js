@@ -1,6 +1,6 @@
 import { createDeepStore, flushSync, jsx, Show, render } from 'vanilla-signal';
 
-import { Tabs } from '../dist/index.js';
+import { Tabs } from '../../dist/index.js';
 import { equal, hasClass, textOf, truthy, dateTime } from './helpers.js';
 
 const tabsConfig = () => [

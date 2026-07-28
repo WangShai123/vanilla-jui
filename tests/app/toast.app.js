@@ -1,6 +1,6 @@
 import { jsx, render } from 'vanilla-signal';
 
-import { Toast } from '../dist/index.js';
+import { Toast } from '../../dist/index.js';
 import { equal, hasClass, textOf, truthy, dateTime } from './helpers.js';
 
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -114,9 +114,12 @@ export function toastApp(runner) {
     const toast = Toast.success('Saved', 0);
     await wait(20);
 
-    truthy(document.querySelector('.j-toast-container'), 'container exists');
+    truthy(
+      document.querySelector('[data-toast-container]'),
+      'container exists'
+    );
     truthy(hasClass(toast, 'is-success'), 'success class');
-    truthy(hasClass(toast, 'toast-show'), 'show class');
+    truthy(hasClass(toast, 'is-shown'), 'show class');
     equal(textOf(toast).includes('Saved'), true, 'message text');
 
     cleanup();
@@ -134,9 +137,13 @@ export function toastApp(runner) {
     cleanup();
     Toast.lite('One', 1000);
     Toast.lite('Two', 1000);
-    equal(document.querySelectorAll('.j-toast-lite').length, 1, 'single lite');
     equal(
-      textOf(document.querySelector('.j-toast-lite')),
+      document.querySelectorAll('[data-toast-lite]').length,
+      1,
+      'single lite'
+    );
+    equal(
+      textOf(document.querySelector('[data-toast-lite]')),
       'Two',
       'latest text'
     );
@@ -150,11 +157,11 @@ export function toastApp(runner) {
     cleanup();
     equal(Toast.timers.size, 0, 'timers cleared');
     equal(
-      document.querySelector('.j-toast-container'),
+      document.querySelector('[data-toast-container]'),
       null,
       'container removed'
     );
-    equal(document.querySelector('.j-toast-lite'), null, 'lite removed');
+    equal(document.querySelector('[data-toast-lite]'), null, 'lite removed');
   });
 
   runner.log('Toast 组件测试已加载。');

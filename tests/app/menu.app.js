@@ -1,6 +1,6 @@
 import { createDeepStore, flushSync, jsx, Show, render } from 'vanilla-signal';
 
-import { Menu } from '../dist/index.js';
+import { Menu } from '../../dist/index.js';
 import { equal, hasClass, textOf, truthy, dateTime } from './helpers.js';
 
 const items = () => [
@@ -186,9 +186,16 @@ export function menuApp(runner) {
 
     truthy(menu.root, 'root exists');
     truthy(hasClass(menu.root, 'j-mobile-menu'), 'mobile class');
-    equal(menu.root.querySelectorAll('.menu-item').length, 7, 'item count');
-    truthy(menu.root.querySelector('.menu-item-has-children'), 'has children');
-    truthy(menu.root.querySelector('.sub-menu'), 'sub-menu exists');
+    equal(
+      menu.root.querySelectorAll('[data-menu-item]').length,
+      7,
+      'item count'
+    );
+    truthy(menu.root.querySelector('[data-menu-has-children]'), 'has children');
+    truthy(
+      menu.root.querySelector('[data-menu-list="sub"]'),
+      'sub-menu exists'
+    );
 
     menu.destroy();
   });
@@ -199,7 +206,11 @@ export function menuApp(runner) {
 
     truthy(menu.root, 'root exists');
     truthy(hasClass(menu.root, 'j-bottom-menu'), 'bottom class');
-    equal(menu.root.querySelectorAll('.menu-item').length, 7, 'item count');
+    equal(
+      menu.root.querySelectorAll('[data-menu-item]').length,
+      7,
+      'item count'
+    );
 
     menu.destroy();
   });
@@ -209,7 +220,11 @@ export function menuApp(runner) {
     const menu = new Menu({ type: 'mobile', items: items() }).build();
 
     menu.setItems([{ id: 'new', title: 'New', url: '#new' }]);
-    equal(menu.root.querySelectorAll('.menu-item').length, 1, 'new item count');
+    equal(
+      menu.root.querySelectorAll('[data-menu-item]').length,
+      1,
+      'new item count'
+    );
     equal(textOf(menu.root), 'New', 'new text');
 
     menu.destroy();
@@ -220,7 +235,11 @@ export function menuApp(runner) {
     const menu = new Menu({ type: 'mobile', items: items() }).build();
 
     menu.removeItem('home');
-    equal(menu.root.querySelectorAll('.menu-item').length, 6, 'after remove');
+    equal(
+      menu.root.querySelectorAll('[data-menu-item]').length,
+      6,
+      'after remove'
+    );
 
     menu.destroy();
   });
@@ -245,12 +264,12 @@ export function menuApp(runner) {
     }).build();
     document.body.appendChild(menu.root);
 
-    const parent = menu.root.querySelector('.menu-item-has-children');
-    parent.querySelector(':scope > a').click();
+    const parent = menu.root.querySelector('[data-menu-has-children]');
+    parent.querySelector('[data-menu-link]').click();
     truthy(hasClass(parent, 'is-active'), 'parent active');
-    truthy(parent.querySelector('.menu-item.back'), 'back item created');
+    truthy(parent.querySelector('[data-menu-back]'), 'back item created');
 
-    parent.querySelector('.menu-item.back a').click();
+    parent.querySelector('[data-menu-back] [data-menu-link]').click();
     truthy(!hasClass(parent, 'is-active'), 'parent inactive');
 
     menu.destroy();
@@ -260,8 +279,10 @@ export function menuApp(runner) {
     cleanup();
     const root = document.createElement('nav');
     root.className = 'j-mobile-menu';
+    root.setAttribute('data-menu', 'root');
+    root.setAttribute('data-menu-type', 'mobile');
     root.innerHTML =
-      '<ul class="menu"><li class="menu-item"><a class="menu-link">Old</a></li></ul>';
+      '<ul class="menu" data-menu-list="root"><li class="menu-item" data-menu-item="old"><a class="menu-link" data-menu-link>Old</a></li></ul>';
     document.body.appendChild(root);
 
     const menu = new Menu({ type: 'mobile', items: [] }, root).build();
@@ -276,11 +297,19 @@ export function menuApp(runner) {
     cleanup();
     const root = jsx('nav', {
       className: 'j-mobile-menu',
+      'data-menu': 'root',
+      'data-menu-type': 'mobile',
       children: jsx('ul', {
         className: 'menu',
+        'data-menu-list': 'root',
         children: jsx('li', {
           className: 'menu-item',
-          children: jsx('a', { className: 'menu-link', children: 'Old' }),
+          'data-menu-item': 'old',
+          children: jsx('a', {
+            className: 'menu-link',
+            'data-menu-link': '',
+            children: 'Old',
+          }),
         }),
       }),
     });

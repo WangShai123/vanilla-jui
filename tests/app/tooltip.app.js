@@ -1,6 +1,6 @@
 import { createDeepStore, flushSync, jsx, Show, render } from 'vanilla-signal';
 
-import { Tooltip } from '../dist/index.js';
+import { Tooltip } from '../../dist/index.js';
 import { equal, hasClass, textOf, truthy, dateTime } from './helpers.js';
 
 // ========== 手动测试 UI ==========
@@ -134,6 +134,10 @@ export function tooltipApp(runner) {
     const tooltip = new Tooltip(el, { message: 'Tooltip message' });
 
     equal(textOf(tooltip.drop.root), 'Tooltip message', 'message text');
+    truthy(
+      tooltip.drop.root.querySelector('[data-tooltip-message]'),
+      'message data marker'
+    );
     truthy(tooltip.drop, 'drop instance exists');
 
     tooltip.destroy();

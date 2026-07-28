@@ -32,8 +32,8 @@ export default defineConfig({
   ],
 
   test: {
-    include: ['tests/**/*.test.js'],
-    exclude: [],
+    include: ['tests/**/*.test.ts'],
+    exclude: ['tests/app/**/*'],
   },
 
   lint: {

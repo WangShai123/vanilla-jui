@@ -6,14 +6,25 @@ import {
   h,
 } from 'vanilla-signal';
 
-import Component from '../core/Component.ts';
-import { resolveProps, validateParam } from '../utilities/core.ts';
+import Component, {
+  type ComponentDOM,
+  type ComponentRuntime,
+  type ComponentUpdateOptions,
+} from '../core/Component.ts';
+import {
+  type ResolveSchema,
+  isPlainObject,
+  resolveProps,
+  validateParam,
+} from '../utilities/core.ts';
 import {
   all,
+  type DOMReference,
   isElement,
   isRenderableContent,
   normalizeContentNodes,
   q,
+  type RenderableContent,
   requireContainer,
   requireRenderDOM,
 } from '../utilities/dom.ts';
@@ -22,10 +33,169 @@ import { icon } from './icons.ts';
 const SWIPE_THRESHOLD = 6;
 const AUTOPLAY_DELAY_FLOOR = 16;
 
+export interface SwiperClassNames {
+  root: string;
+  wrapper: string;
+  slide: string;
+  image: string;
+  title: string;
+  pagination: string;
+  paginationHorizontal: string;
+  paginationClickable: string;
+  paginationBulletGroup: string;
+  indicator: string;
+  bullet: string;
+  navigation: string;
+  prev: string;
+  next: string;
+  active: string;
+  disabled: string;
+  loading: string;
+  loaded: string;
+  error: string;
+}
+
+export type SwiperClassNameConfig = Partial<SwiperClassNames>;
+
+export interface SwiperDataItem extends Record<string, unknown> {
+  image?: string | null;
+  url?: string | null;
+  title?: string | null;
+  sort?: number | null;
+  blank?: boolean | null;
+  children?: RenderableContent<SwiperSlideContext> | null;
+}
+
+interface NormalizedSwiperDataItem extends SwiperDataItem {
+  blank: boolean;
+  index: number;
+}
+
+export interface SwiperSlideContext {
+  swiper: Swiper;
+  item: NormalizedSwiperDataItem;
+  index: number;
+}
+
+export interface SwiperOptions extends Record<string, unknown> {
+  data?: SwiperDataItem[] | null;
+  loop?: boolean;
+  autoplay?: boolean;
+  delay?: number;
+  lazyload?: boolean;
+  pagination?: boolean;
+  navigation?: boolean;
+  speed?: number;
+  touchRatio?: number;
+  touchAngle?: number;
+  longSwipesMs?: number;
+  longSwipesRatio?: number;
+  preventClick?: boolean;
+  className?: SwiperClassNameConfig;
+}
+
+interface ResolvedSwiperOptions extends Record<string, unknown> {
+  data: SwiperDataItem[] | null;
+  loop: boolean;
+  autoplay: boolean;
+  delay: number;
+  lazyload: boolean;
+  pagination: boolean;
+  navigation: boolean;
+  speed: number;
+  touchRatio: number;
+  touchAngle: number;
+  longSwipesMs: number;
+  longSwipesRatio: number;
+  preventClick: boolean;
+  className: SwiperClassNames;
+}
+
+interface SwiperState extends Record<string, unknown> {
+  index: number;
+  trackIndex: number;
+  transform: number;
+  animating: boolean;
+  width: number;
+}
+
+interface SwiperDOM extends ComponentDOM {
+  root: HTMLElement | null;
+  container: DOMReference;
+  mountTarget: Element | null;
+  createdRoot: boolean;
+  createdSlides: boolean;
+  wrapper: HTMLElement | null;
+  slides: HTMLElement[];
+  pagination: HTMLElement | null;
+  prevButton: HTMLButtonElement | null;
+  nextButton: HTMLButtonElement | null;
+  bullets: HTMLButtonElement[];
+  createdPagination: boolean;
+  createdPrevButton: boolean;
+  createdNextButton: boolean;
+}
+
+interface SwipeLog {
+  x: number;
+  y: number;
+  time: number;
+}
+
+interface SwipePoint {
+  pageX?: number;
+  pageY?: number;
+  clientX?: number;
+  clientY?: number;
+}
+
+interface SwiperRuntime extends ComponentRuntime {
+  logs: SwipeLog[];
+  startTarget: EventTarget | null;
+  touching: boolean;
+  scrolling: boolean;
+  swiping: boolean;
+  clickPrevented: boolean;
+  timer: ReturnType<typeof setInterval> | null;
+  imageCleanups: Set<() => void>;
+  realCount: number;
+}
+
+interface SwiperCleanupExtras {
+  bindings?: (() => void) | null;
+  navBindings?: (() => void) | null;
+}
+
+type SwiperUpdateOptions = Partial<ComponentUpdateOptions>;
+type SwiperDirection = 'prev' | 'next';
+type CreatedNavigationKey = 'createdPrevButton' | 'createdNextButton';
+
+const DEFAULT_CLASS_NAMES: SwiperClassNames = {
+  root: 'j-swiper',
+  wrapper: 'swiper-wrapper',
+  slide: 'swiper-slide',
+  image: 'swiper-image',
+  title: 'swiper-slide-title',
+  pagination: 'swiper-pagination',
+  paginationHorizontal: 'is-horizontal',
+  paginationClickable: 'is-clickable',
+  paginationBulletGroup: 'is-bullet',
+  indicator: 'swiper-pagination-indicator',
+  bullet: 'swiper-pagination-bullet',
+  navigation: 'swiper-navigation',
+  prev: 'is-prev',
+  next: 'is-next',
+  active: 'is-active',
+  disabled: 'is-disabled',
+  loading: 'loading',
+  loaded: 'loaded',
+  error: 'error',
+};
+
 const SWIPER_OPTIONS_SCHEMA = {
   data: {
     default: null,
-    validate: (value) => value == null || Array.isArray(value),
+    validate: (value: unknown) => value == null || Array.isArray(value),
     message: 'expects an array or null.',
   },
   loop: { default: true, type: 'boolean' },
@@ -33,7 +203,7 @@ const SWIPER_OPTIONS_SCHEMA = {
   delay: {
     default: 3000,
     type: 'number',
-    validate: (value) => value >= 0,
+    validate: (value: unknown) => Number(value) >= 0,
     message: 'expects a positive number or 0.',
   },
   lazyload: { default: true, type: 'boolean' },
@@ -42,82 +212,121 @@ const SWIPER_OPTIONS_SCHEMA = {
   speed: {
     default: 300,
     type: 'number',
-    validate: (value) => value >= 0,
+    validate: (value: unknown) => Number(value) >= 0,
     message: 'expects a positive number or 0.',
   },
   touchRatio: {
     default: 1,
     type: 'number',
-    validate: (value) => value > 0,
+    validate: (value: unknown) => Number(value) > 0,
     message: 'expects a number greater than 0.',
   },
   touchAngle: {
     default: 45,
     type: 'number',
-    validate: (value) => value >= 0 && value <= 90,
+    validate: (value: unknown) => Number(value) >= 0 && Number(value) <= 90,
     message: 'expects a number between 0 and 90.',
   },
   longSwipesMs: {
     default: 300,
     type: 'number',
-    validate: (value) => value >= 0,
+    validate: (value: unknown) => Number(value) >= 0,
     message: 'expects a positive number or 0.',
   },
   longSwipesRatio: {
     default: 0.05,
     type: 'number',
-    validate: (value) => value >= 0 && value <= 1,
+    validate: (value: unknown) => Number(value) >= 0 && Number(value) <= 1,
     message: 'expects a number between 0 and 1.',
   },
   preventClick: { default: true, type: 'boolean' },
-};
+  className: {
+    default: DEFAULT_CLASS_NAMES,
+    type: 'object',
+    normalize: (value: unknown) => ({
+      ...DEFAULT_CLASS_NAMES,
+      ...(value && typeof value === 'object' ? value : {}),
+    }),
+  },
+} satisfies ResolveSchema<SwiperOptions>;
 
 const SWIPER_DATA_ITEM_RULE = {
-  validate: (value) => {
+  validate: (value: unknown) => {
     if (!value || typeof value !== 'object' || Array.isArray(value)) {
       return false;
     }
+    const item = value as SwiperDataItem;
 
     return (
-      (value.image == null || typeof value.image === 'string') &&
-      (value.url == null || typeof value.url === 'string') &&
-      (value.title == null || typeof value.title === 'string') &&
-      (value.sort == null || typeof value.sort === 'number') &&
-      (value.blank == null || typeof value.blank === 'boolean') &&
-      (value.children == null || isRenderableContent(value.children))
+      (item.image == null || typeof item.image === 'string') &&
+      (item.url == null || typeof item.url === 'string') &&
+      (item.title == null || typeof item.title === 'string') &&
+      (item.sort == null || typeof item.sort === 'number') &&
+      (item.blank == null || typeof item.blank === 'boolean') &&
+      (item.children == null || isRenderableContent(item.children))
     );
   },
   message:
     'expects items with optional image, url, title, sort, blank and children fields.',
 };
 
-function isInteractiveTarget(target) {
-  return !!target?.closest?.(
-    'a, button, input, textarea, select, label, [data-swiper-ignore]'
+function isInteractiveTarget(target: EventTarget | null): boolean {
+  return (
+    target instanceof Element &&
+    !!target.closest(
+      'a, button, input, textarea, select, label, [data-swiper-ignore]'
+    )
   );
 }
 
-function normalizeNumber(value, fallback = 0) {
+function normalizeNumber(value: unknown, fallback = 0): number {
   const number = Number(value);
   return Number.isFinite(number) ? number : fallback;
 }
 
-function getRenderableNodes(content, context) {
+function getRenderableNodes(
+  content: RenderableContent<SwiperSlideContext>,
+  context: SwiperSlideContext
+): Node[] {
   return normalizeContentNodes(content, context);
 }
 
-function resolveSwiperRoot(container) {
-  const roots = all('.j-swiper', container);
+function normalizeOptions(options: SwiperOptions = {}): ResolvedSwiperOptions {
+  const props = resolveProps(
+    options,
+    SWIPER_OPTIONS_SCHEMA,
+    'Swiper.options'
+  ) as ResolvedSwiperOptions;
+  return {
+    ...props,
+    className: { ...props.className },
+  };
+}
+
+function resolveSwiperRoot(container: Element): HTMLElement {
+  const roots = all<HTMLElement>('[data-swiper="root"]', container);
   validateParam(
     'container',
     roots,
     {
-      validate: (value) => value.length === 1,
-      message: 'expects exactly one .j-swiper descendant.',
+      validate: (value: unknown) => Array.isArray(value) && value.length === 1,
+      message: 'expects exactly one [data-swiper="root"] descendant.',
     },
     'Swiper'
   );
-  return roots[0];
+  return roots[0] as HTMLElement;
+}
+
+function classList(...tokens: Array<string | null | undefined>): string {
+  return tokens.filter(Boolean).join(' ');
+}
+
+function setDataMarker(element: Element, name: string, value = ''): void {
+  element.setAttribute(name, value);
+}
+
+function isObjectPatch(value: unknown): value is SwiperOptions {
+  return isPlainObject(value);
 }
 
 /**
@@ -126,18 +335,26 @@ function resolveSwiperRoot(container) {
  * 支持链接 slide、图片 lazyload、分页、导航、loop 和桌面/移动端拖拽滑动。
  * 使用 vanilla-signal 响应式管理 pagination 和 navigation 状态。
  */
-export class Swiper extends Component {
+export class Swiper extends Component<
+  ResolvedSwiperOptions,
+  SwiperState,
+  SwiperDOM
+> {
+  declare props: ResolvedSwiperOptions;
+  declare state: SwiperState;
+  declare dom: SwiperDOM;
+  declare runtime: SwiperRuntime;
+  declare cleanup: Component['cleanup'] & SwiperCleanupExtras;
+
+  private _built: boolean;
+
   /**
    * 创建轮播实例。
    * @param {Element|Node|string|Array} container 挂载容器、选择器或 JSX/h 返回节点。
    * @param {object} [options={}] Swiper 配置。
    */
-  constructor(container, options = {}) {
-    const resolvedOptions = resolveProps(
-      options,
-      SWIPER_OPTIONS_SCHEMA,
-      'Swiper.options'
-    );
+  constructor(container: DOMReference, options: SwiperOptions = {}) {
+    const resolvedOptions = normalizeOptions(options);
 
     super(resolvedOptions);
 
@@ -181,7 +398,7 @@ export class Swiper extends Component {
    * 构建或绑定 Swiper DOM。
    * @returns {Swiper} 当前实例。
    */
-  build() {
+  build(): this {
     if (this.runtime.destroyed)
       throw new Error('Swiper.build: instance destroyed');
     if (this._built) return this;
@@ -196,7 +413,10 @@ export class Swiper extends Component {
 
     if (hasData) {
       mountTarget = root;
-      mountRoot = h('div', { className: 'j-swiper' });
+      mountRoot = h('div', {
+        className: this.props.className.root,
+        'data-swiper': 'root',
+      }) as HTMLElement;
       mountTarget.appendChild(mountRoot);
     } else {
       mountRoot = resolveSwiperRoot(root);
@@ -210,22 +430,34 @@ export class Swiper extends Component {
 
       const wrapper = hasData
         ? this.createDataView(mountRoot, this.props.data)
-        : q('.swiper-wrapper', mountRoot);
+        : q<HTMLElement>('[data-swiper-wrapper]', mountRoot);
       validateParam(
         'wrapper',
         wrapper,
         {
           validate: isElement,
-          message: 'expects .swiper-wrapper in the root element.',
+          message: 'expects [data-swiper-wrapper] in the root element.',
         },
         'Swiper'
       );
 
-      this.dom.wrapper = wrapper;
-      this.dom.slides = all('.swiper-slide', wrapper);
-      this.dom.pagination = q('.swiper-pagination', mountRoot);
-      this.dom.prevButton = q('.swiper-navigation.is-prev', mountRoot);
-      this.dom.nextButton = q('.swiper-navigation.is-next', mountRoot);
+      this.dom.wrapper = wrapper as HTMLElement;
+      this.dom.slides = all<HTMLElement>(
+        '[data-swiper-slide]',
+        this.dom.wrapper
+      );
+      this.dom.pagination = q<HTMLElement>(
+        '[data-swiper-pagination]',
+        mountRoot
+      );
+      this.dom.prevButton = q<HTMLButtonElement>(
+        '[data-action="prev"]',
+        mountRoot
+      );
+      this.dom.nextButton = q<HTMLButtonElement>(
+        '[data-action="next"]',
+        mountRoot
+      );
       this.dom.bullets = [];
       this.dom.createdPagination = false;
       this.dom.createdPrevButton = false;
@@ -244,47 +476,51 @@ export class Swiper extends Component {
     return this;
   }
 
-  set index(v) {
+  set index(v: unknown) {
     this.setState({ index: normalizeNumber(v) });
   }
 
-  set trackIndex(v) {
+  set trackIndex(v: unknown) {
     this.setState({ trackIndex: normalizeNumber(v) });
   }
 
-  set transform(v) {
+  set transform(v: unknown) {
     this.setState({ transform: normalizeNumber(v) });
   }
 
-  set animating(v) {
+  set animating(v: unknown) {
     this.setState({ animating: !!v });
   }
 
-  set width(v) {
+  set width(v: unknown) {
     this.setState({ width: normalizeNumber(v) });
   }
 
-  get realCount() {
+  get realCount(): number {
     if (this.runtime?.destroyed) return 0;
     return this.runtime?.realCount || 0;
   }
 
-  get realIndex() {
+  get realIndex(): number {
     return this.toRealIndex();
   }
 
-  assertBuilt(method) {
+  assertBuilt(method: string): void {
     if (!this._built) {
       throw new Error(`Swiper.${method}: call build() first.`);
     }
   }
 
-  createDataView(root, data) {
+  createDataView(
+    root: HTMLElement,
+    data: SwiperDataItem[] | null
+  ): HTMLElement {
     const items = this.normalizeData(data);
     const wrapper = h('div', {
-      className: 'swiper-wrapper',
+      className: this.props.className.wrapper,
+      'data-swiper-wrapper': '',
       'aria-live': 'polite',
-    });
+    }) as HTMLElement;
     root.textContent = '';
 
     items.forEach((item, index) => {
@@ -295,7 +531,9 @@ export class Swiper extends Component {
     return wrapper;
   }
 
-  normalizeData(data) {
+  normalizeData(data: SwiperDataItem[] | null): NormalizedSwiperDataItem[] {
+    if (!Array.isArray(data)) return [];
+
     data.forEach((item, index) => {
       validateParam(
         String(index),
@@ -305,7 +543,7 @@ export class Swiper extends Component {
       );
     });
 
-    const items = data.map((item, index) => ({
+    const items: NormalizedSwiperDataItem[] = data.map((item, index) => ({
       ...item,
       blank: item.blank !== false,
       index,
@@ -320,15 +558,16 @@ export class Swiper extends Component {
     });
   }
 
-  createDataSlide(item, index) {
+  createDataSlide(item: NormalizedSwiperDataItem, index: number): HTMLElement {
     const slide = h(item.url ? 'a' : 'div', {
-      className: 'swiper-slide',
+      className: this.props.className.slide,
       href: item.url || undefined,
       target: item.url ? (item.blank ? '_blank' : '_self') : undefined,
+      'data-swiper-slide': String(index),
       'data-swiper-index': String(index),
       role: 'group',
       'aria-label': `Slide ${index + 1}`,
-    });
+    }) as HTMLElement;
 
     if (item.children != null) {
       slide.append(
@@ -339,10 +578,10 @@ export class Swiper extends Component {
 
     if (item.image) {
       const img = h('img', {
-        className: 'swiper-image',
+        className: this.props.className.image,
         alt: item.title || '',
         loading: 'lazy',
-      });
+      }) as HTMLImageElement;
       if (this.props.lazyload) img.dataset.lazy = item.image;
       else img.src = item.image;
       slide.appendChild(img);
@@ -351,16 +590,17 @@ export class Swiper extends Component {
     if (item.title) {
       slide.appendChild(
         h('span', {
-          className: 'swiper-slide-title',
+          className: this.props.className.title,
           children: item.title,
-        })
+        }) as HTMLElement
       );
     }
 
     return slide;
   }
 
-  onInit() {
+  protected onInit(): void {
+    if (!this.dom.root || !this.dom.wrapper) return;
     this.dom.wrapper.setAttribute('aria-live', 'polite');
     this.updateSize();
 
@@ -380,7 +620,7 @@ export class Swiper extends Component {
     if (this.props.autoplay) this.play();
   }
 
-  onDestroy() {
+  protected onDestroy(): void {
     this.pause();
     this.clearImageCleanups();
     this.cleanup.events.clear();
@@ -399,21 +639,27 @@ export class Swiper extends Component {
     this._built = false;
   }
 
-  updateSize() {
+  updateSize(): void {
     this.assertBuilt('updateSize');
+    if (!this.dom.root) return;
     this.width = this.dom.root.clientWidth || this.dom.root.offsetWidth;
   }
 
-  refreshSlides() {
-    this.dom.slides = all('.swiper-slide', this.dom.wrapper);
+  refreshSlides(): void {
+    if (!this.dom.wrapper) return;
+    this.dom.slides = all<HTMLElement>('[data-swiper-slide]', this.dom.wrapper);
     this.runtime.realCount = this.dom.slides.filter(
       (slide) => !slide.hasAttribute('data-clone')
     ).length;
   }
 
-  initLoop() {
-    const first = this.dom.slides[0].cloneNode(true);
-    const last = this.dom.slides[this.dom.slides.length - 1].cloneNode(true);
+  initLoop(): void {
+    if (!this.dom.wrapper || this.dom.slides.length === 0) return;
+
+    const first = this.dom.slides[0].cloneNode(true) as HTMLElement;
+    const last = this.dom.slides[this.dom.slides.length - 1].cloneNode(
+      true
+    ) as HTMLElement;
 
     first.setAttribute('data-clone', '');
     last.setAttribute('data-clone', '');
@@ -425,14 +671,16 @@ export class Swiper extends Component {
     this.refreshSlides();
   }
 
-  setupStyles() {
+  setupStyles(): void {
+    if (!this.dom.root) return;
     this.dom.root.style.setProperty(
       '--swiper-slide-width',
       `${this.state.width}px`
     );
   }
 
-  reInitView() {
+  reInitView(): void {
+    if (!this.dom.wrapper) return;
     this.pause();
     this.clearImageCleanups();
     this.cleanup.bindings?.();
@@ -465,7 +713,7 @@ export class Swiper extends Component {
     if (this.props.autoplay) this.play();
   }
 
-  clearPagination() {
+  clearPagination(): void {
     this.cleanup.bindings?.();
     this.cleanup.bindings = null;
     this.dom.bullets.forEach((_, index) => {
@@ -482,7 +730,7 @@ export class Swiper extends Component {
     }
   }
 
-  clearNavigation() {
+  clearNavigation(): void {
     this.cleanup.navBindings?.();
     this.cleanup.navBindings = null;
     this.cleanup.events.off('nav:prev');
@@ -499,89 +747,76 @@ export class Swiper extends Component {
     }
   }
 
-  bindEvents() {
+  bindEvents(): void {
+    const root = this.dom.root;
+    const wrapper = this.dom.wrapper;
+    if (!root || !wrapper) return;
+
     this.cleanup.events.on(
       'touchstart',
-      this.dom.wrapper,
+      wrapper,
       'touchstart',
       (event) => {
-        if (event.touches[0]) this.onStart(event.touches[0], event.target);
+        const touchEvent = event as TouchEvent;
+        if (touchEvent.touches[0])
+          this.onStart(touchEvent.touches[0], touchEvent.target);
       },
       { passive: true }
     );
     this.cleanup.events.on(
       'touchmove',
-      this.dom.wrapper,
+      wrapper,
       'touchmove',
       (event) => {
-        if (event.touches[0]) this.onMove(event.touches[0], event);
+        const touchEvent = event as TouchEvent;
+        if (touchEvent.touches[0]) this.onMove(touchEvent.touches[0], event);
       },
       { passive: false }
     );
-    this.cleanup.events.on(
-      'touchend',
-      this.dom.wrapper,
-      'touchend',
-      (event) => {
-        if (event.changedTouches[0]) this.pushLog(event.changedTouches[0]);
-        this.onEnd();
-      }
-    );
-    this.cleanup.events.on(
-      'touchcancel',
-      this.dom.wrapper,
-      'touchcancel',
-      () => {
-        this.resetDrag(true);
-      }
-    );
+    this.cleanup.events.on('touchend', wrapper, 'touchend', (event) => {
+      const touchEvent = event as TouchEvent;
+      if (touchEvent.changedTouches[0])
+        this.pushLog(touchEvent.changedTouches[0]);
+      this.onEnd();
+    });
+    this.cleanup.events.on('touchcancel', wrapper, 'touchcancel', () => {
+      this.resetDrag(true);
+    });
     this.cleanup.events.on('window:touchcancel', window, 'touchcancel', () => {
       this.resetDrag(true);
     });
-    this.cleanup.events.on(
-      'mousedown',
-      this.dom.wrapper,
-      'mousedown',
-      (event) => {
-        if (event.button !== 0) return;
-        this.onStart(event, event.target);
-        this.dom.wrapper.style.cursor = 'grabbing';
-      }
-    );
-    this.cleanup.events.on(
-      'mousemove',
-      this.dom.wrapper,
-      'mousemove',
-      (event) => {
-        if (event.buttons === 1) this.onMove(event, event);
-      }
-    );
-    this.cleanup.events.on('window:mousemove', window, 'mousemove', (event) => {
-      if (this.runtime.touching && event.buttons === 1)
-        this.onMove(event, event);
+    this.cleanup.events.on('mousedown', wrapper, 'mousedown', (event) => {
+      const mouseEvent = event as MouseEvent;
+      if (mouseEvent.button !== 0) return;
+      this.onStart(mouseEvent, mouseEvent.target);
+      wrapper.style.cursor = 'grabbing';
     });
-    this.cleanup.events.on('mouseup', this.dom.wrapper, 'mouseup', (event) => {
-      this.dom.wrapper.style.cursor = 'grab';
-      this.pushLog(event);
+    this.cleanup.events.on('mousemove', wrapper, 'mousemove', (event) => {
+      const mouseEvent = event as MouseEvent;
+      if (mouseEvent.buttons === 1) this.onMove(mouseEvent, event);
+    });
+    this.cleanup.events.on('window:mousemove', window, 'mousemove', (event) => {
+      const mouseEvent = event as MouseEvent;
+      if (this.runtime.touching && mouseEvent.buttons === 1)
+        this.onMove(mouseEvent, event);
+    });
+    this.cleanup.events.on('mouseup', wrapper, 'mouseup', (event) => {
+      wrapper.style.cursor = 'grab';
+      this.pushLog(event as MouseEvent);
       this.onEnd();
     });
     this.cleanup.events.on('window:mouseup', window, 'mouseup', (event) => {
       if (!this.runtime.touching) return;
-      this.dom.wrapper.style.cursor = 'grab';
-      this.pushLog(event);
+      wrapper.style.cursor = 'grab';
+      this.pushLog(event as MouseEvent);
       this.onEnd();
     });
-    this.cleanup.events.on(
-      'wrapper:mouseleave',
-      this.dom.wrapper,
-      'mouseleave',
-      () => {
-        this.dom.wrapper.style.cursor = 'grab';
-      }
-    );
+    this.cleanup.events.on('wrapper:mouseleave', wrapper, 'mouseleave', () => {
+      wrapper.style.cursor = 'grab';
+    });
     this.cleanup.events.on(
       'click',
-      this.dom.wrapper,
+      wrapper,
       'click',
       (event) => {
         if (!this.runtime.clickPrevented || !this.props.preventClick) return;
@@ -591,30 +826,24 @@ export class Swiper extends Component {
       },
       { capture: true }
     );
-    this.cleanup.events.on(
-      'dragstart',
-      this.dom.wrapper,
-      'dragstart',
-      (event) => event.preventDefault()
+    this.cleanup.events.on('dragstart', wrapper, 'dragstart', (event) =>
+      event.preventDefault()
     );
-    this.cleanup.events.on(
-      'transitionend',
-      this.dom.wrapper,
-      'transitionend',
-      (event) => this.onTransitionEnd(event)
+    this.cleanup.events.on('transitionend', wrapper, 'transitionend', (event) =>
+      this.onTransitionEnd(event)
     );
     this.cleanup.events.on('window:resize', window, 'resize', () =>
       this.update(null, { force: true })
     );
-    this.cleanup.events.on('root:mouseenter', this.dom.root, 'mouseenter', () =>
+    this.cleanup.events.on('root:mouseenter', root, 'mouseenter', () =>
       this.pause()
     );
-    this.cleanup.events.on('root:mouseleave', this.dom.root, 'mouseleave', () =>
+    this.cleanup.events.on('root:mouseleave', root, 'mouseleave', () =>
       this.resume()
     );
   }
 
-  onStart(point, target = null) {
+  onStart(point: SwipePoint, target: EventTarget | null = null): void {
     if (this.state.animating) return;
 
     this.runtime.logs = [];
@@ -626,10 +855,10 @@ export class Swiper extends Component {
     this.runtime.clickPrevented = false;
 
     this.pause();
-    this.dom.wrapper.style.transition = 'none';
+    if (this.dom.wrapper) this.dom.wrapper.style.transition = 'none';
   }
 
-  onMove(point, event) {
+  onMove(point: SwipePoint, event: Event): void {
     if (
       !this.runtime.touching ||
       this.runtime.scrolling ||
@@ -668,7 +897,7 @@ export class Swiper extends Component {
     }
   }
 
-  onEnd() {
+  onEnd(): void {
     if (!this.runtime.touching) return;
 
     this.runtime.touching = false;
@@ -706,7 +935,7 @@ export class Swiper extends Component {
     this.resume();
   }
 
-  resetDrag(animate = true) {
+  resetDrag(animate = true): void {
     const target =
       this.state.trackIndex === 0
         ? 0
@@ -723,10 +952,12 @@ export class Swiper extends Component {
     this.resume();
   }
 
-  onTransitionEnd(event) {
+  onTransitionEnd(event?: Event): void {
     if (
       event &&
-      (event.target !== this.dom.wrapper || event.propertyName !== 'transform')
+      (event.target !== this.dom.wrapper ||
+        !('propertyName' in event) ||
+        event.propertyName !== 'transform')
     )
       return;
 
@@ -743,7 +974,7 @@ export class Swiper extends Component {
     }
   }
 
-  pushLog(point) {
+  pushLog(point: SwipePoint): void {
     this.runtime.logs.push({
       x: point.pageX ?? point.clientX ?? 0,
       y: point.pageY ?? point.clientY ?? 0,
@@ -752,7 +983,7 @@ export class Swiper extends Component {
     if (this.runtime.logs.length > 5) this.runtime.logs.shift();
   }
 
-  getDuration() {
+  getDuration(): number {
     if (this.runtime.logs.length === 0) return 0;
     return (
       this.runtime.logs[this.runtime.logs.length - 1].time -
@@ -760,14 +991,14 @@ export class Swiper extends Component {
     );
   }
 
-  getOffset() {
+  getOffset(): { x: number; y: number } {
     if (this.runtime.logs.length === 0) return { x: 0, y: 0 };
     const first = this.runtime.logs[0];
     const last = this.runtime.logs[this.runtime.logs.length - 1];
     return { x: last.x - first.x, y: last.y - first.y };
   }
 
-  toRealIndex(index = this.state.trackIndex) {
+  toRealIndex(index = this.state.trackIndex): number {
     if (!this.realCount) return 0;
     if (!this.props.loop) return index;
     if (index === 0) return this.realCount - 1;
@@ -775,13 +1006,13 @@ export class Swiper extends Component {
     return index - 1;
   }
 
-  trackIndexForRealIndex(index) {
+  trackIndexForRealIndex(index: number): number {
     if (!this.realCount) return 0;
     const target = Math.max(0, Math.min(index, this.realCount - 1));
     return this.props.loop && this.realCount > 1 ? target + 1 : target;
   }
 
-  setTrackIndex(trackIndex, animate = true) {
+  setTrackIndex(trackIndex: number, animate: boolean | null = true): void {
     const target = normalizeNumber(trackIndex);
     this.setState({
       trackIndex: target,
@@ -791,11 +1022,11 @@ export class Swiper extends Component {
     if (animate != null) this.render(animate);
   }
 
-  slideTo(index) {
+  slideTo(index: number): void {
     return this.slideToTrack(this.trackIndexForRealIndex(index));
   }
 
-  slideToTrack(idx) {
+  slideToTrack(idx: number): void {
     this.assertBuilt('slideToTrack');
     if (this.state.animating) return;
     if (this.dom.slides.length === 0) return;
@@ -815,20 +1046,21 @@ export class Swiper extends Component {
     if (this.props.lazyload) this.loadImages();
   }
 
-  next() {
+  next(): void {
     this.assertBuilt('next');
     if (this.state.animating) return;
     this.slideToTrack(this.state.trackIndex + 1);
   }
 
-  prev() {
+  prev(): void {
     this.assertBuilt('prev');
     if (this.state.animating) return;
     this.slideToTrack(this.state.trackIndex - 1);
   }
 
-  render(animate) {
+  render(animate: boolean): void {
     this.assertBuilt('render');
+    if (!this.dom.wrapper) return;
     if (animate) {
       this.dom.wrapper.style.transition = `transform ${this.props.speed}ms cubic-bezier(0.25, 0.46, 0.45, 0.94)`;
       this.animating = true;
@@ -840,7 +1072,7 @@ export class Swiper extends Component {
     this.dom.wrapper.style.transform = `translate3d(${this.state.transform}px, 0, 0)`;
   }
 
-  loadImages() {
+  loadImages(): void {
     this.assertBuilt('loadImages');
     const indices = [this.state.trackIndex];
     if (this.state.trackIndex > 0) indices.push(this.state.trackIndex - 1);
@@ -851,11 +1083,11 @@ export class Swiper extends Component {
       const slide = this.dom.slides[index];
       if (!slide) return;
 
-      const img = q('img[data-lazy]', slide);
+      const img = q<HTMLImageElement>('img[data-lazy]', slide);
       if (!img || img.src) return;
 
-      img.classList.add('loading');
-      img.src = img.dataset.lazy;
+      img.classList.add(this.props.className.loading);
+      img.src = img.dataset.lazy || '';
       const cleanup = () => {
         img.onload = null;
         img.onerror = null;
@@ -863,47 +1095,63 @@ export class Swiper extends Component {
       };
       this.runtime.imageCleanups.add(cleanup);
       img.onload = () => {
-        img.classList.remove('loading');
-        img.classList.add('loaded');
+        img.classList.remove(this.props.className.loading);
+        img.classList.add(this.props.className.loaded);
         cleanup();
       };
       img.onerror = () => {
-        img.classList.remove('loading');
-        img.classList.add('error');
+        img.classList.remove(this.props.className.loading);
+        img.classList.add(this.props.className.error);
         cleanup();
       };
     });
   }
 
-  clearImageCleanups() {
+  clearImageCleanups(): void {
     this.runtime.imageCleanups?.forEach((cleanup) => cleanup());
     this.runtime.imageCleanups?.clear();
   }
 
-  initPagination() {
+  initPagination(): void {
+    if (!this.dom.root) return;
+
     if (!this.dom.pagination) {
       this.dom.pagination = h('div', {
-        className: 'swiper-pagination is-horizontal is-clickable is-bullet',
-      });
+        className: classList(
+          this.props.className.pagination,
+          this.props.className.paginationHorizontal,
+          this.props.className.paginationClickable,
+          this.props.className.paginationBulletGroup
+        ),
+        'data-swiper-pagination': '',
+      }) as HTMLElement;
       this.dom.root.appendChild(this.dom.pagination);
       this.dom.createdPagination = true;
     } else {
       this.dom.pagination.classList.add(
-        'is-horizontal',
-        'is-clickable',
-        'is-bullet'
+        this.props.className.paginationHorizontal,
+        this.props.className.paginationClickable,
+        this.props.className.paginationBulletGroup
       );
+      setDataMarker(this.dom.pagination, 'data-swiper-pagination');
     }
 
-    this.dom.pagination.textContent = '';
+    const pagination = this.dom.pagination;
+    if (!pagination) return;
+
+    pagination.textContent = '';
     this.dom.bullets = [];
 
     for (let index = 0; index < this.realCount; index++) {
       const bullet = h('button', {
         type: 'button',
-        className: 'swiper-pagination-indicator swiper-pagination-bullet',
+        className: classList(
+          this.props.className.indicator,
+          this.props.className.bullet
+        ),
+        'data-swiper-bullet': String(index),
         'aria-label': `Go to slide ${index + 1}`,
-      });
+      }) as HTMLButtonElement;
       this.cleanup.events.on(`bullet:${index}:click`, bullet, 'click', () => {
         this.slideTo(index);
       });
@@ -912,18 +1160,22 @@ export class Swiper extends Component {
         bullet,
         'keydown',
         (event) => {
-          if (event.key !== 'Enter' && event.key !== ' ') return;
+          const keyboardEvent = event as KeyboardEvent;
+          if (keyboardEvent.key !== 'Enter' && keyboardEvent.key !== ' ')
+            return;
           event.preventDefault();
           this.slideTo(index);
         }
       );
       this.dom.bullets.push(bullet);
-      this.dom.pagination.appendChild(bullet);
+      pagination.appendChild(bullet);
     }
 
     this.cleanup.bindings = createRoot((dispose) => {
       this.dom.bullets.forEach((bullet, i) => {
-        bindClass(bullet, 'is-active', () => this.state.index === i);
+        bindClass(bullet, this.props.className.active, () => {
+          return this.state.index === i;
+        });
         bindAttr(bullet, 'aria-current', () =>
           this.state.index === i ? 'true' : null
         );
@@ -932,33 +1184,31 @@ export class Swiper extends Component {
     });
   }
 
-  initNavigation() {
-    this.dom.prevButton = this.ensureNavigation('prev', 'arrow-left');
-    this.dom.nextButton = this.ensureNavigation('next', 'arrow-right');
+  initNavigation(): void {
+    const prevButton = this.ensureNavigation('prev', 'arrow-left');
+    const nextButton = this.ensureNavigation('next', 'arrow-right');
+    this.dom.prevButton = prevButton;
+    this.dom.nextButton = nextButton;
 
-    this.cleanup.events.on('nav:prev', this.dom.prevButton, 'click', () =>
-      this.prev()
-    );
-    this.cleanup.events.on('nav:next', this.dom.nextButton, 'click', () =>
-      this.next()
-    );
+    this.cleanup.events.on('nav:prev', prevButton, 'click', () => this.prev());
+    this.cleanup.events.on('nav:next', nextButton, 'click', () => this.next());
 
     if (!this.props.loop) {
       this.cleanup.navBindings = createRoot((dispose) => {
         bindClass(
-          this.dom.prevButton,
-          'is-disabled',
+          prevButton,
+          this.props.className.disabled,
           () => this.state.trackIndex <= 0
         );
-        bindAttr(this.dom.prevButton, 'disabled', () =>
+        bindAttr(prevButton, 'disabled', () =>
           this.state.trackIndex <= 0 ? '' : null
         );
         bindClass(
-          this.dom.nextButton,
-          'is-disabled',
+          nextButton,
+          this.props.className.disabled,
           () => this.state.trackIndex >= this.dom.slides.length - 1
         );
-        bindAttr(this.dom.nextButton, 'disabled', () =>
+        bindAttr(nextButton, 'disabled', () =>
           this.state.trackIndex >= this.dom.slides.length - 1 ? '' : null
         );
         return dispose;
@@ -966,27 +1216,53 @@ export class Swiper extends Component {
     }
   }
 
-  ensureNavigation(direction, iconName) {
-    const key =
+  ensureNavigation(
+    direction: SwiperDirection,
+    iconName: 'arrow-left' | 'arrow-right'
+  ): HTMLButtonElement {
+    if (!this.dom.root) {
+      throw new Error('Swiper.ensureNavigation: root not found.');
+    }
+
+    const key: CreatedNavigationKey =
       direction === 'prev' ? 'createdPrevButton' : 'createdNextButton';
-    const className = `swiper-navigation is-${direction}`;
-    let button = q(`.swiper-navigation.is-${direction}`, this.dom.root);
+    const directionClass =
+      direction === 'prev'
+        ? this.props.className.prev
+        : this.props.className.next;
+    const className = classList(
+      this.props.className.navigation,
+      directionClass
+    );
+    let button = q<HTMLButtonElement>(
+      `[data-action="${direction}"]`,
+      this.dom.root
+    );
 
     if (!button) {
-      button = h('button', { type: 'button', className });
+      button = h('button', {
+        type: 'button',
+        className,
+        'data-action': direction,
+        'data-swiper-navigation': direction,
+      }) as HTMLButtonElement;
       this.dom.root.appendChild(button);
       this.dom[key] = true;
-    } else if (!button.matches('button')) {
+    } else if (button.tagName.toLowerCase() !== 'button') {
       button.setAttribute('role', 'button');
       button.setAttribute('tabindex', '0');
-      button.classList.add('swiper-navigation', `is-${direction}`);
+      button.classList.add(this.props.className.navigation, directionClass);
+      setDataMarker(button, 'data-swiper-navigation', direction);
+    } else {
+      button.classList.add(this.props.className.navigation, directionClass);
+      setDataMarker(button, 'data-swiper-navigation', direction);
     }
 
     button.setAttribute(
       'aria-label',
       direction === 'prev' ? 'Previous slide' : 'Next slide'
     );
-    if (!button.querySelector('svg')) {
+    if (!q('svg', button)) {
       button.textContent = '';
       button.appendChild(icon(iconName));
     }
@@ -994,7 +1270,7 @@ export class Swiper extends Component {
     return button;
   }
 
-  play() {
+  play(): void {
     this.assertBuilt('play');
     if (this.runtime.destroyed || this.runtime.timer) return;
     if (this.realCount <= 1) return;
@@ -1002,40 +1278,37 @@ export class Swiper extends Component {
     this.runtime.timer = setInterval(() => this.next(), delay);
   }
 
-  pause() {
+  pause(): void {
     if (!this.runtime.timer) return;
     clearInterval(this.runtime.timer);
     this.runtime.timer = null;
   }
 
-  resume() {
+  resume(): void {
     if (this.runtime.destroyed) return;
     if (this.props.autoplay && !this.runtime.timer) this.play();
   }
 
-  restartAutoplay() {
+  restartAutoplay(): void {
     this.pause();
     if (this.props.autoplay) this.play();
   }
 
-  update(propsPatch = {}, { force = false } = {}) {
+  update(
+    propsPatch: SwiperOptions | null | undefined = {},
+    { force = false }: SwiperUpdateOptions = {}
+  ): this {
     if (this.runtime.destroyed)
       throw new Error('Component.update: instance destroyed');
     this.assertBuilt('update');
 
-    const patch =
-      propsPatch && typeof propsPatch === 'object' && !Array.isArray(propsPatch)
-        ? propsPatch
-        : {};
-    const nextProps = resolveProps(
-      Object.assign({}, this.props, patch),
-      SWIPER_OPTIONS_SCHEMA,
-      'Swiper.options'
-    );
-    const normalizedPatch = {};
+    const patch = isObjectPatch(propsPatch) ? propsPatch : {};
+    const nextProps = normalizeOptions(Object.assign({}, this.props, patch));
+    const normalizedPatch: Partial<ResolvedSwiperOptions> = {};
 
     Object.keys(patch).forEach((key) => {
-      normalizedPatch[key] = nextProps[key];
+      const propKey = key as keyof ResolvedSwiperOptions;
+      normalizedPatch[propKey] = nextProps[propKey];
     });
 
     this.props = nextProps;
@@ -1045,7 +1318,10 @@ export class Swiper extends Component {
     return this;
   }
 
-  onUpdate(propsPatch = {}) {
+  protected onUpdate(
+    propsPatch: Partial<ResolvedSwiperOptions> | null | undefined = {},
+    _options: Required<ComponentUpdateOptions> = { force: false }
+  ): void {
     if (
       propsPatch &&
       Object.prototype.hasOwnProperty.call(propsPatch, 'data')
@@ -1076,7 +1352,7 @@ export class Swiper extends Component {
     else this.pause();
   }
 
-  updateData(data = this.props.data) {
+  updateData(data: SwiperDataItem[] | null = this.props.data): this {
     if (this.runtime.destroyed)
       throw new Error('Swiper.updateData: instance destroyed');
     this.assertBuilt('updateData');
@@ -1094,6 +1370,8 @@ export class Swiper extends Component {
 
     this.props.data = data;
     const realIndex = this.state.index;
+    const wrapper = this.dom.wrapper;
+    if (!wrapper) return this;
 
     this.pause();
     this.clearImageCleanups();
@@ -1104,9 +1382,9 @@ export class Swiper extends Component {
     this.cleanup.events.clear();
 
     const items = this.normalizeData(data);
-    this.dom.wrapper.textContent = '';
+    wrapper.textContent = '';
     items.forEach((item, index) => {
-      this.dom.wrapper.appendChild(this.createDataSlide(item, index));
+      wrapper.appendChild(this.createDataSlide(item, index));
     });
     this.refreshSlides();
     this.runtime.realCount = this.dom.slides.length;
@@ -1118,6 +1396,9 @@ export class Swiper extends Component {
   }
 }
 
-export function createSwiper(container, input = {}) {
-  return new Swiper(input);
+export function createSwiper(
+  container: DOMReference,
+  input: SwiperOptions = {}
+): Swiper {
+  return new Swiper(container, input);
 }

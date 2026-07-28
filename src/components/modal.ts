@@ -9,8 +9,13 @@ import {
   untrack,
 } from 'vanilla-signal';
 
-import Component from '../core/Component.ts';
+import Component, {
+  type ComponentDOM,
+  type ComponentRuntime,
+  type ComponentUpdateOptions,
+} from '../core/Component.ts';
 import {
+  type ResolveSchema,
   hasOwn,
   isPlainObject,
   randomId,
@@ -23,64 +28,258 @@ import {
   canUseDOM,
   canRenderDOM,
   createLoading,
-  isNode,
+  isRenderableContent,
+  normalizeContentNodes,
   requireRenderDOM,
+  type RenderableContent,
 } from '../utilities/dom.ts';
-import { Form } from './form.js';
+import {
+  Form,
+  type FormDataRecord,
+  type FormField,
+  type FormProps,
+} from './form.ts';
 import { icon } from './icons.ts';
 
 const HIDE_DURATION = 300;
 
-function cloneFields(fields) {
+type ModalStyle =
+  | string
+  | Record<string, string | number | null | undefined>
+  | null;
+type ModalTextInput = Partial<ModalText> & Record<string, unknown>;
+type ModalContent = RenderableContent<Modal>;
+type FlowDirection = 'next' | 'back';
+
+export interface ModalClassNames {
+  layout: string;
+  modal: string;
+  fullscreen: string;
+  header: string;
+  body: string;
+  footer: string;
+  title: string;
+  close: string;
+  cancel: string;
+  confirm: string;
+  button: string;
+  buttonIcon: string;
+  buttonGhost: string;
+  buttonPrimary: string;
+  buttonSmall: string;
+  formContainer: string;
+}
+
+export type ModalClassNameConfig = Partial<ModalClassNames>;
+
+export interface ModalText {
+  title: string;
+  confirm: string;
+  cancel: string;
+}
+
+interface FlowStep {
+  id?: string;
+  title?: RenderableContent<Modal>;
+  content?: ModalContent;
+  modal?: ModalFlowView | ModalFlowViewFactory;
+  view?: ModalFlowView | ModalFlowViewFactory;
+  [key: string]: unknown;
+}
+
+interface FlowSnapshot {
+  data?: Record<string, unknown> | null;
+  currentData?: Record<string, unknown> | null;
+  currentStep?: FlowStep;
+  [key: string]: unknown;
+}
+
+interface FlowLike {
+  currentStep?: FlowStep;
+  next: (
+    payload: FormDataRecord | null
+  ) => Promise<FlowSnapshot> | FlowSnapshot;
+  back: (
+    payload: FormDataRecord | null
+  ) => Promise<FlowSnapshot> | FlowSnapshot;
+  snapshot: () => FlowSnapshot;
+  reset?: () => void;
+  destroy?: () => void;
+}
+
+interface ModalFlowView extends Partial<ModalProps> {
+  [key: string]: unknown;
+}
+
+type ModalFlowViewFactory = (context: {
+  flow: FlowLike;
+  snapshot: FlowSnapshot | null;
+  step: FlowStep | undefined;
+  modal: Modal;
+  data: Record<string, unknown> | null;
+  currentData: Record<string, unknown> | null;
+}) => unknown;
+
+export interface ModalProps extends Record<string, unknown> {
+  content?: ModalContent;
+  position?: string;
+  showCancel?: boolean;
+  showClose?: boolean;
+  fullscreen?: boolean;
+  flow?: FlowLike | null;
+  text?: ModalTextInput;
+  onShow?: ((modal: Modal) => void | Promise<void>) | null;
+  onShown?: ((modal: Modal) => void | Promise<void>) | null;
+  onHide?: ((modal: Modal) => void | Promise<void>) | null;
+  onHidden?: ((modal: Modal) => void | Promise<void>) | null;
+  onConfirm?: ((modal: Modal) => void | Promise<void>) | null;
+  onSubmit?:
+    | ((data: FormDataRecord, modal: Modal) => void | Promise<void>)
+    | null;
+  onCancel?: ((modal: Modal) => void | Promise<void>) | null;
+  fields?: readonly FormField[] | null;
+  header?: boolean;
+  footer?: boolean;
+  style?: ModalStyle;
+  id?: string | null;
+  escClose?: boolean;
+  bgClose?: boolean;
+  lazy?: boolean;
+  className?: ModalClassNameConfig;
+}
+
+interface ResolvedModalProps extends Record<string, unknown> {
+  content: ModalContent;
+  position: string;
+  showCancel: boolean;
+  showClose: boolean;
+  fullscreen: boolean;
+  flow: FlowLike | null;
+  text: ModalText;
+  onShow: NonNullable<ModalProps['onShow']> | null;
+  onShown: NonNullable<ModalProps['onShown']> | null;
+  onHide: NonNullable<ModalProps['onHide']> | null;
+  onHidden: NonNullable<ModalProps['onHidden']> | null;
+  onConfirm: NonNullable<ModalProps['onConfirm']> | null;
+  onSubmit: NonNullable<ModalProps['onSubmit']> | null;
+  onCancel: NonNullable<ModalProps['onCancel']> | null;
+  fields: FormField[] | null;
+  header: boolean;
+  footer: boolean;
+  style: ModalStyle;
+  id: string;
+  escClose: boolean;
+  bgClose: boolean;
+  lazy: boolean;
+  className: ModalClassNames;
+}
+
+interface ModalState extends ResolvedModalProps {
+  loading: boolean;
+  submitting: boolean;
+  visible: boolean;
+  data: FormDataRecord | null;
+  extraData: FormDataRecord | null;
+}
+
+interface ModalDOM extends ComponentDOM {
+  root: HTMLElement | null;
+  modal: HTMLElement | null;
+  header: HTMLElement | null;
+  body: HTMLElement | null;
+  footer: HTMLElement | null;
+  form: Form | null;
+  formContainer: HTMLElement | null;
+}
+
+interface ModalRuntime extends ComponentRuntime {
+  scrollLocked: boolean;
+  visibleApplied: boolean;
+}
+
+interface ModalCache {
+  initial: ResolvedModalProps | null;
+  fieldIds: Map<string, string> | null;
+  baseStyle: string;
+  previousActiveElement: HTMLElement | null;
+  formId: string;
+}
+
+interface ModalCleanupExtras {
+  visibility?: (() => void) | null;
+  view?: (() => void) | null;
+  hideTimer?: ReturnType<typeof setTimeout> | null;
+}
+
+type ModalPatch = Partial<ModalProps>;
+type ModalStatePatch = Partial<ModalState>;
+
+const DEFAULT_CLASS_NAMES: ModalClassNames = {
+  layout: 'j-popup-layout',
+  modal: 'j-modal',
+  fullscreen: 'is-fullscreen',
+  header: 'modal-header',
+  body: 'modal-body',
+  footer: 'modal-footer',
+  title: 'modal-title',
+  close: 'modal-close',
+  cancel: 'modal-cancel',
+  confirm: 'modal-confirm',
+  button: 'j-button',
+  buttonIcon: 'is-icon',
+  buttonGhost: 'is-ghost',
+  buttonPrimary: 'is-primary',
+  buttonSmall: 'is-sm',
+  formContainer: 'modal-form-container',
+};
+
+function cloneFields(
+  fields: readonly FormField[] | null | undefined
+): FormField[] {
   if (!Array.isArray(fields)) return [];
   return fields.map((field) => ({
     ...field,
     options: Array.isArray(field.options)
-      ? field.options.map((option) =>
-          option && typeof option === 'object' ? { ...option } : option
+      ? field.options.map(
+          (option: NonNullable<FormField['options']>[number]) =>
+            option && typeof option === 'object' ? { ...option } : option
         )
       : field.options,
   }));
 }
 
-function cloneProps(props) {
+function cloneProps(props: ResolvedModalProps): ResolvedModalProps {
   return {
     ...props,
-    fields: Array.isArray(props.fields)
-      ? cloneFields(props.fields)
-      : props.fields,
+    fields: Array.isArray(props.fields) ? cloneFields(props.fields) : null,
+    text: { ...props.text },
+    className: { ...props.className },
   };
 }
 
-function isModalContent(content) {
-  return (
-    content == null ||
-    typeof content === 'string' ||
-    typeof content === 'function' ||
-    Array.isArray(content) ||
-    isNode(content)
-  );
-}
-
-function isUpdateProps(value) {
+function isUpdateProps(value: unknown): value is ModalPatch {
   return isPlainObject(value);
 }
 
-function isFlowLike(value) {
+function isFlowLike(value: unknown): value is FlowLike | null {
   return (
     value == null ||
     (typeof value === 'object' &&
-      typeof value.next === 'function' &&
-      typeof value.back === 'function' &&
-      typeof value.snapshot === 'function')
+      typeof (value as Partial<FlowLike>).next === 'function' &&
+      typeof (value as Partial<FlowLike>).back === 'function' &&
+      typeof (value as Partial<FlowLike>).snapshot === 'function')
   );
 }
 
-function hydrateFields(fields, data) {
-  if (!Array.isArray(fields) || !isPlainObject(data)) return fields;
+function hydrateFields(
+  fields: readonly FormField[] | null,
+  data: Record<string, unknown> | null | undefined
+): FormField[] | null {
+  if (!Array.isArray(fields) || !isPlainObject(data))
+    return fields ? cloneFields(fields) : null;
 
   return fields.map((field) => {
-    if (!field?.name || !hasOwn(data, field.name)) return field;
+    if (!field?.name || !hasOwn(data, field.name)) return { ...field };
     const value = data[field.name];
 
     if (field.type === 'checkbox' || field.type === 'radio') {
@@ -91,11 +290,18 @@ function hydrateFields(fields, data) {
       return { ...field, checked };
     }
 
-    return { ...field, value };
+    return {
+      ...field,
+      value: Array.isArray(value)
+        ? value.map(String)
+        : (value as FormField['value']),
+    };
   });
 }
 
-function createTextState(props) {
+function createTextState(
+  props: Partial<ModalProps> | Partial<ResolvedModalProps>
+): ModalText {
   const text = isPlainObject(props?.text) ? props.text : {};
   return {
     title: typeof text.title === 'string' ? text.title : 'Tip',
@@ -104,7 +310,7 @@ function createTextState(props) {
   };
 }
 
-function createModalState(props) {
+function createModalState(props: ResolvedModalProps): ModalState {
   return {
     ...props,
     fields: Array.isArray(props.fields) ? cloneFields(props.fields) : null,
@@ -117,25 +323,40 @@ function createModalState(props) {
   };
 }
 
-function mergeExtraData(data, extraData) {
+function mergeExtraData(
+  data: FormDataRecord,
+  extraData: FormDataRecord | null
+): FormDataRecord {
   if (!extraData || typeof extraData !== 'object') return data;
   return Object.assign(data, extraData);
 }
 
-function clonePlainObject(value) {
+function clonePlainObject(value: unknown): ModalFlowView {
   return isPlainObject(value) ? { ...value } : {};
 }
 
+function joinClasses(
+  ...classes: Array<string | false | null | undefined>
+): string {
+  return classes.filter(Boolean).join(' ');
+}
+
+function textValue(value: RenderableContent<Modal> | undefined): string {
+  return typeof value === 'string' || typeof value === 'number'
+    ? String(value)
+    : '';
+}
+
 const MODAL_CONTENT_RULE = {
-  validate: isModalContent,
-  message: 'expects string, Node, array, function or null.',
+  validate: isRenderableContent,
+  message: 'expects string, number, Node, array, function or null.',
 };
 
 const MODAL_TEXT_RULE = {
   default: {},
-  validate: (value) => isPlainObject(value),
+  validate: (value: unknown) => isPlainObject(value),
   message: 'expects an object with text fields.',
-  normalize: (value) => {
+  normalize: (value: unknown) => {
     const text = isPlainObject(value) ? value : {};
     return {
       ...text,
@@ -173,9 +394,11 @@ const MODAL_PROPS_SCHEMA = {
   id: {
     default: null,
     types: ['string', 'null'],
-    normalize: (value) => {
-      if (typeof value === 'string')
-        return value.trim() ? value.trim() : randomId();
+    normalize: (value: unknown) => {
+      if (typeof value === 'string') {
+        const id = value.trim();
+        return id || randomId();
+      }
       if (value == null) return randomId();
       return value;
     },
@@ -183,7 +406,15 @@ const MODAL_PROPS_SCHEMA = {
   escClose: { default: false, type: 'boolean' },
   bgClose: { default: false, type: 'boolean' },
   lazy: { default: false, type: 'boolean' },
-};
+  className: {
+    default: DEFAULT_CLASS_NAMES,
+    type: 'object',
+    normalize: (value: unknown) => ({
+      ...DEFAULT_CLASS_NAMES,
+      ...(value && typeof value === 'object' ? value : {}),
+    }),
+  },
+} satisfies ResolveSchema<ModalProps>;
 
 const MODAL_STATE_SCHEMA = {
   ...MODAL_PROPS_SCHEMA,
@@ -197,7 +428,7 @@ const MODAL_STATE_SCHEMA = {
 const MODAL_UPDATE_BLOCKED_KEYS = new Set(['id', 'lazy']);
 
 const MODAL_EXTRA_FIELDS_RULE = {
-  validate: (value) =>
+  validate: (value: unknown) =>
     !!value && typeof value === 'object' && !Array.isArray(value),
   message: 'expects an object.',
 };
@@ -207,12 +438,48 @@ const MODAL_UPDATE_RULE = {
   message: 'expects a props object.',
 };
 
+function normalizeProps(input: ModalProps): ResolvedModalProps {
+  const props = resolveProps(input, MODAL_PROPS_SCHEMA, 'Modal');
+  return {
+    content: props.content as ModalContent,
+    position: props.position as string,
+    showCancel: props.showCancel as boolean,
+    showClose: props.showClose as boolean,
+    fullscreen: props.fullscreen as boolean,
+    flow: props.flow as FlowLike | null,
+    text: props.text as ModalText,
+    onShow: props.onShow as ResolvedModalProps['onShow'],
+    onShown: props.onShown as ResolvedModalProps['onShown'],
+    onHide: props.onHide as ResolvedModalProps['onHide'],
+    onHidden: props.onHidden as ResolvedModalProps['onHidden'],
+    onConfirm: props.onConfirm as ResolvedModalProps['onConfirm'],
+    onSubmit: props.onSubmit as ResolvedModalProps['onSubmit'],
+    onCancel: props.onCancel as ResolvedModalProps['onCancel'],
+    fields: Array.isArray(props.fields)
+      ? cloneFields(props.fields as FormField[])
+      : null,
+    header: props.header as boolean,
+    footer: props.footer as boolean,
+    style: props.style as ModalStyle,
+    id: props.id as string,
+    escClose: props.escClose as boolean,
+    bgClose: props.bgClose as boolean,
+    lazy: props.lazy as boolean,
+    className: props.className as ModalClassNames,
+  };
+}
+
 let modalScrollLockCount = 0;
 let modalBodyOverflow = '';
 
-export class Modal extends Component {
-  constructor(input = {}) {
-    const props = resolveProps(input, MODAL_PROPS_SCHEMA, 'Modal');
+export class Modal extends Component<ResolvedModalProps, ModalState, ModalDOM> {
+  declare runtime: ModalRuntime;
+  declare state: ModalState;
+  declare cleanup: Component['cleanup'] & ModalCleanupExtras;
+  cache: ModalCache;
+
+  constructor(input: ModalProps = {}) {
+    const props = normalizeProps(input);
     super(props);
 
     this.dom.modal = null;
@@ -237,38 +504,41 @@ export class Modal extends Component {
       formId: `${this.props.id}_form`,
     };
 
-    this.state = createDeepStore(createModalState(this.props));
+    this.state = createDeepStore(createModalState(this.props)) as ModalState;
 
     this.init(props);
   }
 
-  onInit() {
+  protected override onInit(): void {
     this.bindReactiveVisibility();
     if (!this.state.lazy && canRenderDOM()) this.buildRoot();
   }
 
-  buildRoot() {
-    if (this.root) return this.root;
+  buildRoot(): HTMLElement {
+    if (this.root instanceof HTMLElement) return this.root;
 
-    const { id } = this.state;
+    const { id, className } = this.state;
     const dialogChildren = [
       jsx('div', {
-        className: 'modal-header',
+        className: className.header,
+        'data-modal-header': id,
         style: () => ({ display: this.state.header ? '' : 'none' }),
-        ref: (element) => {
+        ref: (element: HTMLElement) => {
           this.dom.header = element;
         },
       }),
       jsx('div', {
-        className: 'modal-body',
-        ref: (element) => {
+        className: className.body,
+        'data-modal-body': id,
+        ref: (element: HTMLElement) => {
           this.dom.body = element;
         },
       }),
       jsx('div', {
-        className: 'modal-footer',
+        className: className.footer,
+        'data-modal-footer': id,
         style: () => ({ display: this.state.footer ? '' : 'none' }),
-        ref: (element) => {
+        ref: (element: HTMLElement) => {
           this.dom.footer = element;
         },
       }),
@@ -276,32 +546,39 @@ export class Modal extends Component {
 
     const modal = jsx('div', {
       className: () =>
-        this.state.fullscreen ? 'j-modal is-fullscreen' : 'j-modal',
+        joinClasses(
+          this.state.className.modal,
+          this.state.fullscreen && this.state.className.fullscreen
+        ),
       id,
       role: 'document',
-      ref: (element) => {
+      'data-modal-dialog': id,
+      ref: (element: HTMLElement) => {
         this.dom.modal = element;
         this.applyStyle(element, this.state.style);
       },
       children: dialogChildren,
-    });
+    }) as HTMLElement;
 
     const root = jsx('div', {
-      className: () => `j-popup-layout is-${this.state.position}`,
+      className: () =>
+        joinClasses(this.state.className.layout, `is-${this.state.position}`),
       role: 'dialog',
+      'data-modal': 'root',
+      'data-modal-position': () => this.state.position,
       'aria-modal': 'true',
       'aria-labelledby': () => (this.state.header ? `${id}_title` : null),
       'aria-label': () =>
         this.state.header ? null : this.state.text?.title || 'Modal',
       children: modal,
-    });
+    }) as HTMLElement;
 
     this.root = root;
     this.mountView();
     return root;
   }
 
-  mountView() {
+  mountView(): void {
     if (this.cleanup.view || !this.dom.body) return;
 
     this.cleanup.view = createRoot((dispose) => {
@@ -310,7 +587,7 @@ export class Modal extends Component {
         onCleanup(headerDispose);
       }
 
-      render(() => this.bodyView(), this.dom.body);
+      if (this.dom.body) render(() => this.bodyView(), this.dom.body);
 
       if (this.dom.footer) {
         const footerDispose = render(() => this.footerView(), this.dom.footer);
@@ -323,72 +600,88 @@ export class Modal extends Component {
     });
   }
 
-  headerView() {
+  headerView(): () => (Node | null)[] | null {
     return () => {
       if (!this.state.header) return null;
 
       return [
         jsx('div', {
-          className: 'modal-title',
+          className: this.state.className.title,
           id: `${this.state.id}_title`,
+          'data-modal-title': this.state.id,
           children: () => this.state.text?.title,
-        }),
+        }) as Node,
         this.state.showClose
-          ? jsx('button', {
+          ? (jsx('button', {
               type: 'button',
-              className: 'modal-close j-button is-icon is-ghost is-sm',
+              className: joinClasses(
+                this.state.className.button,
+                this.state.className.buttonIcon,
+                this.state.className.buttonGhost,
+                this.state.className.buttonSmall,
+                this.state.className.close
+              ),
               'data-action': 'close',
               'aria-label': 'close',
               children: icon('close'),
-            })
+            }) as Node)
           : null,
       ];
     };
   }
 
-  footerView() {
+  footerView(): () => (Node | null)[] | null {
     return () => {
       if (!this.state.footer) return null;
 
       return [
         this.state.showCancel
-          ? jsx('button', {
+          ? (jsx('button', {
               type: 'button',
-              className: 'j-button is-ghost modal-cancel',
+              className: joinClasses(
+                this.state.className.button,
+                this.state.className.buttonGhost,
+                this.state.className.cancel
+              ),
               'data-action': 'close',
               'aria-label': 'close',
               disabled: () => this.isBusy(),
               children: () => this.state.text?.cancel,
-            })
+            }) as Node)
           : null,
         jsx('button', {
           type: () => (this.isFormMode() ? 'submit' : 'button'),
           form: () => (this.isFormMode() ? this.cache.formId : null),
-          className: 'j-button is-primary modal-confirm',
-          'data-action': this.isFormMode() ? 'submit' : 'confirm',
+          className: joinClasses(
+            this.state.className.button,
+            this.state.className.buttonPrimary,
+            this.state.className.confirm
+          ),
+          'data-action': () => (this.isFormMode() ? 'submit' : 'confirm'),
           disabled: () => this.isBusy(),
           children: () => this.state.text?.confirm,
-        }),
+        }) as Node,
       ];
     };
   }
 
-  bodyView() {
+  bodyView(): RenderableContent<Modal> {
     if (this.isFormMode()) return this.formView();
     this.destroyForm();
     return this.contentView(this.state.content);
   }
 
-  formView() {
+  formView(): HTMLElement {
     return jsx('div', {
-      className: 'modal-form-container',
-      ref: (element) => {
+      className: this.state.className.formContainer,
+      'data-modal-form-container': this.state.id,
+      ref: (element: HTMLElement) => {
         this.mountForm(element);
       },
-    });
+    }) as HTMLElement;
   }
 
-  mountForm(container) {
+  mountForm(container: HTMLElement | null): void {
     if (!container) return;
     this.dom.formContainer = container;
 
@@ -401,7 +694,7 @@ export class Modal extends Component {
     this.dom.form = new Form(props, container).build();
   }
 
-  createFormProps() {
+  createFormProps(): FormProps {
     return {
       id: this.cache.formId,
       fields: this.state.fields || [],
@@ -410,31 +703,23 @@ export class Modal extends Component {
     };
   }
 
-  destroyForm() {
+  destroyForm(): void {
     this.dom.form?.destroy();
     this.dom.form = null;
     this.dom.formContainer = null;
   }
 
-  contentView(content) {
-    if (typeof content === 'function') return content(this);
-    if (Array.isArray(content) || isNode(content)) return content;
-    if (content == null) return '';
-    if (typeof content !== 'string') return '';
-
-    // return Array.from(html(content).childNodes);
-    const template = document.createElement('template');
-    template.innerHTML = content;
-    return Array.from(template.content.childNodes);
+  contentView(content: ModalContent): Node[] {
+    return normalizeContentNodes(content, this);
   }
 
-  bindReactiveLoading() {
-    let loading = null;
+  bindReactiveLoading(): void {
+    let loading: HTMLElement | null = null;
 
     createEffect(() => {
       if (this.state.loading && !loading) {
         loading = createLoading();
-        this.dom.modal.appendChild(loading);
+        this.dom.modal?.appendChild(loading);
       } else if (!this.state.loading && loading) {
         loading.remove();
         loading = null;
@@ -447,22 +732,22 @@ export class Modal extends Component {
     });
   }
 
-  bindReactiveStyle() {
+  bindReactiveStyle(): void {
     createEffect(() => {
       const style = this.state.style;
       if (this.dom.modal) this.applyStyle(this.dom.modal, style);
     });
   }
 
-  isFormMode() {
+  isFormMode(): boolean {
     return Array.isArray(this.state.fields);
   }
 
-  isBusy() {
+  isBusy(): boolean {
     return !!(this.state.loading || this.state.submitting);
   }
 
-  validatePropsPatch(patch, namespace = 'Modal.update') {
+  validatePropsPatch(patch: ModalPatch, namespace = 'Modal.update'): void {
     validateParam('props', patch, MODAL_UPDATE_RULE, namespace);
 
     for (const key of Object.keys(patch)) {
@@ -476,56 +761,75 @@ export class Modal extends Component {
           `Modal.update: "${key}" cannot be updated after initialization.`
         );
       }
-      validateParam(key, patch[key], MODAL_PROPS_SCHEMA[key], namespace);
+      validateParam(
+        key,
+        patch[key],
+        MODAL_PROPS_SCHEMA[key as keyof typeof MODAL_PROPS_SCHEMA],
+        namespace
+      );
     }
   }
 
-  applyProps(patch, { validate = true, force = false } = {}) {
+  applyProps(
+    patch: ModalPatch,
+    {
+      validate = true,
+      force = false,
+    }: { validate?: boolean; force?: boolean } = {}
+  ): this {
     if (validate) this.validatePropsPatch(patch);
     if (!patch || Object.keys(patch).length === 0) return this;
 
     const hasFields = hasOwn(patch, 'fields');
     const hasContent = hasOwn(patch, 'content');
 
-    if (hasContent) {
-      if (!hasFields && this.isFormMode() && !force) {
-        throw new Error(
-          'Modal.update: Cannot update content when fields are defined.'
-        );
-      }
+    if (hasContent && !hasFields && this.isFormMode() && !force) {
+      throw new Error(
+        'Modal.update: Cannot update content when fields are defined.'
+      );
     }
 
-    const nextProps = Object.assign({}, this.props, patch);
-    if (hasOwn(patch, 'text')) {
-      nextProps.text = Object.assign({}, this.props.text || {}, patch.text);
-    }
+    const nextInput: ModalProps = {
+      ...(this.props as ModalProps),
+      ...patch,
+      text: (hasOwn(patch, 'text')
+        ? { ...this.props.text, ...patch.text }
+        : this.props.text) as ModalTextInput,
+      className: hasOwn(patch, 'className')
+        ? { ...this.props.className, ...patch.className }
+        : this.props.className,
+    };
+    const nextProps = normalizeProps(nextInput);
 
     this.props = nextProps;
-    super.update(patch, { force });
+    super.update(patch as Partial<ResolvedModalProps>, { force });
     this.props = nextProps;
 
-    const statePatch = {};
+    const statePatch: ModalStatePatch = {};
     if (hasFields) {
-      this.cache.fieldIds.clear();
+      this.cache.fieldIds?.clear();
       statePatch.fields = Array.isArray(patch.fields)
         ? cloneFields(patch.fields)
         : null;
     }
 
     for (const [key, value] of Object.entries(patch)) {
-      if (key === 'fields' || key === 'text') continue;
-      statePatch[key] = value;
+      if (key === 'fields' || key === 'text' || key === 'className') continue;
+      statePatch[key as keyof ModalStatePatch] =
+        value as ModalStatePatch[keyof ModalStatePatch];
     }
 
-    const shouldRefreshText = hasOwn(patch, 'text');
-
-    if (shouldRefreshText) {
-      statePatch.text = createTextState(this.props);
+    if (hasOwn(patch, 'text')) {
+      statePatch.text = createTextState(nextProps);
+    }
+    if (hasOwn(patch, 'className')) {
+      statePatch.className = nextProps.className;
     }
 
     flushSync(() => {
       for (const [key, value] of Object.entries(statePatch)) {
-        this.state[key] = value;
+        this.state[key as keyof ModalState] =
+          value as ModalState[keyof ModalState];
       }
     });
 
@@ -547,7 +851,7 @@ export class Modal extends Component {
     return this;
   }
 
-  applyStyle(element, style) {
+  applyStyle(element: HTMLElement, style: ModalStyle): void {
     element.removeAttribute('style');
     if (!style) {
       this.cache.baseStyle = '';
@@ -558,19 +862,17 @@ export class Modal extends Component {
       this.cache.baseStyle = element.getAttribute('style') || '';
       return;
     }
-    if (typeof style === 'object') {
-      Object.entries(style).forEach(([key, value]) => {
-        if (value == null) return;
-        const name = key.startsWith('--')
-          ? key
-          : key.replace(/[A-Z]/g, (m) => `-${m.toLowerCase()}`);
-        element.style.setProperty(name, String(value));
-      });
-    }
+    Object.entries(style).forEach(([key, value]) => {
+      if (value == null) return;
+      const name = key.startsWith('--')
+        ? key
+        : key.replace(/[A-Z]/g, (match) => `-${match.toLowerCase()}`);
+      element.style.setProperty(name, String(value));
+    });
     this.cache.baseStyle = element.getAttribute('style') || '';
   }
 
-  bindReactiveVisibility() {
+  bindReactiveVisibility(): void {
     this.cleanup.visibility = createRoot((dispose) => {
       createEffect(() => {
         const visible = !!this.state.visible;
@@ -580,7 +882,7 @@ export class Modal extends Component {
     });
   }
 
-  applyVisibility(visible) {
+  applyVisibility(visible: boolean): void {
     if (visible === this.runtime.visibleApplied) return;
     if (visible) {
       this.showFromState();
@@ -589,7 +891,7 @@ export class Modal extends Component {
     this.hideFromState();
   }
 
-  showFromState() {
+  showFromState(): void {
     if (this.runtime.destroyed) {
       throw new Error('Modal: The current instance has been destroyed.');
     }
@@ -602,25 +904,28 @@ export class Modal extends Component {
     this.resetAnimationStyles();
 
     const { onShow, onShown } = this.state;
-    if (onShow) onShow();
+    void onShow?.(this);
 
-    this.cache.previousActiveElement = document.activeElement;
-    if (!this.root.parentNode) document.body.appendChild(this.root);
+    this.cache.previousActiveElement =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
+    if (this.root && !this.root.parentNode)
+      document.body.appendChild(this.root);
     this.lockScroll();
     this.runtime.visibleApplied = true;
 
-    // this.normalizeIcon(this.dom.modal);
     this.bindEvents(this.root);
     this.focusFirst();
 
-    if (onShown) onShown();
+    void onShown?.(this);
   }
 
-  hideFromState() {
+  hideFromState(): void {
     if (!this.runtime.visibleApplied || !this.root) return;
 
     const { onHide, onHidden } = this.state;
-    if (onHide) onHide();
+    void onHide?.(this);
 
     this.runtime.visibleApplied = false;
     this.clearEvents();
@@ -644,14 +949,14 @@ export class Modal extends Component {
     );
   }
 
-  bindEvents(root) {
+  bindEvents(root: Element | null): void {
     this.clearEvents();
     this.bindOverlayCloseEvent(root);
     this.bindDocumentKeyEvent();
     this.bindInsideEvent();
   }
 
-  bindOverlayCloseEvent(root) {
+  bindOverlayCloseEvent(root: Element | null): void {
     if (!root) return;
     this.cleanup.events.on('bg', root, 'click', (event) => {
       if (this.state.bgClose && event.target === root) {
@@ -660,9 +965,9 @@ export class Modal extends Component {
     });
   }
 
-  bindDocumentKeyEvent() {
+  bindDocumentKeyEvent(): void {
     this.cleanup.events.on('keydown', document, 'keydown', (event) => {
-      if (!this.state.visible) return;
+      if (!this.state.visible || !(event instanceof KeyboardEvent)) return;
 
       if (event.key === 'Escape' && this.state.escClose) {
         event.preventDefault();
@@ -674,20 +979,16 @@ export class Modal extends Component {
     });
   }
 
-  bindInsideEvent() {
+  bindInsideEvent(): void {
     if (!this.dom.modal) return;
 
     this.cleanup.events.on('inside', this.dom.modal, 'click', (event) => {
       const target = event.target instanceof Element ? event.target : null;
-      const actionEl = target?.closest('[data-action]');
-      if (!actionEl || !this.dom.modal.contains(actionEl)) return;
+      const actionEl = target?.closest<HTMLElement>('[data-action]');
+      if (!actionEl || !this.dom.modal?.contains(actionEl)) return;
 
       const action = actionEl.dataset.action;
-      if (
-        action === 'cancel' ||
-        action === 'close' ||
-        actionEl.classList.contains('modal-close')
-      ) {
+      if (action === 'cancel' || action === 'close') {
         void this.handleCancel();
         return;
       }
@@ -709,7 +1010,6 @@ export class Modal extends Component {
 
       if (action === 'confirm') {
         if (this.isFormMode()) {
-          if (actionEl.classList.contains('modal-confirm')) return;
           this.requestSubmit();
           return;
         }
@@ -718,11 +1018,11 @@ export class Modal extends Component {
     });
   }
 
-  clearEvents() {
+  clearEvents(): void {
     this.cleanup.events.clear();
   }
 
-  requestSubmit() {
+  requestSubmit(): void {
     if (!this.dom.form) {
       void this.handleConfirm();
       return;
@@ -731,7 +1031,7 @@ export class Modal extends Component {
     this.dom.form.requestSubmit();
   }
 
-  async handleFormSubmit(formData) {
+  async handleFormSubmit(formData: FormDataRecord): Promise<void> {
     if (this.isBusy()) return;
 
     const data = mergeExtraData(formData, this.state.extraData);
@@ -743,23 +1043,24 @@ export class Modal extends Component {
     await this.handleSubmit(data);
   }
 
-  async handleNext() {
+  async handleNext(): Promise<void> {
     if (this.isBusy()) return;
     if (!this.hasFlow()) return;
     await this.moveFlow('next');
   }
 
-  async handleBack() {
+  async handleBack(): Promise<void> {
     if (this.isBusy()) return;
     if (!this.hasFlow()) return;
     await this.moveFlow('back');
   }
 
-  hasFlow() {
+  hasFlow(): this is this & { state: ModalState & { flow: FlowLike } } {
     return isFlowLike(this.state.flow) && !!this.state.flow;
   }
 
-  async moveFlow(direction) {
+  async moveFlow(direction: FlowDirection): Promise<void> {
+    if (!this.hasFlow()) return;
     const payload = this.createFlowPayload();
     if (payload === false) return;
 
@@ -768,7 +1069,9 @@ export class Modal extends Component {
     });
 
     try {
-      const snapshot = await this.state.flow[direction](payload);
+      const snapshot = await Promise.resolve(
+        this.state.flow[direction](payload)
+      );
       this.syncFlowView(this.state.flow, snapshot);
     } catch (error) {
       console.error(`Modal.flow.${direction} error:`, error);
@@ -782,7 +1085,7 @@ export class Modal extends Component {
     }
   }
 
-  createFlowPayload() {
+  createFlowPayload(): FormDataRecord | null | false {
     if (!this.isFormMode()) return null;
 
     const form = this.dom.form;
@@ -797,7 +1100,11 @@ export class Modal extends Component {
     return this.state.data;
   }
 
-  resolveFlowModalView(flow, snapshot, step) {
+  resolveFlowModalView(
+    flow: FlowLike,
+    snapshot: FlowSnapshot | null,
+    step?: FlowStep
+  ): ModalFlowView {
     const source = step?.modal ?? step?.view;
     if (typeof source === 'function') {
       const result = source({
@@ -813,7 +1120,10 @@ export class Modal extends Component {
     return clonePlainObject(source);
   }
 
-  syncFlowView(flow, snapshot = null) {
+  syncFlowView(
+    flow: FlowLike | null,
+    snapshot: FlowSnapshot | null = null
+  ): void {
     if (!flow || !this.state) return;
     const state = flow.snapshot() || snapshot;
     const step =
@@ -824,12 +1134,12 @@ export class Modal extends Component {
       (!hasOwn(modalView, 'text') || !hasOwn(nextText, 'title')) &&
       step?.title != null;
 
-    const patch = {
+    const patch: ModalPatch = {
       ...(shouldInjectStepTitle
         ? {
             text: {
               ...nextText,
-              title: step.title,
+              title: textValue(step.title),
             },
           }
         : {}),
@@ -849,7 +1159,7 @@ export class Modal extends Component {
     this.update(patch);
   }
 
-  async handleConfirm() {
+  async handleConfirm(): Promise<void> {
     if (this.isBusy()) return;
 
     flushSync(() => {
@@ -857,7 +1167,7 @@ export class Modal extends Component {
     });
 
     try {
-      if (this.state.onConfirm) await Promise.resolve(this.state.onConfirm());
+      await Promise.resolve(this.state.onConfirm?.(this));
       this.hide();
     } catch (error) {
       console.error('Modal.onConfirm error:', error);
@@ -870,7 +1180,7 @@ export class Modal extends Component {
     }
   }
 
-  async handleCancel() {
+  async handleCancel(): Promise<void> {
     if (this.isBusy()) return;
 
     flushSync(() => {
@@ -878,7 +1188,7 @@ export class Modal extends Component {
     });
 
     try {
-      if (this.state.onCancel) await Promise.resolve(this.state.onCancel(this));
+      await Promise.resolve(this.state.onCancel?.(this));
       this.hide();
     } catch (error) {
       console.error('Modal.onCancel error:', error);
@@ -891,7 +1201,7 @@ export class Modal extends Component {
     }
   }
 
-  async handleSubmit(data) {
+  async handleSubmit(data: FormDataRecord): Promise<void> {
     if (!this.state.onSubmit) return;
 
     flushSync(() => {
@@ -899,7 +1209,7 @@ export class Modal extends Component {
     });
 
     try {
-      await Promise.resolve(this.state.onSubmit(data));
+      await Promise.resolve(this.state.onSubmit(data, this));
       this.state.extraData = null;
     } catch (error) {
       console.error('Modal.onSubmit error:', error);
@@ -912,10 +1222,10 @@ export class Modal extends Component {
     }
   }
 
-  trapFocus(event) {
+  trapFocus(event: KeyboardEvent): void {
     if (!this.dom.modal) return;
     const focusable = Array.from(
-      all(
+      all<HTMLElement>(
         'a[href], button:not([disabled]):not([data-action=close]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
         this.dom.modal
       )
@@ -935,17 +1245,17 @@ export class Modal extends Component {
 
     if (event.shiftKey && document.activeElement === first) {
       event.preventDefault();
-      last.focus();
+      last?.focus();
     } else if (!event.shiftKey && document.activeElement === last) {
       event.preventDefault();
-      first.focus();
+      first?.focus();
     }
   }
 
-  focusFirst() {
+  focusFirst(): void {
     if (!this.dom.modal) return;
     const focusRoot = this.dom.form?.root || this.dom.modal;
-    const firstFocusable = q(
+    const firstFocusable = q<HTMLElement>(
       'input:not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]):not([data-action=close]), [tabindex]:not([tabindex="-1"])',
       focusRoot
     );
@@ -956,7 +1266,7 @@ export class Modal extends Component {
     }
   }
 
-  lockScroll() {
+  lockScroll(): void {
     if (this.runtime.scrollLocked || !canUseDOM()) return;
     if (modalScrollLockCount === 0) {
       modalBodyOverflow = document.body.style.overflow;
@@ -966,7 +1276,7 @@ export class Modal extends Component {
     this.runtime.scrollLocked = true;
   }
 
-  unlockScroll() {
+  unlockScroll(): void {
     if (!this.runtime.scrollLocked || !canUseDOM()) return;
     modalScrollLockCount = Math.max(0, modalScrollLockCount - 1);
     if (modalScrollLockCount === 0) {
@@ -976,29 +1286,29 @@ export class Modal extends Component {
     this.runtime.scrollLocked = false;
   }
 
-  cancelHideTimer() {
+  cancelHideTimer(): void {
     if (!this.cleanup.hideTimer) return;
     clearTimeout(this.cleanup.hideTimer);
     this.cleanup.hideTimer = null;
   }
 
-  resetAnimationStyles() {
+  resetAnimationStyles(): void {
     if (!this.dom.modal) return;
     if (this.cache.baseStyle)
       this.dom.modal.setAttribute('style', this.cache.baseStyle);
     else this.dom.modal.removeAttribute('style');
   }
 
-  finishHide(onHidden) {
+  finishHide(onHidden: ResolvedModalProps['onHidden']): void {
     this.cleanup.hideTimer = null;
-    if (this.root?.parentNode) this.root.parentNode.removeChild(this.root);
+    this.root?.remove();
     this.resetAnimationStyles();
     this.unlockScroll();
     this.restoreFocus();
-    if (onHidden) onHidden();
+    void onHidden?.(this);
   }
 
-  restoreFocus() {
+  restoreFocus(): void {
     const target = this.cache.previousActiveElement;
     this.cache.previousActiveElement = null;
     if (
@@ -1010,7 +1320,7 @@ export class Modal extends Component {
     }
   }
 
-  assertActive(method) {
+  assertActive(method: string): void {
     if (this.runtime.destroyed) {
       throw new Error(
         `Modal.${method}: The current instance has been destroyed.`
@@ -1018,7 +1328,7 @@ export class Modal extends Component {
     }
   }
 
-  validateStatePatch(patch) {
+  validateStatePatch(patch: ModalStatePatch): void {
     if (!patch || typeof patch !== 'object' || Array.isArray(patch)) {
       throw new Error('Modal.setState: expects a plain object patch.');
     }
@@ -1034,25 +1344,34 @@ export class Modal extends Component {
           `Modal.setState: "${key}" cannot be updated after initialization.`
         );
       }
-      validateParam(key, patch[key], MODAL_STATE_SCHEMA[key], 'Modal.setState');
+      validateParam(
+        key,
+        patch[key as keyof ModalStatePatch],
+        MODAL_STATE_SCHEMA[key as keyof typeof MODAL_STATE_SCHEMA],
+        'Modal.setState'
+      );
     }
   }
 
-  setState(patch = {}) {
+  override setState(patch: ModalStatePatch = {}): this {
     this.assertActive('setState');
     this.validateStatePatch(patch);
 
     flushSync(() => {
       for (const [key, value] of Object.entries(patch)) {
-        if (key === 'fields') this.cache.fieldIds.clear();
-        this.state[key] =
-          key === 'fields' && Array.isArray(value) ? cloneFields(value) : value;
+        if (key === 'fields') this.cache.fieldIds?.clear();
+        this.state[key as keyof ModalState] =
+          key === 'fields' && Array.isArray(value)
+            ? (cloneFields(
+                value as FormField[]
+              ) as ModalState[keyof ModalState])
+            : (value as ModalState[keyof ModalState]);
       }
     });
     return this;
   }
 
-  show() {
+  show(): this {
     this.assertActive('show');
     flushSync(() => {
       this.state.visible = true;
@@ -1060,7 +1379,7 @@ export class Modal extends Component {
     return this;
   }
 
-  hide() {
+  hide(): this {
     this.assertActive('hide');
     flushSync(() => {
       this.state.visible = false;
@@ -1068,13 +1387,13 @@ export class Modal extends Component {
     return this;
   }
 
-  setFields(data, force = false) {
+  setFields(data: readonly FormField[] | null, force = false): this {
     validateParam('data', data, MODAL_FIELDS_RULE, 'Modal.setFields');
     this.applyProps({ fields: data }, { validate: false, force });
     return this;
   }
 
-  addFields(data) {
+  addFields(data: FormDataRecord): this {
     validateParam('data', data, MODAL_EXTRA_FIELDS_RULE, 'Modal.addFields');
     flushSync(() => {
       this.state.extraData = data;
@@ -1082,7 +1401,7 @@ export class Modal extends Component {
     return this;
   }
 
-  setContent(content, force = false) {
+  setContent(content: ModalContent, force = false): this {
     validateParam('content', content, MODAL_CONTENT_RULE, 'Modal.setContent');
 
     if (this.isFormMode() && !force) {
@@ -1095,18 +1414,35 @@ export class Modal extends Component {
     return this;
   }
 
-  update(patch = {}, force = false) {
-    return this.applyProps(patch, { validate: true, force });
+  override update(
+    patch?: Partial<ResolvedModalProps> | null,
+    options?: ComponentUpdateOptions
+  ): this;
+  update(patch?: ModalPatch | null, force?: boolean): this;
+  update(
+    patch: ModalPatch | Partial<ResolvedModalProps> | null = {},
+    forceOrOptions: boolean | ComponentUpdateOptions = false
+  ): this {
+    const force =
+      typeof forceOrOptions === 'boolean'
+        ? forceOrOptions
+        : !!forceOrOptions.force;
+    return this.applyProps((patch || {}) as ModalPatch, {
+      validate: true,
+      force,
+    });
   }
 
-  reset() {
-    this.cache.fieldIds.clear();
+  reset(): this {
+    this.cache.fieldIds?.clear();
+    if (!this.cache.initial) return this;
 
     const initialProps = cloneProps(this.cache.initial);
-    delete initialProps.id;
-    delete initialProps.lazy;
-    this.props = cloneProps(initialProps);
-    this.applyProps(initialProps, { validate: false });
+    const patch: ModalPatch = { ...(initialProps as unknown as ModalProps) };
+    delete patch.id;
+    delete patch.lazy;
+    this.props = normalizeProps(patch);
+    this.applyProps(patch, { validate: false });
     flushSync(() => {
       this.state.data = null;
       this.state.extraData = null;
@@ -1114,11 +1450,11 @@ export class Modal extends Component {
     return this;
   }
 
-  resetContent() {
+  resetContent(): this {
     return this.setContent(this.cache.initial?.content ?? '');
   }
 
-  resetFields() {
+  resetFields(): this {
     return this.setFields(
       Array.isArray(this.cache.initial?.fields)
         ? cloneFields(this.cache.initial.fields)
@@ -1126,12 +1462,12 @@ export class Modal extends Component {
     );
   }
 
-  onDestroy() {
+  protected override onDestroy(): void {
     const wasVisible = !!this.runtime.visibleApplied;
     const onHide = this.state?.onHide;
     const onHidden = this.state?.onHidden;
 
-    if (wasVisible && onHide) onHide();
+    if (wasVisible) void onHide?.(this);
 
     this.cancelHideTimer();
     this.clearEvents();
@@ -1142,8 +1478,8 @@ export class Modal extends Component {
     this.cleanup.view?.();
     this.cleanup.view = null;
 
-    if (this.root?.parentNode) this.root.parentNode.removeChild(this.root);
-    if (wasVisible && onHidden) onHidden();
+    this.root?.remove();
+    if (wasVisible) void onHidden?.(this);
 
     this.cache = {
       initial: null,
@@ -1154,13 +1490,13 @@ export class Modal extends Component {
     };
   }
 
-  destroy() {
-    if (this.runtime.destroyed) return;
+  override destroy(): this {
+    if (this.runtime.destroyed) return this;
     super.destroy();
     return this;
   }
 }
 
-export function createModal(input) {
+export function createModal(input: ModalProps = {}): Modal {
   return new Modal(input);
 }

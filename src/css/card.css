@@ -146,6 +146,6 @@
   }
 
   .j-card .card-footer:has(.j-button-group) {
-    padding-top: 2px;
+    padding-top: 4px;
   }
 }

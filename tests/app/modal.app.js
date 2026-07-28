@@ -1,6 +1,6 @@
 import { createDeepStore, flushSync, jsx, Show, render } from 'vanilla-signal';
 
-import { Modal, Toast, Flow, icon, timer } from '../dist/index.js';
+import { Modal, Toast, Flow, icon, timer } from '../../dist/index.js';
 import { equal, truthy, dateTime, wait } from './helpers.js';
 
 // ========== 手动测试 UI ==========
@@ -292,7 +292,7 @@ function bindEvents(runner) {
 
 function clearRuntimeLayers() {
   document
-    .querySelectorAll('.j-popup-layout, .j-toast-container')
+    .querySelectorAll('[data-modal], [data-toast-container]')
     .forEach((node) => node.remove());
 }
 
@@ -473,7 +473,9 @@ export function modalApp(runner) {
       });
 
       modal.show();
-      const confirmButton = modal.dom.modal?.querySelector('.modal-confirm');
+      const confirmButton = modal.dom.modal?.querySelector(
+        '[data-action="confirm"]'
+      );
       truthy(!!confirmButton, 'confirm button exists');
       confirmButton.click();
       await wait(0);

@@ -1,12 +1,70 @@
 import { createDeepStore } from 'vanilla-signal';
 
-import Component from '../core/Component.ts';
-import { resolveProps } from '../utilities/core.ts';
+import Component, {
+  type ComponentDOM,
+  type ComponentRuntime,
+} from '../core/Component.ts';
+import { type ResolveSchema, resolveProps } from '../utilities/core.ts';
 import {
-  isElement,
+  type DOMReference,
+  all,
   requireContainer,
   requireRenderDOM,
 } from '../utilities/dom.ts';
+
+export type StickyOverflow = 'destroy' | 'ignore';
+
+export interface StickyProps extends Record<string, unknown> {
+  target?: DOMReference;
+  parent?: DOMReference;
+  max?: number;
+  top?: number;
+  gap?: number;
+  overflow?: StickyOverflow;
+  onUpdate?: ((sticky: Sticky) => void) | null;
+}
+
+interface ResolvedStickyProps extends Record<string, unknown> {
+  target: DOMReference;
+  parent: DOMReference;
+  max: number;
+  top: number;
+  gap: number;
+  overflow: StickyOverflow;
+  onUpdate: ((sticky: Sticky) => void) | null;
+}
+
+export interface StickyStateItem {
+  element: HTMLElement;
+  top: number;
+}
+
+interface StickyState extends Record<string, unknown> {
+  count: number;
+  top: number;
+  items: StickyStateItem[];
+}
+
+interface StickyDOM extends ComponentDOM {
+  root: Element | null;
+  parent: Element | null;
+  targets: HTMLElement[];
+}
+
+interface StickyRuntimeItem {
+  element: HTMLElement;
+  top: number;
+  originalPosition: string;
+  originalTop: string;
+  originalZIndex: string;
+}
+
+interface StickyRuntime extends ComponentRuntime {
+  active: boolean;
+  built: boolean;
+  ignored: boolean;
+  items: StickyRuntimeItem[];
+}
 
 const STICKY_PROPS_SCHEMA = {
   target: { default: null },
@@ -14,19 +72,20 @@ const STICKY_PROPS_SCHEMA = {
   max: {
     default: 10,
     type: 'number',
-    validate: (value) => Number.isInteger(value) && value > 0,
+    validate: (value) =>
+      typeof value === 'number' && Number.isInteger(value) && value > 0,
     message: 'expects a positive integer.',
   },
   top: {
     default: 16,
     type: 'number',
-    validate: (value) => value >= 0,
+    validate: (value) => typeof value === 'number' && value >= 0,
     message: 'expects a positive number or 0.',
   },
   gap: {
     default: 16,
     type: 'number',
-    validate: (value) => value >= 0,
+    validate: (value) => typeof value === 'number' && value >= 0,
     message: 'expects a positive number or 0.',
   },
   overflow: {
@@ -35,44 +94,37 @@ const STICKY_PROPS_SCHEMA = {
     enum: ['destroy', 'ignore'],
   },
   onUpdate: { default: null, types: ['function', 'null'] },
-};
+} satisfies ResolveSchema<StickyProps>;
 
-/**
- * 对元素数组去重，并保持原始顺序。
- * @param {Element[]} elements 元素数组。
- * @returns {Element[]}
- */
-function uniqueElements(elements) {
-  return Array.from(new Set(elements.filter(isElement)));
+function normalizeProps(input: StickyProps): ResolvedStickyProps {
+  const props = resolveProps(input, STICKY_PROPS_SCHEMA, 'Sticky.props');
+  return {
+    target: props.target as DOMReference,
+    parent: props.parent as DOMReference,
+    max: props.max as number,
+    top: props.top as number,
+    gap: props.gap as number,
+    overflow: props.overflow as StickyOverflow,
+    onUpdate: props.onUpdate as ResolvedStickyProps['onUpdate'],
+  };
 }
 
-/**
- * 判断元素是否在指定父级中。
- * @param {Element} element 目标元素。
- * @param {Element|null} parent 父级。
- * @returns {boolean}
- */
-function isWithinParent(element, parent) {
-  return !parent || element === parent || parent.contains(element);
+function uniqueElements(elements: readonly Node[]): HTMLElement[] {
+  const htmlElements = elements.filter(
+    (element): element is HTMLElement => element instanceof HTMLElement
+  );
+  return Array.from(new Set(htmlElements));
 }
 
-/**
- * 归一化 parent 输入。
- * @param {Element|Node|string|null|false} parent 父级输入。
- * @returns {Element|null}
- */
-function resolveParent(parent) {
+function resolveParent(parent: DOMReference): Element | null {
   if (parent === false || parent == null) return null;
   return requireContainer(parent, 'Sticky.parent', 'element');
 }
 
-/**
- * 在 parent 作用域内解析 sticky 目标。
- * @param {Element|Node|string|Array|null|false} target 目标输入。
- * @param {Element|null} parent 父级。
- * @returns {Element[]}
- */
-function resolveTarget(target, parent) {
+function resolveTarget(
+  target: DOMReference,
+  parent: Element | null
+): HTMLElement[] {
   if (target === false || target == null) return [];
 
   if (typeof target === 'string') {
@@ -80,21 +132,20 @@ function resolveTarget(target, parent) {
       return uniqueElements(requireContainer(target, 'Sticky.target', 'array'));
     }
 
-    const elements = uniqueElements(
-      Array.from(parent.querySelectorAll(target))
-    );
+    const elements = uniqueElements(all<HTMLElement>(target, parent));
     if (elements.length === 0) {
       throw new Error('Sticky.target: target not found.');
     }
     return elements;
   }
 
-  const nodes = requireContainer(target, 'Sticky.target', 'array');
-  const elements = uniqueElements(nodes);
-
+  const elements = uniqueElements(
+    requireContainer(target, 'Sticky.target', 'array')
+  );
   if (!parent) return elements;
-  const scopedElements = elements.filter((element) =>
-    isWithinParent(element, parent)
+
+  const scopedElements = elements.filter(
+    (element) => element === parent || parent.contains(element)
   );
   if (scopedElements.length === 0) {
     throw new Error('Sticky.target: target not found in parent.');
@@ -103,28 +154,24 @@ function resolveTarget(target, parent) {
 }
 
 /**
- * 读取元素 offsetHeight。
- * @param {Element} element 目标元素。
- * @returns {number}
- */
-function getElementHeight(element) {
-  const height = element.offsetHeight;
-  return Number.isFinite(height) ? height : 0;
-}
-
-/**
  * Sticky 吸附组件。
  *
  * 用于给一个或多个元素应用 `position: sticky`，并按顺序计算 `top`
  * 偏移，适合页面侧边栏中多个 widget 的堆叠吸附场景。
  */
-export class Sticky extends Component {
+export class Sticky extends Component<
+  ResolvedStickyProps,
+  StickyState,
+  StickyDOM
+> {
+  declare runtime: StickyRuntime;
+
   /**
    * 创建 Sticky 实例。
    * @param {object} [input={}] Sticky 配置。
    */
-  constructor(input = {}) {
-    const props = resolveProps(input, STICKY_PROPS_SCHEMA, 'Sticky.props');
+  constructor(input: StickyProps = {}) {
+    const props = normalizeProps(input);
     super(props);
 
     this.dom.parent = null;
@@ -146,7 +193,7 @@ export class Sticky extends Component {
    * 构建 Sticky 行为并应用样式。
    * @returns {Sticky} 当前实例。
    */
-  build() {
+  build(): this {
     if (this.runtime.destroyed)
       throw new Error('Sticky.build: instance destroyed');
     if (this.runtime.built) return this;
@@ -157,23 +204,19 @@ export class Sticky extends Component {
 
     this.dom.parent = resolveParent(this.props.parent);
     this.dom.targets = resolveTarget(this.props.target, this.dom.parent);
-    this.dom.targets = this._resolveOverflow(this.dom.targets);
+    this.dom.targets = this.resolveOverflow(this.dom.targets);
 
     this.runtime.built = true;
 
     if (this.dom.targets.length === 0) return this;
 
     this.runtime.active = true;
-    this._captureItems();
-    this._apply();
+    this.captureItems();
+    this.apply();
     return this;
   }
 
-  /**
-   * 按当前实例的 targets 创建运行时条目。
-   * @private
-   */
-  _captureItems() {
+  private captureItems(): void {
     this.runtime.items = this.dom.targets.map((element) => ({
       element,
       top: this.props.top,
@@ -183,13 +226,7 @@ export class Sticky extends Component {
     }));
   }
 
-  /**
-   * 按 max/overflow 处理当前实例的目标集合。
-   * @param {Element[]} targets 目标元素集合。
-   * @returns {Element[]}
-   * @private
-   */
-  _resolveOverflow(targets) {
+  private resolveOverflow(targets: HTMLElement[]): HTMLElement[] {
     const { max, overflow } = this.props;
     if (targets.length <= max) return targets;
 
@@ -197,15 +234,9 @@ export class Sticky extends Component {
     return overflow === 'ignore' ? [] : targets.slice(-max);
   }
 
-  /**
-   * 对本实例重新计算 sticky 偏移。
-   * @param {number} [startTop=this.props.top] 起始 top。
-   * @returns {number} 当前实例处理后的下一个 top。
-   * @private
-   */
-  _apply(startTop = this.props.top) {
+  private apply(startTop = this.props.top): number {
     let nextTop = startTop;
-    const stateItems = [];
+    const stateItems: StickyStateItem[] = [];
 
     for (const item of this.runtime.items) {
       item.top = nextTop;
@@ -213,7 +244,7 @@ export class Sticky extends Component {
       item.element.style.top = `${nextTop}px`;
 
       stateItems.push({ element: item.element, top: nextTop });
-      nextTop += getElementHeight(item.element) + this.props.gap;
+      nextTop += item.element.offsetHeight + this.props.gap;
     }
 
     this.setState({
@@ -229,11 +260,7 @@ export class Sticky extends Component {
     return nextTop;
   }
 
-  /**
-   * 恢复本实例管理元素的原始内联样式。
-   * @private
-   */
-  _restore() {
+  private restore(): void {
     for (const item of this.runtime.items) {
       item.element.style.position = item.originalPosition;
       item.element.style.top = item.originalTop;
@@ -245,20 +272,25 @@ export class Sticky extends Component {
    * 重新计算当前实例内所有 sticky 元素的 top。
    * @returns {Sticky} 当前实例。
    */
-  refresh() {
+  refresh(): this {
     if (this.runtime.destroyed || !this.runtime.built || !this.runtime.active) {
       return this;
     }
-    this._apply();
+    this.apply();
     return this;
+  }
+
+  destroy(): void {
+    if (this.runtime.destroyed) return;
+    this.restore();
+    super.destroy();
   }
 
   /**
    * 销毁实例并恢复被管理元素的原始样式。
    * @private
    */
-  onDestroy() {
-    this._restore();
+  protected onDestroy(): void {
     this.runtime.active = false;
     this.runtime.built = false;
     this.runtime.items = [];
@@ -266,6 +298,6 @@ export class Sticky extends Component {
   }
 }
 
-export function createSticky(props = {}) {
+export function createSticky(props: StickyProps = {}): Sticky {
   return new Sticky(props);
 }

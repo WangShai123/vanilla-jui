@@ -1,6 +1,6 @@
 import { createDeepStore, flushSync, jsx, Show, render } from 'vanilla-signal';
 
-import { Flow, Toast } from '../dist/index.js';
+import { Flow, Toast } from '../../dist/index.js';
 import { equal, truthy, dateTime } from './helpers.js';
 
 // ========== 手动测试 UI ==========
@@ -418,9 +418,20 @@ export function flowApp(runner) {
     });
     flow.mount(document.body);
 
-    truthy(document.querySelector('.j-flow'), 'Flow root should exist');
-    equal(document.querySelector('.flow-title').textContent, 'Step A', 'title');
-    equal(document.querySelectorAll('.flow-step').length, 2, 'step count');
+    truthy(
+      document.querySelector('[data-flow="root"]'),
+      'Flow root should exist'
+    );
+    equal(
+      document.querySelector('[data-flow-title]').textContent,
+      'Step A',
+      'title'
+    );
+    equal(
+      document.querySelectorAll('[data-flow-step]').length,
+      2,
+      'step count'
+    );
 
     flow.destroy();
   });
@@ -436,7 +447,10 @@ export function flowApp(runner) {
     });
 
     flow.mount(container);
-    truthy(container.querySelector('.j-flow'), 'flow mounted in jsx node');
+    truthy(
+      container.querySelector('[data-flow="root"]'),
+      'flow mounted in jsx node'
+    );
 
     flow.destroy();
     container.remove();

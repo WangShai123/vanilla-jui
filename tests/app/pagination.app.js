@@ -1,7 +1,7 @@
 import { createDeepStore, flushSync, render, For, jsx } from 'vanilla-signal';
 
-import { Pagination } from '../dist/index.js';
-import { createLoading } from '../src/utilities/dom.js';
+import { Pagination } from '../../dist/index.js';
+import { createLoading } from '../../src/utilities/dom.js';
 import { dateTime, equal, hasClass, sleep, textOf, truthy } from './helpers.js';
 
 const PAGE_SIZE = 2;
@@ -336,7 +336,9 @@ export function paginationApp(runner) {
       'navigation role'
     );
     equal(
-      pagination.root.querySelector('.pagination').getAttribute('aria-live'),
+      pagination.root
+        .querySelector('[data-pagination-list]')
+        .getAttribute('aria-live'),
       'polite',
       'aria live'
     );
@@ -359,7 +361,10 @@ export function paginationApp(runner) {
       'false',
       'next enabled'
     );
-    truthy(pagination.root.querySelector('.more svg'), 'more icon');
+    truthy(
+      pagination.root.querySelector('[data-pagination-more] svg'),
+      'more icon'
+    );
     equal(pageTextList(pagination.root).join(','), '2,10', 'visible links');
 
     pagination.destroy();

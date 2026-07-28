@@ -1,6 +1,6 @@
 import { createDeepStore, flushSync, jsx, Show, render } from 'vanilla-signal';
 
-import { Drop } from '../dist/index.js';
+import { Drop } from '../../dist/index.js';
 import { equal, hasClass, textOf, truthy, dateTime } from './helpers.js';
 
 // ========== 手动测试 UI ==========
@@ -127,6 +127,11 @@ export function dropApp(runner) {
 
     drop.show(false);
     truthy(hasClass(drop.root, 'is-active'), 'drop active');
+    truthy(drop.root.matches('[data-drop]'), 'drop data marker');
+    truthy(
+      drop.root.querySelector('[data-drop-container]'),
+      'container data marker'
+    );
     equal(textOf(drop.root), 'Drop content', 'content text');
     truthy(drop.root.querySelector('b'), 'html node rendered');
     drop.hide(false);
@@ -158,6 +163,7 @@ export function dropApp(runner) {
 
     const drop = new Drop(target, { content: 'Plain drop content' });
 
+    truthy(drop.root.matches('[data-drop]'), 'drop data marker');
     equal(textOf(drop.root), 'Plain drop content', 'plain content text');
 
     drop.destroy();

@@ -1,6 +1,6 @@
 import { createDeepStore, flushSync, jsx, Show, render } from 'vanilla-signal';
 
-import { Offcanvas } from '../dist/index.js';
+import { Offcanvas } from '../../dist/index.js';
 import { equal, hasClass, textOf, truthy, dateTime } from './helpers.js';
 
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -19,7 +19,7 @@ function cleanup() {
     asyncInstance = null;
   }
   document
-    .querySelectorAll('.j-offcanvas, .j-offcanvas-overlay')
+    .querySelectorAll('[data-offcanvas], [data-offcanvas-overlay]')
     .forEach((node) => node.remove());
   document.body.style.overflow = '';
   document.body.classList.remove(
@@ -287,7 +287,7 @@ export function offcanvasApp(runner) {
     const offcanvas = new Offcanvas({ content, overlay: false });
 
     await offcanvas.show();
-    document.querySelector('[data-action="close"]', offcanvas.root)?.click();
+    offcanvas.root?.querySelector('[data-action="close"]')?.click();
     await wait(130);
     equal(offcanvas.state.visible, false, 'closed by action');
     offcanvas.destroy();
@@ -318,7 +318,7 @@ export function offcanvasApp(runner) {
       await wait(20);
       equal(offcanvas.state.loading, true, 'loading true before resolve');
       truthy(
-        offcanvas.root.querySelector('.j-loading.is-active'),
+        offcanvas.root.querySelector('[aria-live="polite"]'),
         'loading node visible'
       );
 
@@ -360,7 +360,11 @@ export function offcanvasApp(runner) {
     };
     offcanvas.destroy();
     offcanvas.destroy();
-    equal(document.querySelectorAll('.j-offcanvas').length, 0, 'root removed');
+    equal(
+      document.querySelectorAll('[data-offcanvas]').length,
+      0,
+      'root removed'
+    );
     equal(document.body.style.overflow, '', 'body overflow restored');
     equal(destroyCount, 1, 'onDestroy once');
   });

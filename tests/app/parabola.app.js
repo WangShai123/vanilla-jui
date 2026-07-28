@@ -1,10 +1,12 @@
 import { createDeepStore, flushSync, jsx, Show, render } from 'vanilla-signal';
 
-import { Parabola } from '../dist/index.js';
+import { Parabola } from '../../dist/index.js';
 import { equal, truthy, falsy, dateTime, wait } from './helpers.js';
 
 function cleanupBalls() {
-  document.querySelectorAll('.parabola-ball').forEach((node) => node.remove());
+  document
+    .querySelectorAll('[data-parabola="ball"]')
+    .forEach((node) => node.remove());
 }
 
 // ========== 手动测试 UI ==========
@@ -163,14 +165,20 @@ export function parabolaApp(runner) {
     const to = document.getElementById('to-point');
     const parabola = new Parabola({ from, to });
 
-    truthy(document.querySelector('.parabola-ball'), 'ball exists in DOM');
+    truthy(
+      document.querySelector('[data-parabola="ball"]'),
+      'ball exists in DOM'
+    );
     equal(parabola.hidden, false, 'instance active');
     equal(parabola._ball !== null, true, 'ball reference set');
 
     parabola.destroy();
     equal(parabola.hidden, true, 'instance hidden after destroy');
     equal(parabola._ball, null, 'ball reference cleared');
-    falsy(document.querySelector('.parabola-ball'), 'ball removed from DOM');
+    falsy(
+      document.querySelector('[data-parabola="ball"]'),
+      'ball removed from DOM'
+    );
   });
 
   runner.add('JSX 起止点', '验证 from/to 支持 jsx 返回节点', () => {
@@ -180,7 +188,7 @@ export function parabolaApp(runner) {
     document.body.append(from, to);
     const parabola = new Parabola({ from, to });
 
-    truthy(document.querySelector('.parabola-ball'), 'ball exists');
+    truthy(document.querySelector('[data-parabola="ball"]'), 'ball exists');
 
     parabola.destroy();
     from.remove();
@@ -204,7 +212,7 @@ export function parabolaApp(runner) {
     const result = await parabola.show();
     equal(result, true, 'show resolves true');
     equal(shown, true, 'onShow called');
-    truthy(document.querySelector('.parabola-ball'), 'ball visible');
+    truthy(document.querySelector('[data-parabola="ball"]'), 'ball visible');
 
     parabola.destroy();
   });
@@ -248,7 +256,7 @@ export function parabolaApp(runner) {
     await wait(900);
     equal(hidden, true, 'onHidden called');
     equal(parabola.hidden, true, 'instance hidden');
-    falsy(document.querySelector('.parabola-ball'), 'ball removed');
+    falsy(document.querySelector('[data-parabola="ball"]'), 'ball removed');
   });
 
   runner.add('destroy 清理', '验证多次 destroy 安全', () => {
@@ -284,20 +292,20 @@ export function parabolaApp(runner) {
     parabola.destroy();
   });
 
-  runner.add('from/to 无效时抛错', '验证元素缺失时的错误处理', () => {
+  runner.add('from/to 无效', '验证元素缺失时 show 返回 false', async () => {
     cleanupBalls();
-    let threw = false;
-    try {
-      new Parabola({ from: '#nonexistent', to: '#also-missing' });
-    } catch (e) {
-      threw = true;
-      console.warn(e.message);
-      truthy(
-        e.message.includes('Parabola.from: expects a valid Element.'),
-        'error message correct'
-      );
-    }
-    truthy(threw, 'should throw');
+    let hidden = false;
+    const parabola = new Parabola({
+      from: '#nonexistent',
+      to: '#also-missing',
+      onHidden: () => {
+        hidden = true;
+      },
+    });
+    const result = await parabola.show();
+    equal(result, false, 'show resolves false');
+    equal(parabola.hidden, true, 'instance hidden');
+    equal(hidden, true, 'onHidden called');
   });
 
   runner.add('cleanup 清理', '验证 cleanup 移除所有小球', () => {
@@ -306,10 +314,18 @@ export function parabolaApp(runner) {
     const to = document.getElementById('to-point');
     new Parabola({ from, to });
     new Parabola({ from, to });
-    equal(document.querySelectorAll('.parabola-ball').length, 2, 'two balls');
+    equal(
+      document.querySelectorAll('[data-parabola="ball"]').length,
+      2,
+      'two balls'
+    );
 
     cleanupBalls();
-    equal(document.querySelectorAll('.parabola-ball').length, 0, 'all removed');
+    equal(
+      document.querySelectorAll('[data-parabola="ball"]').length,
+      0,
+      'all removed'
+    );
   });
 
   runner.add('清理环境', '销毁实例并移除 from/to', () => {
