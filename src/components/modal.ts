@@ -25,12 +25,9 @@ import {
 import {
   all,
   q,
-  canUseDOM,
-  canRenderDOM,
   createLoading,
   isRenderableContent,
   normalizeContentNodes,
-  requireRenderDOM,
   type RenderableContent,
 } from '../utilities/dom.ts';
 import {
@@ -511,7 +508,7 @@ export class Modal extends Component<ResolvedModalProps, ModalState, ModalDOM> {
 
   protected override onInit(): void {
     this.bindReactiveVisibility();
-    if (!this.state.lazy && canRenderDOM()) this.buildRoot();
+    if (!this.state.lazy) this.buildRoot();
   }
 
   buildRoot(): HTMLElement {
@@ -896,8 +893,6 @@ export class Modal extends Component<ResolvedModalProps, ModalState, ModalDOM> {
       throw new Error('Modal: The current instance has been destroyed.');
     }
 
-    requireRenderDOM('Modal.show');
-
     if (!this.root) this.buildRoot();
 
     this.cancelHideTimer();
@@ -1267,7 +1262,7 @@ export class Modal extends Component<ResolvedModalProps, ModalState, ModalDOM> {
   }
 
   lockScroll(): void {
-    if (this.runtime.scrollLocked || !canUseDOM()) return;
+    if (this.runtime.scrollLocked) return;
     if (modalScrollLockCount === 0) {
       modalBodyOverflow = document.body.style.overflow;
       document.body.style.overflow = 'hidden';
@@ -1277,7 +1272,7 @@ export class Modal extends Component<ResolvedModalProps, ModalState, ModalDOM> {
   }
 
   unlockScroll(): void {
-    if (!this.runtime.scrollLocked || !canUseDOM()) return;
+    if (!this.runtime.scrollLocked) return;
     modalScrollLockCount = Math.max(0, modalScrollLockCount - 1);
     if (modalScrollLockCount === 0) {
       document.body.style.overflow = modalBodyOverflow;

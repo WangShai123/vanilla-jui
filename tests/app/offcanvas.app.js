@@ -1,6 +1,6 @@
 import { createDeepStore, flushSync, jsx, Show, render } from 'vanilla-signal';
 
-import { Offcanvas } from '../../dist/index.js';
+import { Offcanvas } from '../../dist/index.js?v=00';
 import { equal, hasClass, textOf, truthy, dateTime } from './helpers.js';
 
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));

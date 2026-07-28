@@ -15,7 +15,6 @@ import {
   createLoading,
   isRenderableContent,
   normalizeContentNodes,
-  requireRenderDOM,
 } from '../utilities/dom.ts';
 
 export type OffcanvasDirection = 'top' | 'right' | 'bottom' | 'left';
@@ -216,8 +215,6 @@ export class Offcanvas extends Component<
   _overlay: HTMLElement | null;
 
   constructor(input: OffcanvasProps = {}) {
-    requireRenderDOM('Offcanvas');
-
     const props = normalizeProps(input);
     super(props);
 

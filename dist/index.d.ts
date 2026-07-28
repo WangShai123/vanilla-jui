@@ -253,23 +253,6 @@ interface LazyRenderOptions {
   waitForDOM?: boolean;
 }
 /**
- * 判断当前环境是否可访问 DOM。
- * @returns {boolean}
- */
-declare function canUseDOM(): boolean;
-/**
- * 判断当前环境是否可执行 DOM 渲染。
- * @returns {boolean}
- */
-declare function canRenderDOM(): boolean;
-/**
- * 强制要求当前环境可执行 DOM 渲染。
- * @param {string} [namespace='Component'] 错误命名空间。
- * @returns {true}
- * @throws {Error} 当前环境不可渲染 DOM 时抛出。
- */
-declare function requireRenderDOM(namespace?: string): true;
-/**
  * 判断是否为 DOM Node。
  * @param {*} value 需要判断的值。
  * @returns {boolean}
@@ -282,12 +265,19 @@ declare function isNode(value: unknown): value is Node;
  */
 declare function isElement(value: unknown): value is Element;
 /**
- * 将常见内容值转换为 DOM 节点数组。
+ * 将可渲染内容归一化为 DOM 节点数组。
  *
- * 字符串会按 HTML 片段解析；函数会以 context 调用后继续归一化。
- * @param {*} content 组件内容。
- * @param {*} [context] 传给函数内容的上下文。
- * @returns {Node[]}
+ * 支持的输入类型：
+ * - **Node/Element**: 包装为单元素数组
+ * - **string**: 按 HTML 片段解析为节点数组
+ * - **number/boolean**: 转换为文本节点
+ * - **Array**: 递归扁平化处理
+ * - **Function**: 调用后递归处理返回值
+ * - **null/undefined/false/true**: 返回空数组
+ *
+ * @param {RenderableContent<TContext>} content 可渲染内容。
+ * @param {TContext} [context] 传递给函数类型内容的上下文。
+ * @returns {Node[]} 归一化后的节点数组。
  */
 declare function normalizeContentNodes<TContext = unknown>(content: RenderableContent<TContext>, context?: TContext): Node[];
 /**
@@ -301,10 +291,9 @@ declare function normalizeContentNodes<TContext = unknown>(content: RenderableCo
  * - **false/null/undefined**: 返回 null
  *
  * @param {Element|Node|string|Array|false|null|undefined} ref 元素引用、选择器、节点或空值。
- * @param {string} [namespace='Component'] 错误命名空间。
  * @returns {Node[]|null}
  */
-declare function resolveNodeList(ref: DOMReference, _namespace?: string): Node[] | null;
+declare function resolveNodeList(ref: DOMReference): Node[] | null;
 /**
  * 将 DOM 引用解析为节点。
  *
@@ -315,10 +304,9 @@ declare function resolveNodeList(ref: DOMReference, _namespace?: string): Node[]
  * - **false/null/undefined**: 返回 null
  *
  * @param {Element|Node|string|Array|false|null|undefined} ref 元素引用、选择器、节点或空值。
- * @param {string} [namespace='Component'] 错误命名空间。
  * @returns {Node|null}
  */
-declare function resolveNode(ref: DOMReference, namespace?: string): Node | null;
+declare function resolveNode(ref: DOMReference): Node | null;
 /**
  * 将 DOM 引用解析为元素。
  *
@@ -329,10 +317,9 @@ declare function resolveNode(ref: DOMReference, namespace?: string): Node | null
  * - **false/null/undefined**: 返回 null
  *
  * @param {Element|Node|string|Array|false|null|undefined} ref 元素引用、选择器、节点或空值。
- * @param {string} [namespace='Component'] 错误命名空间。
  * @returns {Element|null}
  */
-declare function resolveElement(ref: DOMReference, namespace?: string): Element | null;
+declare function resolveElement(ref: DOMReference): Element | null;
 /**
  * 统一解析容器引用。
  *
@@ -359,10 +346,9 @@ declare function requireContainer<TExpect extends ContainerExpect = 'element'>(c
 declare function isRenderableContent(value: unknown): value is RenderableContent;
 /**
  * 创建通用加载状态节点。
- * @param {string} [className='j-loading is-active'] 容器类名。
  * @returns {HTMLElement}
  */
-declare function createLoading(className?: string): HTMLDivElement;
+declare function createLoading(): HTMLDivElement;
 /**
  * 根据 CSS 选择器获取第一个匹配的元素。
  * @param {string} selector CSS 选择器。
@@ -1799,7 +1785,6 @@ interface TabsDOM extends ComponentDOM {
   container: Element;
   tabs: HTMLElement[];
   panels: HTMLElement[];
-  panelBodies: HTMLElement[];
 }
 interface TabsPanelCacheEntry {
   content: RenderableContent<TabsPanelContext>;
@@ -2939,4 +2924,4 @@ declare class Menu {
 }
 declare function createMenu(options?: MenuOptions, element?: DOMReference): Menu;
 //#endregion
-export { Accordion, AccordionActive, AccordionClassNameConfig, AccordionClassNames, AccordionContentContext, AccordionItem, AccordionProps, CleanupFunction, Component, ContainerExpect, DOMReference, DebounceOptions, DebouncedFunction, Destroyable, Drop, DropClassNameConfig, DropClassNames, DropDelay, DropMode, DropPosition, DropProps, Flow, FlowAction, FlowBusyHook, FlowBusyStrategy, FlowChangeHook, FlowClassNameConfig, FlowClassNames, FlowCleanup, FlowContext, FlowData, FlowDirection, FlowErrorHook, FlowFinishHook, FlowGuardHook, FlowLifecycleHook, FlowMoveHook, FlowOptions, FlowPayload, FlowRenderContext, FlowSlot, FlowSlotName, FlowSnapshot, FlowState, FlowStep, FlowStepResult, FlowSubscriber, FlowTarget, FlowText, Form, FormButton, FormClassNameConfig, FormClassNames, FormDataRecord, FormDataValue, FormField, FormOption, FormProps, FormValidatorConfig, IEventManager, IconAttributeValue, IconName, IconPathMap, IconProps, LazyRenderCallback, LazyRenderOptions, LazyRenderTarget, Menu, MenuClassNameConfig, MenuClassNames, MenuItem, MenuItemId, MenuOptions, MenuType, Modal, ModalClassNameConfig, ModalClassNames, ModalProps, ModalText, NormalizeContext, Offcanvas, OffcanvasAnimation, OffcanvasClassNameConfig, OffcanvasClassNames, OffcanvasContent, OffcanvasDirection, OffcanvasProps, Pagination, PaginationClassNameConfig, PaginationClassNames, PaginationCount, PaginationPage, PaginationProps, Parabola, ParabolaBallOptions, ParabolaClassNameConfig, ParabolaClassNames, ParabolaDirection, ParabolaOptions, ParamRule, ParamRuleInput, PublicFlowStep, QueryContext, RenderableContent, RequireContainerResult, ResolveContainerResult, ResolveSchema, ResolvedProps, Sticky, StickyOverflow, StickyProps, StickyStateItem, Swiper, SwiperClassNameConfig, SwiperClassNames, SwiperDataItem, SwiperOptions, SwiperSlideContext, TabItem, TabPanel, TabTitleContext, Tabs, TabsClassNameConfig, TabsClassNames, TabsDirection, TabsDisabled, TabsPanelContext, TabsProps, TabsValue, Theme, ThemeClassNameConfig, ThemeClassNames, ThemeConfigKey, ThemeOptions, ThemePanelGroup, Toast, ToastActionProps, ToastClassNameConfig, ToastClassNames, ToastOptions, ToastType, Toc, TocClassNameConfig, TocClassNames, TocCurrent, TocItem, TocProps, Tooltip, TooltipClassNameConfig, TooltipClassNames, TooltipProps, ValidateCondition, Validator, ValidatorOptions, ValidatorRule, addIcons, all, canRenderDOM, canUseDOM, copy, createAccordion, createDrop, createEventManager, createFlow, createForm, createLoading, createMenu, createModal, createOffcanvas, createPagination, createParabola, createSticky, createSwiper, createTabs, createToc, createTooltip, createValidator, debounce, getCookie, getRegistedIconPath, getType, hasOwn, icon, iconHtml, iconMarkup, isClass, isElement, isFunction, isMobile, isNode, isPlainObject, isRenderableContent, lazyRender, listen, normalizeContentNodes, postJson, q, randomId, removeCookie, requireContainer, requireRenderDOM, resolveContainer, resolveElement, resolveNode, resolveNodeList, resolveProps, restUrl, service, setCookie, throttle, timer, uniq, uuid, validateParam };
+export { Accordion, AccordionActive, AccordionClassNameConfig, AccordionClassNames, AccordionContentContext, AccordionItem, AccordionProps, CleanupFunction, Component, ContainerExpect, DOMReference, DebounceOptions, DebouncedFunction, Destroyable, Drop, DropClassNameConfig, DropClassNames, DropDelay, DropMode, DropPosition, DropProps, Flow, FlowAction, FlowBusyHook, FlowBusyStrategy, FlowChangeHook, FlowClassNameConfig, FlowClassNames, FlowCleanup, FlowContext, FlowData, FlowDirection, FlowErrorHook, FlowFinishHook, FlowGuardHook, FlowLifecycleHook, FlowMoveHook, FlowOptions, FlowPayload, FlowRenderContext, FlowSlot, FlowSlotName, FlowSnapshot, FlowState, FlowStep, FlowStepResult, FlowSubscriber, FlowTarget, FlowText, Form, FormButton, FormClassNameConfig, FormClassNames, FormDataRecord, FormDataValue, FormField, FormOption, FormProps, FormValidatorConfig, IEventManager, IconAttributeValue, IconName, IconPathMap, IconProps, LazyRenderCallback, LazyRenderOptions, LazyRenderTarget, Menu, MenuClassNameConfig, MenuClassNames, MenuItem, MenuItemId, MenuOptions, MenuType, Modal, ModalClassNameConfig, ModalClassNames, ModalProps, ModalText, NormalizeContext, Offcanvas, OffcanvasAnimation, OffcanvasClassNameConfig, OffcanvasClassNames, OffcanvasContent, OffcanvasDirection, OffcanvasProps, Pagination, PaginationClassNameConfig, PaginationClassNames, PaginationCount, PaginationPage, PaginationProps, Parabola, ParabolaBallOptions, ParabolaClassNameConfig, ParabolaClassNames, ParabolaDirection, ParabolaOptions, ParamRule, ParamRuleInput, PublicFlowStep, QueryContext, RenderableContent, RequireContainerResult, ResolveContainerResult, ResolveSchema, ResolvedProps, Sticky, StickyOverflow, StickyProps, StickyStateItem, Swiper, SwiperClassNameConfig, SwiperClassNames, SwiperDataItem, SwiperOptions, SwiperSlideContext, TabItem, TabPanel, TabTitleContext, Tabs, TabsClassNameConfig, TabsClassNames, TabsDirection, TabsDisabled, TabsPanelContext, TabsProps, TabsValue, Theme, ThemeClassNameConfig, ThemeClassNames, ThemeConfigKey, ThemeOptions, ThemePanelGroup, Toast, ToastActionProps, ToastClassNameConfig, ToastClassNames, ToastOptions, ToastType, Toc, TocClassNameConfig, TocClassNames, TocCurrent, TocItem, TocProps, Tooltip, TooltipClassNameConfig, TooltipClassNames, TooltipProps, ValidateCondition, Validator, ValidatorOptions, ValidatorRule, addIcons, all, copy, createAccordion, createDrop, createEventManager, createFlow, createForm, createLoading, createMenu, createModal, createOffcanvas, createPagination, createParabola, createSticky, createSwiper, createTabs, createToc, createTooltip, createValidator, debounce, getCookie, getRegistedIconPath, getType, hasOwn, icon, iconHtml, iconMarkup, isClass, isElement, isFunction, isMobile, isNode, isPlainObject, isRenderableContent, lazyRender, listen, normalizeContentNodes, postJson, q, randomId, removeCookie, requireContainer, resolveContainer, resolveElement, resolveNode, resolveNodeList, resolveProps, restUrl, service, setCookie, throttle, timer, uniq, uuid, validateParam };

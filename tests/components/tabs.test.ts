@@ -50,6 +50,10 @@ describe('Tabs', () => {
     expect(tabs.root?.getAttribute('data-tabs')).toBe('root');
     expect(tabs.root?.querySelectorAll('[data-tabs-tab]')).toHaveLength(3);
     expect(tabs.root?.querySelectorAll('[data-tabs-panel]')).toHaveLength(3);
+    expect(tabs.root?.querySelector('[data-tabs-tab-title]')).toBeNull();
+    expect(tabs.root?.querySelector('[data-tabs-panel-body]')).toBeNull();
+    expect(tabs.dom.tabs[1]?.textContent).toBe('Usage');
+    expect(tabs.dom.panels[1]?.textContent).toBe('Usage panel');
     expect(tabs.dom.tabs[1]?.classList.contains('is-active')).toBe(true);
     expect(tabs.dom.panels[1]?.classList.contains('is-active')).toBe(true);
     expect(tabs.state.current.name).toBe('usage');
@@ -122,9 +126,9 @@ describe('Tabs', () => {
     await Promise.resolve();
 
     expect(load).toHaveBeenCalledTimes(1);
-    expect(
-      tabs.root?.querySelector('[data-tabs-panel-body="async"]')?.textContent
-    ).toBe('Async content');
+    expect(tabs.dom.panels[1]?.textContent).toBe('Async content');
+    expect(tabs.dom.panels[1]?.getAttribute('aria-live')).toBe('polite');
+    expect(tabs.dom.panels[1]?.getAttribute('aria-busy')).toBe('false');
 
     await tabs.activate('intro');
     await tabs.activate('async');

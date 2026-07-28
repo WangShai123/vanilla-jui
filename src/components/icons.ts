@@ -1,5 +1,4 @@
 import iconPath from '../icons/index.ts';
-import { requireRenderDOM } from '../utilities/dom.ts';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
@@ -38,8 +37,6 @@ function isSVGElement(value: Element | null): value is SVGElement {
  * @throws {Error} 图标不存在或非 DOM 环境时抛出。
  */
 export function icon(name: IconName, props: IconProps = {}): SVGElement {
-  requireRenderDOM('icon()');
-
   const template = document.createElement('template');
   template.innerHTML = svgMarkup(name);
   const svg = template.content.firstElementChild;

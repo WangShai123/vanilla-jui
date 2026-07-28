@@ -1,6 +1,6 @@
 import { createDeepStore, flushSync, jsx, Show, render } from 'vanilla-signal';
 
-import { Tabs } from '../../dist/index.js';
+import { Tabs } from '../../dist/index.js?v=000';
 import { equal, hasClass, textOf, truthy, dateTime } from './helpers.js';
 
 const tabsConfig = () => [
@@ -422,7 +422,7 @@ export function tabsApp(runner) {
       const activating = tabs.activate('async');
       equal(tabs.state.loading, true, 'loading true before resolve');
       truthy(
-        tabs.dom.panels[1].querySelector('.j-loading.is-active'),
+        tabs.dom.panels[1].querySelector('svg.animate-spin'),
         'loading node visible'
       );
 

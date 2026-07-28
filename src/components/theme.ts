@@ -9,7 +9,7 @@ import {
 import { t } from 'vanilla-signal-i18n';
 
 import locales from '../locales/index.ts';
-import { all, requireRenderDOM } from '../utilities/dom.ts';
+import { all } from '../utilities/dom.ts';
 import { createEventManager, type IEventManager } from '../utilities/events.ts';
 import { getCookie, setCookie } from '../utilities/storage.ts';
 
@@ -140,8 +140,6 @@ export class Theme {
   runtime: { destroyed: boolean };
 
   constructor(options: ThemeOptions = {}) {
-    requireRenderDOM('Theme');
-
     this.props = createDeepStore(normalizeOptions(options));
     this.languages = locales;
     this.cleanup = null;

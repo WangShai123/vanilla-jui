@@ -9,12 +9,7 @@ import {
   randomId,
   resolveProps,
 } from '../utilities/core.ts';
-import {
-  type DOMReference,
-  all,
-  requireContainer,
-  requireRenderDOM,
-} from '../utilities/dom.ts';
+import { type DOMReference, all, requireContainer } from '../utilities/dom.ts';
 
 export interface TocClassNames {
   toc: string;
@@ -180,8 +175,6 @@ export class Toc extends Component<ResolvedTocProps, TocState, TocDOM> {
     if (this.runtime.destroyed)
       throw new Error('Toc.build: instance destroyed');
     if (this.runtime.built) return this;
-
-    requireRenderDOM('Toc');
 
     this.init(this.props);
     this.dom.container = requireContainer(

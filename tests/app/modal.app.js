@@ -1,6 +1,6 @@
 import { createDeepStore, flushSync, jsx, Show, render } from 'vanilla-signal';
 
-import { Modal, Toast, Flow, icon, timer } from '../../dist/index.js';
+import { Modal, Toast, Flow, icon, timer } from '../../dist/index.js?v=00';
 import { equal, truthy, dateTime, wait } from './helpers.js';
 
 // ========== 手动测试 UI ==========

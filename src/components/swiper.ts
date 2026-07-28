@@ -26,7 +26,6 @@ import {
   q,
   type RenderableContent,
   requireContainer,
-  requireRenderDOM,
 } from '../utilities/dom.ts';
 import { icon } from './icons.ts';
 
@@ -402,8 +401,6 @@ export class Swiper extends Component<
     if (this.runtime.destroyed)
       throw new Error('Swiper.build: instance destroyed');
     if (this._built) return this;
-
-    requireRenderDOM('Swiper');
 
     const hasData = Array.isArray(this.props.data);
     const root = requireContainer(this.dom.container, 'Swiper');

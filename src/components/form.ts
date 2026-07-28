@@ -23,7 +23,6 @@ import {
   isRenderableContent,
   normalizeContentNodes,
   requireContainer,
-  requireRenderDOM,
 } from '../utilities/dom.ts';
 import { Validator } from './validator.ts';
 
@@ -421,8 +420,6 @@ export class Form extends Component<ResolvedFormProps, FormState, FormDOM> {
     if (this.runtime.destroyed)
       throw new Error('Form.build: instance destroyed');
     if (this.cleanup.view) return this;
-
-    requireRenderDOM('Form');
     this.dom.container =
       container === false
         ? document.createDocumentFragment()

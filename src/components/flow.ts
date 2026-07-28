@@ -19,7 +19,6 @@ import {
   type RenderableContent,
   isRenderableContent,
   requireContainer,
-  requireRenderDOM,
 } from '../utilities/dom.ts';
 
 export type FlowData = Record<string, unknown>;
@@ -702,7 +701,6 @@ export class Flow {
   mount(container: DOMReference): this {
     this.assertActive('mount');
     if (!this.options.render) return this;
-    requireRenderDOM('Flow.mount');
 
     const target = requireContainer(
       container,

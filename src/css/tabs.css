@@ -83,6 +83,7 @@
     display: none;
     margin: var(--tab-panel-item-margin, 0);
     position: relative;
+    min-height: 1.25em;
   }
 
   .j-tabs .tab-panel .panel-item.is-active {

@@ -24,7 +24,6 @@ import {
   isRenderableContent,
   normalizeContentNodes,
   requireContainer,
-  requireRenderDOM,
 } from '../utilities/dom.ts';
 import { icon } from './icons.ts';
 
@@ -222,8 +221,6 @@ export class Accordion extends Component<
    * @param {object} [input={}] 手风琴配置。
    */
   constructor(container: DOMReference, input: AccordionProps = {}) {
-    requireRenderDOM('Accordion');
-
     const el = requireContainer(container, 'Accordion');
     const props = normalizeProps(input);
     super(props);

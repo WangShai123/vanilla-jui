@@ -26,7 +26,6 @@ import {
   normalizeContentNodes,
   q,
   requireContainer,
-  requireRenderDOM,
 } from '../utilities/dom.ts';
 
 export type TabsDirection = 'top' | 'bottom' | 'left' | 'right';
@@ -137,7 +136,6 @@ interface TabsDOM extends ComponentDOM {
   container: Element;
   tabs: HTMLElement[];
   panels: HTMLElement[];
-  panelBodies: HTMLElement[];
 }
 
 interface TabsPanelCacheEntry {
@@ -269,8 +267,6 @@ export class Tabs extends Component<ResolvedTabsProps, TabsState, TabsDOM> {
    * @param {object} [input={}] 标签页配置。
    */
   constructor(container: DOMReference, input: TabsProps = {}) {
-    requireRenderDOM('Tabs');
-
     const el = requireContainer(container, 'Tabs');
     const props = normalizeProps(input);
     super(props);
@@ -278,7 +274,6 @@ export class Tabs extends Component<ResolvedTabsProps, TabsState, TabsDOM> {
     this.dom.container = el;
     this.dom.tabs = [];
     this.dom.panels = [];
-    this.dom.panelBodies = [];
     this.bindingsDispose = null;
     this.isDragging = false;
     this.raf = 0;
@@ -351,7 +346,6 @@ export class Tabs extends Component<ResolvedTabsProps, TabsState, TabsDOM> {
 
     this.dom.tabs = [];
     this.dom.panels = [];
-    this.dom.panelBodies = [];
 
     const tabFragment = document.createDocumentFragment();
     const panelFragment = document.createDocumentFragment();
@@ -363,25 +357,19 @@ export class Tabs extends Component<ResolvedTabsProps, TabsState, TabsDOM> {
         className: this.props.className.tab,
         'data-tabs-tab': name,
         role: 'tab',
-        children: jsx('span', {
-          'data-tabs-tab-title': name,
-          children: normalizeContentNodes(item.title, { tabs: this, item }),
-        }),
+        children: normalizeContentNodes(item.title, { tabs: this, item }),
       }) as HTMLElement;
 
       this.dom.tabs.push(tab);
-      const body = jsx('div', { 'data-tabs-panel-body': name }) as HTMLElement;
       const panel = jsx('div', {
         className: this.props.className.panel,
         'data-tabs-panel': name,
         role: 'tabpanel',
-        children: body,
       }) as HTMLElement;
       this.dom.panels.push(panel);
-      this.dom.panelBodies.push(body);
 
       if (typeof item.panel !== 'function') {
-        body.append(
+        panel.append(
           ...normalizeContentNodes(item.panel, {
             tabs: this,
             item,
@@ -511,12 +499,12 @@ export class Tabs extends Component<ResolvedTabsProps, TabsState, TabsDOM> {
     index: number,
     content: RenderableContent<TabsPanelContext>
   ): void {
-    const body = this.dom.panelBodies[index];
+    const panel = this.dom.panels[index];
     const item = this.props.tabs[index];
-    if (!body || !item) return;
+    if (!panel || !item) return;
 
-    body.textContent = '';
-    body.append(
+    panel.textContent = '';
+    panel.append(
       ...normalizeContentNodes(content, {
         tabs: this,
         item,
@@ -528,8 +516,8 @@ export class Tabs extends Component<ResolvedTabsProps, TabsState, TabsDOM> {
 
   private async loadPanel(index: number): Promise<void> {
     const item = this.props.tabs[index];
-    const body = this.dom.panelBodies[index];
-    if (!item || !body || typeof item.panel !== 'function') {
+    const panel = this.dom.panels[index];
+    if (!item || !panel || typeof item.panel !== 'function') {
       this.runtime.panelLoadId += 1;
       flushSync(() => {
         this.state.loading = false;
@@ -551,9 +539,10 @@ export class Tabs extends Component<ResolvedTabsProps, TabsState, TabsDOM> {
     flushSync(() => {
       this.state.loading = true;
     });
-    body.textContent = '';
-    body.style.minHeight = '80px';
-    body.appendChild(createLoading());
+    panel.setAttribute('aria-live', 'polite');
+    panel.setAttribute('aria-busy', 'true');
+    panel.textContent = '';
+    panel.appendChild(createLoading());
 
     try {
       const content = await Promise.resolve(
@@ -573,8 +562,8 @@ export class Tabs extends Component<ResolvedTabsProps, TabsState, TabsDOM> {
       if (!this.runtime.destroyed && loadId === this.runtime.panelLoadId) {
         flushSync(() => {
           this.state.loading = false;
-          body.style.minHeight = '';
         });
+        panel.setAttribute('aria-busy', 'false');
       }
     }
   }

@@ -17,12 +17,7 @@ import {
   resolveProps,
   validateParam,
 } from '../utilities/core.ts';
-import {
-  type DOMReference,
-  q,
-  requireContainer,
-  requireRenderDOM,
-} from '../utilities/dom.ts';
+import { type DOMReference, q, requireContainer } from '../utilities/dom.ts';
 import { icon } from './icons.ts';
 
 export interface PaginationPage {
@@ -261,7 +256,7 @@ function resolvePageItems(
   const items: PaginationItem[] = [];
 
   for (const page of sorted) {
-    const previous = items.at(-1);
+    const previous = items[items.length - 1];
     if (previous?.type === 'page' && page - previous.page > 1) {
       if (page - previous.page === 2) {
         items.push(createPageItem(previous.page + 1));
@@ -292,8 +287,6 @@ export class Pagination extends Component {
    * @param {object} [input={}] 分页配置。
    */
   constructor(container: DOMReference, input: PaginationProps = {}) {
-    requireRenderDOM('Pagination');
-
     const el = requireContainer(container, 'Pagination.container');
     const props = normalizeProps(input);
     super(props);

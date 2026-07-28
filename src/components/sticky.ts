@@ -5,12 +5,7 @@ import Component, {
   type ComponentRuntime,
 } from '../core/Component.ts';
 import { type ResolveSchema, resolveProps } from '../utilities/core.ts';
-import {
-  type DOMReference,
-  all,
-  requireContainer,
-  requireRenderDOM,
-} from '../utilities/dom.ts';
+import { type DOMReference, all, requireContainer } from '../utilities/dom.ts';
 
 export type StickyOverflow = 'destroy' | 'ignore';
 
@@ -197,8 +192,6 @@ export class Sticky extends Component<
     if (this.runtime.destroyed)
       throw new Error('Sticky.build: instance destroyed');
     if (this.runtime.built) return this;
-
-    requireRenderDOM('Sticky');
 
     this.init(this.props);
 

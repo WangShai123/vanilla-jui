@@ -11,7 +11,6 @@ import {
   isNode,
   isRenderableContent,
   normalizeContentNodes,
-  requireRenderDOM,
   resolveElement,
 } from '../utilities/dom.ts';
 import { createEventManager, type IEventManager } from '../utilities/events.ts';
@@ -204,9 +203,7 @@ export class Drop {
   private lastY: number;
 
   constructor(element: DOMReference, options: DropProps = {}) {
-    requireRenderDOM('Drop');
-
-    this.target = resolveElement(element, 'Drop.element');
+    this.target = resolveElement(element);
     this.props = normalizeProps(options);
     this.root = null;
     this.isVisible = false;

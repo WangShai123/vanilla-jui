@@ -5,12 +5,7 @@ import {
   resolveProps,
   validateParam,
 } from '../utilities/core.ts';
-import {
-  type DOMReference,
-  all,
-  requireRenderDOM,
-  resolveElement,
-} from '../utilities/dom.ts';
+import { type DOMReference, all, resolveElement } from '../utilities/dom.ts';
 import { type IEventManager, createEventManager } from '../utilities/events.ts';
 
 type ValidatorElement =
@@ -162,8 +157,6 @@ export class Validator {
     options: ValidatorOptions = {},
     bindEvents = false
   ) {
-    requireRenderDOM('Validator');
-
     this.options = normalizeOptions(options);
     this.root = this.resolveRoot(element);
     this.runtime = createRuntime();
@@ -179,7 +172,7 @@ export class Validator {
   }
 
   private resolveRoot(element: DOMReference): HTMLFormElement {
-    const root = resolveElement(element, 'Validator.element');
+    const root = resolveElement(element);
     if (!(root instanceof HTMLFormElement)) {
       throw new Error('Validator.element expects a form element.');
     }

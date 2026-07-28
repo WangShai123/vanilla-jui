@@ -1,7 +1,7 @@
 import { jsx } from 'vanilla-signal';
 
 import { randomId, timer, validateParam } from '../utilities/core.ts';
-import { q, requireRenderDOM } from '../utilities/dom.ts';
+import { q } from '../utilities/dom.ts';
 import { listen } from '../utilities/events.ts';
 import { icon } from './icons.ts';
 
@@ -125,8 +125,6 @@ export class Toast {
     type: ToastType = 'info',
     options: ToastOptions = {}
   ): HTMLElement {
-    requireRenderDOM('Toast');
-
     validateParam('message', message, 'string', 'Toast.show');
     validateParam('duration', duration, TOAST_DURATION_RULE, 'Toast.show');
     validateParam('type', type, TOAST_TYPE_RULE, 'Toast.show');
@@ -237,8 +235,6 @@ export class Toast {
     duration = 2000,
     options: ToastOptions = {}
   ): HTMLElement {
-    requireRenderDOM('Toast');
-
     validateParam('message', message, 'string', 'Toast.lite');
     validateParam('duration', duration, LITE_DURATION_RULE, 'Toast.lite');
 
@@ -272,7 +268,6 @@ export class Toast {
   }
 
   static action(message = '', props: ToastActionProps = {}): HTMLElement {
-    requireRenderDOM('Toast');
     validateParam('message', message, 'string', 'Toast.action');
 
     const className = Toast.resolveClassNames(props);

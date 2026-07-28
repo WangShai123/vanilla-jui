@@ -1,12 +1,7 @@
 import { jsx } from 'vanilla-signal';
 
 import { type ResolveSchema, resolveProps } from '../utilities/core.ts';
-import {
-  type DOMReference,
-  isNode,
-  requireRenderDOM,
-  resolveElement,
-} from '../utilities/dom.ts';
+import { type DOMReference, isNode, resolveElement } from '../utilities/dom.ts';
 
 export type ParabolaDirection =
   | 'center'
@@ -150,14 +145,12 @@ export class Parabola {
    * @param {ParabolaOptions} options 动画配置。
    */
   constructor(options: ParabolaOptions = {}) {
-    requireRenderDOM('Parabola');
-
     this.options = normalizeOptions(options);
     this.hidden = false;
     this._ball = null;
     this._animationId = null;
-    this._fromEl = resolveElement(this.options.from, 'Parabola.from');
-    this._toEl = resolveElement(this.options.to, 'Parabola.to');
+    this._fromEl = resolveElement(this.options.from);
+    this._toEl = resolveElement(this.options.to);
     this.showTimerId = null;
 
     this.createBall();

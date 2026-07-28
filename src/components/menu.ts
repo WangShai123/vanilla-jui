@@ -6,13 +6,7 @@ import {
   resolveProps,
   validateParam,
 } from '../utilities/core.ts';
-import {
-  all,
-  type DOMReference,
-  q,
-  requireRenderDOM,
-  resolveElement,
-} from '../utilities/dom.ts';
+import { all, type DOMReference, q, resolveElement } from '../utilities/dom.ts';
 import { createEventManager, type IEventManager } from '../utilities/events.ts';
 import { icon } from './icons.ts';
 
@@ -251,14 +245,12 @@ export class Menu {
     if (this._bound) return this;
     if (!this.options) throw new Error('Menu.build: instance destroyed.');
 
-    requireRenderDOM('Menu');
-
     if (this._element === false) {
       this._verifyItems(this.options.items);
       this.dom.root = this._buildRoot();
       this._bound = true;
     } else {
-      const root = resolveElement(this._element, 'Menu.element');
+      const root = resolveElement(this._element);
       if (!root) throw new Error('Menu.element: container not found.');
       this.dom.root = root as HTMLElement;
       this._bound = true;

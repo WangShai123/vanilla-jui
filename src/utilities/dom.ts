@@ -1,5 +1,7 @@
 import { jsx } from 'vanilla-signal';
 
+import { icon } from '../components/icons';
+
 export type ContainerExpect = 'node' | 'element' | 'array';
 export type ResolveContainerResult<
   TExpect extends ContainerExpect = 'element',
@@ -42,45 +44,12 @@ function isContainerExpect(value: unknown): value is ContainerExpect {
 }
 
 /**
- * 判断当前环境是否可访问 DOM。
- * @returns {boolean}
- */
-export function canUseDOM(): boolean {
-  return typeof document !== 'undefined';
-}
-
-/**
- * 判断当前环境是否可执行 DOM 渲染。
- * @returns {boolean}
- */
-export function canRenderDOM(): boolean {
-  if (!canUseDOM() || typeof document.createElement !== 'function') {
-    return false;
-  }
-  const element = document.createElement('div');
-  return typeof element.insertBefore === 'function';
-}
-
-/**
- * 强制要求当前环境可执行 DOM 渲染。
- * @param {string} [namespace='Component'] 错误命名空间。
- * @returns {true}
- * @throws {Error} 当前环境不可渲染 DOM 时抛出。
- */
-export function requireRenderDOM(namespace: string = 'Component'): true {
-  if (!canRenderDOM()) {
-    throw new Error(`${namespace}: DOM render environment is required.`);
-  }
-  return true;
-}
-
-/**
  * 判断是否为 DOM Node。
  * @param {*} value 需要判断的值。
  * @returns {boolean}
  */
 export function isNode(value: unknown): value is Node {
-  return canUseDOM() && typeof Node !== 'undefined' && value instanceof Node;
+  return value instanceof Node;
 }
 
 /**
@@ -89,9 +58,7 @@ export function isNode(value: unknown): value is Node {
  * @returns {boolean}
  */
 export function isElement(value: unknown): value is Element {
-  return (
-    canUseDOM() && typeof Element !== 'undefined' && value instanceof Element
-  );
+  return value instanceof Element;
 }
 
 /**
@@ -136,12 +103,19 @@ function flattenNodeArray(
 }
 
 /**
- * 将常见内容值转换为 DOM 节点数组。
+ * 将可渲染内容归一化为 DOM 节点数组。
  *
- * 字符串会按 HTML 片段解析；函数会以 context 调用后继续归一化。
- * @param {*} content 组件内容。
- * @param {*} [context] 传给函数内容的上下文。
- * @returns {Node[]}
+ * 支持的输入类型：
+ * - **Node/Element**: 包装为单元素数组
+ * - **string**: 按 HTML 片段解析为节点数组
+ * - **number/boolean**: 转换为文本节点
+ * - **Array**: 递归扁平化处理
+ * - **Function**: 调用后递归处理返回值
+ * - **null/undefined/false/true**: 返回空数组
+ *
+ * @param {RenderableContent<TContext>} content 可渲染内容。
+ * @param {TContext} [context] 传递给函数类型内容的上下文。
+ * @returns {Node[]} 归一化后的节点数组。
  */
 export function normalizeContentNodes<TContext = unknown>(
   content: RenderableContent<TContext>,
@@ -185,18 +159,13 @@ export function normalizeContentNodes<TContext = unknown>(
  * - **false/null/undefined**: 返回 null
  *
  * @param {Element|Node|string|Array|false|null|undefined} ref 元素引用、选择器、节点或空值。
- * @param {string} [namespace='Component'] 错误命名空间。
  * @returns {Node[]|null}
  */
-export function resolveNodeList(
-  ref: DOMReference,
-  _namespace = 'Component'
-): Node[] | null {
+export function resolveNodeList(ref: DOMReference): Node[] | null {
   if (ref === false || ref == null) return null;
 
   if (typeof ref === 'string') {
-    if (!canUseDOM()) return null;
-    const nodes = Array.from(document.querySelectorAll(ref));
+    const nodes = all(ref);
     return nodes.length > 0 ? nodes : null;
   }
 
@@ -220,22 +189,17 @@ export function resolveNodeList(
  * - **false/null/undefined**: 返回 null
  *
  * @param {Element|Node|string|Array|false|null|undefined} ref 元素引用、选择器、节点或空值。
- * @param {string} [namespace='Component'] 错误命名空间。
  * @returns {Node|null}
  */
-export function resolveNode(
-  ref: DOMReference,
-  namespace: string = 'Component'
-): Node | null {
+export function resolveNode(ref: DOMReference): Node | null {
   if (isElement(ref) || isNode(ref)) return ref;
 
   if (typeof ref === 'string') {
-    if (!canUseDOM()) return null;
     return document.querySelector(ref);
   }
 
   if (Array.isArray(ref)) {
-    const nodes = resolveNodeList(ref, namespace) || [];
+    const nodes = resolveNodeList(ref) || [];
     return nodes[0] || null;
   }
 
@@ -252,23 +216,18 @@ export function resolveNode(
  * - **false/null/undefined**: 返回 null
  *
  * @param {Element|Node|string|Array|false|null|undefined} ref 元素引用、选择器、节点或空值。
- * @param {string} [namespace='Component'] 错误命名空间。
  * @returns {Element|null}
  */
-export function resolveElement(
-  ref: DOMReference,
-  namespace: string = 'Component'
-): Element | null {
+export function resolveElement(ref: DOMReference): Element | null {
   if (!isContainerLike(ref)) return null;
 
   if (typeof ref === 'string') {
-    if (!canUseDOM()) return null;
     const element = document.querySelector(ref);
     return isElement(element) ? element : null;
   }
 
   if (Array.isArray(ref)) {
-    const nodes = resolveNodeList(ref, namespace);
+    const nodes = resolveNodeList(ref);
     return Array.isArray(nodes) ? firstElement(nodes) : null;
   }
 
@@ -297,23 +256,14 @@ export function resolveContainer<TExpect extends ContainerExpect = 'element'>(
   if (!isContainerLike(container)) return null;
 
   if (expect === 'array') {
-    return resolveNodeList(
-      container,
-      namespace
-    ) as ResolveContainerResult<TExpect> | null;
+    return resolveNodeList(container) as ResolveContainerResult<TExpect> | null;
   }
 
   if (expect === 'node') {
-    return resolveNode(
-      container,
-      namespace
-    ) as ResolveContainerResult<TExpect> | null;
+    return resolveNode(container) as ResolveContainerResult<TExpect> | null;
   }
 
-  return resolveElement(
-    container,
-    namespace
-  ) as ResolveContainerResult<TExpect> | null;
+  return resolveElement(container) as ResolveContainerResult<TExpect> | null;
 }
 
 /**
@@ -357,16 +307,21 @@ export function isRenderableContent(
 
 /**
  * 创建通用加载状态节点。
- * @param {string} [className='j-loading is-active'] 容器类名。
  * @returns {HTMLElement}
  */
-export function createLoading(
-  className: string = 'j-loading is-active'
-): HTMLDivElement {
+export function createLoading(): HTMLDivElement {
   return jsx('div', {
-    className,
     'aria-live': 'polite',
-    children: jsx`<div className="loading-spinner"></div>`,
+    style: {
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      position: 'absolute',
+      width: '100%',
+      height: '100%',
+      backdropFilter: 'blur(4px)',
+    },
+    children: icon('loader', { width: 24, className: 'animate-spin' }),
   });
 }
 
@@ -416,8 +371,6 @@ export function lazyRender(
   renderCallback: LazyRenderCallback,
   options: LazyRenderOptions = {}
 ): CleanupFunction {
-  if (!canUseDOM()) return noop;
-
   if (typeof renderCallback !== 'function') {
     throw new TypeError('lazyRender: renderCallback expects function.');
   }
