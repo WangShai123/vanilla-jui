@@ -1,0 +1,14 @@
+@layer themes {
+    .j-tooltip {
+        --tooltip-fg: var(--ui-bg);
+        --tooltip-bg: var(--ui-fg);
+        --tooltip-border-width: 1px;
+        --tooltip-border-style: solid;
+        --tooltip-border-color: var(--ui-border-strong);
+        --tooltip-border-radius: var(--radius-md);
+        --tooltip-max-width: 260px;
+        --tooltip-padding: calc(var(--space) * 1.5) var(--s2);
+        --tooltip-font-size: var(--font-size-md);
+        --tooltip-line-height: var(--line-height);
+    }
+}

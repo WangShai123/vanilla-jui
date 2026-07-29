@@ -5,11 +5,10 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: var(--offcanvas-overlay-background,
-        var(--ui-overlay-muted));
-    z-index: var(--z-overlay);
     opacity: 0;
     transition: opacity 0.3s ease;
+    background: var(--offcanvas-overlay-bg);
+    z-index: var(--z-overlay);
   }
 
   .j-offcanvas-overlay.is-active {
@@ -19,25 +18,23 @@
   .j-offcanvas {
     position: fixed;
     z-index: var(--z-offcanvas);
-    background: var(--offcanvas-background, var(--ui-bg));
-    box-shadow: var(--offcanvas-box-shadow, var(--shadow-md));
-    --offcanvas-border: 1px solid var(--ui-border-subtle);
+    background: var(--offcanvas-bg);
+    box-shadow: var(--offcanvas-box-shadow);
   }
 
-  .j-offcanvas.is-slide,
-  .j-offcanvas.is-push {
+  .j-offcanvas.is-slide {
     transition: transform 0.3s ease;
   }
 
-  .j-offcanvas:not(.is-slide):not(.is-push) {
+  .j-offcanvas:not(.is-slide) {
     transition: none;
   }
 
   .j-offcanvas.is-left {
     top: 0;
     left: 0;
-    width: 300px;
-    height: 100%;
+    width: var(--offcanvas-block-width);
+    height: 100vh;
     transform: translateX(-100%);
     border-right: var(--offcanvas-border);
   }
@@ -45,8 +42,8 @@
   .j-offcanvas.is-right {
     top: 0;
     right: 0;
-    width: 300px;
-    height: 100%;
+    width: var(--offcanvas-block-width);
+    height: 100vh;
     transform: translateX(100%);
     border-left: var(--offcanvas-border);
   }
@@ -55,7 +52,7 @@
     top: 0;
     left: 0;
     width: 100%;
-    height: 200px;
+    height: var(--offcanvas-inline-height);
     transform: translateY(-100%);
     border-bottom: var(--offcanvas-border);
   }
@@ -64,41 +61,18 @@
     bottom: 0;
     left: 0;
     width: 100%;
-    height: 200px;
+    height: var(--offcanvas-inline-height);
     transform: translateY(100%);
     border-top: var(--offcanvas-border);
   }
 
-  .j-offcanvas.is-slide.is-active,
-  .j-offcanvas.is-active:not(.is-push) {
+  .j-offcanvas.is-active {
     transform: translate(0, 0);
-  }
-
-  .offcanvas-push-body {
-    transition: transform 0.3s ease;
-    overflow: hidden;
-  }
-
-  .offcanvas-push-left {
-    transform: translateX(300px);
-  }
-
-  .offcanvas-push-right {
-    transform: translateX(-300px);
-  }
-
-  .offcanvas-push-top {
-    transform: translateY(200px);
-  }
-
-  .offcanvas-push-bottom {
-    transform: translateY(-200px);
   }
 
   .j-offcanvas .offcanvas-content {
     height: 100%;
     overflow-y: auto;
-    box-sizing: border-box;
     position: relative;
   }
 }

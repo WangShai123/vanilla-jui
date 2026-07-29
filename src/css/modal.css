@@ -1,27 +1,15 @@
 @layer components {
   .j-modal {
-    --modal-border: var(--modal-border-width, 1px) var(--modal-border-style, solid) var(--modal-border-color, transparent);
-
-    --modal-header-padding: var(--s4) var(--s4) 0;
-    --modal-header-gap: var(--space);
-    --modal-title-font-size: var(--font-size-md);
-    --modal-close-icon-size: var(--el-height-3xs);
-    --modal-close-font-size: var(--font-size-lg);
-    --modal-close-color: var(--ui-fg-muted);
-
-    --modal-body-padding: var(--s4);
-    --modal-body-line-height: var(--line-height-paragraph);
-
-    --modal-footer-padding: 0 var(--s4) var(--s4);
-    --modal-footer-gap: var(--s2);
-
-    background: var(--modal-background, var(--ui-bg));
-    border: var(--modal-border, 1px solid var(--ui-border));
-    border-radius: var(--modal-border-radius, var(--radius-md));
-    box-shadow: var(--modal-box-shadow, var(--shadow-md));
-    min-width: var(--modal-min-width, 300px);
-    max-width: var(--modal-max-width, 500px);
-    max-height: var(--modal-max-height, 90vh);
+    color: var(--modal-fg);
+    background: var(--modal-bg);
+    border-width: var(--modal-border-width);
+    border-style: var(--modal-border-style);
+    border-color: var(--modal-border-color);
+    border-radius: var(--modal-border-radius);
+    box-shadow: var(--modal-box-shadow);
+    min-width: var(--modal-min-width);
+    max-width: var(--modal-max-width);
+    max-height: var(--modal-max-height);
     overflow: hidden;
     animation: animate-fade-in 0.35s ease-in-out;
     display: flex;
@@ -38,22 +26,21 @@
     height: 100%;
     max-width: none;
     max-height: none;
-    /* --modal-border-color: var(--ui-border-subtle); */
   }
 
   .j-modal .modal-header {
-    padding: var(--modal-header-padding);
-    border-bottom: var(--modal-border);
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: var(--modal-header-gap);
+    padding: var(--modal-header-padding);
+    border-bottom: var(--modal-header-bottom-border);
   }
 
   .j-modal .modal-header .modal-title {
     margin: 0;
     font-size: var(--modal-title-font-size);
-    font-weight: 500;
+    font-weight: var(--modal-title-font-weight);
   }
 
   .j-modal .modal-body {
@@ -68,27 +55,11 @@
     line-height: var(--modal-body-line-height);
   }
 
-  .j-modal.is-fullscreen .modal-header {
-    --modal-header-padding: var(--s4);
-  }
-
-  .j-modal:not(.is-fullscreen) .modal-header:has(.modal-close) {
-    --modal-header-padding: var(--s3) var(--s4) 0;
-  }
-
-  .j-modal.is-fullscreen .modal-body {
-    --modal-body-padding: 0;
-  }
-
-  .j-modal.is-fullscreen .modal-footer {
-    --modal-footer-padding: var(--s4);
-  }
-
   .j-modal .modal-footer {
-    padding: var(--modal-footer-padding);
-    border-top: var(--modal-footer-border, var(--modal-border));
     display: flex;
     justify-content: flex-end;
     gap: var(--modal-footer-gap);
+    padding: var(--modal-footer-padding);
+    border-top: var(--modal-footer-top-border);
   }
 }

@@ -1,19 +1,19 @@
 @layer comopnents {
   .j-tooltip {
     position: relative;
-    background: var(--tooltip-background, #000);
-    color: var(--tooltip-foreground, #fff);
-    border-width: var(--tooltip-border-width, 1px);
-    border-style: var(--tooltip-border-style, solid);
-    border-color: var(--tooltip-border-color, #111);
-    border-radius: var(--tooltip-radius, var(--radius-md));
-    max-width: var(--tooltip-max-width, 260px);
+    background: var(--tooltip-bg);
+    color: var(--tooltip-fg);
+    border-width: var(--tooltip-border-width);
+    border-style: var(--tooltip-border-style);
+    border-color: var(--tooltip-border-color);
+    border-radius: var(--tooltip-border-radius);
+    max-width: var(--tooltip-max-width);
   }
 
   .j-tooltip .tooltip-message {
     word-wrap: break-word;
-    padding: var(--tooltip-padding, calc(var(--space) * 1.5) var(--s2));
-    font-size: var(--tooltip-font-size, var(--font-size-md));
-    line-height: var(--tooltip-line-height, var(--line-height));
+    padding: var(--tooltip-padding);
+    font-size: var(--tooltip-font-size);
+    line-height: var(--tooltip-line-height);
   }
 }

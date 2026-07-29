@@ -99,7 +99,6 @@ const locales = {
     noSpace: 'No Space',
     noChinese: 'No Chinese',
     noSpecial: 'No Special Characters',
-    passwordRequired: 'Password Required',
     passwordMinLength: 'Password Min Length is 6 characters',
     passwordMaxLength: 'Password Max Length is 8 characters',
     equalToRequired: 'Different Password Warning',
@@ -211,7 +210,6 @@ const locales = {
     noSpace: '不允许使用空格',
     noChinese: '不允许使用中文',
     noSpecial: '不允许使用特殊字符',
-    passwordRequired: '请输入密码',
     passwordMinLength: '密码长度不能小于6位',
     passwordMaxLength: '密码长度不能大于8位',
     equalToRequired: '两次输入的密码不一致',
@@ -271,7 +269,7 @@ const menuItems = [
 ];
 
 const { show, info, primary, success, warning, error, lite } = Toast;
-const path = window.location.pathname;
+// const path = window.location.pathname;
 const ts = (key) => {
   return t(key, locales);
 };
@@ -804,14 +802,16 @@ const sectionOffcanvas = jsx('section', {
           },
         }),
         jsx('button', {
-          className: 'j-button is-default example-offcanvas-push',
-          children: 'push',
+          className: 'j-button is-default example-offcanvas-none',
+          children: 'none',
           onClick: () => {
             service
-              .get('pushOffcanvas', () => {
+              .get('noneOffcanvas', () => {
                 return new Offcanvas({
-                  animation: 'push',
-                  content: 'Push Offcanvas',
+                  animation: 'none',
+                  filter: false,
+                  content:
+                    '<div style="padding:2rem 1rem;"><h2>No Animation Offcanvas</h2><button class="j-button is-default" data-action="close">Close</button></div>',
                 });
               })
               .show();
@@ -1507,8 +1507,6 @@ const __form = () => {
   listen(form, 'submit', (e) => {
     e.preventDefault();
     const result = test.validate();
-    console.log(test);
-    console.log(result);
 
     if (!result && test.runtime.message) {
       error(test.runtime.message);

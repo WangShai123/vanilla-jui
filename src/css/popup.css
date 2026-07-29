@@ -1,14 +1,14 @@
 @layer components {
   .j-popup-layout {
+    display: flex;
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: var(--popup-background, var(--ui-popup-background));
-    backdrop-filter: var(--popup-backdrop-filter, blur(4px));
-    display: flex;
-    padding: var(--popup-layout-padding, var(--s4));
+    background: var(--popup-bg);
+    backdrop-filter: var(--popup-backdrop-filter);
+    padding: var(--popup-layout-padding);
     z-index: var(--z-popup);
   }
 

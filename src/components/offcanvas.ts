@@ -18,7 +18,7 @@ import {
 } from '../utilities/dom.ts';
 
 export type OffcanvasDirection = 'top' | 'right' | 'bottom' | 'left';
-export type OffcanvasAnimation = 'slide' | 'push' | 'none';
+export type OffcanvasAnimation = 'slide' | 'none';
 
 export interface OffcanvasClassNames {
   root: string;
@@ -30,13 +30,7 @@ export interface OffcanvasClassNames {
   bottom: string;
   left: string;
   slide: string;
-  push: string;
   none: string;
-  pushBody: string;
-  pushTop: string;
-  pushRight: string;
-  pushBottom: string;
-  pushLeft: string;
 }
 
 export type OffcanvasClassNameConfig = Partial<OffcanvasClassNames>;
@@ -112,13 +106,7 @@ const DEFAULT_CLASS_NAMES: OffcanvasClassNames = {
   bottom: 'is-bottom',
   left: 'is-left',
   slide: 'is-slide',
-  push: 'is-push',
   none: 'is-none',
-  pushBody: 'offcanvas-push-body',
-  pushTop: 'offcanvas-push-top',
-  pushRight: 'offcanvas-push-right',
-  pushBottom: 'offcanvas-push-bottom',
-  pushLeft: 'offcanvas-push-left',
 };
 
 const OFFCANVAS_PROPS_SCHEMA = {
@@ -139,7 +127,7 @@ const OFFCANVAS_PROPS_SCHEMA = {
   animation: {
     default: 'slide',
     type: 'string',
-    enum: ['slide', 'push', 'none'],
+    enum: ['slide', 'none'],
   },
   bgClose: { default: true, type: 'boolean' },
   escClose: { default: true, type: 'boolean' },
@@ -373,44 +361,31 @@ export class Offcanvas extends Component<
   }
 
   private renderPanel(): void {
-    const { overlay, animation, direction, id, className } = this.props;
+    const { overlay, id, className } = this.props;
     const body = document.body;
 
     if (overlay && this._overlay) body.appendChild(this._overlay);
     if (this.dom.root) body.appendChild(this.dom.root);
 
     body.style.overflow = 'hidden';
-    if (animation === 'push') {
-      body.classList.add(className.pushBody);
-    }
 
     timer.start(`oc-show-${id}`, 10, () => {
       if (!this.dom.root) return;
       this._overlay?.classList.add(className.active);
-      if (animation === 'push') {
-        body.classList.add(className[`push${capitalizeDirection(direction)}`]);
-      }
       this.dom.root.classList.add(className.active);
     });
   }
 
   private removePanel(): void {
-    const { animation, direction, id, className } = this.props;
+    const { id, className } = this.props;
     const body = document.body;
 
     this._overlay?.classList.remove(className.active);
     this.dom.root?.classList.remove(className.active);
 
-    if (animation === 'push') {
-      body.classList.remove(className[`push${capitalizeDirection(direction)}`]);
-    }
-
     timer.start(`oc-remove-${id}`, 100, () => {
       this._overlay?.remove();
       this.dom.root?.remove();
-      if (animation === 'push') {
-        body.classList.remove(className.pushBody);
-      }
       body.style.overflow = '';
     });
   }
@@ -458,7 +433,7 @@ export class Offcanvas extends Component<
   }
 
   onDestroy(): void {
-    const { id, direction, className } = this.props;
+    const { id, className } = this.props;
 
     timer.cancel(`oc-show-${id}`);
     timer.cancel(`oc-remove-${id}`);
@@ -472,23 +447,9 @@ export class Offcanvas extends Component<
 
     const body = document.body;
     body.style.overflow = '';
-    body.classList.remove(
-      className.pushBody,
-      className[`push${capitalizeDirection(direction)}`]
-    );
 
     this._overlay = null;
   }
-}
-
-function capitalizeDirection(
-  direction: OffcanvasDirection
-): 'Top' | 'Right' | 'Bottom' | 'Left' {
-  return `${direction[0].toUpperCase()}${direction.slice(1)}` as
-    | 'Top'
-    | 'Right'
-    | 'Bottom'
-    | 'Left';
 }
 
 export function createOffcanvas(options: OffcanvasProps = {}): Offcanvas {

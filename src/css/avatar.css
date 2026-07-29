@@ -1,16 +1,19 @@
 @layer components {
   .j-avatar {
-    --avatar-size: var(--el-height-md);
-
     display: inline-block;
     vertical-align: middle;
-    border-radius: var(--avatar-border-radius, var(--radius-md));
     width: var(--avatar-size);
     height: var(--avatar-size);
     overflow: hidden;
     user-select: none;
     object-fit: cover;
-    box-shadow: var(--avatar-box-shadow, var(--shadow-sm));
+    box-shadow: var(--avatar-box-shadow);
+    border: var(--avatar-border);
+    border-radius: var(--avatar-border-radius);
+    background: var(--avatar-bg);
+    color: var(--avatar-fg);
+    font-size: var(--avatar-font-size);
+    font-weight: var(--avatar-font-weight);
   }
 
   .j-avatar img,
@@ -18,22 +21,7 @@
     margin: 0;
   }
 
-  .j-avatar.is-sm {
-    --avatar-size: var(--el-height-2xs);
-  }
-
-  .j-avatar.is-lg {
-    --avatar-size: var(--el-height-lg);
-  }
-
-  .j-avatar.is-round {
-    border-radius: 0.5rem;
-  }
-
   .j-avatar.is-text {
-    background-color: var(--tone-subtle);
-    color: var(--tone-solid);
-    font-weight: var(--font-medium);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -44,19 +32,5 @@
     justify-content: center;
     align-items: center;
     flex-wrap: nowrap;
-  }
-
-  .j-avatar-group .j-avatar {
-    border: 1.5px solid var(--avatar-border-color, var(--ui-bg));
-  }
-
-  .j-avatar-group .j-avatar:not(:first-child) {
-    margin-inline-start: calc(var(--space) * -3);
-  }
-
-  .j-avatar-group .j-avatar:last-child {
-    font-size: var(--font-size-sm, 0.75rem);
-    background-color: var(--ui-bg);
-    box-shadow: var(--avatar-box-shadow, var(--shadow-sm));
   }
 }

@@ -1,6 +1,6 @@
 import { createDeepStore, flushSync, jsx, Show, render } from 'vanilla-signal';
 
-import { Offcanvas } from '../../dist/index.js?v=00';
+import { Offcanvas } from '../../dist/index.js?v=01';
 import { equal, hasClass, textOf, truthy, dateTime } from './helpers.js';
 
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -10,10 +10,6 @@ function cleanup() {
     slideInstance.destroy();
     slideInstance = null;
   }
-  if (pushInstance) {
-    pushInstance.destroy();
-    pushInstance = null;
-  }
   if (asyncInstance) {
     asyncInstance.destroy();
     asyncInstance = null;
@@ -22,19 +18,11 @@ function cleanup() {
     .querySelectorAll('[data-offcanvas], [data-offcanvas-overlay]')
     .forEach((node) => node.remove());
   document.body.style.overflow = '';
-  document.body.classList.remove(
-    'offcanvas-push-body',
-    'offcanvas-push-left',
-    'offcanvas-push-right',
-    'offcanvas-push-top',
-    'offcanvas-push-bottom'
-  );
 }
 
 // ========== 手动测试 UI ==========
 
 let slideInstance = null;
-let pushInstance = null;
 let asyncInstance = null;
 
 const ui = createDeepStore({ created: false, asyncCreated: false });
@@ -52,7 +40,7 @@ function mountButtons() {
             id: 'btn-oc-create',
             type: 'button',
             className: 'j-button is-primary is-sm',
-            children: '创建实例',
+            children: '创建普通实例',
           }),
         fallback: () =>
           jsx('div', {
@@ -62,13 +50,7 @@ function mountButtons() {
                 id: 'btn-oc-slide',
                 type: 'button',
                 className: 'j-button is-outline is-sm',
-                children: 'Slide',
-              }),
-              jsx('button', {
-                id: 'btn-oc-push',
-                type: 'button',
-                className: 'j-button is-outline is-sm',
-                children: 'Push',
+                children: '显示面板',
               }),
               jsx('button', {
                 id: 'btn-oc-destroy',
@@ -151,39 +133,20 @@ function bindEvents(runner) {
           runner.log(`${dateTime()} Slide Offcanvas 已关闭`);
         },
       });
-      pushInstance = new Offcanvas({
-        animation: 'push',
-        direction: 'left',
-        content:
-          '<div style="padding: 16px"><button data-action="close" class="j-button is-outline is-sm">关闭</button><p>Push Offcanvas 内容</p></div>',
-        onShown: () => {
-          runner.log(`${dateTime()} Push Offcanvas 已显示`);
-        },
-        onHidden: () => {
-          runner.log(`${dateTime()} Push Offcanvas 已关闭`);
-        },
-      });
-
-      runner.log(`${dateTime()} 已创建 2 个 Offcanvas 实例`);
+      runner.log(`${dateTime()} 已创建普通 Offcanvas 实例`);
     }
 
     if (id === 'btn-oc-slide' && slideInstance) {
       slideInstance.show();
     }
 
-    if (id === 'btn-oc-push' && pushInstance) {
-      pushInstance.show();
-    }
-
     if (id === 'btn-oc-destroy') {
       slideInstance?.destroy();
-      pushInstance?.destroy();
       slideInstance = null;
-      pushInstance = null;
       flushSync(() => {
         ui.created = false;
       });
-      runner.log(`${dateTime()} 已销毁 2 个 Offcanvas 实例`);
+      runner.log(`${dateTime()} 已销毁普通 Offcanvas 实例`);
       mountButtons(runner);
     }
   });
@@ -347,7 +310,6 @@ export function offcanvasApp(runner) {
     cleanup();
     const offcanvas = new Offcanvas({
       content: 'Destroy content',
-      animation: 'push',
       direction: 'left',
     });
 

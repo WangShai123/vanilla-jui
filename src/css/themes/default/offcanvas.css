@@ -1,0 +1,13 @@
+@layer themes {
+  .j-offcanvas-overlay {
+    --offcanvas-overlay-bg: var(--ui-overlay-muted);
+  }
+
+  .j-offcanvas {
+    --offcanvas-bg: var(--ui-bg);
+    --offcanvas-box-shadow: var(--shadow-md);
+    --offcanvas-border: 1px solid var(--ui-border-subtle);
+    --offcanvas-block-width: 300px;
+    --offcanvas-inline-height: 200px;
+  }
+}

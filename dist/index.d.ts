@@ -2116,7 +2116,7 @@ declare function createTooltip(element: DOMReference, props?: TooltipProps): Too
 //#endregion
 //#region src/components/offcanvas.d.ts
 type OffcanvasDirection = 'top' | 'right' | 'bottom' | 'left';
-type OffcanvasAnimation = 'slide' | 'push' | 'none';
+type OffcanvasAnimation = 'slide' | 'none';
 interface OffcanvasClassNames {
   root: string;
   overlay: string;
@@ -2127,13 +2127,7 @@ interface OffcanvasClassNames {
   bottom: string;
   left: string;
   slide: string;
-  push: string;
   none: string;
-  pushBody: string;
-  pushTop: string;
-  pushRight: string;
-  pushBottom: string;
-  pushLeft: string;
 }
 type OffcanvasClassNameConfig = Partial<OffcanvasClassNames>;
 type OffcanvasContent = RenderableContent<Offcanvas> | ((offcanvas: Offcanvas) => Promise<RenderableContent<Offcanvas>>);

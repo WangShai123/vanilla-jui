@@ -1,0 +1,70 @@
+@layer themes {
+    .j-toast-container {
+        --toast-container-offset: var(--s2);
+        --toast-container-gap: var(--s2);
+    }
+
+    .j-toast {
+        --toast-padding: var(--s3) var(--s4);
+        --toast-font-size: var(--font-size-md);
+        --toast-font-weight: var(--font-medium);
+        --toast-min-width: 200px;
+        --toast-max-width: 310px;
+        --toast-box-shadow: var(--shadow-md);
+        --toast-border-width: 1px;
+        --toast-border-style: solid;
+        --toast-border-color: var(--ui-border);
+        --toast-border-radius: var(--radius-md);
+        --toast-fg: var(--ui-fg);
+        --toast-bg: var(--ui-bg);
+    }
+
+    .j-toast .toast-icon {
+        --toast-icon-size: var(--font-size-lg);
+    }
+
+    .j-toast.is-success {
+        --toast-fg: var(--state-success);
+        --toast-bg: var(--state-success-weak);
+        --toast-border-color: var(--state-success-border);
+    }
+
+    .j-toast.is-error {
+        --toast-fg: var(--state-danger);
+        --toast-bg: var(--state-danger-weak);
+        --toast-border-color: var(--state-danger-border);
+    }
+
+    .j-toast.is-warning {
+        --toast-fg: var(--state-warning);
+        --toast-bg: var(--state-warning-weak);
+        --toast-border-color: var(--state-warning-border);
+    }
+
+    .j-toast.is-primary {
+        --toast-fg: var(--tone-solid);
+        --toast-bg: var(--tone-weak);
+        --toast-border-color: var(--tone-border);
+    }
+
+    .j-toast.is-action {
+        --toast-gap: calc(var(--space)*4);
+        --toast-min-width: 280px;
+    }
+
+    .j-toast.is-action .toast-actions {
+        width: 100%;
+        display: flex;
+        justify-content: flex-end;
+        gap: var(--space);
+    }
+
+    .j-toast-lite {
+        font-size: var(--font-size-md);
+        color: var(--ui-bg);
+        background: var(--ui-fg);
+        border-radius: var(--radius-md);
+        padding: var(--s2) var(--s3);
+        max-width: calc(var(--screen-sm) / 2);
+    }
+}

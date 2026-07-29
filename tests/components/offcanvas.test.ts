@@ -61,16 +61,13 @@ describe('Offcanvas', () => {
       id: 'custom-offcanvas',
       overlay: false,
       direction: 'left',
-      animation: 'push',
       content: 'Custom panel',
       className: {
         root: 'qa-offcanvas',
         content: 'qa-offcanvas-content',
         active: 'qa-active',
         left: 'qa-left',
-        push: 'qa-push',
-        pushBody: 'qa-push-body',
-        pushLeft: 'qa-push-left',
+        slide: 'qa-slide',
       },
     });
 
@@ -86,8 +83,8 @@ describe('Offcanvas', () => {
     vi.advanceTimersByTime(11);
 
     expect(offcanvas.root?.classList.contains('qa-active')).toBe(true);
-    expect(document.body.classList.contains('qa-push-body')).toBe(true);
-    expect(document.body.classList.contains('qa-push-left')).toBe(true);
+    expect(offcanvas.root?.classList.contains('qa-slide')).toBe(true);
+    expect(document.body.className).toBe('');
   });
 
   it('closes by nested data-action, overlay and Escape', async () => {

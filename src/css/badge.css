@@ -3,64 +3,16 @@
     display: inline-flex;
     justify-content: center;
     align-items: center;
-    padding: 0 var(--badge-padding, calc(var(--space) * 1.5));
-    min-width: var(--badge-min-width, 1.25rem);
-    height: var(--badge-height, 1.25rem);
-    line-height: var(--badge-line-height, var(--line-height-self));
-    font-size: var(--badge-font-size, var(--font-size-sm));
-    font-weight: var(--badge-font-weight, var(--font-medium));
-    border-radius: var(--badge-radius, 500px);
-    border: 1px solid var(--badge-border-color, var(--ui-border));
-    color: var(--badge-color, var(--ui-fg));
-    background-color: var(--badge-background, var(--ui-bg));
-    box-shadow: var(--badge-box-shadow, none);
-  }
-
-  .j-badge.is-sm {
-    --badge-padding: calc(var(--space) * 0.75);
-    --badge-min-width: 1rem;
-    --badge-height: 1rem;
-    --badge-font-size: 0.625rem;
-  }
-
-  .j-badge.is-contrast {
-    --badge-background: var(--ui-fg);
-    --badge-color: var(--ui-bg);
-  }
-
-  .j-badge.is-primary {
-    --badge-background: var(--tone-solid);
-    --badge-color: var(--tone-fg);
-    --badge-border-color: var(--tone-solid);
-  }
-
-  .j-badge.is-secondary {
-    --badge-background: var(--tone-soft);
-    --badge-color: var(--tone-text);
-    --badge-border-color: var(--tone-soft);
-  }
-
-  .j-badge.is-success {
-    --badge-background: var(--state-success);
-    --badge-color: var(--state-success-fg);
-    --badge-border-color: var(--state-success);
-  }
-
-  .j-badge.is-warning {
-    --badge-background: var(--state-warning);
-    --badge-color: var(--state-warning-fg);
-    --badge-border-color: var(--state-warning);
-  }
-
-  .j-badge.is-danger {
-    --badge-background: var(--state-danger);
-    --badge-color: var(--state-danger-fg);
-    --badge-border-color: var(--state-danger);
-  }
-
-  .j-badge.is-error {
-    --badge-border-color: var(--state-danger-subtle);
-    --badge-background: var(--state-danger-subtle);
-    --badge-color: var(--state-danger-text);
+    padding: var(--badge-padding);
+    min-width: var(--badge-min-width);
+    height: var(--badge-height);
+    line-height: var(--badge-line-height);
+    font-size: var(--badge-font-size);
+    font-weight: var(--badge-font-weight);
+    border-radius: var(--badge-radius);
+    border: 1px solid var(--badge-border-color);
+    color: var(--badge-fg);
+    background-color: var(--badge-bg);
+    box-shadow: var(--badge-box-shadow);
   }
 }

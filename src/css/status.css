@@ -14,8 +14,6 @@
     filter: grayscale(100%);
   }
 
-
-
   /* readonly */
   [readonly] {
     opacity: var(--opacity-readonly);

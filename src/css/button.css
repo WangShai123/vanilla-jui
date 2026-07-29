@@ -4,20 +4,21 @@
     justify-content: center;
     align-items: center;
     flex-wrap: nowrap;
-    gap: var(--button-gap, var(--space) calc(var(--space) * 1.5));
+    gap: var(--btn-gap);
     position: relative;
     white-space: nowrap;
-    font-weight: var(--button-font-weight, var(--font-medium));
-    font-size: var(--button-font-size, var(--font-size-md));
-    height: var(--button-height, var(--el-height-md));
-    line-height: var(--button-line-height, var(--line-height-self));
-    background-color: var(--button-background, transparent);
-    padding: var(--button-padding, 0 var(--s3));
-    border-width: var(--button-border-width, 1px);
-    border-style: var(--button-border-style, solid);
-    border-color: var(--button-border-color, transparent);
-    border-radius: var(--button-border-radius, var(--radius-md));
-    box-shadow: var(--button-box-shadow, var(--shadow-sm));
+    font-weight: var(--btn-font-weight);
+    font-size: var(--btn-font-size);
+    height: var(--btn-height);
+    line-height: var(--btn-line-height);
+    color: var(--btn-fg);
+    background-color: var(--btn-bg);
+    padding: var(--btn-padding);
+    border-width: var(--btn-border-width);
+    border-style: var(--btn-border-style);
+    border-color: var(--btn-border-color);
+    border-radius: var(--btn-border-radius);
+    box-shadow: var(--btn-box-shadow);
     appearance: button;
     user-select: none;
     touch-action: manipulation;
@@ -29,7 +30,7 @@
   }
 
   .j-button svg {
-    width: var(--font-size-md);
+    width: var(--btn-svg-size);
     fill: currentColor;
   }
 
@@ -38,113 +39,16 @@
     color: inherit;
   }
 
-  /* size */
-  .j-button.is-sm {
-    font-size: var(--font-size-sm);
-    height: var(--button-height-sm, var(--el-height-sm));
-    padding: var(--button-padding-sm, var(--space) var(--s2));
-  }
-
-  .j-button.is-lg {
-    font-size: var(--font-size-lg);
-    height: var(--button-height-lg, var(--el-height-lg));
-    padding: var(--button-padding-lg, var(--s3) var(--s4));
-  }
-
-  /* variant */
-  .j-button.is-default {
-    --button-background: var(--ui-bg);
-    --button-border-color: var(--ui-border);
-    color: var(--ui-fg);
-  }
-
-  .j-button.is-contrast {
-    --button-background: var(--ui-fg);
-    color: var(--ui-bg);
-  }
-
-  .j-button.is-primary {
-    --button-background: var(--tone-solid);
-    color: var(--tone-fg);
-  }
-
-  .j-button.is-secondary {
-    --button-border-color: transparent;
-    --button-background: var(--tone-soft);
-    color: var(--tone-text);
-  }
-
-  .j-button.is-outline {
-    --button-background: transparent;
-    --button-border-color: var(--tone-solid);
-    color: var(--tone-solid);
-  }
-
-  .j-button.is-ghost {
-    --button-box-shadow: none;
-    transition-property: none;
-  }
-
-  .j-button.is-text {
-    --button-border-color: transparent;
-    height: var(--button-text-height, auto);
-    padding: var(--button-text-padding, 0);
-    box-shadow: var(--button-text-box-shadow, none);
-  }
-
-  .j-button.is-icon {
-    aspect-ratio: var(--aspect-icon, 1);
-    padding: var(--icon-padding, 0);
-  }
-
-  .j-button.is-danger {
-    --button-background: var(--state-danger);
-    color: var(--state-danger-fg);
-  }
-
-  .j-button.is-warning {
-    --button-background: var(--state-warning);
-    color: var(--state-warning-fg);
-  }
-
-  .j-button.is-success {
-    --button-background: var(--state-success);
-    color: var(--state-success-fg);
-  }
-
-  .j-button.is-error {
-    --button-background: var(--state-danger-subtle);
-    color: var(--state-danger-text);
-  }
-
-  .j-button[class*='is-surface-'] {
-    --button-border-color: var(--ui-border);
-    color: var(--ui-fg);
-  }
-
-  .j-button.is-surface-sm {
-    --button-background: var(--ui-surface-subtle);
-  }
-
-  .j-button.is-surface-md {
-    --button-background: var(--ui-surface-muted);
-  }
-
-  .j-button.is-surface-lg {
-    --button-background: var(--ui-surface-active);
-  }
-
   /* group */
   .j-button-group {
-    --button-padding: 0 var(--s2);
     display: flex;
     margin: 0;
+    box-shadow: var(--btn-group-box-shadow);
   }
 
   .j-button-group .j-button:not(:first-child) {
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;
-    /* margin-left: -1px; */
   }
 
   .j-button-group .j-button:not(:last-child) {
@@ -153,8 +57,10 @@
   }
 
   .j-button-group .j-button:not(:first-child):not(:last-child) {
-    border-block-width: var(--button-border-width, 1px);
-    border-inline-width: 0;
+    border-top-width: var(--btn-border-width);
+    border-bottom-width: var(--btn-border-width);
+    border-left-width: 0;
+    border-right-width: 0;
   }
 
   .j-button-group.is-vertical {
@@ -173,8 +79,10 @@
   }
 
   .j-button-group.is-vertical .j-button:not(:last-child):not(:first-child) {
-    border-block-width: 0;
-    border-inline-width: var(--button-border-width, 1px);
+    border-left-width: var(--btn-border-width);
+    border-right-width: var(--btn-border-width);
+    border-top-width: 0;
+    border-bottom-width: 0;
   }
 
   .j-button-group.is-vertical .j-button:first-child {
@@ -183,114 +91,5 @@
 
   .j-button-group.is-vertical .j-button:last-child {
     border-bottom-left-radius: var(--radius-md);
-  }
-
-  /* disabled */
-  .j-button:disabled {
-    opacity: var(--opacity-disabled, 0.5);
-  }
-
-  /* status */
-  .j-button:not(:disabled) {
-    cursor: pointer;
-  }
-
-  .j-button:not(:disabled):hover {
-    opacity: var(--opacity-hover);
-  }
-
-  .j-button:not(:disabled):active {
-    opacity: var(--opacity-active);
-  }
-
-  .j-button:not(:disabled).is-active,
-  .j-button:not(:disabled):focus-visible {
-    outline: 2px solid var(--button-ring, var(--tone-solid));
-    outline-offset: 1px;
-    border-color: transparent;
-  }
-
-  .j-button.is-default:hover:not(:disabled) {
-    background-color: var(--ui-surface-hover);
-  }
-
-  .j-button.is-outline:hover:not(:disabled),
-  .j-button.is-ghost:hover:not(:disabled) {
-    background-color: var(--tone-subtle);
-  }
-
-  .j-button.is-text:not(:disabled):active,
-  .j-button.is-text:not(:disabled):focus-visible,
-  .j-button.is-text:not(:disabled).is-active {
-    outline: none;
-    color: var(--tone-solid);
-    text-decoration: underline;
-    text-underline-offset: var(--space);
-  }
-
-  .j-button.is-contrast:not(:disabled):active,
-  .j-button.is-contrast:not(:disabled):focus-visible {
-    --button-ring: var(--ui-fg);
-  }
-
-  .j-button.is-success:not(:disabled):active,
-  .j-button.is-success:not(:disabled):focus-visible {
-    --button-ring: var(--state-success);
-  }
-
-  .j-button.is-warning:not(:disabled):active,
-  .j-button.is-warning:not(:disabled):focus-visible {
-    --button-ring: var(--state-warning);
-  }
-
-  .j-button.is-danger:not(:disabled):active,
-  .j-button.is-danger:not(:disabled):focus-visible {
-    --button-ring: var(--state-danger);
-  }
-
-  .j-button.is-error:not(:disabled):active,
-  .j-button.is-error:not(:disabled):focus-visible {
-    --button-ring: var(--state-danger-subtle);
-  }
-
-  .j-button.is-surface-sm:not(:disabled):active,
-  .j-button.is-surface-sm:not(:disabled):focus-visible {
-    --button-ring: var(--ui-surface-hover);
-  }
-
-  .j-button.is-surface-md:not(:disabled):active,
-  .j-button.is-surface-md:not(:disabled):focus-visible {
-    --button-ring: var(--ui-border);
-  }
-
-  .j-button.is-surface-lg:not(:disabled):active,
-  .j-button.is-surface-lg:not(:disabled):focus-visible {
-    --button-ring: var(--ui-border-strong);
-  }
-
-  .j-button-group .j-button:active,
-  .j-button-group .j-button:focus-visible {
-    outline: none;
-    --button-border-color: transparent;
-    --button-box-shadow: 0 0 0 2px var(--tone-solid);
-    z-index: 1;
-  }
-
-  .j-button-group .j-button.is-primary:not(:disabled):active,
-  .j-button-group .j-button.is-primary:not(:disabled):focus-visible,
-  .j-button-group .j-button:focus-within {
-    outline: 2px solid var(--button-ring, var(--tone-solid));
-    outline-offset: 1px;
-    --button-border-color: transparent;
-    --button-box-shadow: var(--shadow-sm);
-  }
-
-  .j-button-group .j-button:focus-within {
-    z-index: 1;
-    --button-border-color: transparent;
-  }
-
-  .j-button-group.is-vertical .j-button:focus-within {
-    z-index: auto
   }
 }

@@ -1,0 +1,85 @@
+@layer themes {
+    .j-tag {
+        --tag-gap: var(--space);
+        --tag-fg: var(--ui-fg);
+        --tag-bg: var(--ui-bg);
+        --tag-font-size: var(--font-size-sm);
+        --tag-font-weight: var(--font-normal);
+        --tag-line-height: var(--line-height-self);
+        --tag-height: var(--el-height-xs);
+        --tag-padding: 0 calc(var(--space) * 1.5);
+        --tag-border-width: 1px;
+        --tag-border-style: solid;
+        --tag-border-color: var(--ui-border);
+        --tag-border-radius: var(--radius-md);
+        --tag-box-shadow: var(--shadow-sm);
+    }
+
+    .j-font-md .j-tag {
+        --tag-padding: 0 var(--s2);
+    }
+
+    .j-tag.is-contrast {
+        --tag-fg: var(--ui-bg);
+        --tag-bg: var(--ui-fg);
+    }
+
+    .j-tag.is-primary {
+        --tag-bg: var(--tone-solid);
+        --tag-fg: var(--tone-fg);
+        --tag-border-color: var(--tone-solid);
+    }
+
+    .j-tag.is-secondary {
+        --tag-bg: var(--tone-soft);
+        --tag-fg: var(--tone-text);
+        --tag-border-color: transparent;
+    }
+
+    .j-tag.is-outline {
+        --tag-bg: transparent;
+        --tag-fg: var(--tone-solid);
+        --tag-border-color: var(--tone-solid);
+    }
+
+    .j-tag.is-ghost {
+        --tag-border-color: transparent;
+        --tag-box-shadow: none;
+    }
+
+    .j-tag img,
+    .j-tag svg {
+        --tag-icon-size: var(--font-size-sm);
+    }
+
+    .j-tag.is-default:hover {
+        background: var(--ui-surface-hover);
+    }
+
+    .j-tag.is-outline:hover,
+    .j-tag.is-ghost:hover {
+        background: var(--tone-subtle);
+    }
+
+    .j-tag .el-icon[data-action='close']:hover {
+        color: var(--tone-fg);
+        background: var(--tone-solid);
+        border-radius: 50%;
+    }
+
+    .j-tag.is-default .el-icon[data-action='close']:hover,
+    .j-tag.is-ghost .el-icon[data-action='close']:hover {
+        background: var(--ui-fg);
+        color: var(--ui-bg-subtle);
+    }
+
+    .j-tag.is-contrast .el-icon[data-action='close']:hover {
+        color: var(--ui-fg);
+        background: var(--ui-bg);
+    }
+
+    .j-tag.is-primary .el-icon[data-action='close']:hover {
+        color: var(--tone-solid);
+        background: var(--tone-fg);
+    }
+}

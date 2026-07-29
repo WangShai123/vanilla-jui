@@ -1,0 +1,35 @@
+@layer themes {
+    .j-swiper {
+        --swiper-min-height: 180px;
+        --swiper-title-inset: var(--s3);
+        --swiper-title-padding: calc(var(--space) * 1.5) var(--s2);
+        --swiper-title-color: #fff;
+        --swiper-title-font-size: var(--font-size-lg);
+        --swiper-title-font-weight: var(--font-bold);
+        --swiper-title-bg: rgb(0 0 0 / 35%);
+        --swiper-title-border-radius: var(--radius-sm);
+        --swiper-title-line-height: var(--line-height-heading);
+        --swiper-pagination-gap: 6px;
+        --swiper-pagination-inline: var(--s3);
+        --swiper-pagination-block: var(--s2);
+        --swiper-indicator-size: 8px;
+        --swiper-indicator-bg: rgb(255 255 255 / 62%);
+        --swiper-indicator-hover-bg: rgb(255 255 255 / 86%);
+        --swiper-indicator-active-width: 22px;
+        --swiper-indicator-active-bg: #fff;
+        --swiper-navigation-size: 36px;
+        --swiper-navigation-fg: #fff;
+        --swiper-navigation-bg: rgb(0 0 0 / 35%);
+        --swiper-navigation-hover-bg: rgb(0 0 0 / 65%);
+        --swiper-navigation-offset: var(--s2);
+        --swiper-navigation-icon-size: 18px;
+    }
+
+    @media (max-width: 640px) {
+        .j-swiper {
+            --swiper-title-font-size: var(--font-size-md);
+            --swiper-title-inset: var(--s2);
+            --swiper-navigation-size: 32px;
+        }
+    }
+}

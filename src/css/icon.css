@@ -3,27 +3,6 @@
 		display: block;
 	}
 
-	.j-loader {
-		display: flex;
-		justify-content: center;
-		align-items: center;
-		background: var(--ui-bg-subtle);
-		width: 100%;
-		height: 100%;
-		position: absolute;
-	}
-
-	/* loader icon */
-	.icon-loader {
-		display: inline-block;
-		width: var(--font-size-xl);
-		height: var(--font-size-xl);
-		border: 1px solid currentcolor;
-		border-right-color: transparent;
-		border-radius: 50%;
-		animation: var(--speed-xl) linear infinite animate-spin;
-	}
-
 	/* close icon */
 	.icon-close {
 		box-sizing: border-box;

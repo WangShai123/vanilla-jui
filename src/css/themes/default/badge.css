@@ -1,0 +1,63 @@
+@layer themes {
+    .j-badge {
+        --badge-padding: 0 calc(var(--space) * 1.5);
+        --badge-min-width: 1.25rem;
+        --badge-height: 1.25rem;
+        --badge-font-size: var(--font-size-sm);
+        --badge-font-weight: var(--font-medium);
+        --badge-line-height: var(--line-height-self);
+        --badge-radius: 500px;
+        --badge-border-color: var(--ui-border);
+        --badge-fg: var(--ui-fg);
+        --badge-bg: var(--ui-bg);
+        --badge-box-shadow: none;
+    }
+
+    .j-badge.is-sm {
+        --badge-padding: 0 calc(var(--space) * 0.75);
+        --badge-min-width: 1rem;
+        --badge-height: 1rem;
+        --badge-font-size: 0.625rem;
+    }
+
+    .j-badge.is-contrast {
+        --badge-bg: var(--ui-fg);
+        --badge-fg: var(--ui-bg);
+    }
+
+    .j-badge.is-primary {
+        --badge-bg: var(--tone-solid);
+        --badge-fg: var(--tone-fg);
+        --badge-border-color: var(--tone-solid);
+    }
+
+    .j-badge.is-secondary {
+        --badge-bg: var(--tone-soft);
+        --badge-fg: var(--tone-text);
+        --badge-border-color: var(--tone-soft);
+    }
+
+    .j-badge.is-success {
+        --badge-bg: var(--state-success);
+        --badge-fg: var(--state-success-fg);
+        --badge-border-color: var(--state-success);
+    }
+
+    .j-badge.is-warning {
+        --badge-bg: var(--state-warning);
+        --badge-fg: var(--state-warning-fg);
+        --badge-border-color: var(--state-warning);
+    }
+
+    .j-badge.is-danger {
+        --badge-bg: var(--state-danger);
+        --badge-fg: var(--state-danger-fg);
+        --badge-border-color: var(--state-danger);
+    }
+
+    .j-badge.is-error {
+        --badge-border-color: var(--state-danger-subtle);
+        --badge-bg: var(--state-danger-subtle);
+        --badge-fg: var(--state-danger-text);
+    }
+}

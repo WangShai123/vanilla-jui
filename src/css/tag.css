@@ -3,49 +3,19 @@
     display: inline-flex;
     justify-content: center;
     align-items: center;
-    gap: var(--tag-gap, var(--space));
-    padding: 0 var(--tag-padding, calc(var(--space) * 1.5));
-    height: var(--tag-height, var(--el-height-xs));
-    line-height: var(--tag-line-height, var(--line-height-self));
-    font-size: var(--tag-font-size, var(--font-size-sm));
-    font-weight: var(--font-normal);
-    border-radius: var(--tag-radius, var(--radius-md));
-    border: 1px solid var(--tag-border-color, var(--ui-border));
-    color: var(--tag-foreground, var(--ui-fg));
-    background: var(--tag-background, var(--ui-bg));
-    box-shadow: var(--tag-box-shadow, var(--shadow-sm));
-  }
-
-  .j-font-md .j-tag {
-    --tag-padding: var(--s2);
-  }
-
-  .j-tag.is-contrast {
-    --tag-background: var(--ui-fg);
-    --tag-foreground: var(--ui-bg);
-  }
-
-  .j-tag.is-primary {
-    --tag-background: var(--tone-solid);
-    --tag-foreground: var(--tone-fg);
-    --tag-border-color: var(--tone-solid);
-  }
-
-  .j-tag.is-secondary {
-    --tag-background: var(--tone-soft);
-    --tag-foreground: var(--tone-text);
-    --tag-border-color: transparent;
-  }
-
-  .j-tag.is-outline {
-    --tag-background: transparent;
-    --tag-foreground: var(--tone-solid);
-    --tag-border-color: var(--tone-solid);
-  }
-
-  .j-tag.is-ghost {
-    --tag-border-color: transparent;
-    --tag-shadow: none;
+    gap: var(--tag-gap);
+    padding: var(--tag-padding);
+    height: var(--tag-height);
+    line-height: var(--tag-line-height);
+    font-size: var(--tag-font-size);
+    font-weight: var(--tag-font-weight);
+    border-width: var(--tag-border-width);
+    border-style: var(--tag-border-style);
+    border-color: var(--tag-border-color);
+    border-radius: var(--tag-border-radius);
+    color: var(--tag-fg);
+    background: var(--tag-bg);
+    box-shadow: var(--tag-box-shadow);
   }
 
   .j-tag span {
@@ -56,42 +26,11 @@
 
   .j-tag img,
   .j-tag svg {
-    width: var(--tag-icon-size, var(--font-size-sm));
-    height: var(--tag-icon-size, var(--font-size-sm));
+    width: var(--tag-icon-size);
+    height: var(--tag-icon-size);
   }
 
   .j-tag:hover {
-    opacity: var(--opacity-hover, 0.9);
-  }
-
-  .j-tag.is-default:hover {
-    background-color: var(--ui-surface-hover);
-  }
-
-  .j-tag.is-outline:hover,
-  .j-tag.is-ghost:hover {
-    background-color: var(--tone-subtle);
-  }
-
-  .j-tag .el-icon[data-action='close']:hover {
-    color: var(--tone-fg);
-    background-color: var(--tone-solid);
-    border-radius: 50%;
-  }
-
-  .j-tag.is-default .el-icon[data-action='close']:hover,
-  .j-tag.is-ghost .el-icon[data-action='close']:hover {
-    background-color: var(--ui-fg);
-    color: var(--ui-bg-subtle);
-  }
-
-  .j-tag.is-contrast .el-icon[data-action='close']:hover {
-    color: var(--ui-fg);
-    background-color: var(--ui-bg);
-  }
-
-  .j-tag.is-primary .el-icon[data-action='close']:hover {
-    color: var(--tone-solid);
-    background-color: var(--tone-fg);
+    opacity: var(--opacity-hover);
   }
 }

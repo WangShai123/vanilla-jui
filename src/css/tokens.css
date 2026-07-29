@@ -92,6 +92,11 @@
 
     /* --- Border Radius --- */
     --radius-full: 9999px;
+
+    /* --- Opacity --- */
+    --opacity-hover: 0.8;
+    --opacity-active: 0.95;
+    --opacity-disabled: 0.5;
   }
 
 
@@ -126,7 +131,7 @@
     --ui-disabled-fg: #9ca3af;
     --ui-overlay: rgba(0, 0, 0, 0.5);
     --ui-overlay-muted: rgba(0, 0, 0, 0.25);
-    --ui-popup-background: rgba(0, 0, 0, 0.0625);
+    --ui-popup-bg: rgba(0, 0, 0, 0.0625);
     --ui-input-color: #111827;
     --ui-input-border: rgba(0, 0, 0, 0.15);
     --ui-input-focus-border: #3b82f6;
@@ -317,7 +322,7 @@
     --ui-disabled-fg: #64748b;
     --ui-overlay: rgba(2, 6, 23, 0.7);
     --ui-overlay-muted: rgba(2, 6, 23, 0.45);
-    --ui-popup-background: rgba(17, 24, 39, 0.82);
+    --ui-popup-bg: rgba(17, 24, 39, 0.82);
     --ui-input-color: #f9fafb;
     --ui-input-border: rgba(148, 163, 184, 0.2);
     --ui-input-focus-border: #a78bfa;

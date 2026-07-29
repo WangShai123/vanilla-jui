@@ -18,7 +18,7 @@
   .j-swiper .swiper-slide {
     position: relative;
     display: block;
-    width: var(--swiper-slide-width, 100%);
+    width: 100%;
     min-width: 100%;
     overflow: hidden;
     color: inherit;
@@ -30,52 +30,52 @@
     display: block;
     width: 100%;
     height: 100%;
-    min-height: var(--swiper-min-height, 180px);
+    min-height: var(--swiper-min-height);
     object-fit: cover;
     pointer-events: none;
   }
 
   .j-swiper .swiper-slide-title {
-    position: absolute;
-    right: var(--swiper-title-inset, var(--s3));
-    bottom: var(--swiper-title-inset, var(--s3));
-    left: var(--swiper-title-inset, var(--s3));
-    z-index: 1;
     display: block;
-    padding: calc(var(--space) * 1.5) var(--s2);
-    overflow: hidden;
-    color: var(--swiper-title-color, #fff);
-    font-size: var(--swiper-title-font-size, var(--font-size-lg));
-    font-weight: var(--font-weight-bold, 700);
-    line-height: 1.35;
+    position: absolute;
+    right: var(--swiper-title-inset);
+    bottom: var(--swiper-title-inset);
+    left: var(--swiper-title-inset);
+    padding: var(--swiper-title-padding);
+    color: var(--swiper-title-color);
+    font-size: var(--swiper-title-font-size);
+    font-weight: var(--swiper-title-font-weight);
+    background: var(--swiper-title-bg);
+    border-radius: var(--swiper-title-border-radius);
+    line-height: var(--swiper-title-line-height);
     text-overflow: ellipsis;
     white-space: nowrap;
-    background: var(--swiper-title-background, rgb(0 0 0 / 35%));
-    border-radius: var(--radius-sm);
+    z-index: 1;
+    overflow: hidden;
   }
 
   .j-swiper .swiper-pagination {
     position: absolute;
-    z-index: 2;
     display: flex;
-    gap: var(--swiper-pagination-gap, 7px);
+    gap: var(--swiper-pagination-gap);
     align-items: center;
     justify-content: center;
+    z-index: 2;
   }
 
   .j-swiper .swiper-pagination.is-horizontal {
-    right: var(--s3);
-    bottom: var(--s2);
-    left: var(--s3);
+    right: var(--swiper-pagination-inline);
+    bottom: var(--swiper-pagination-block);
+    left: var(--swiper-pagination-inline);
   }
 
   .j-swiper .swiper-pagination-indicator {
     display: inline-block;
-    width: var(--swiper-indicator-size, 8px);
-    height: var(--swiper-indicator-size, 8px);
+    width: var(--swiper-indicator-size);
+    height: var(--swiper-indicator-size);
     padding: 0;
     cursor: pointer;
-    background: var(--swiper-indicator-background, rgb(255 255 255 / 62%));
+    background: var(--swiper-indicator-bg);
     border: 0;
     border-radius: 999px;
     outline: none;
@@ -87,14 +87,13 @@
 
   .j-swiper .swiper-pagination-indicator:hover,
   .j-swiper .swiper-pagination-indicator:focus-visible {
-    background: var(--swiper-indicator-hover-background,
-        rgb(255 255 255 / 86%));
+    background: var(--swiper-indicator-hover-bg);
   }
 
   .j-swiper .swiper-pagination-indicator.is-active,
   .j-swiper .swiper-pagination-indicator.active {
-    width: var(--swiper-indicator-active-width, 22px);
-    background: var(--swiper-indicator-active-background, #fff);
+    width: var(--swiper-indicator-active-width);
+    background: var(--swiper-indicator-active-bg);
   }
 
   .j-swiper .swiper-navigation {
@@ -104,12 +103,12 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: var(--swiper-navigation-size, 36px);
-    height: var(--swiper-navigation-size, 36px);
+    width: var(--swiper-navigation-size);
+    height: var(--swiper-navigation-size);
     padding: 0;
-    color: var(--swiper-navigation-color, #fff);
+    color: var(--swiper-navigation-fg);
     cursor: pointer;
-    background: var(--swiper-navigation-background, rgb(0 0 0 / 35%));
+    background: var(--swiper-navigation-bg);
     border: 0;
     border-radius: 999px;
     transform: translateY(-50%);
@@ -120,21 +119,21 @@
 
   .j-swiper .swiper-navigation:hover,
   .j-swiper .swiper-navigation:focus-visible {
-    background: var(--swiper-navigation-hover-background, rgb(0 0 0 / 65%));
+    background: var(--swiper-navigation-hover-bg);
     outline: none;
   }
 
   .j-swiper .swiper-navigation.is-prev {
-    left: var(--s2);
+    left: var(--swiper-navigation-offset);
   }
 
   .j-swiper .swiper-navigation.is-next {
-    right: var(--s2);
+    right: var(--swiper-navigation-offset);
   }
 
   .j-swiper .swiper-navigation svg {
-    width: var(--swiper-navigation-icon-size, 18px);
-    height: var(--swiper-navigation-icon-size, 18px);
+    width: var(--swiper-navigation-icon-size);
+    height: var(--swiper-navigation-icon-size);
     pointer-events: none;
   }
 
@@ -142,19 +141,5 @@
   .j-swiper .swiper-navigation:disabled {
     cursor: default;
     opacity: 0.36;
-  }
-
-  @media (max-width: 640px) {
-    .j-swiper .swiper-slide-title {
-      right: var(--s2);
-      bottom: var(--s2);
-      left: var(--s2);
-      font-size: var(--font-size-md);
-    }
-
-    .j-swiper .swiper-navigation {
-      width: 32px;
-      height: 32px;
-    }
   }
 }
