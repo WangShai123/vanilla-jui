@@ -27,29 +27,21 @@
     border-style: var(--toast-border-style);
     border-color: var(--toast-border-color);
     border-radius: var(--toast-border-radius);
-
-    opacity: 0;
-    transform: translateY(-100%);
-
-    transition: all 0.3s ease-in-out;
-    cursor: pointer;
     min-width: var(--toast-min-width);
     max-width: var(--toast-max-width);
     word-break: break-all;
-
+    cursor: pointer;
     pointer-events: auto;
+
+    opacity: 0;
+    transform: translateY(-100%);
+    transition: all 0.3s ease-in-out;
   }
 
-  /* .j-toast.is-shown, */
   .j-toast[aria-live] {
     opacity: 1;
     transform: translateY(0);
   }
-
-  /* .j-toast.is-hidden {
-    opacity: 0;
-    transform: translateY(-100%);
-  } */
 
   .j-toast .toast-icon {
     margin-right: var(--s2);
@@ -66,8 +58,10 @@
     position: fixed;
     top: 45%;
     left: 50%;
-    transition: opacity var(--speed-sm) ease-in-out;
+    transition: opacity 0.15s ease-in-out;
     z-index: var(--z-toast);
+    width: fit-content;
+    max-width: 240px;
     text-align: center;
     user-select: none;
     pointer-events: none;
@@ -75,16 +69,10 @@
     transform: translate(-50%, -50%) scale(0.9);
   }
 
-  /* .j-toast-lite.is-shown, */
   .j-toast-lite[aria-live] {
     opacity: 1;
-    transform: scale(1);
+    transform: translate(-50%, -50%) scale(1);
   }
-
-  /* .j-toast-lite.is-hidden {
-    opacity: 0;
-    transform: scale(0.9);
-  } */
 
   .j-toast.is-action {
     flex-direction: column;
