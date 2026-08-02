@@ -11,8 +11,8 @@
 		transform: scale(1);
 		width: var(--font-size-xl);
 		height: var(--font-size-xl);
-		border: 1px solid;
-		border-radius: 50%;
+		/* border: 1px solid; */
+		/* border-radius: 50%; */
 		color: inherit;
 		cursor: pointer;
 	}
@@ -25,7 +25,7 @@
 		top: 50%;
 		left: 50%;
 		width: 12px;
-		height: 2px;
+		height: 1.5px;
 		background: currentColor;
 		border-radius: 1px;
 		transform-origin: center center;

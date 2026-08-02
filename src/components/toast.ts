@@ -1,5 +1,7 @@
 import { jsx } from 'vanilla-signal';
+import { t } from 'vanilla-signal-i18n';
 
+import locales from '../locales/index.ts';
 import { randomId, timer, validateParam } from '../utilities/core.ts';
 import { q } from '../utilities/dom.ts';
 import { listen } from '../utilities/events.ts';
@@ -12,13 +14,12 @@ export interface ToastClassNames {
   toast: string;
   icon: string;
   message: string;
-  shown: string;
   hidden: string;
   lite: string;
   action: string;
   actions: string;
   button: string;
-  cancelButton: string;
+  closeButton: string;
   actionButton: string;
   info: string;
   success: string;
@@ -35,10 +36,11 @@ export interface ToastOptions {
 
 export interface ToastActionProps extends ToastOptions {
   text?: {
-    cancel?: string;
+    close?: string;
     action?: string;
   };
   onAction?: () => void | Promise<void>;
+  onClose?: () => void | Promise<void>;
 }
 
 interface ResolvedToastOptions {
@@ -50,13 +52,12 @@ const DEFAULT_CLASS_NAMES: ToastClassNames = {
   toast: 'j-toast',
   icon: 'toast-icon',
   message: 'toast-message',
-  shown: 'is-shown',
   hidden: 'is-hidden',
   lite: 'j-toast-lite',
   action: 'is-action',
   actions: 'toast-actions',
   button: 'j-button is-sm',
-  cancelButton: 'is-ghost',
+  closeButton: 'is-ghost',
   actionButton: 'is-outline',
   info: 'is-info',
   success: 'is-success',
@@ -135,6 +136,8 @@ export class Toast {
     const toast = jsx('div', {
       className: joinClasses(className.toast, className[type]),
       'data-toast': id,
+      role: 'alert',
+      'aria-atomic': 'true',
       children: [
         jsx('span', {
           className: className.icon,
@@ -152,7 +155,8 @@ export class Toast {
     Toast.classNames.set(toast, className);
     toastContainer.appendChild(toast);
 
-    Toast.setTimer(id, 'show', () => toast.classList.add(className.shown), 10);
+    const v = type === 'error' ? 'assertive' : 'polite';
+    Toast.setTimer(id, 'show', () => toast.setAttribute('aria-live', v), 10);
 
     if (duration > 0) {
       Toast.setTimer(id, 'hide', () => Toast.hide(toast), duration);
@@ -207,12 +211,11 @@ export class Toast {
   static hide(toast: HTMLElement | null | undefined): void {
     if (!toast) return;
 
-    const className = Toast.classNames.get(toast) || Toast.options.className;
     Toast.disposers.get(toast)?.();
     Toast.disposers.delete(toast);
 
-    toast.classList.remove(className.shown);
-    toast.classList.add(className.hidden);
+    toast.removeAttribute('aria-live');
+    toast.setAttribute('aria-hidden', 'true');
 
     const id = toast.dataset.toast || randomId();
     Toast.setTimer(
@@ -252,13 +255,19 @@ export class Toast {
     Toast.classNames.set(lite, className);
     document.body.appendChild(lite);
 
-    Toast.setTimer(id, 'show', () => lite.classList.add(className.shown), 10);
+    Toast.setTimer(
+      id,
+      'show',
+      () => lite.setAttribute('aria-live', 'polite'),
+      10
+    );
+
     Toast.setTimer(
       id,
       'hide',
       () => {
-        lite.classList.remove(className.shown);
-        lite.classList.add(className.hidden);
+        lite.removeAttribute('aria-live');
+        lite.setAttribute('aria-hidden', 'true');
         Toast.setTimer(id, 'remove', () => lite.remove(), 300);
       },
       duration
@@ -269,7 +278,8 @@ export class Toast {
 
   static action(message = '', props: ToastActionProps = {}): HTMLElement {
     validateParam('message', message, 'string', 'Toast.action');
-
+    const c = t('Close', locales);
+    const a = t('Confirm', locales);
     const className = Toast.resolveClassNames(props);
     const toastContainer = Toast.getOrCreateContainer(className);
     const id = randomId();
@@ -288,15 +298,20 @@ export class Toast {
           'data-toast-actions': id,
           children: [
             jsx('button', {
-              className: joinClasses(className.button, className.cancelButton),
-              children: props.text?.cancel || 'cancel',
-              'data-action': 'cancel',
-              onClick: () => Toast.hide(action),
+              className: joinClasses(className.button, className.closeButton),
+              children: props.text?.close || c,
+              'data-action': 'close',
+              'aria-label': props.text?.close || c,
+              onClick: async () => {
+                await props.onClose?.();
+                Toast.hide(action);
+              },
             }),
             jsx('button', {
               className: joinClasses(className.button, className.actionButton),
-              children: props.text?.action || 'action',
+              children: props.text?.action || a,
               'data-action': 'toast-action',
+              'aria-label': props.text?.action || a,
               onClick: async () => {
                 await props.onAction?.();
                 Toast.hide(action);
@@ -314,7 +329,7 @@ export class Toast {
       id,
       'show',
       () => {
-        action.classList.add(className.shown);
+        action.setAttribute('aria-live', 'polite');
         q<HTMLButtonElement>('[data-action="toast-action"]', action)?.focus();
       },
       10

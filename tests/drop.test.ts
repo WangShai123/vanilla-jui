@@ -9,7 +9,7 @@ import {
   vi,
 } from 'vite-plus/test';
 
-import { Drop, createDrop } from '../../src/components/drop.ts';
+import { Drop, createDrop } from '../src/components/drop.ts';
 
 let drop: Drop | null = null;
 
@@ -51,7 +51,7 @@ describe('Drop', () => {
 
     drop.show(false);
     expect(document.body.contains(drop.root)).toBe(true);
-    expect(drop.root?.classList.contains('is-active')).toBe(true);
+    expect(drop.root?.getAttribute('aria-expanded')).toBe('true');
     expect(drop.root?.querySelector('b')?.textContent).toBe('Drop content');
   });
 
@@ -64,7 +64,6 @@ describe('Drop', () => {
       className: {
         root: 'qa-drop',
         container: 'qa-drop-container',
-        active: 'qa-active',
       },
     });
 
@@ -73,9 +72,6 @@ describe('Drop', () => {
     expect(
       drop.root?.querySelector('[data-drop-container="custom"]')
     ).toBeTruthy();
-
-    drop.show(false);
-    expect(drop.root?.classList.contains('qa-active')).toBe(true);
   });
 
   it('supports click mode document closing and callbacks', () => {

@@ -9,7 +9,7 @@ import {
   vi,
 } from 'vite-plus/test';
 
-import { Swiper, createSwiper } from '../../src/components/swiper.ts';
+import { Swiper, createSwiper } from '../src/components/swiper.ts';
 
 let swiper: Swiper | null = null;
 
@@ -145,6 +145,27 @@ describe('Swiper', () => {
     swiper = null;
 
     expect(app().children).toHaveLength(0);
+  });
+
+  it('clears autoplay timer before destroy finishes', () => {
+    swiper = new Swiper(app(), {
+      data: SLIDES,
+      delay: 40,
+    }).build();
+
+    const nextSpy = vi.spyOn(swiper, 'next');
+
+    expect(swiper.runtime.timer).toBeTruthy();
+
+    swiper.destroy();
+
+    expect(swiper.runtime.destroyed).toBe(true);
+    expect(swiper.runtime.timer).toBeNull();
+
+    expect(() => {
+      vi.advanceTimersByTime(120);
+    }).not.toThrow();
+    expect(nextSpy).not.toHaveBeenCalled();
   });
 
   it('createSwiper passes container and options through', () => {

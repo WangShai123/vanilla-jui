@@ -2,7 +2,6 @@ export default {
   en: {
     b: 'Back',
     t: 'Customize',
-    d: 'Customize your UI experience.',
     sm: 'Small',
     md: 'Medium',
     lg: 'Large',
@@ -10,8 +9,7 @@ export default {
   zh: {
     b: '返回',
     t: '自定义主题',
-    d: '自定义您的UI体验。',
-    Theme: '主题',
+    Primary: '主色',
     Radius: '圆角',
     Shadow: '阴影',
     Font: '字号',
@@ -40,5 +38,7 @@ export default {
     Light: '浅色',
     Dark: '深色',
     Auto: '自动',
+    Close: '关闭',
+    Confirm: '确认',
   },
 };

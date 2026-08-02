@@ -1,0 +1,16 @@
+@layer components {
+    #j-editor {
+        max-width: var(--editor-max-width);
+        border-width: var(--editor-border-width);
+        border-style: var(--editor-border-style);
+        border-color: var(--editor-border-color);
+        border-top: none;
+        border-bottom: none;
+        min-height: var(--editor-min-height);
+        padding: var(--editor-padding);
+    }
+
+    .ProseMirror {
+        outline: 0;
+    }
+}

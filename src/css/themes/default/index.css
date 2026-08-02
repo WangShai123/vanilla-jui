@@ -1,3 +1,6 @@
+@import url('./content.css');
+@import url('./toolbar.css');
+@import url('./editor.css');
 @import url('./button.css');
 @import url('./avatar.css');
 @import url('./badge.css');
@@ -14,3 +17,7 @@
 @import url('./swiper.css');
 @import url('./breadcrumb.css');
 @import url('./loading.css');
+@import url('./theme-palette.css');
+@import url('./table.css');
+@import url('./pagination.css');
+@import url('./menu.css');

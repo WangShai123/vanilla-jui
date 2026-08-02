@@ -10,7 +10,7 @@
     z-index: var(--z-drop);
   }
 
-  .j-drop.is-active {
+  .j-drop[aria-expanded='true'] {
     display: block;
     opacity: 1;
     pointer-events: auto;

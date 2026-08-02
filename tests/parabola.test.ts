@@ -9,7 +9,7 @@ import {
   vi,
 } from 'vite-plus/test';
 
-import { Parabola, createParabola } from '../../src/components/parabola.ts';
+import { Parabola, createParabola } from '../src/components/parabola.ts';
 
 let instances: Parabola[] = [];
 
@@ -45,7 +45,7 @@ function raf(time: number): void {
   const request = window.requestAnimationFrame as unknown as ReturnType<
     typeof vi.fn
   >;
-  const callback = request.mock.calls.at(-1)?.[0] as
+  const callback = request.mock.calls[request.mock.calls.length - 1]?.[0] as
     | FrameRequestCallback
     | undefined;
   callback?.(time);
@@ -81,8 +81,8 @@ describe('Parabola', () => {
     const ball = document.querySelector<HTMLElement>('[data-parabola="ball"]');
     expect(ball).toBe(parabola._ball);
     expect(ball?.classList.contains('parabola-ball')).toBe(true);
-    expect(ball?.style.backgroundColor).toBe('var(--primary, #3e63dd)');
-    expect(ball?.style.width).toBe('10px');
+    expect(ball?.style.backgroundColor).toBe('var(--tone-solid)');
+    expect(ball?.style.width).toBe('12px');
     expect(parabola.hidden).toBe(false);
   });
 

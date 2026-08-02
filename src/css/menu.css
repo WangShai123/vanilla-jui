@@ -31,43 +31,50 @@
 
   .j-menu .menu .menu-item {
     flex-shrink: 0;
+    font-size: var(--menu-font-size);
   }
 
   .j-menu .menu .menu-item:not(:has(a)) {
-    font-size: var(--font-size-md);
-    font-weight: var(--font-normal);
-    padding: var(--button-padding, 0.5rem 1rem);
-    height: var(--button-height, var(--el-height-md));
-    line-height: var(--line-height);
+    height: var(--menu-item-height);
+    line-height: var(--menu-item-line-height);
+    font-weight: var(--menu-font-weight);
     text-decoration: underline;
     text-decoration-style: wavy;
     text-decoration-color: var(--state-danger);
     text-underline-offset: 4px;
+    padding: 4px 1rem;
     position: relative;
     cursor: help;
   }
 
-  .j-menu .menu .menu-item:has(a) a {
+  .j-menu .menu .menu-item a {
     display: flex;
     justify-content: center;
     align-items: center;
     flex-wrap: nowrap;
-    gap: var(--space);
+    gap: var(--menu-link-gap);
     white-space: nowrap;
     cursor: pointer;
     appearance: button;
     touch-action: manipulation;
     color: currentColor;
     background-color: inherit;
-    font-weight: var(--font-medium);
-    font-size: var(--font-size-md);
+    font-weight: var(--menu-link-font-weight);
     text-decoration: none;
+
+    padding: var(--menu-item-padding);
+    height: var(--menu-item-height);
+    line-height: var(--menu-item-line-height);
+    border-width: var(--border-width, 1px);
+    border-style: var(--border-style, solid);
+    border-color: var(--button-border-color, transparent);
+    border-radius: var(--button-border-radius, var(--radius-md));
   }
 
-  .j-menu .menu .menu-item:has(a) a .el-icon,
-  .j-menu .menu .menu-item:has(a) a svg {
-    width: var(--font-size-lg);
-    height: var(--font-size-lg);
+  .j-menu .menu .menu-item a .el-icon,
+  .j-menu .menu .menu-item a svg {
+    width: var(--menu-item-icon-size);
+    height: var(--menu-item-icon-size);
   }
 
   .j-menu .menu .menu-item.menu-item-has-children>a {
@@ -88,17 +95,6 @@
 
   .j-menu .menu .menu-item.menu-item-has-children:hover>a::after {
     transform: rotate(180deg);
-  }
-
-  /* menu type */
-  .j-menu .menu .menu-item:has(a) a {
-    padding: var(--button-padding, 0.5rem 1rem);
-    height: var(--button-height, var(--el-height-md));
-    line-height: var(--line-height);
-    border-width: var(--border-width, 1px);
-    border-style: var(--border-style, solid);
-    border-color: var(--button-border-color, transparent);
-    border-radius: var(--button-border-radius, var(--radius-md));
   }
 
   /* submenu */
@@ -206,10 +202,11 @@
     display: grid;
     grid-template-columns: repeat(6, 1fr);
     grid-template-rows: repeat(6, 1fr);
-    grid-column-gap: 0px;
-    grid-row-gap: 0px;
+    grid-column-gap: var(--space);
+    grid-row-gap: var(--space);
     min-width: 400px;
     max-width: 600px;
+    padding-right: var(--s2);
     transform: translateX(-33.33%) translateY(1px);
   }
 
@@ -324,7 +321,7 @@
     cursor: help;
   }
 
-  .j-mobile-menu .menu .menu-item:has(a) a {
+  .j-mobile-menu .menu .menu-item a {
     display: flex;
     justify-content: flex-start;
     align-items: center;
@@ -341,12 +338,12 @@
     text-decoration: none;
   }
 
-  .j-mobile-menu .menu .menu-item:has(a) a .menu-text {
+  .j-mobile-menu .menu .menu-item a .menu-text {
     line-height: var(--line-height-paragraph);
   }
 
-  .j-mobile-menu .menu .menu-item:has(a) a .el-icon,
-  .j-mobile-menu .menu .menu-item:has(a) a svg {
+  .j-mobile-menu .menu .menu-item a .el-icon,
+  .j-mobile-menu .menu .menu-item a svg {
     width: var(--font-size-lg);
     height: var(--font-size-lg);
   }
@@ -453,8 +450,8 @@
     padding: calc(var(--space) * 1.5);
   }
 
-  .j-bottom-menu .menu .menu-item:has(a) a .el-icon,
-  .j-bottom-menu .menu .menu-item:has(a) a svg {
+  .j-bottom-menu .menu .menu-item a .el-icon,
+  .j-bottom-menu .menu .menu-item a svg {
     width: var(--font-size-lg);
     height: var(--font-size-lg);
   }

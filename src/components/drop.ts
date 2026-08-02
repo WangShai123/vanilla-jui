@@ -30,7 +30,6 @@ export type DropPosition =
 export interface DropClassNames {
   root: string;
   container: string;
-  active: string;
 }
 
 export type DropClassNameConfig = Partial<DropClassNames>;
@@ -48,7 +47,6 @@ export interface DropProps extends Record<string, unknown> {
   content?: RenderableContent<Drop>;
   className?: DropClassNameConfig;
   id?: string | null;
-  containerClassName?: string | null;
   delay?: number | DropDelay;
   hoverIntent?: boolean;
   onShown?: ((drop: Drop) => void | Promise<void>) | null;
@@ -63,7 +61,6 @@ interface ResolvedDropProps extends Record<string, unknown> {
   content: RenderableContent<Drop>;
   className: DropClassNames;
   id: string;
-  containerClassName: string | null;
   delay: number | DropDelay;
   hoverIntent: boolean;
   onShown: NonNullable<DropProps['onShown']> | null;
@@ -88,7 +85,6 @@ interface HoverIntentData {
 const DEFAULT_CLASS_NAMES: DropClassNames = {
   root: 'j-drop',
   container: 'drop-container',
-  active: 'is-active',
 };
 
 const DROP_PROPS_SCHEMA = {
@@ -140,7 +136,6 @@ const DROP_PROPS_SCHEMA = {
       return value;
     },
   },
-  containerClassName: { default: null, types: ['string', 'null'] },
   delay: { default: 0, types: ['number', 'object'] },
   hoverIntent: { default: true, type: 'boolean' },
   onShown: { default: null, types: ['function', 'null'] },
@@ -157,18 +152,11 @@ function normalizeProps(input: DropProps): ResolvedDropProps {
     content: props.content as RenderableContent<Drop>,
     className: props.className as DropClassNames,
     id: props.id as string,
-    containerClassName: props.containerClassName as string | null,
     delay: props.delay as number | DropDelay,
     hoverIntent: props.hoverIntent as boolean,
     onShown: props.onShown as ResolvedDropProps['onShown'],
     onHidden: props.onHidden as ResolvedDropProps['onHidden'],
   };
-}
-
-function joinClasses(
-  ...classes: Array<string | null | undefined | false>
-): string {
-  return classes.filter(Boolean).join(' ');
 }
 
 function normalizeDelay(delay: number | DropDelay): Required<DropDelay> {
@@ -232,12 +220,12 @@ export class Drop {
   }
 
   private buildDrop(props: ResolvedDropProps): void {
-    const { className, content, id, name, containerClassName } = props;
+    const { className, content, id, name } = props;
     const wrapper =
       isNode(content) && content.nodeType === Node.ELEMENT_NODE
         ? content
         : jsx('div', {
-            className: joinClasses(className.container, containerClassName),
+            className: className.container,
             'data-drop-container': name || id,
             children: normalizeContentNodes(content, this),
           });
@@ -433,7 +421,9 @@ export class Drop {
       this.root.remove();
     }
 
-    this.root.classList.toggle(this.props.className.active, visible);
+    this.root.setAttribute('aria-hidden', visible ? 'false' : 'true');
+    this.root.setAttribute('aria-expanded', visible ? 'true' : 'false');
+
     this.isVisible = visible;
   }
 

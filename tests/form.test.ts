@@ -13,7 +13,7 @@ import {
   Form,
   createForm,
   type FormDataRecord,
-} from '../../src/components/form.ts';
+} from '../src/components/form.ts';
 
 let form: Form | null = null;
 

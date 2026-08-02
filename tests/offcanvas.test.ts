@@ -9,7 +9,7 @@ import {
   vi,
 } from 'vite-plus/test';
 
-import { Offcanvas, createOffcanvas } from '../../src/components/offcanvas.ts';
+import { Offcanvas, createOffcanvas } from '../src/components/offcanvas.ts';
 
 let offcanvas: Offcanvas | null = null;
 

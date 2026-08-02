@@ -53,8 +53,8 @@ interface ParabolaPath {
 }
 
 const DEFAULT_BALL: ParabolaBallOptions = {
-  color: 'var(--primary, #3e63dd)',
-  size: '10px',
+  color: 'var(--tone-solid)',
+  size: '12px',
 };
 
 const DEFAULT_CLASS_NAMES: ParabolaClassNames = {

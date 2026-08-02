@@ -1,6 +1,6 @@
 @layer components {
   .j-toolbar-container {
-    position: var(--toolbar-container-position, sticky);
+    position: var(--toolbar-container-position);
     top: 0;
     width: 100%;
     z-index: var(--z-toolbar);
@@ -11,19 +11,18 @@
     scrollbar-width: none;
     -ms-overflow-style: none;
     scroll-behavior: smooth;
-    background: var(--toolbar-container-background, var(--ui-bg));
-    border-bottom: var(--toolbar-container-border, 1px solid var(--ui-border));
+    background: var(--toolbar-container-bg);
+    border-bottom: var(--toolbar-container-border);
   }
 
   .j-toolbar {
     position: relative;
-    /* width: 100%; */
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: var(--toolbar-gap, 0);
-    padding: var(--toolbar-padding, var(--s2));
-    box-shadow: var(--toolbar-box-shadow, var(--shadow-sm));
+    gap: var(--toolbar-gap);
+    padding: var(--toolbar-padding);
+    box-shadow: var(--toolbar-box-shadow);
   }
 
   @media screen and (max-width: 992px) {
@@ -33,61 +32,43 @@
   }
 
   .j-toolbar button svg {
-    width: var(--toolbar-icon-size, var(--font-size-xl));
-    height: var(--toolbar-icon-size, var(--font-size-xl));
-  }
-
-  .j-toolbar button.is-sm svg {
-    --toolbar-icon-size: var(--font-size-lg);
-  }
-
-  .j-toolbar button.is-lg svg {
-    --toolbar-icon-size: var(--font-size-2xl);
+    width: var(--toolbar-icon-size);
+    height: var(--toolbar-icon-size);
   }
 
   .j-toolbar .divider {
-    width: 1px;
-    height: 16px;
-    background-color: var(--ui-fg);
-  }
-
-  /* 编辑器区域 */
-  #editor {
-    max-width: 880px;
-    border-left: 1px solid var(--ui-border);
-    border-right: 1px solid var(--ui-border);
-    min-height: calc(100vh - 51px);
-    padding: 1.5rem 1.5rem 4rem;
-  }
-
-  .ProseMirror {
-    outline: 0;
+    width: var(--toolbar-divider-width);
+    height: var(--toolbar-divider-height);
+    background: var(--toolbar-divider-bg);
+    align-self: center;
   }
 
   .heading-drop-menu,
   .editor-size-menu,
-  .color-drop-menu {
-    background: var(--ui-bg-subtle);
-    padding: var(--space);
-    box-shadow: var(--shadow-md);
-    border: 1px solid var(--ui-border);
-    border-radius: var(--radius-md);
-    font-size: var(--font-size-md)
+  .color-drop-menu,
+
+  .editor-drop-heading,
+  .editor-drop-size,
+  .editor-drop-color {
+    background: var(--toolbar-drop-bg);
+    box-shadow: var(--toolbar-drop-box-shadow);
+    border: var(--toolbar-drop-border);
+    border-radius: var(--toolbar-drop-radius);
+    font-size: var(--toolbar-drop-font-size);
   }
 
-  .heading-drop-menu a,
-  .editor-size-menu a {
-    padding-block: var(--space);
+  .editor-drop-color {
+    padding: var(--toolbar-drop-padding);
   }
 
-  .color-drop-menu .color-panel {
+  .editor-drop-color .color-panel {
     padding: .5rem;
     display: grid;
     grid-template-columns: repeat(5, 1fr);
     gap: .5rem;
   }
 
-  .color-drop-menu .color-panel button.color-btn {
+  .editor-drop-color .color-panel button.color-btn {
     padding: 0;
     margin: 0;
     outline: none;
@@ -98,17 +79,17 @@
     cursor: pointer;
   }
 
-  .color-drop-menu .color-panel button.color-btn.color-btn-clear::after {
+  .editor-drop-color .color-panel button.color-btn.color-btn-clear::after {
     content: '🚫';
     display: flex;
     justify-content: center;
     align-items: center;
     height: 30px;
-    background-color: var(--ui-bg-subtle);
+    background: var(--ui-bg-subtle);
     border-radius: var(--radius-sm);
   }
 
-  .color-drop-menu .color-panel .color-btn:last-of-type {
+  .editor-drop-color .color-panel .color-btn:last-of-type {
     grid-column: span 5;
     width: auto;
   }

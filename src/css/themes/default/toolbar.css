@@ -1,0 +1,34 @@
+@layer themes {
+    .j-toolbar-container {
+        --toolbar-container-position: sticky;
+        --toolbar-container-bg: var(--ui-bg);
+        --toolbar-container-border: 1px solid var(--ui-border);
+    }
+
+    .j-toolbar {
+        --toolbar-gap: 0;
+        --toolbar-padding: var(--s2);
+        --toolbar-box-shadow: var(--shadow-sm);
+        --toolbar-divider-width: 1px;
+        --toolbar-divider-height: 16px;
+        --toolbar-divider-bg: var(--ui-fg);
+        --toolbar-drop-font-size: var(--font-size-md);
+        --toolbar-drop-bg: var(--ui-bg-subtle);
+        --toolbar-drop-padding: var(--space);
+        --toolbar-drop-border: 1px solid var(--ui-border);
+        --toolbar-drop-radius: var(--radius-sm);
+        --toolbar-drop-box-shadow: var(--shadow-md);
+    }
+
+    .j-toolbar button svg {
+        --toolbar-icon-size: var(--font-size-xl);
+    }
+
+    .j-toolbar button.is-sm svg {
+        --toolbar-icon-size: var(--font-size-lg);
+    }
+
+    .j-toolbar button.is-lg svg {
+        --toolbar-icon-size: var(--font-size-2xl);
+    }
+}

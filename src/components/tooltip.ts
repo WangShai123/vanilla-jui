@@ -4,14 +4,13 @@ import { type ResolveSchema, resolveProps } from '../utilities/core.ts';
 import { type DOMReference } from '../utilities/dom.ts';
 import {
   Drop,
-  type DropClassNameConfig,
   type DropDelay,
   type DropMode,
   type DropPosition,
 } from './drop.ts';
 
 export interface TooltipClassNames {
-  root: string;
+  container: string;
   message: string;
 }
 
@@ -24,7 +23,6 @@ export interface TooltipProps extends Record<string, unknown> {
   offset?: number;
   message?: string;
   className?: TooltipClassNameConfig;
-  dropClassName?: DropClassNameConfig;
   id?: string | null;
   delay?: number | DropDelay;
   hoverIntent?: boolean;
@@ -39,7 +37,6 @@ interface ResolvedTooltipProps extends Record<string, unknown> {
   offset: number;
   message: string;
   className: TooltipClassNames;
-  dropClassName: DropClassNameConfig;
   id: string | null;
   delay: number | DropDelay;
   hoverIntent: boolean;
@@ -48,7 +45,7 @@ interface ResolvedTooltipProps extends Record<string, unknown> {
 }
 
 const DEFAULT_CLASS_NAMES: TooltipClassNames = {
-  root: 'j-tooltip',
+  container: 'j-tooltip',
   message: 'tooltip-message',
 };
 
@@ -87,7 +84,6 @@ const TOOLTIP_OPTIONS_SCHEMA = {
       ...(value && typeof value === 'object' ? value : {}),
     }),
   },
-  dropClassName: { default: {}, type: 'object' },
   id: { default: null, types: ['string', 'null'] },
   delay: { default: 100, types: ['number', 'object'] },
   hoverIntent: { default: true, type: 'boolean' },
@@ -104,7 +100,6 @@ function normalizeProps(input: TooltipProps): ResolvedTooltipProps {
     offset: props.offset as number,
     message: props.message as string,
     className: props.className as TooltipClassNames,
-    dropClassName: props.dropClassName as DropClassNameConfig,
     id: props.id as string | null,
     delay: props.delay as number | DropDelay,
     hoverIntent: props.hoverIntent as boolean,
@@ -135,14 +130,13 @@ export class Tooltip {
       hoverIntent: settings.hoverIntent,
       onShown: settings.onShown,
       onHidden: settings.onHidden,
-      className: settings.dropClassName,
       content: this.buildContent(settings),
     });
   }
 
   private buildContent(settings: ResolvedTooltipProps): HTMLElement {
     return jsx('div', {
-      className: settings.className.root,
+      className: settings.className.container,
       'data-tooltip': settings.name || settings.id || '',
       children: jsx('div', {
         className: settings.className.message,

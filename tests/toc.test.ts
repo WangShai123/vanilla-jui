@@ -9,7 +9,7 @@ import {
   vi,
 } from 'vite-plus/test';
 
-import { Toc } from '../../src/components/toc.ts';
+import { Toc } from '../src/components/toc.ts';
 
 let toc: Toc | null = null;
 

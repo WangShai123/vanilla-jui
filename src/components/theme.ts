@@ -260,33 +260,36 @@ export class Theme {
       className: containerClass || className.panel,
       'data-theme-palette': 'root',
       children: [
-        jsx('div', {
-          className: className.closeWrap,
-          'data-theme-close-wrap': '',
-          style: {
-            display: 'flex',
-            justifyContent: 'center',
-          },
-          children: jsx('button', {
-            className: className.closeButton,
-            'data-action': 'close',
-            children: this.translate('b'),
-          }),
-        }),
+        // jsx('div', {
+        //   className: className.closeWrap,
+        //   'data-theme-close-wrap': '',
+        //   style: {
+        //     display: 'flex',
+        //     justifyContent: 'center',
+        //   },
+        //   children: jsx('button', {
+        //     className: className.closeButton,
+        //     'data-action': 'close',
+        //     children: this.translate('b'),
+        //   }),
+        // }),
         jsx('h3', {
           className: className.title,
           'data-theme-title': '',
+          style: {
+            margin: '0 0 1rem',
+          },
           children: this.translate('t'),
         }),
-        jsx('p', {
-          className: className.description,
-          'data-theme-description': '',
-          style: {
-            marginTop: 0,
-            fontSize: 'var(--text-sm, 0.875rem)',
-          },
-          children: this.translate('d'),
-        }),
+        // jsx('p', {
+        //   className: className.description,
+        //   'data-theme-description': '',
+        //   style: {
+        //     marginTop: 0,
+        //     fontSize: 'var(--text-sm, 0.875rem)',
+        //   },
+        //   children: this.translate('d'),
+        // }),
         jsx('div', {
           className: className.container,
           'data-theme-container': '',
@@ -373,7 +376,7 @@ export class Theme {
   private defaultPanelConfig(): ThemePanelGroup[] {
     return [
       {
-        title: this.translate('Theme'),
+        title: this.translate('Primary'),
         type: 'theme',
         buttons: [
           ['gray', this.translate('Gray')],

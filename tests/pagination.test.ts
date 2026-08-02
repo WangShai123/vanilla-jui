@@ -9,10 +9,7 @@ import {
   vi,
 } from 'vite-plus/test';
 
-import {
-  Pagination,
-  createPagination,
-} from '../../src/components/pagination.ts';
+import { Pagination, createPagination } from '../src/components/pagination.ts';
 
 let pagination: Pagination | null = null;
 

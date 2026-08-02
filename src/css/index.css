@@ -6,10 +6,10 @@
 @import url('./icon.css');
 @import url('./font.css');
 
+@import url('./content.css');
+
 @import url('./components.css');
 @import url('./themes/index.css');
 
-@import url('./content.css');
 @import url('./animation.css');
-
 @import url('./status.css');

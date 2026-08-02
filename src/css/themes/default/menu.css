@@ -1,0 +1,15 @@
+@layer themes {
+    .j-menu {
+        --menu-font-size: var(--font-size-md);
+        --menu-font-weight: var(--font-normal);
+
+        --menu-item-padding: 0.5rem 1rem;
+        --menu-item-height: var(--el-height-md);
+        --menu-item-line-height: var(--line-height);
+
+        --menu-link-font-weight: var(--font-medium);
+        --menu-link-gap: var(--space);
+
+        --menu-item-icon-size: var(--font-size-lg);
+    }
+}

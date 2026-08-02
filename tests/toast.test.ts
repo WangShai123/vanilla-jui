@@ -9,7 +9,7 @@ import {
   vi,
 } from 'vite-plus/test';
 
-import { Toast } from '../../src/components/toast.ts';
+import { Toast } from '../src/components/toast.ts';
 
 beforeEach(() => {
   document.body.innerHTML = '';
@@ -32,7 +32,7 @@ describe('Toast', () => {
     expect(document.querySelector('[data-toast-container]')).toBeTruthy();
     expect(toast.classList.contains('j-toast')).toBe(true);
     expect(toast.classList.contains('is-success')).toBe(true);
-    expect(toast.classList.contains('is-shown')).toBe(true);
+    expect(toast.getAttribute('aria-live')).toBe('polite');
     expect(toast.querySelector('[data-toast-message]')?.textContent).toBe(
       'Saved'
     );
@@ -45,7 +45,6 @@ describe('Toast', () => {
         toast: 'qa-toast',
         success: 'qa-success',
         message: 'qa-message',
-        shown: 'qa-shown',
         hidden: 'qa-hidden',
       },
     });
@@ -56,10 +55,10 @@ describe('Toast', () => {
     expect(document.querySelector('.j-toast-container')).toBeNull();
     expect(toast.classList.contains('qa-toast')).toBe(true);
     expect(toast.classList.contains('qa-success')).toBe(true);
-    expect(toast.classList.contains('qa-shown')).toBe(true);
+    expect(toast.getAttribute('aria-live')).toBe('polite');
 
     Toast.hide(toast);
-    expect(toast.classList.contains('qa-hidden')).toBe(true);
+    expect(toast.getAttribute('aria-live')).toBe(null);
     vi.advanceTimersByTime(300);
     expect(document.body.contains(toast)).toBe(false);
   });
@@ -77,13 +76,13 @@ describe('Toast', () => {
   it('supports action toast callbacks and clearAll', async () => {
     const onAction = vi.fn<() => Promise<void>>(async () => {});
     const toast = Toast.action('Confirm?', {
-      text: { cancel: 'No', action: 'Yes' },
+      text: { close: 'No', action: 'Yes' },
       onAction,
     });
 
     vi.advanceTimersByTime(11);
-    expect(toast.classList.contains('is-shown')).toBe(true);
-    expect(toast.querySelector('[data-action="cancel"]')?.textContent).toBe(
+    expect(toast.getAttribute('aria-live')).toBe('polite');
+    expect(toast.querySelector('[data-action="close"]')?.textContent).toBe(
       'No'
     );
 
@@ -94,7 +93,7 @@ describe('Toast', () => {
     await Promise.resolve();
 
     expect(onAction).toHaveBeenCalledTimes(1);
-    expect(toast.classList.contains('is-hidden')).toBe(true);
+    expect(toast.getAttribute('aria-hidden')).toBe('true');
 
     Toast.warning('Warning', 1000);
     Toast.lite('Lite', 1000);

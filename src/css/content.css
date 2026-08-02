@@ -1,86 +1,44 @@
 @layer content {
+
   /* ============================================
-     Content - 文章阅读/编辑器预览样式
-     ============================================ */
-
+    Content - 文章阅读/编辑器预览样式
+  ============================================ */
   .j-content {
-    /* 阅读模式变量 */
-    --content-line-height: 1.75;
-    --content-letter-spacing: 0.01em;
-    --content-word-spacing: 0.02em;
-    --content-paragraph-spacing: 1.25em;
-    --content-heading-spacing: 1.5em;
-    --content-block-spacing: 1.5em;
-    --content-list-spacing: 0.5em;
-
+    font-size: var(--content-font-size);
     line-height: var(--content-line-height);
-    letter-spacing: var(--content-letter-spacing);
-    word-spacing: var(--content-word-spacing);
+    letter-spacing: var(--content-letter-space);
+    word-spacing: var(--content-word-space);
     word-break: break-word;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    outline: 0;
+    outline: var(--content-outline);
     position: relative;
   }
 
-  /* --- Size Modes --- */
-  .j-content,
-  .j-content.is-md {
-    font-size: var(--font-size-lg);
-  }
-
-  .j-content.is-sm {
-    --content-line-height: 1.65;
-    --content-paragraph-spacing: 1em;
-    --content-heading-spacing: 1.25em;
-    --content-block-spacing: 1.25em;
-    font-size: var(--font-size-md);
-  }
-
-  .j-content.is-lg {
-    --content-line-height: 1.8;
-    --content-paragraph-spacing: 1.5em;
-    --content-heading-spacing: 1.75em;
-    --content-block-spacing: 1.75em;
-    font-size: var(--font-size-xl);
-  }
-
-  .j-content.is-xl {
-    --content-line-height: 1.85;
-    --content-paragraph-spacing: 1.75em;
-    --content-heading-spacing: 2em;
-    --content-block-spacing: 2em;
-    font-size: var(--font-size-2xl);
-  }
-
   /* ============================================
-     Typography - 段落与标题
-     ============================================ */
-
-  /* Reset */
+    Typography - 段落与标题
+  ============================================ */
   .j-content *,
   .j-content *::before,
   .j-content *::after {
     box-sizing: border-box;
   }
 
-  /* 段落 */
   .j-content p {
-    margin: 0 0 var(--content-paragraph-spacing);
+    margin: 0 0 var(--content-paragraph-space);
   }
 
-  /* 标题层级 */
   .j-content h1,
   .j-content h2,
   .j-content h3,
   .j-content h4,
   .j-content h5,
   .j-content h6 {
-    margin: var(--content-heading-spacing) 0 calc(var(--content-heading-spacing) * 0.75);
+    margin: var(--content-heading-space) 0 calc(var(--content-heading-space) * 0.75);
     font-weight: 600;
     line-height: 1.3;
-    color: var(--tone-heading);
+    color: var(--content-heading-fg);
     letter-spacing: -0.02em;
   }
 
@@ -95,7 +53,7 @@
     font-size: 1.625em;
     font-weight: 650;
     padding-bottom: 0.5em;
-    border-bottom: 1px solid var(--ui-border-subtle);
+    border-bottom: 1px solid var(--content-border-subtle);
   }
 
   .j-content h3 {
@@ -118,17 +76,16 @@
   .j-content h4+p,
   .j-content h5+p,
   .j-content h6+p {
-    margin-top: calc(var(--content-paragraph-spacing) * -0.5);
+    margin-top: calc(var(--content-paragraph-space) * -0.5);
   }
 
   /* ============================================
-     Inline Elements - 内联元素
-     ============================================ */
-
+    Inline Elements - 内联元素
+  ============================================ */
   .j-content strong,
   .j-content b {
     font-weight: 650;
-    color: var(--tone-heading);
+    color: var(--content-heading-fg);
   }
 
   .j-content em,
@@ -139,18 +96,18 @@
   .j-content u {
     text-decoration: underline;
     text-decoration-thickness: 4px;
-    text-decoration-color: var(--tone-ring);
+    text-decoration-color: var(--content-ring);
     text-underline-offset: 0.2em;
   }
 
   .j-content s,
   .j-content del {
     text-decoration: line-through;
-    color: var(--tone-caption);
+    color: var(--content-caption-fg);
   }
 
   .j-content mark {
-    background-color: var(--tone-highlight);
+    background: var(--tone-highlight);
     color: var(--tone-highlight-fg);
     padding: 0.1em 0.3em;
     border-radius: 0.2em;
@@ -158,7 +115,7 @@
 
   .j-content small {
     font-size: 0.875em;
-    color: var(--tone-caption);
+    color: var(--content-caption-fg);
   }
 
   .j-content sub {
@@ -180,7 +137,7 @@
 
   .j-content time {
     white-space: nowrap;
-    color: var(--tone-caption);
+    color: var(--content-caption-fg);
   }
 
   .j-content ruby {
@@ -189,15 +146,14 @@
 
   .j-content rt {
     font-size: 0.7em;
-    color: var(--tone-caption);
+    color: var(--content-caption-fg);
   }
 
   /* ============================================
-     Links - 链接
-     ============================================ */
-
+    Links - 链接
+  ============================================ */
   .j-content a {
-    color: var(--tone-link);
+    color: var(--content-link);
     text-decoration: none;
     text-decoration-color: transparent;
     text-underline-offset: 0.15em;
@@ -205,33 +161,31 @@
   }
 
   .j-content a:hover {
-    color: var(--tone-link-hover);
+    color: var(--content-link-hover);
     text-decoration: underline;
-    text-decoration-color: var(--tone-link-hover);
+    text-decoration-color: var(--content-link-hover);
   }
 
   .j-content a:visited {
-    color: var(--tone-link-visited);
+    color: var(--content-link-visited);
   }
 
   .j-content a:active {
-    color: var(--tone-link-active);
+    color: var(--content-link-active);
   }
 
   /* ============================================
-     Lists - 列表
-     ============================================ */
-
+    Lists - 列表
+  ============================================ */
   .j-content ul,
   .j-content ol {
-    margin: 0 0 var(--content-paragraph-spacing);
+    margin: 0 0 var(--content-paragraph-space);
     padding-left: 1.75em;
-    /* font-size: 0.875em; */
   }
 
   .j-content ul li,
   .j-content ol li {
-    margin-bottom: var(--content-list-spacing);
+    margin-bottom: var(--content-list-space);
     padding-left: 0.25em;
   }
 
@@ -250,18 +204,22 @@
 
   .j-content ul ul {
     list-style-type: circle;
-    margin-top: var(--content-list-spacing);
+    margin-top: var(--content-list-space);
     margin-bottom: 0;
   }
 
   .j-content ol ol {
     list-style-type: lower-alpha;
-    margin-top: var(--content-list-spacing);
+    margin-top: var(--content-list-space);
     margin-bottom: 0;
   }
 
   .j-content ul ul ul {
     list-style-type: square;
+  }
+
+  .j-content ol ol ol {
+    list-style-type: lower-roman;
   }
 
   .j-content ul p,
@@ -271,14 +229,14 @@
 
   /* Definition List */
   .j-content dl {
-    margin: 0 0 var(--content-block-spacing);
+    margin: 0 0 var(--content-block-space);
   }
 
   .j-content dt {
     font-weight: 600;
     margin-top: 0.75em;
     margin-bottom: 0.125em;
-    color: var(--tone-heading);
+    color: var(--content-heading-fg);
   }
 
   .j-content dt:first-child {
@@ -297,22 +255,21 @@
 
   /* checkbox - 任务列表 */
   .j-content .j-checkbox {
-    margin-block: var(--content-paragraph-spacing);
+    margin-block: var(--content-paragraph-space);
   }
 
   /* ============================================
-     Blockquote - 引用
-     ============================================ */
-
+    Blockquote - 引用
+  ============================================ */
   .j-content blockquote {
-    margin: var(--content-block-spacing) 0;
+    margin: var(--content-block-space) 0;
     margin-left: 0;
     margin-right: 0;
     padding: 1em 1.5em;
-    border-left: 3px solid var(--tone-border);
+    border-left: 3px solid var(--content-border-tone);
     border-radius: 0 var(--radius-md) var(--radius-md) 0;
-    background-color: var(--tone-wash);
-    color: var(--tone-subtitle);
+    background-color: var(--content-blockquote-bg);
+    color: var(--content-blockquote-fg);
     font-style: italic;
   }
 
@@ -329,7 +286,7 @@
     margin-top: 0.75em;
     font-style: normal;
     font-size: 0.875em;
-    color: var(--tone-caption);
+    color: var(--content-caption-fg);
   }
 
   .j-content cite::before {
@@ -337,25 +294,24 @@
   }
 
   /* ============================================
-     Code - 代码
-     ============================================ */
-
+    Code - 代码
+  ============================================ */
   .j-content code:not([class*="language-"]) {
     font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
     font-size: 0.875em;
-    border: 1px solid var(--ui-border-subtle);
+    border: 1px solid var(--content-border-subtle);
     border-radius: var(--radius-sm);
     word-break: break-word;
     padding: 0.15em 0.4em;
-    background-color: var(--tone-code-bg);
-    color: var(--tone-code-fg);
+    background: var(--content-code-bg);
+    color: var(--content-code-fg);
   }
 
   .j-content kbd {
     font-family: inherit;
     font-size: 0.875em;
-    background-color: var(--ui-surface-subtle);
-    border: 1px solid var(--ui-border);
+    background: var(--content-code-bg);
+    border: 1px solid var(--content-border);
     border-bottom-width: 2px;
     border-radius: var(--radius-sm);
     padding: 0.1em 0.4em;
@@ -363,8 +319,8 @@
   }
 
   .j-content pre {
-    margin: var(--content-block-spacing) 0;
-    background-color: var(--tone-code-bg);
+    margin: var(--content-block-space) 0;
+    background: var(--content-code-bg);
     font-size: 0.875em;
     line-height: 1.6;
     tab-size: 2;
@@ -382,26 +338,50 @@
     margin-block: 1rem;
     overflow: auto;
     border-radius: var(--radius-md);
-    border: 1px solid var(--ui-border);
+    border: 1px solid var(--content-border);
+  }
+
+  .j-content pre.j-code-editor.hljs {
+    color: var(--ui-fg);
+    background: var(--content-bg-subtle);
+    white-space: break-spaces;
   }
 
   html.j-radius-round .j-content pre.j-code-editor {
     border-radius: 1.25rem;
   }
 
-  .j-content pre.j-code-editor.hljs {
-    color: var(--ui-fg);
-    background-color: var(--ui-bg-subtle);
-    white-space: break-spaces;
+  .j-code-editor .code-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: .5rem 1rem 0;
+    font-size: .78rem;
   }
 
-  .j-content pre.j-code-editor select.language-selector {
-    --input-background-color: var(--ui-bg-subtle);
-    --input-box-shadow: none;
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    z-index: 1;
+  .j-code-editor .code-header .code-dots {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--state-success);
+    box-shadow: 14px 0 0 var(--state-warning), 28px 0 0 var(--state-danger);
+  }
+
+  .j-code-editor .code-header .code-language,
+  .j-code-editor .code-header select {
+    font-size: .75rem;
+    color: var(--ui-fg-soft);
+  }
+
+  .j-code-editor .code-header select {
+    appearance: none;
+    background: transparent;
+    border: none;
+  }
+
+  .j-code-editor .code-header select::-ms-expand {
+    display: none;
   }
 
   .j-content pre code[class*="language-"] {
@@ -410,6 +390,11 @@
     padding: 1.25em 1.5em;
   }
 
+  .j-content pre.j-code-editor .code-header+code[class*="language-"] {
+    padding: .5rem 1rem 1rem;
+  }
+
+  /* prettylights-syntax-keyword */
   .hljs-doctag,
   .hljs-keyword,
   .hljs-meta .hljs-keyword,
@@ -417,18 +402,18 @@
   .hljs-template-variable,
   .hljs-type,
   .hljs-variable.language_ {
-    /* prettylights-syntax-keyword */
     color: var(--ui-tomato)
   }
 
+  /* prettylights-syntax-entity */
   .hljs-title,
   .hljs-title.class_,
   .hljs-title.class_.inherited__,
   .hljs-title.function_ {
-    /* prettylights-syntax-entity */
     color: var(--ui-violet)
   }
 
+  /* prettylights-syntax-constant */
   .hljs-attr,
   .hljs-attribute,
   .hljs-literal,
@@ -439,85 +424,85 @@
   .hljs-selector-attr,
   .hljs-selector-class,
   .hljs-selector-id {
-    /* prettylights-syntax-constant */
     color: var(--ui-teal)
   }
 
+  /* prettylights-syntax-string */
   .hljs-regexp,
   .hljs-string,
   .hljs-meta .hljs-string {
-    /* prettylights-syntax-string */
     color: var(--ui-pink)
   }
 
+  /* prettylights-syntax-variable */
   .hljs-built_in,
   .hljs-symbol {
-    /* prettylights-syntax-variable */
     color: var(--ui-orange)
   }
 
+  /* prettylights-syntax-comment */
   .hljs-comment,
   .hljs-code,
   .hljs-formula {
-    /* prettylights-syntax-comment */
-    color: var(--ui-olive)
+    color: var(--ui-gray-shade)
   }
 
+  /* prettylights-syntax-entity-tag */
   .hljs-name,
   .hljs-quote,
   .hljs-selector-tag,
   .hljs-selector-pseudo {
-    /* prettylights-syntax-entity-tag */
     color: var(--ui-indigo);
   }
 
+  /* prettylights-syntax-storage-modifier-import */
   .hljs-subst {
-    /* prettylights-syntax-storage-modifier-import */
     color: var(--ui-fg)
   }
 
+  /* prettylights-syntax-markup-heading */
   .hljs-section {
-    /* prettylights-syntax-markup-heading */
     color: var(--ui-teal);
     font-weight: bold
   }
 
+  /* prettylights-syntax-markup-list */
   .hljs-bullet {
-    /* prettylights-syntax-markup-list */
     color: var(--ui-gold)
   }
 
+  /* prettylights-syntax-markup-italic */
   .hljs-emphasis {
-    /* prettylights-syntax-markup-italic */
     color: var(--ui-fg);
     font-style: italic
   }
 
+  /* prettylights-syntax-markup-bold */
   .hljs-strong {
-    /* prettylights-syntax-markup-bold */
     color: var(--ui-fg);
     font-weight: bold
   }
 
+  /* prettylights-syntax-markup-inserted */
   .hljs-addition {
-    /* prettylights-syntax-markup-inserted */
     color: var(--ui-indigo);
     background-color: #f0fff4
   }
 
+  /* prettylights-syntax-markup-deleted */
   .hljs-deletion {
-    /* prettylights-syntax-markup-deleted */
     color: var(--ui-ruby);
     background-color: #ffeef0;
   }
 
+  /* purposely ignored */
   .hljs-char.escape_,
   .hljs-link,
   .hljs-params,
   .hljs-property,
   .hljs-punctuation,
   .hljs-tag {
-    /* purposely ignored */
+    color: var(--ui-lime);
   }
 
   /* ============================================
@@ -531,7 +516,7 @@
   }
 
   .j-content figure {
-    margin: var(--content-block-spacing) 0;
+    margin: var(--content-block-space) 0;
   }
 
   .j-content figure img,
@@ -544,7 +529,7 @@
   .j-content figcaption {
     margin-top: 0.75em;
     font-size: 0.875em;
-    color: var(--tone-caption);
+    color: var(--content-caption-fg);
     text-align: center;
     line-height: 1.5;
   }
@@ -579,7 +564,7 @@
   .j-content table {
     min-width: 280px;
     max-width: 100%;
-    margin: var(--content-block-spacing) 0;
+    margin: var(--content-block-space) 0;
     border-collapse: collapse;
     font-size: 0.9375em;
     display: block;
@@ -590,19 +575,19 @@
   .j-content th,
   .j-content td {
     padding: 0.75em 1em;
-    border-bottom: 1px solid var(--ui-border-subtle);
+    border-bottom: 1px solid var(--content-border-subtle);
     text-align: left;
   }
 
   .j-content th {
-    background-color: var(--ui-bg-subtle);
+    background-color: var(--content-bg-subtle);
     font-weight: 600;
-    color: var(--tone-heading);
+    color: var(--content-heading-fg);
     white-space: nowrap;
   }
 
   .j-content thead th {
-    border-bottom: 2px solid var(--ui-border);
+    border-bottom: 2px solid var(--content-border);
   }
 
   .j-content tbody tr:hover {
@@ -618,10 +603,10 @@
      ============================================ */
 
   .j-content hr {
-    margin: var(--content-block-spacing) 0;
+    margin: var(--content-block-space) 0;
     border: 0;
     height: 1px;
-    background-color: var(--ui-border);
+    background: var(--content-border);
   }
 
   /* ============================================
@@ -629,17 +614,17 @@
      ============================================ */
 
   .j-content details {
-    margin: var(--content-block-spacing) 0;
-    padding: 1em 1.25em;
-    background-color: var(--ui-bg-subtle);
+    margin: var(--content-block-space) 0;
+    padding: 1em;
+    background-color: var(--content-bg-subtle);
     border-radius: var(--radius-lg);
-    border: 1px solid var(--ui-border-subtle);
+    border: 1px solid var(--content-border-subtle);
   }
 
   .j-content summary {
     cursor: pointer;
     font-weight: 600;
-    color: var(--tone-heading);
+    color: var(--content-heading-fg);
     outline: none;
     list-style: none;
     display: flex;
@@ -657,12 +642,23 @@
     transform: rotate(90deg);
   }
 
-  .j-content details[open]>summary {
-    margin-bottom: 0.75em;
+  .j-content details[open] p,
+  .j-content details[open] ul,
+  .j-content details[open] ol,
+  .j-content details[open]>* {
+    margin-bottom: 1em;
   }
+
+  /* .j-content details[open]>summary {
+    margin-bottom: 0.75em;
+  } */
 
   .j-content details[open]>summary+* {
     margin-top: 0;
+  }
+
+  .j-content details[open]>*:last-child {
+    margin-bottom: 0;
   }
 
   /* ============================================
@@ -689,11 +685,11 @@
 
   .j-content address {
     font-style: normal;
-    margin: 0 0 var(--content-block-spacing);
+    margin: 0 0 var(--content-block-space);
     padding: 1em 1.25em;
-    background-color: var(--ui-bg-subtle);
+    background-color: var(--content-bg-subtle);
     border-radius: var(--radius-lg);
-    color: var(--tone-caption);
+    color: var(--content-caption-fg);
     font-size: 0.9375em;
   }
 
@@ -702,7 +698,7 @@
      ============================================ */
 
   .j-content .block-item {
-    margin: var(--content-block-spacing) 0;
+    margin: var(--content-block-space) 0;
   }
 
   /* First/Last child margin reset */

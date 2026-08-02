@@ -84,6 +84,7 @@
     box-shadow: var(--input-box-shadow, var(--shadow-sm));
     background-color: inherit;
     color: inherit;
+    letter-spacing: 0.5px;
   }
 
   .j-input:not([type='file']) {
@@ -101,6 +102,23 @@
     font-size: var(--input-font-size-lg, var(--font-size-lg, 1rem));
     line-height: var(--input-line-height-lg, var(--line-height));
   }
+
+  .j-input[type='password'].is-sm {
+    letter-spacing: 1px;
+  }
+
+  .j-input[type='password'] {
+    letter-spacing: 2px;
+  }
+
+  .j-input[type='password'].is-lg {
+    letter-spacing: 3px;
+  }
+
+  .j-input[type='password']:placeholder-shown {
+    letter-spacing: 0.5px;
+  }
+
 
   /* type file */
   .j-input[type='file'] {
@@ -259,7 +277,7 @@
 
   .j-radio label:has(input[type='radio']:disabled) {
     cursor: not-allowed;
-    opacity: var(--opacity-disabled);
+    /* opacity: var(--opacity-disabled); */
     color: var(--ui-disabled-fg);
   }
 
@@ -404,11 +422,7 @@
     print-color-adjust: exact;
   }
 
-  .j-theme-yellow .j-checkbox input[type='checkbox']:checked,
-  .j-theme-mint .j-checkbox input[type='checkbox']:checked,
-  .j-theme-lime .j-checkbox input[type='checkbox']:checked,
-  .dark.j-theme-gray .j-checkbox input[type='checkbox']:checked,
-  .dark.j-theme-olive .j-checkbox input[type='checkbox']:checked {
+  .dark .j-checkbox input[type='checkbox']:checked {
     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' width='16' height='16'%3e%3cpath fill='none' stroke='%23000000' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M4 8.5l2.5 2.5l5.5 -5.5'/%3e%3c/svg%3e");
   }
 
@@ -677,6 +691,8 @@
   .input-group>.el-addon>.j-button {
     position: relative;
     border-color: var(--input-border-color, var(--ui-input-border));
+    color: var(--ui-fg-muted);
+    background: var(--ui-surface-muted);
   }
 
   .input-group>.el-addon>.is-text {
@@ -687,7 +703,7 @@
     line-height: var(--line-height, 1.25rem);
     color: var(--ui-fg-muted);
     background-color: var(--input-group-text-addon-background, var(--ui-bg-muted));
-    padding: var(--input-group-text-addon-padding, 0.5rem 0.75rem);
+    padding: var(--input-group-text-addon-padding, var(--s2));
     height: var(--button-height, var(--el-height-md));
     border-width: var(--border-width, 1px);
     border-style: var(--border-style, solid);
@@ -855,7 +871,6 @@
 
   .j-input:disabled:not(.is-line):not(.is-ghost):not(.is-blank) {
     background-color: var(--ui-disabled-bg);
-    border-color: var(--ui-border);
   }
 
   .j-textarea[disabled] {
@@ -877,14 +892,14 @@
   .j-radio.is-group label input[type='radio']:disabled+.radio-text {
     cursor: not-allowed;
     background-color: var(--ui-disabled-bg);
-    opacity: var(--opacity-disabled);
+    /* opacity: var(--opacity-disabled); */
     color: var(--ui-disabled-fg);
   }
 
   /* checkbox disabled */
   .j-checkbox label:has(input[type='checkbox']:disabled) {
     cursor: not-allowed;
-    opacity: var(--opacity-disabled);
+    /* opacity: var(--opacity-disabled); */
     color: var(--ui-disabled-fg);
   }
 
@@ -911,9 +926,7 @@
   }
 
   /* status placeholder shown */
-  /* input.j-input[type='file']:valid, */
-  /* select.j-select:valid, */
-  input.j-input:not([type='file']):not(:placeholder-shown) {
+  /* input.j-input:not([type='file']):not(:placeholder-shown) {
     background-color: var(--tone-subtle);
-  }
+  } */
 }

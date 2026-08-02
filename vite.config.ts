@@ -1,6 +1,9 @@
 import { defineConfig } from 'vite-plus';
 
 export default defineConfig({
+  optimizeDeps: {
+    force: true, // ✅ 正确：强制重新预构建依赖
+  },
   pack: [
     {
       entry: 'src/index.ts',
@@ -33,7 +36,7 @@ export default defineConfig({
 
   test: {
     include: ['tests/**/*.test.ts'],
-    exclude: ['tests/app/**/*'],
+    exclude: [''],
   },
 
   lint: {

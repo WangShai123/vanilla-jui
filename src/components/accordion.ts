@@ -1,6 +1,5 @@
 import {
   bindAttr,
-  bindClass,
   createDeepStore,
   createRoot,
   flushSync,
@@ -36,7 +35,6 @@ export interface AccordionClassNames {
   arrow: string;
   panel: string;
   content: string;
-  active: string;
 }
 
 export type AccordionClassNameConfig = Partial<AccordionClassNames>;
@@ -107,7 +105,6 @@ const DEFAULT_CLASS_NAMES: AccordionClassNames = {
   arrow: 'header-arrow',
   panel: 'accordion-panel',
   content: 'panel-content',
-  active: 'is-active',
 };
 
 const ACCORDION_ITEMS_RULE = {
@@ -316,18 +313,18 @@ export class Accordion extends Component<
     this.bindingsDispose = createRoot((dispose) => {
       this.dom.headers.forEach((header) => {
         const name = header.dataset.accordionHeader || '';
-        bindClass(header, this.props.className.active, () =>
-          this.state.activeNames.includes(name)
-        );
+        // bindClass(header, this.props.className.active, () =>
+        //   this.state.activeNames.includes(name)
+        // );
         bindAttr(header, 'aria-expanded', () =>
-          this.state.activeNames.includes(name)
+          this.state.activeNames.includes(name) ? 'true' : 'false'
         );
       });
       this.dom.panels.forEach((panel, i) => {
         const name = this.dom.headers[i]?.dataset.accordionHeader || '';
-        bindClass(panel, this.props.className.active, () =>
-          this.state.activeNames.includes(name)
-        );
+        // bindClass(panel, this.props.className.active, () =>
+        //   this.state.activeNames.includes(name)
+        // );
         bindAttr(panel, 'aria-hidden', () =>
           this.state.activeNames.includes(name) ? 'false' : 'true'
         );

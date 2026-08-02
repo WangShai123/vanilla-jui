@@ -5,12 +5,28 @@
         --avatar-box-shadow: var(--shadow-sm);
     }
 
-    .j-avatar.is-sm {
+    .j-avatar.is-2xs {
         --avatar-size: var(--el-height-2xs);
+    }
+
+    .j-avatar.is-xs {
+        --avatar-size: var(--el-height-xs);
+    }
+
+    .j-avatar.is-sm {
+        --avatar-size: var(--el-height-sm);
     }
 
     .j-avatar.is-lg {
         --avatar-size: var(--el-height-lg);
+    }
+
+    .j-avatar.is-xl {
+        --avatar-size: var(--el-height-xl);
+    }
+
+    .j-avatar.is-2xl {
+        --avatar-size: var(--el-height-2xl);
     }
 
     .j-avatar.is-round {

@@ -9,7 +9,7 @@ import {
   vi,
 } from 'vite-plus/test';
 
-import { Modal, createModal } from '../../src/components/modal.ts';
+import { Modal, createModal } from '../src/components/modal.ts';
 
 let modal: Modal | null = null;
 

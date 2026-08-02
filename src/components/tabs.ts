@@ -1,6 +1,5 @@
 import {
   bindAttr,
-  bindClass,
   createDeepStore,
   createRoot,
   flushSync,
@@ -43,7 +42,6 @@ export interface TabsClassNames {
   tab: string;
   panelWrap: string;
   panel: string;
-  active: string;
   disabled: string;
   dragging: string;
 }
@@ -163,7 +161,6 @@ const DEFAULT_CLASS_NAMES: TabsClassNames = {
   tab: 'tab-item',
   panelWrap: 'tab-panel',
   panel: 'panel-item',
-  active: 'is-active',
   disabled: 'is-disabled',
   dragging: 'dragging',
 };
@@ -389,33 +386,16 @@ export class Tabs extends Component<ResolvedTabsProps, TabsState, TabsDOM> {
     this.bindingsDispose = createRoot((dispose) => {
       this.dom.tabs.forEach((tab, index) => {
         const name = tab.dataset.tabsTab || '';
-        bindClass(
-          tab,
-          this.props.className.active,
-          () => this.state.current.index === index
-        );
-        bindClass(tab, this.props.className.disabled, () =>
-          this.state.disabled.names.includes(name)
-        );
-        bindAttr(
-          tab,
-          'aria-selected',
-          () => this.state.current.index === index
+        bindAttr(tab, 'aria-selected', () =>
+          this.state.current.index === index ? 'true' : 'false'
         );
         bindAttr(tab, 'aria-disabled', () =>
-          this.state.disabled.names.includes(name)
+          this.state.disabled.names.includes(name) ? 'true' : 'false'
         );
       });
       this.dom.panels.forEach((panel, index) => {
-        bindClass(
-          panel,
-          this.props.className.active,
-          () => this.state.current.index === index
-        );
-        bindAttr(
-          panel,
-          'aria-hidden',
-          () => this.state.current.index !== index
+        bindAttr(panel, 'aria-hidden', () =>
+          this.state.current.index !== index ? 'true' : 'false'
         );
       });
       return dispose;

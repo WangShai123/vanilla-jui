@@ -3,52 +3,100 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    position: absolute;
+    position: var(--loader-position);
     width: 100%;
     height: 100%;
-    background: var(--loader-bg);
   }
 
   .j-loader .loader {
     display: inline-block;
-    width: var(--loader-icon-size);
-    height: var(--loader-icon-size);
-    border-width: var(--loader-icon-width);
-    border-style: var(--loader-icon-style);
-    border-color: var(--loader-icon-fg);
+    width: var(--loader-size);
+    height: var(--loader-size);
+    border-width: var(--loader-width);
+    border-style: var(--loader-style);
+    border-color: var(--loader-fg);
     border-right-color: transparent;
     border-radius: 50%;
-    animation: var(--loader-icon-speed) linear infinite animate-spin;
+    animation: var(--loader-speed) linear infinite animate-spin;
   }
 
-  .j-loading {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background: var(--loading-bg);
-    backdrop-filter: var(--loading-backdrop-filter);
+  .j-loader .polygon-loader {
+    width: var(--loader-size);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    border: 1.5px solid var(--loader-fg);
+    animation:
+      polygon-loader-1 0.8s infinite linear alternate,
+      polygon-loader-2 1.6s infinite linear;
   }
 
-  .j-loading .loader {
-    width: var(--loading-loader-size);
-    height: var(--loading-loader-size);
-    border-width: var(--loading-loader-border-width);
-    border-style: var(--loading-loader-border-style);
-    border-color: var(--loading-loader-border-color);
-    border-top-color: var(--loading-loader-border-top-color);
+  @keyframes polygon-loader-1 {
+    0% {
+      clip-path: polygon(50% 50%, 0 0, 50% 0%, 50% 0%, 50% 0%, 50% 0%, 50% 0%)
+    }
+
+    12.5% {
+      clip-path: polygon(50% 50%, 0 0, 50% 0%, 100% 0%, 100% 0%, 100% 0%, 100% 0%)
+    }
+
+    25% {
+      clip-path: polygon(50% 50%, 0 0, 50% 0%, 100% 0%, 100% 100%, 100% 100%, 100% 100%)
+    }
+
+    50% {
+      clip-path: polygon(50% 50%, 0 0, 50% 0%, 100% 0%, 100% 100%, 50% 100%, 0% 100%)
+    }
+
+    62.5% {
+      clip-path: polygon(50% 50%, 100% 0, 100% 0%, 100% 0%, 100% 100%, 50% 100%, 0% 100%)
+    }
+
+    75% {
+      clip-path: polygon(50% 50%, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 50% 100%, 0% 100%)
+    }
+
+    100% {
+      clip-path: polygon(50% 50%, 50% 100%, 50% 100%, 50% 100%, 50% 100%, 50% 100%, 0% 100%)
+    }
+  }
+
+  @keyframes polygon-loader-2 {
+    0% {
+      transform: scaleY(1) rotate(0deg)
+    }
+
+    49.99% {
+      transform: scaleY(1) rotate(135deg)
+    }
+
+    50% {
+      transform: scaleY(-1) rotate(0deg)
+    }
+
+    100% {
+      transform: scaleY(-1) rotate(-135deg)
+    }
+  }
+
+  .j-loader .tone-loader {
+    width: var(--loader-size);
+    height: var(--loader-size);
+    border-width: var(--loader-width);
+    border-style: var(--loader-style);
+    border-color: var(--loader-fg);
+    border-top-color: var(--loader-top-fg);
     border-radius: 50%;
     animation: 1s linear infinite animate-spin;
   }
 
-  .j-loading.is-bold .loader {
+  .j-loader .flow-loader {
+    width: var(--loader-size);
+    height: var(--loader-size);
     border: none;
+    border-radius: 50%;
     aspect-ratio: 1;
-    background: var(--loading-loader-bg);
-    mask: var(--loading-loader-mask);
+    background: var(--loader-bg);
+    mask: var(--loader-mask);
+    animation: 1s linear infinite animate-spin;
   }
 }

@@ -22,15 +22,15 @@
         border-bottom: var(--accordion-border);
     }
 
-    .j-accordion .accordion-header.is-active {
+    .j-accordion .accordion-header[aria-expanded="true"] {
         border-color: transparent;
     }
 
-    .j-accordion .accordion-header.is-active .header-title {
+    .j-accordion .accordion-header[aria-expanded="true"] .header-title {
         --accordion-font-weight: var(--font-bold);
     }
 
-    .j-accordion .accordion-header:hover:not(.is-active) {
+    .j-accordion .accordion-header[aria-expanded="false"]:hover {
         --accordion-bg: var(--ui-surface-hover)
     }
 
@@ -41,7 +41,7 @@
         transform: var(--accordion-icon-transform);
     }
 
-    .j-accordion .accordion-header.is-active .header-arrow {
+    .j-accordion .accordion-header[aria-expanded="true"] .header-arrow {
         --accordion-icon-transform: rotate(180deg);
     }
 

@@ -2,8 +2,8 @@
 
 import { afterEach, beforeEach, describe, expect, it } from 'vite-plus/test';
 
-import { Theme } from '../../src/components/theme.ts';
-import { getCookie } from '../../src/utilities/storage.ts';
+import { Theme } from '../src/components/theme.ts';
+import { getCookie } from '../src/utilities/storage.ts';
 
 let theme: Theme | null = null;
 

@@ -9,7 +9,7 @@ import {
   vi,
 } from 'vite-plus/test';
 
-import { Tabs, createTabs, type TabItem } from '../../src/components/tabs.ts';
+import { Tabs, createTabs, type TabItem } from '../src/components/tabs.ts';
 
 let tabs: Tabs | null = null;
 
@@ -54,8 +54,8 @@ describe('Tabs', () => {
     expect(tabs.root?.querySelector('[data-tabs-panel-body]')).toBeNull();
     expect(tabs.dom.tabs[1]?.textContent).toBe('Usage');
     expect(tabs.dom.panels[1]?.textContent).toBe('Usage panel');
-    expect(tabs.dom.tabs[1]?.classList.contains('is-active')).toBe(true);
-    expect(tabs.dom.panels[1]?.classList.contains('is-active')).toBe(true);
+    expect(tabs.dom.tabs[1]?.getAttribute('aria-selected')).toBe('true');
+    expect(tabs.dom.panels[1]?.getAttribute('aria-hidden')).toBe('false');
     expect(tabs.state.current.name).toBe('usage');
   });
 
@@ -103,7 +103,7 @@ describe('Tabs', () => {
     tabs.root?.querySelector<HTMLElement>('[data-tabs-tab="usage"]')?.click();
     await Promise.resolve();
     expect(tabs.state.current.name).toBe('intro');
-    expect(tabs.dom.tabs[1]?.classList.contains('is-disabled')).toBe(true);
+    expect(tabs.dom.tabs[1]?.getAttribute('aria-disabled')).toBe('true');
 
     tabs.enable('usage');
     tabs.root?.querySelector<HTMLElement>('[data-tabs-tab="usage"]')?.click();

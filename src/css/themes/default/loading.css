@@ -1,23 +1,23 @@
 @layer themes {
     .j-loader {
-        --loader-bg: inherit;
-        --loader-icon-size: var(--font-size-xl);
-        --loader-icon-width: 1px;
-        --loader-icon-style: solid;
-        --loader-icon-fg: currentcolor;
-        --loader-icon-speed: var(--speed-xl);
+        --loader-position: absolute;
+        --loader-size: var(--font-size-md);
+        --loader-width: 1.5px;
+        --loader-style: solid;
+        --loader-fg: currentcolor;
+        --loader-speed: var(--speed-xl);
     }
 
-    .j-loading {
-        --loading-bg: inherit;
-        --loading-backdrop-filter: blur(4px);
-        --loading-loader-size: 3rem;
-        --loading-loader-border-width: 4px;
-        --loading-loader-border-style: solid;
-        --loading-loader-border-color: var(--tone-soft);
-        --loading-loader-border-top-color: var(--tone-solid);
-        --loading-loader-bg: radial-gradient(farthest-side, var(--tone-solid) 94%, #0000) top/8px 8px no-repeat,
+    .j-loader .tone-loader {
+        --loader-width: 2px;
+        --loader-fg: var(--tone-soft);
+        --loader-top-fg: var(--tone-solid);
+    }
+
+    .j-loader .flow-loader {
+        --loader-width: 2px;
+        --loader-bg: radial-gradient(farthest-side, var(--tone-solid) 94%, #0000) top/var(--loader-width) var(--loader-width) no-repeat,
             conic-gradient(#0000 30%, var(--tone-solid));
-        --loading-loader-mask: radial-gradient(farthest-side, #0000 calc(100% - 8px), #000 0);
+        --loader-mask: radial-gradient(farthest-side, #0000 calc(100% - var(--loader-width)), #000 0);
     }
 }

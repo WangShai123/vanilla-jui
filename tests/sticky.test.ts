@@ -2,7 +2,7 @@
 
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 
-import { Sticky } from '../../src/components/sticky.ts';
+import { Sticky } from '../src/components/sticky.ts';
 
 let sticky: Sticky | null = null;
 

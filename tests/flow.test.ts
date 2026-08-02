@@ -2,7 +2,7 @@
 
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 
-import { Flow, createFlow } from '../../src/components/flow.ts';
+import { Flow, createFlow } from '../src/components/flow.ts';
 
 let flow: Flow | null = null;
 

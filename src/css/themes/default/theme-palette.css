@@ -1,0 +1,12 @@
+@layer themes {
+    .j-theme-palette {
+        --palette-padding: 1rem 1rem 2rem;
+        --palette-container-gap: var(--s4);
+        --palette-item-gap: var(--s2);
+        --palette-item-title-font-size: var(--font-size-md);
+        --palette-item-title-font-weight: var(--font-bold);
+        --palette-items-columns: repeat(3, 1fr);
+        --palette-items-gap: var(--space);
+        --palette-items-icon-size: var(--font-size-sm);
+    }
+}

@@ -2,7 +2,7 @@
 
 import { afterEach, beforeEach, describe, expect, it } from 'vite-plus/test';
 
-import { Menu, createMenu, type MenuItem } from '../../src/components/menu.ts';
+import { Menu, createMenu, type MenuItem } from '../src/components/menu.ts';
 
 let menu: Menu | null = null;
 

@@ -630,7 +630,6 @@ declare const _default: {
   en: {
     b: string;
     t: string;
-    d: string;
     sm: string;
     md: string;
     lg: string;
@@ -638,8 +637,7 @@ declare const _default: {
   zh: {
     b: string;
     t: string;
-    d: string;
-    Theme: string;
+    Primary: string;
     Radius: string;
     Shadow: string;
     Font: string;
@@ -668,6 +666,8 @@ declare const _default: {
     Light: string;
     Dark: string;
     Auto: string;
+    Close: string;
+    Confirm: string;
   };
 };
 //#endregion
@@ -752,13 +752,12 @@ interface ToastClassNames {
   toast: string;
   icon: string;
   message: string;
-  shown: string;
   hidden: string;
   lite: string;
   action: string;
   actions: string;
   button: string;
-  cancelButton: string;
+  closeButton: string;
   actionButton: string;
   info: string;
   success: string;
@@ -772,10 +771,11 @@ interface ToastOptions {
 }
 interface ToastActionProps extends ToastOptions {
   text?: {
-    cancel?: string;
+    close?: string;
     action?: string;
   };
   onAction?: () => void | Promise<void>;
+  onClose?: () => void | Promise<void>;
 }
 /**
  * Toast 消息提示工具。
@@ -1722,7 +1722,6 @@ interface TabsClassNames {
   tab: string;
   panelWrap: string;
   panel: string;
-  active: string;
   disabled: string;
   dragging: string;
 }
@@ -1889,7 +1888,6 @@ interface AccordionClassNames {
   arrow: string;
   panel: string;
   content: string;
-  active: string;
 }
 type AccordionClassNameConfig = Partial<AccordionClassNames>;
 interface AccordionItem extends Record<string, unknown> {
@@ -1988,7 +1986,6 @@ type DropPosition = 'auto' | 'top-left' | 'top-center' | 'top-right' | 'bottom-l
 interface DropClassNames {
   root: string;
   container: string;
-  active: string;
 }
 type DropClassNameConfig = Partial<DropClassNames>;
 interface DropDelay {
@@ -2003,7 +2000,6 @@ interface DropProps extends Record<string, unknown> {
   content?: RenderableContent<Drop>;
   className?: DropClassNameConfig;
   id?: string | null;
-  containerClassName?: string | null;
   delay?: number | DropDelay;
   hoverIntent?: boolean;
   onShown?: ((drop: Drop) => void | Promise<void>) | null;
@@ -2017,7 +2013,6 @@ interface ResolvedDropProps extends Record<string, unknown> {
   content: RenderableContent<Drop>;
   className: DropClassNames;
   id: string;
-  containerClassName: string | null;
   delay: number | DropDelay;
   hoverIntent: boolean;
   onShown: NonNullable<DropProps['onShown']> | null;
@@ -2065,7 +2060,7 @@ declare function createDrop(container: DOMReference, input?: DropProps): Drop;
 //#endregion
 //#region src/components/tooltip.d.ts
 interface TooltipClassNames {
-  root: string;
+  container: string;
   message: string;
 }
 type TooltipClassNameConfig = Partial<TooltipClassNames>;
@@ -2076,7 +2071,6 @@ interface TooltipProps extends Record<string, unknown> {
   offset?: number;
   message?: string;
   className?: TooltipClassNameConfig;
-  dropClassName?: DropClassNameConfig;
   id?: string | null;
   delay?: number | DropDelay;
   hoverIntent?: boolean;
@@ -2090,7 +2084,6 @@ interface ResolvedTooltipProps extends Record<string, unknown> {
   offset: number;
   message: string;
   className: TooltipClassNames;
-  dropClassName: DropClassNameConfig;
   id: string | null;
   delay: number | DropDelay;
   hoverIntent: boolean;

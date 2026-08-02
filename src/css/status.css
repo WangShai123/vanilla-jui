@@ -47,7 +47,8 @@
   /* disabled */
   [disabled],
   :disabled,
-  .is-disabled {
+  .is-disabled,
+  [aria-disabled="true"] {
     cursor: not-allowed;
     user-select: none;
   }

@@ -26,12 +26,12 @@
         border-left: var(--tab-wrap-border);
     }
 
-    .j-tabs .tab-list .tab-item.is-active {
+    .j-tabs .tab-list .tab-item[aria-selected="true"] {
         --tab-fg: var(--tone-solid);
         --tab-font-weight: var(--font-medium);
     }
 
-    .j-tabs .tab-list .tab-item.is-disabled {
+    .j-tabs .tab-list .tab-item[aria-disabled="true"] {
         --tab-fg: var(--ui-border-strong);
     }
 }

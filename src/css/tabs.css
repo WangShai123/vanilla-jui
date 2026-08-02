@@ -47,7 +47,7 @@
     cursor: pointer;
   }
 
-  .j-tabs .tab-list .tab-item.is-disabled {
+  .j-tabs .tab-list .tab-item[aria-disabled="true"] {
     cursor: not-allowed;
   }
 
@@ -63,7 +63,7 @@
     min-height: var(--tab-panel-item-min-height);
   }
 
-  .j-tabs .tab-panel .panel-item.is-active {
+  .j-tabs .tab-panel .panel-item[aria-hidden="false"] {
     display: block;
   }
 

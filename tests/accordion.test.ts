@@ -13,7 +13,7 @@ import {
   Accordion,
   createAccordion,
   type AccordionItem,
-} from '../../src/components/accordion.ts';
+} from '../src/components/accordion.ts';
 
 let accordion: Accordion | null = null;
 
@@ -56,10 +56,10 @@ describe('Accordion', () => {
     expect(
       accordion.root?.querySelectorAll('[data-accordion-panel]')
     ).toHaveLength(2);
-    expect(accordion.dom.headers[1]?.classList.contains('is-active')).toBe(
-      true
+    expect(accordion.dom.headers[1]?.getAttribute('aria-expanded')).toBe(
+      'true'
     );
-    expect(accordion.dom.panels[1]?.hidden).toBe(false);
+    expect(accordion.dom.panels[1]?.getAttribute('aria-hidden')).toBe('false');
     expect(accordion.dom.panels[0]?.hidden).toBe(true);
   });
 

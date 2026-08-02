@@ -9,7 +9,7 @@ import {
   vi,
 } from 'vite-plus/test';
 
-import { Tooltip, createTooltip } from '../../src/components/tooltip.ts';
+import { Tooltip, createTooltip } from '../src/components/tooltip.ts';
 
 let tooltip: Tooltip | null = null;
 
@@ -49,31 +49,30 @@ describe('Tooltip', () => {
     ).toBe('Helpful message');
   });
 
-  it('allows className overrides for tooltip content and drop wrapper', () => {
+  it('allows className overrides for tooltip container and message', () => {
     const button = target();
     tooltip = createTooltip(button, {
       message: 'Custom message',
       className: {
-        root: 'qa-tooltip',
+        container: 'qa-tooltip',
         message: 'qa-tooltip-message',
-      },
-      dropClassName: {
-        root: 'qa-drop',
-        container: 'qa-drop-container',
-        active: 'qa-active',
       },
     });
 
-    expect(tooltip.drop?.root?.classList.contains('qa-drop')).toBe(true);
-    expect(tooltip.drop?.root?.classList.contains('j-drop')).toBe(false);
+    expect(tooltip.drop?.root?.classList.contains('j-drop')).toBe(true);
     expect(
       tooltip.drop?.root
         ?.querySelector('[data-tooltip]')
         ?.classList.contains('qa-tooltip')
     ).toBe(true);
+    expect(
+      tooltip.drop?.root
+        ?.querySelector('[data-tooltip-message]')
+        ?.classList.contains('qa-tooltip-message')
+    ).toBe(true);
 
     tooltip.show(false);
-    expect(tooltip.drop?.root?.classList.contains('qa-active')).toBe(true);
+    expect(tooltip.drop?.root?.getAttribute('aria-expanded')).toBe('true');
   });
 
   it('proxies show, hide and toggle to Drop', () => {

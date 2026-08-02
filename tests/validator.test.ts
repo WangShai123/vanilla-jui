@@ -9,7 +9,7 @@ import {
   vi,
 } from 'vite-plus/test';
 
-import { Validator } from '../../src/components/validator.ts';
+import { Validator } from '../src/components/validator.ts';
 
 let validator: Validator | null = null;
 
