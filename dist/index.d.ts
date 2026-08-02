@@ -2777,7 +2777,7 @@ interface MenuItem extends Record<string, unknown> {
   title: string | number;
   url?: string;
   target?: string;
-  classes?: string[];
+  classes?: string | string[];
   children?: MenuItem[];
 }
 interface MenuOptions extends Record<string, unknown> {

@@ -127,6 +127,97 @@ describe('Menu', () => {
     expect(menu.options?.items).toHaveLength(0);
   });
 
+  it('allows extra item fields without blocking rendering', () => {
+    const extendedItems: MenuItem[] = [
+      {
+        id: 'extended',
+        title: 'Extended',
+        url: '#extended',
+        classes: 'is-current custom-link',
+        a: 'custom data',
+        meta: { icon: 'home' },
+        children: [
+          {
+            id: 'child',
+            title: 'Child',
+            url: '#child',
+            classes: '',
+            badge: 2,
+          },
+        ],
+      },
+    ];
+
+    menu = new Menu({ type: 'mobile', items: extendedItems }).build();
+    app().appendChild(menu.root!);
+
+    expect(menu.root?.querySelectorAll('[data-menu-item]')).toHaveLength(2);
+    expect(menu.root?.textContent).toContain('Extended');
+    expect(
+      menu.root?.querySelector('[data-menu-item="extended"]')?.className
+    ).toContain('is-current');
+    expect(
+      menu.root?.querySelector('[data-menu-item="extended"]')?.className
+    ).toContain('custom-link');
+    expect(menu.options?.items[0]?.a).toBe('custom data');
+
+    menu.setItems([{ id: 'next', title: 'Next', url: '#next', a: true }]);
+
+    expect(menu.root?.querySelectorAll('[data-menu-item]')).toHaveLength(1);
+    expect(menu.options?.items[0]?.a).toBe(true);
+  });
+
+  it('accepts WordPress-like menu items with string classes', () => {
+    const wordpressItems: MenuItem[] = [
+      {
+        id: 251,
+        title: '首页',
+        url: 'http://g3.local/',
+        target: '',
+        description: '',
+        classes: '',
+        menu_item_parent: null,
+        children: [],
+      },
+      {
+        id: 254,
+        title: '焦点推荐',
+        url: 'http://g3.local/category/uncategorized/',
+        target: '_blank',
+        description: '',
+        classes: 'menu-item current-menu-item',
+        menu_item_parent: null,
+        children: [
+          {
+            id: 253,
+            title: '人话',
+            url: 'http://g3.local/人话/',
+            target: '',
+            description: '',
+            classes: '',
+            menu_item_parent: 254,
+            children: [],
+          },
+        ],
+      },
+    ];
+
+    menu = new Menu({ type: 'mobile', items: wordpressItems }).build();
+    app().appendChild(menu.root!);
+
+    expect(menu.root?.querySelectorAll('[data-menu-item]')).toHaveLength(3);
+    expect(menu.root?.textContent).toContain('首页');
+    expect(menu.root?.textContent).toContain('人话');
+    expect(
+      menu.root?.querySelector('[data-menu-item="254"]')?.className
+    ).toContain('current-menu-item');
+    expect(
+      menu.root?.querySelector<HTMLAnchorElement>('[data-menu-item="254"] a')
+        ?.target
+    ).toBe('_blank');
+    expect(menu.options?.items[1]?.menu_item_parent).toBeNull();
+  });
+
   it('binds existing data DOM and updates the list', () => {
     app().innerHTML = `
       <nav class="qa-bound" data-menu="root" data-menu-type="mobile">

@@ -34,7 +34,7 @@ export interface MenuItem extends Record<string, unknown> {
   title: string | number;
   url?: string;
   target?: string;
-  classes?: string[];
+  classes?: string | string[];
   children?: MenuItem[];
 }
 
@@ -118,6 +118,13 @@ function classList(...tokens: Array<string | null | undefined>): string {
   return tokens.filter(Boolean).join(' ');
 }
 
+function normalizeItemClasses(classes: MenuItem['classes']): string[] {
+  if (classes == null) return [];
+  if (typeof classes === 'string')
+    return classes.trim().split(/\s+/).filter(Boolean);
+  return classes;
+}
+
 function itemId(id: MenuItemId | undefined): string {
   return `menu-item-${id ?? randomId()}`;
 }
@@ -141,6 +148,7 @@ function isMenuItem(value: unknown): value is MenuItem {
     (item.url == null || typeof item.url === 'string') &&
     (item.target == null || typeof item.target === 'string') &&
     (item.classes == null ||
+      typeof item.classes === 'string' ||
       (Array.isArray(item.classes) &&
         item.classes.every((className) => typeof className === 'string'))) &&
     (item.children == null ||
@@ -301,9 +309,7 @@ export class Menu {
       classes.push(className.hasChildren);
     }
 
-    if (item.classes) {
-      classes.push(...item.classes);
-    }
+    classes.push(...normalizeItemClasses(item.classes));
 
     const children: Node[] = [
       jsx('a', {
