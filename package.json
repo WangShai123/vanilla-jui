@@ -1,6 +1,6 @@
 {
   "name": "vanilla-jui",
-  "version": "1.4.4",
+  "version": "1.4.5",
   "private": false,
   "description": "A lightweight vanilla JavaScript UI plugin library.",
   "keywords": [
@@ -58,7 +58,7 @@
   },
   "dependencies": {
     "vanilla-signal": "latest",
-    "vanilla-signal-i18n": "^1.1.1"
+    "vanilla-signal-i18n": "latest"
   },
   "devDependencies": {
     "@tsdown/css": "^0.22.2",
