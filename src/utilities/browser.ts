@@ -4,8 +4,11 @@ declare global {
       mobile: boolean;
       brands: Array<{ brand: string; version: string }>;
       platform: string;
-      getHighEntropyValues: (hints: string[]) => Promise<any>;
+      getHighEntropyValues: (
+        hints: string[]
+      ) => Promise<Record<string, unknown>>;
     };
+    msMaxTouchPoints?: number;
   }
   interface Window {
     opera?: string;
@@ -13,64 +16,35 @@ declare global {
 }
 
 /**
- * 判断当前环境是否为移动设备。
- * @returns {boolean}
+ * 采用 MDN 推荐的组合策略：特性检测优先，UA 嗅探兜底
  */
 export function isMobile(): boolean {
-  if (typeof window === 'undefined' || typeof navigator === 'undefined') {
-    return false;
-  }
+  if (typeof navigator === 'undefined') return false;
 
-  // 1. 优先使用现代 Client Hints API
-  if (
-    navigator.userAgentData &&
-    typeof navigator.userAgentData.mobile === 'boolean'
-  ) {
+  if (typeof navigator.userAgentData?.mobile === 'boolean') {
     return navigator.userAgentData.mobile;
   }
 
-  // 提取 UA 字符串并做安全处理
-  const ua = navigator.userAgent || navigator.vendor || window.opera || '';
-
-  // 2. 核心 UA 正则匹配
-  const mobileUaRegex =
-    /Android|iPhone|iPad|iPod|Mobile|Windows Phone|webOS|BlackBerry|IEMobile|Opera Mini/i;
-  const isMobileUa = mobileUaRegex.test(ua);
-
-  // 3. 排除平板设备 (Tablet)
-  const isTabletUa = /iPad|Android(?!.*Mobile)|Tablet/i.test(ua);
-
-  // 4. 综合判定逻辑（针对 iOS 和 Android 分别处理）
-  if (isMobileUa && !isTabletUa) {
-    // 对于 iOS 设备，UA 匹配通常足够
-    if (
-      /iPhone|iPod|Windows Phone|webOS|BlackBerry|IEMobile|Opera Mini/i.test(ua)
-    ) {
-      return true;
-    }
-    // Android 设备需结合屏幕尺寸或触摸能力，避免大屏安卓平板被误判
-    if (/Android/i.test(ua)) {
-      const hasTouchSupport =
-        'maxTouchPoints' in navigator
-          ? navigator.maxTouchPoints > 0
-          : 'ontouchstart' in window;
-      const screenWidth = Math.min(window.screen.width, window.screen.height);
-      return screenWidth <= 768 || hasTouchSupport;
-    }
+  const ua = navigator.userAgent || '';
+  if (
+    /\b(BlackBerry|webOS|iPhone|IEMobile|Android|Windows Phone|iPad|iPod)\b/i.test(
+      ua
+    )
+  ) {
+    return true;
   }
 
-  // 5. 针对 iOS 13+ iPad 伪装成 Mac 的特殊兜底
-  const isLikelyIPad = /Macintosh|MacIntel/i.test(ua);
-  if (isLikelyIPad) {
-    const hasTouchSupport =
-      'maxTouchPoints' in navigator
-        ? navigator.maxTouchPoints > 0
-        : 'ontouchstart' in window;
-    const screenWidth = Math.min(window.screen.width, window.screen.height);
-    return hasTouchSupport && screenWidth <= 768;
+  if (
+    typeof window === 'undefined' ||
+    typeof window.matchMedia !== 'function'
+  ) {
+    return false;
   }
 
-  return false;
+  return (
+    window.matchMedia('(pointer: coarse)').matches &&
+    window.matchMedia('(max-width: 820px)').matches
+  );
 }
 
 /**

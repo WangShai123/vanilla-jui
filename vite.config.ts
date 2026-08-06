@@ -1,8 +1,17 @@
 import { defineConfig } from 'vite-plus';
+import type { OxfmtConfig } from 'oxfmt';
+
+import fmtConfig from './.oxfmtrc.json' with { type: 'json' };
+
+const externalPackages = [
+  'vanilla-signal',
+  'vanilla-signal-i18n',
+  'vanilla-create-storage',
+];
 
 export default defineConfig({
   optimizeDeps: {
-    force: true, // ✅ 正确：强制重新预构建依赖
+    force: true,
   },
   pack: [
     {
@@ -10,10 +19,15 @@ export default defineConfig({
       outDir: 'dist',
       format: ['esm', 'umd'],
       globalName: 'jui',
-      target: 'es2020',
+      target: 'es2022',
       platform: 'browser',
       minify: true,
       clean: true,
+      deps: {
+        neverBundle: externalPackages,
+        alwaysBundle: [/^lodash-es(?:\/|$)/],
+        onlyBundle: ['lodash-es'],
+      },
       css: {
         minify: true,
       },
@@ -21,6 +35,7 @@ export default defineConfig({
         globals: {
           'vanilla-signal': 'vanillaSignal',
           'vanilla-signal-i18n': 'vanillaSignalI18n',
+          'vanilla-create-storage': 'vanillaStorage',
         },
       },
       outExtensions({ format }) {
@@ -50,23 +65,5 @@ export default defineConfig({
     },
   },
 
-  fmt: {
-    ignorePatterns: ['dist/**'],
-    sortPackageJson: true,
-    sortImports: true,
-    sortTailwindcss: true,
-    semi: true,
-    singleQuote: true,
-    tabWidth: 2,
-    useTabs: false,
-    printWidth: 80,
-    trailingComma: 'es5',
-    arrowParens: 'always',
-    bracketSameLine: false,
-    bracketSpacing: true,
-    embeddedLanguageFormatting: 'auto',
-    endOfLine: 'lf',
-    htmlWhitespaceSensitivity: 'css',
-    insertFinalNewline: true,
-  },
+  fmt: fmtConfig as OxfmtConfig,
 });

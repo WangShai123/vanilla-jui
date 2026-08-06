@@ -1,55 +1,55 @@
 @layer themes {
-    .j-avatar {
-        --avatar-size: var(--el-height-md);
-        --avatar-border-radius: var(--radius-md);
-        --avatar-box-shadow: var(--shadow-sm);
-    }
+  .j-avatar {
+    --avatar-size: var(--el-height-md);
+    --avatar-border-radius: var(--radius-md);
+    --avatar-box-shadow: var(--shadow-sm);
+  }
 
-    .j-avatar.is-2xs {
-        --avatar-size: var(--el-height-2xs);
-    }
+  .j-avatar.is-2xs {
+    --avatar-size: var(--el-height-2xs);
+  }
 
-    .j-avatar.is-xs {
-        --avatar-size: var(--el-height-xs);
-    }
+  .j-avatar.is-xs {
+    --avatar-size: var(--el-height-xs);
+  }
 
-    .j-avatar.is-sm {
-        --avatar-size: var(--el-height-sm);
-    }
+  .j-avatar.is-sm {
+    --avatar-size: var(--el-height-sm);
+  }
 
-    .j-avatar.is-lg {
-        --avatar-size: var(--el-height-lg);
-    }
+  .j-avatar.is-lg {
+    --avatar-size: var(--el-height-lg);
+  }
 
-    .j-avatar.is-xl {
-        --avatar-size: var(--el-height-xl);
-    }
+  .j-avatar.is-xl {
+    --avatar-size: var(--el-height-xl);
+  }
 
-    .j-avatar.is-2xl {
-        --avatar-size: var(--el-height-2xl);
-    }
+  .j-avatar.is-2xl {
+    --avatar-size: var(--el-height-2xl);
+  }
 
-    .j-avatar.is-round {
-        --avatar-border-radius: 0.5rem;
-    }
+  .j-avatar.is-round {
+    --avatar-border-radius: 0.5rem;
+  }
 
-    .j-avatar.is-text {
-        --avatar-bg: var(--tone-subtle);
-        --avatar-fg: var(--tone-solid);
-        --avatar-font-weight: var(--font-medium);
-    }
+  .j-avatar.is-text {
+    --avatar-bg: var(--tone-subtle);
+    --avatar-fg: var(--tone-solid);
+    --avatar-font-weight: var(--font-medium);
+  }
 
-    .j-avatar-group .j-avatar {
-        --avatar-border: 1.5px solid var(--ui-bg)
-    }
+  .j-avatar-group .j-avatar {
+    --avatar-border: 1.5px solid var(--ui-bg);
+  }
 
-    .j-avatar-group .j-avatar:not(:first-child) {
-        margin-inline-start: calc(var(--space) * -3);
-    }
+  .j-avatar-group .j-avatar:not(:first-child) {
+    margin-inline-start: calc(var(--space) * -3);
+  }
 
-    .j-avatar-group .j-avatar:last-child {
-        --avatar-font-size: var(--font-size-sm);
-        --avatar-bg: var(--ui-bg);
-        --avatar-box-shadow: var(--shadow-sm);
-    }
+  .j-avatar-group .j-avatar:last-child {
+    --avatar-font-size: var(--font-size-sm);
+    --avatar-bg: var(--ui-bg);
+    --avatar-box-shadow: var(--shadow-sm);
+  }
 }

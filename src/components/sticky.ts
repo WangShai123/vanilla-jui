@@ -4,19 +4,19 @@ import Component, {
   type ComponentDOM,
   type ComponentRuntime,
 } from '../core/Component.ts';
-import { type ResolveSchema, resolveProps } from '../utilities/core.ts';
 import { type DOMReference, all, requireContainer } from '../utilities/dom.ts';
+import { type ResolveSchema, resolveProps } from '../utilities/types.ts';
 
-export type StickyOverflow = 'destroy' | 'ignore';
+type StickyOverflow = 'destroy' | 'ignore';
 
-export interface StickyProps extends Record<string, unknown> {
+interface StickyProps extends Record<string, unknown> {
   target?: DOMReference;
   parent?: DOMReference;
   max?: number;
   top?: number;
   gap?: number;
   overflow?: StickyOverflow;
-  onUpdate?: ((sticky: Sticky) => void) | null;
+  onRefresh?: ((sticky: StickyInstance) => void) | null;
 }
 
 interface ResolvedStickyProps extends Record<string, unknown> {
@@ -26,17 +26,15 @@ interface ResolvedStickyProps extends Record<string, unknown> {
   top: number;
   gap: number;
   overflow: StickyOverflow;
-  onUpdate: ((sticky: Sticky) => void) | null;
+  onRefresh: ((sticky: StickyInstance) => void) | null;
 }
 
-export interface StickyStateItem {
+interface StickyStateItem {
   element: HTMLElement;
   top: number;
 }
 
 interface StickyState extends Record<string, unknown> {
-  count: number;
-  top: number;
   items: StickyStateItem[];
 }
 
@@ -46,20 +44,31 @@ interface StickyDOM extends ComponentDOM {
   targets: HTMLElement[];
 }
 
-interface StickyRuntimeItem {
+interface StickyOriginalStyle {
   element: HTMLElement;
-  top: number;
   originalPosition: string;
   originalTop: string;
   originalZIndex: string;
 }
 
 interface StickyRuntime extends ComponentRuntime {
-  active: boolean;
   built: boolean;
-  ignored: boolean;
-  items: StickyRuntimeItem[];
 }
+
+interface StickyCache {
+  originalStyles: StickyOriginalStyle[];
+}
+
+type StickyInstance = Component<
+  ResolvedStickyProps,
+  StickyState,
+  StickyDOM,
+  StickyCache
+> & {
+  runtime: StickyRuntime;
+  build(): StickyInstance;
+  refresh(): StickyInstance;
+};
 
 const STICKY_PROPS_SCHEMA = {
   target: { default: null },
@@ -67,28 +76,25 @@ const STICKY_PROPS_SCHEMA = {
   max: {
     default: 10,
     type: 'number',
-    validate: (value) =>
-      typeof value === 'number' && Number.isInteger(value) && value > 0,
-    message: 'expects a positive integer.',
+    integer: true,
+    greaterThan: 0,
   },
   top: {
     default: 16,
     type: 'number',
-    validate: (value) => typeof value === 'number' && value >= 0,
-    message: 'expects a positive number or 0.',
+    min: 0,
   },
   gap: {
     default: 16,
     type: 'number',
-    validate: (value) => typeof value === 'number' && value >= 0,
-    message: 'expects a positive number or 0.',
+    min: 0,
   },
   overflow: {
     default: 'destroy',
     type: 'string',
     enum: ['destroy', 'ignore'],
   },
-  onUpdate: { default: null, types: ['function', 'null'] },
+  onRefresh: { default: null, types: ['function', 'null'] },
 } satisfies ResolveSchema<StickyProps>;
 
 function normalizeProps(input: StickyProps): ResolvedStickyProps {
@@ -100,7 +106,7 @@ function normalizeProps(input: StickyProps): ResolvedStickyProps {
     top: props.top as number,
     gap: props.gap as number,
     overflow: props.overflow as StickyOverflow,
-    onUpdate: props.onUpdate as ResolvedStickyProps['onUpdate'],
+    onRefresh: props.onRefresh as ResolvedStickyProps['onRefresh'],
   };
 }
 
@@ -154,32 +160,30 @@ function resolveTarget(
  * 用于给一个或多个元素应用 `position: sticky`，并按顺序计算 `top`
  * 偏移，适合页面侧边栏中多个 widget 的堆叠吸附场景。
  */
-export class Sticky extends Component<
+class Sticky extends Component<
   ResolvedStickyProps,
   StickyState,
-  StickyDOM
+  StickyDOM,
+  StickyCache
 > {
   declare runtime: StickyRuntime;
+  declare cache: StickyCache;
 
   /**
    * 创建 Sticky 实例。
-   * @param {object} [input={}] Sticky 配置。
+   * @param {object} [props={}] Sticky 配置。
    */
-  constructor(input: StickyProps = {}) {
-    const props = normalizeProps(input);
-    super(props);
+  constructor(props: StickyProps = {}) {
+    const settings = normalizeProps(props);
+    super(settings);
 
     this.dom.parent = null;
     this.dom.targets = [];
+    this.cache.originalStyles = [];
 
-    this.runtime.active = false;
     this.runtime.built = false;
-    this.runtime.ignored = false;
-    this.runtime.items = [];
 
     this.state = createDeepStore({
-      count: 0,
-      top: props.top,
       items: [],
     });
   }
@@ -203,16 +207,14 @@ export class Sticky extends Component<
 
     if (this.dom.targets.length === 0) return this;
 
-    this.runtime.active = true;
-    this.captureItems();
+    this.captureOriginalStyles();
     this.apply();
     return this;
   }
 
-  private captureItems(): void {
-    this.runtime.items = this.dom.targets.map((element) => ({
+  private captureOriginalStyles(): void {
+    this.cache.originalStyles = this.dom.targets.map((element) => ({
       element,
-      top: this.props.top,
       originalPosition: element.style.position,
       originalTop: element.style.top,
       originalZIndex: element.style.zIndex,
@@ -223,7 +225,6 @@ export class Sticky extends Component<
     const { max, overflow } = this.props;
     if (targets.length <= max) return targets;
 
-    this.runtime.ignored = overflow === 'ignore';
     return overflow === 'ignore' ? [] : targets.slice(-max);
   }
 
@@ -231,30 +232,27 @@ export class Sticky extends Component<
     let nextTop = startTop;
     const stateItems: StickyStateItem[] = [];
 
-    for (const item of this.runtime.items) {
-      item.top = nextTop;
-      item.element.style.position = 'sticky';
-      item.element.style.top = `${nextTop}px`;
+    for (const element of this.dom.targets) {
+      element.style.position = 'sticky';
+      element.style.top = `${nextTop}px`;
 
-      stateItems.push({ element: item.element, top: nextTop });
-      nextTop += item.element.offsetHeight + this.props.gap;
+      stateItems.push({ element, top: nextTop });
+      nextTop += element.offsetHeight + this.props.gap;
     }
 
     this.setState({
-      count: this.runtime.items.length,
-      top: this.runtime.items[0]?.top ?? this.props.top,
       items: stateItems,
     });
 
-    if (typeof this.props.onUpdate === 'function') {
-      this.props.onUpdate(this);
+    if (typeof this.props.onRefresh === 'function') {
+      this.props.onRefresh(this);
     }
 
     return nextTop;
   }
 
   private restore(): void {
-    for (const item of this.runtime.items) {
+    for (const item of this.cache.originalStyles) {
       item.element.style.position = item.originalPosition;
       item.element.style.top = item.originalTop;
       item.element.style.zIndex = item.originalZIndex;
@@ -266,7 +264,11 @@ export class Sticky extends Component<
    * @returns {Sticky} 当前实例。
    */
   refresh(): this {
-    if (this.runtime.destroyed || !this.runtime.built || !this.runtime.active) {
+    if (
+      this.runtime.destroyed ||
+      !this.runtime.built ||
+      this.dom.targets.length === 0
+    ) {
       return this;
     }
     this.apply();
@@ -284,13 +286,12 @@ export class Sticky extends Component<
    * @private
    */
   protected onDestroy(): void {
-    this.runtime.active = false;
     this.runtime.built = false;
-    this.runtime.items = [];
+    this.cache.originalStyles = [];
     this.dom.targets = [];
   }
 }
 
-export function createSticky(props: StickyProps = {}): Sticky {
+export function createSticky(props: StickyProps = {}): StickyInstance {
   return new Sticky(props);
 }

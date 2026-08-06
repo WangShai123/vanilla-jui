@@ -1,28 +1,28 @@
 @layer themes {
-    .j-breadcrumb {
-        --breadcrumb-font-size: var(--font-size-md);
-        --breadcrumb-fg: var(--ui-fg-muted);
-        --breadcrumb-icon-size: var(--font-size-md);
-        --breadcrumb-divider-fg: var(--ui-fg-soft);
-        --breadcrumb-link-fg: var(--tone-text);
-        --breadcrumb-item-padding: 0 var(--s2);
-    }
+  .j-breadcrumb {
+    --breadcrumb-font-size: var(--font-size-md);
+    --breadcrumb-fg: var(--ui-fg-muted);
+    --breadcrumb-icon-size: var(--font-size-md);
+    --breadcrumb-divider-fg: var(--ui-fg-soft);
+    --breadcrumb-link-fg: var(--tone-text);
+    --breadcrumb-item-padding: 0 var(--s2);
+  }
 
-    .j-breadcrumb.is-sm {
-        --breadcrumb-font-size: var(--font-size-sm);
-        --breadcrumb-icon-size: var(--font-size-sm);
-    }
+  .j-breadcrumb.is-sm {
+    --breadcrumb-font-size: var(--font-size-sm);
+    --breadcrumb-icon-size: var(--font-size-sm);
+  }
 
-    .j-breadcrumb.is-lg {
-        --breadcrumb-font-size: var(--font-size-lg);
-        --breadcrumb-icon-size: var(--font-size-lg);
-    }
+  .j-breadcrumb.is-lg {
+    --breadcrumb-font-size: var(--font-size-lg);
+    --breadcrumb-icon-size: var(--font-size-lg);
+  }
 
-    .j-breadcrumb a:hover {
-        --breadcrumb-link-fg: var(--tone-solid);
-    }
+  .j-breadcrumb a:hover {
+    --breadcrumb-link-fg: var(--tone-solid);
+  }
 
-    .j-breadcrumb li.is-active a {
-        --breadcrumb-link-fg: var(--ui-fg-muted);
-    }
+  .j-breadcrumb li.is-active a {
+    --breadcrumb-link-fg: var(--ui-fg-muted);
+  }
 }

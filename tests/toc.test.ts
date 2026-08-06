@@ -9,9 +9,9 @@ import {
   vi,
 } from 'vite-plus/test';
 
-import { Toc } from '../src/components/toc.ts';
+import { createToc } from '../src/components/toc.ts';
 
-let toc: Toc | null = null;
+let toc: ReturnType<typeof createToc> | null = null;
 
 function mount(): { container: HTMLElement; target: HTMLElement } {
   document.body.innerHTML = `
@@ -69,7 +69,8 @@ describe('Toc', () => {
   it('builds default classes and data markers from headings', () => {
     const { container } = mount();
 
-    toc = new Toc({ container, target: '#content' }).build();
+    toc = createToc({ target: '#content' }).build();
+    if (toc.dom.root) container.appendChild(toc.dom.root);
 
     expect(
       container.querySelector('[data-toc="root"]')?.classList.contains('j-toc')
@@ -88,8 +89,7 @@ describe('Toc', () => {
   it('allows className overrides without changing data selectors', () => {
     const { container } = mount();
 
-    toc = new Toc({
-      container,
+    toc = createToc({
       target: '#content',
       className: {
         toc: 'doc-toc',
@@ -99,6 +99,7 @@ describe('Toc', () => {
         levelPrefix: 'doc-level-',
       },
     }).build();
+    if (toc.dom.root) container.appendChild(toc.dom.root);
 
     const link = container.querySelector<HTMLElement>('[data-toc-index="1"]');
     expect(
@@ -118,7 +119,8 @@ describe('Toc', () => {
     mockHeadingTop(headings[1], 30);
     mockHeadingTop(headings[2], 120);
 
-    toc = new Toc({ container, target, offset: 40 }).build();
+    toc = createToc({ target, offset: 40 }).build();
+    if (toc.dom.root) container.appendChild(toc.dom.root);
 
     const links = container.querySelectorAll<HTMLElement>('[data-toc-index]');
     expect(toc.state?.current.index).toBe(1);
@@ -130,7 +132,8 @@ describe('Toc', () => {
     const { container } = mount();
     const pushState = vi.spyOn(window.history, 'pushState');
 
-    toc = new Toc({ container, target: '#content', offset: 24 }).build();
+    toc = createToc({ target: '#content', offset: 24 }).build();
+    if (toc.dom.root) container.appendChild(toc.dom.root);
     const link = container.querySelector<HTMLElement>('[data-toc-index="1"]');
     if (!link) throw new Error('Missing Toc link.');
     link.appendChild(document.createElement('span'));

@@ -2,9 +2,9 @@
 
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 
-import { Sticky } from '../src/components/sticky.ts';
+import { createSticky } from '../src/components/sticky.ts';
 
-let sticky: Sticky | null = null;
+let sticky: ReturnType<typeof createSticky> | null = null;
 
 function mount(): HTMLElement {
   document.body.innerHTML = `
@@ -50,7 +50,7 @@ describe('Sticky', () => {
     mockHeight(element('#a'), 20);
     mockHeight(element('#b'), 30);
 
-    sticky = new Sticky({
+    sticky = createSticky({
       parent,
       target: '.widget',
       max: 2,
@@ -62,13 +62,13 @@ describe('Sticky', () => {
     expect(element('#b').style.position).toBe('sticky');
     expect(element('#b').style.top).toBe('10px');
     expect(element('#c').style.top).toBe('45px');
-    expect(sticky.state?.count).toBe(2);
+    expect(sticky.state?.items).toHaveLength(2);
   });
 
   it('scopes selector targets to parent with public dom all helper path', () => {
     const parent = mount();
 
-    sticky = new Sticky({
+    sticky = createSticky({
       parent,
       target: '.widget',
       top: 0,
@@ -81,19 +81,20 @@ describe('Sticky', () => {
 
   it('ignores overflow when configured', () => {
     const parent = mount();
-    const onUpdate = vi.fn<(sticky: Sticky) => void>();
+    const onRefresh =
+      vi.fn<(sticky: ReturnType<typeof createSticky>) => void>();
 
-    sticky = new Sticky({
+    sticky = createSticky({
       parent,
       target: '.widget',
       max: 1,
       overflow: 'ignore',
-      onUpdate,
+      onRefresh,
     }).build();
 
-    expect(sticky.runtime.ignored).toBe(true);
     expect(sticky.dom.targets).toHaveLength(0);
-    expect(onUpdate).not.toHaveBeenCalled();
+    expect(sticky.state?.items).toHaveLength(0);
+    expect(onRefresh).not.toHaveBeenCalled();
   });
 
   it('restores original inline styles on destroy', () => {
@@ -103,7 +104,7 @@ describe('Sticky', () => {
     target.style.top = '3px';
     target.style.zIndex = '2';
 
-    sticky = new Sticky({ target, top: 12 }).build();
+    sticky = createSticky({ target, top: 12 }).build();
     expect(target.style.position).toBe('sticky');
 
     sticky.destroy();

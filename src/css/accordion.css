@@ -21,7 +21,7 @@
     display: none;
   }
 
-  .j-accordion .accordion-panel[aria-hidden="false"] {
+  .j-accordion .accordion-panel[aria-hidden='false'] {
     display: block;
   }
 }

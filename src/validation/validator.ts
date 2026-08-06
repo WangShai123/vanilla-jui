@@ -1,29 +1,25 @@
 import { jsx } from 'vanilla-signal';
 
+import { type DOMReference, all, resolveElement } from '../utilities/dom.ts';
+import { type IEventManager, createEventManager } from '../utilities/events.ts';
 import {
   type ResolveSchema,
   resolveProps,
   validateParam,
-} from '../utilities/core.ts';
-import { type DOMReference, all, resolveElement } from '../utilities/dom.ts';
-import { type IEventManager, createEventManager } from '../utilities/events.ts';
+} from '../utilities/types.ts';
 
 type ValidatorElement =
   | HTMLInputElement
   | HTMLSelectElement
   | HTMLTextAreaElement;
-type ValidatorRuleName = keyof ValidatorRule | string;
-type ValidatorMessageMap = Record<
-  string,
-  Partial<Record<ValidatorRuleName, string>>
->;
+type ValidatorMessageMap = Record<string, Partial<Record<string, string>>>;
 type ValidatorCustomResult = boolean | string;
 type ValidatorCustomRule = (
   element: ValidatorElement,
-  validator: Validator
+  validator: ValidatorInstance
 ) => ValidatorCustomResult;
 
-export interface ValidatorRule extends Record<string, unknown> {
+interface ValidatorRule extends Record<string, unknown> {
   required?: boolean;
   minLength?: number;
   maxLength?: number;
@@ -45,16 +41,20 @@ export interface ValidatorRule extends Record<string, unknown> {
   validate?: ValidatorCustomRule;
 }
 
-export interface ValidatorOptions extends Record<string, unknown> {
+interface ValidatorProps extends Record<string, unknown> {
   rules?: Record<string, ValidatorRule>;
   messages?: ValidatorMessageMap;
-  onSubmit?: ((validator: Validator) => void) | null;
+  onSubmit?: ((validator: ValidatorInstance) => void) | null;
 }
 
-interface ResolvedValidatorOptions extends Record<string, unknown> {
+interface ResolvedValidatorProps extends Record<string, unknown> {
   rules: Record<string, ValidatorRule>;
   messages: ValidatorMessageMap;
-  onSubmit: ((validator: Validator) => void) | null;
+  onSubmit: ((validator: ValidatorInstance) => void) | null;
+}
+
+interface ValidatorDOM {
+  root: HTMLFormElement | null;
 }
 
 interface ValidatorRuntime {
@@ -71,22 +71,27 @@ interface ResetOptions {
   native?: boolean;
 }
 
-const VALIDATOR_OPTIONS_SCHEMA = {
+interface ValidatorInstance {
+  dom: ValidatorDOM;
+  props: ResolvedValidatorProps | null;
+  runtime: ValidatorRuntime;
+  validate(): boolean;
+  reset(options?: ResetOptions): void;
+  destroy(): void;
+}
+
+const VALIDATOR_PROPS_SCHEMA = {
   rules: { default: {}, type: 'object' },
   messages: { default: {}, type: 'object' },
   onSubmit: { default: null, types: ['function', 'null'] },
-} satisfies ResolveSchema<ValidatorOptions>;
+} satisfies ResolveSchema<ValidatorProps>;
 
-function normalizeOptions(input: ValidatorOptions): ResolvedValidatorOptions {
-  const options = resolveProps(
-    input,
-    VALIDATOR_OPTIONS_SCHEMA,
-    'Validator.options'
-  );
+function normalizeProps(input: ValidatorProps): ResolvedValidatorProps {
+  const props = resolveProps(input, VALIDATOR_PROPS_SCHEMA, 'Validator.props');
   return {
-    rules: options.rules as Record<string, ValidatorRule>,
-    messages: options.messages as ValidatorMessageMap,
-    onSubmit: options.onSubmit as ResolvedValidatorOptions['onSubmit'],
+    rules: props.rules as Record<string, ValidatorRule>,
+    messages: props.messages as ValidatorMessageMap,
+    onSubmit: props.onSubmit as ResolvedValidatorProps['onSubmit'],
   };
 }
 
@@ -146,19 +151,21 @@ function hasFiles(element: HTMLInputElement): element is HTMLInputElement & {
  *
  * 支持绑定表单 submit/reset 事件，也可以手动调用 validate/reset。
  */
-export class Validator {
-  root: HTMLFormElement | null;
-  options: ResolvedValidatorOptions | null;
+class Validator implements ValidatorInstance {
+  dom: ValidatorDOM;
+  props: ResolvedValidatorProps | null;
   runtime: ValidatorRuntime;
   cleanup: ValidatorCleanup | null;
 
   constructor(
     element: DOMReference,
-    options: ValidatorOptions = {},
+    props: ValidatorProps = {},
     bindEvents = false
   ) {
-    this.options = normalizeOptions(options);
-    this.root = this.resolveRoot(element);
+    this.props = normalizeProps(props);
+    this.dom = {
+      root: this.resolveRoot(element),
+    };
     this.runtime = createRuntime();
     this.cleanup = {
       events: createEventManager(),
@@ -185,13 +192,14 @@ export class Validator {
 
   private bindEvents(): void {
     this.unbindEvents();
-    if (!this.root || !this.cleanup) return;
+    const { root } = this.dom;
+    if (!root || !this.cleanup) return;
 
-    this.cleanup.events.on('submit', this.root, 'submit', (event) => {
+    this.cleanup.events.on('submit', root, 'submit', (event) => {
       event.preventDefault();
       this.validate();
     });
-    this.cleanup.events.on('reset', this.root, 'reset', () => {
+    this.cleanup.events.on('reset', root, 'reset', () => {
       this.reset({ native: false });
     });
   }
@@ -204,28 +212,29 @@ export class Validator {
    * 执行表单校验。
    */
   validate(): boolean {
-    if (!this.root || !this.options) return false;
+    const { root } = this.dom;
+    if (!root || !this.props) return false;
 
     this.runtime.valid = true;
     this.runtime.message = '';
 
-    for (const element of Array.from(this.root.elements)) {
+    for (const element of Array.from(root.elements)) {
       if (!isValidatorElement(element) || !element.name) continue;
-      if (!this.options.rules[element.name]) continue;
+      if (!this.props.rules[element.name]) continue;
 
       this.runtime.valid = this.validateRule(element, element.name);
       if (!this.runtime.valid) break;
     }
 
-    if (this.runtime.valid && this.options.onSubmit) {
-      this.options.onSubmit(this);
+    if (this.runtime.valid && this.props.onSubmit) {
+      this.props.onSubmit(this);
     }
     return this.runtime.valid;
   }
 
   private validateRule(element: ValidatorElement, name: string): boolean {
-    if (!this.options) return false;
-    const rules = this.options.rules[name];
+    if (!this.props) return false;
+    const rules = this.props.rules[name];
     if (!rules) return true;
 
     if (this.hasNativeValidationRule(element)) {
@@ -358,9 +367,10 @@ export class Validator {
     element: ValidatorElement,
     targetName: unknown
   ): boolean {
-    if (!this.root || typeof targetName !== 'string') return true;
+    const { root } = this.dom;
+    if (!root || typeof targetName !== 'string') return true;
     const targetElement = toValidatorElement(
-      this.root.elements.namedItem(targetName)
+      root.elements.namedItem(targetName)
     );
     if (!targetElement) {
       throw new Error(`Validator: target element "${targetName}" not found.`);
@@ -509,7 +519,7 @@ export class Validator {
       element.classList.add('is-invalid');
     }
 
-    const error = customMessage || this.options?.messages[name]?.[rule] || '';
+    const error = customMessage || this.props?.messages[name]?.[rule] || '';
     if (!error) return;
 
     this.runtime.message = error;
@@ -552,16 +562,17 @@ export class Validator {
    * 重置表单与校验状态。
    */
   reset({ native = true }: ResetOptions = {}): void {
-    if (!this.root) return;
-    if (native) this.root.reset();
+    const { root } = this.dom;
+    if (!root) return;
+    if (native) root.reset();
 
-    for (const element of Array.from(this.root.elements)) {
+    for (const element of Array.from(root.elements)) {
       if (!isValidatorElement(element)) continue;
       element.classList.remove('is-valid');
       element.classList.remove('is-invalid');
     }
 
-    for (const help of all<HTMLElement>('[data-validator-help]', this.root)) {
+    for (const help of all<HTMLElement>('[data-validator-help]', root)) {
       help.remove();
     }
 
@@ -578,8 +589,8 @@ export class Validator {
 
     this.unbindEvents();
     this.reset({ native: false });
-    this.root = null;
-    this.options = null;
+    this.dom.root = null;
+    this.props = null;
     this.runtime.valid = false;
     this.runtime.message = '';
     this.cleanup?.events.clear();
@@ -589,8 +600,8 @@ export class Validator {
 
 export function createValidator(
   element: DOMReference,
-  options: ValidatorOptions = {},
+  props: ValidatorProps = {},
   bindEvents = false
-): Validator {
-  return new Validator(element, options, bindEvents);
+): ValidatorInstance {
+  return new Validator(element, props, bindEvents);
 }

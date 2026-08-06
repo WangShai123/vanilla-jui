@@ -9,13 +9,11 @@ import {
   vi,
 } from 'vite-plus/test';
 
-import {
-  Form,
-  createForm,
-  type FormDataRecord,
-} from '../src/components/form.ts';
+import { createForm, type FormDataRecord } from '../src/components/form.ts';
 
-let form: Form | null = null;
+type FormInstance = ReturnType<typeof createForm>;
+
+let form: FormInstance | null = null;
 
 function app(): HTMLElement {
   const element = document.querySelector<HTMLElement>('#app');
@@ -25,6 +23,11 @@ function app(): HTMLElement {
 
 function submit(root: HTMLFormElement): void {
   root.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+}
+
+function mountForm(): void {
+  if (!form?.dom.root) throw new Error('Form root was not built.');
+  app().appendChild(form.dom.root);
 }
 
 beforeEach(() => {
@@ -39,21 +42,21 @@ afterEach(() => {
 
 describe('Form', () => {
   it('builds default form classes and stable data markers', () => {
-    form = new Form(
-      {
-        id: 'default-form',
-        fields: [
-          { label: 'Email', name: 'email', type: 'email', required: true },
-          { label: 'Bio', name: 'bio', type: 'textarea', help: 'Short bio' },
-        ],
-      },
-      app()
-    );
+    form = createForm({
+      id: 'default-form',
+      fields: [
+        { label: 'Email', name: 'email', type: 'email', required: true },
+        { label: 'Bio', name: 'bio', type: 'textarea', help: 'Short bio' },
+      ],
+    });
 
     expect(form.root).toBeNull();
     form.build();
+    expect(app().contains(form.root)).toBe(false);
+    mountForm();
 
     expect(form.root).toBeInstanceOf(HTMLFormElement);
+    expect(app().contains(form.root)).toBe(true);
     expect(form.root?.classList.contains('j-form')).toBe(true);
     expect(form.root?.classList.contains('is-vertical')).toBe(true);
     expect(form.root?.dataset.form).toBe('root');
@@ -68,21 +71,19 @@ describe('Form', () => {
   });
 
   it('allows className overrides without changing data selectors', () => {
-    form = createForm(
-      {
-        id: 'custom-form',
-        fields: [{ label: 'Name', name: 'name', help: 'Static help' }],
-        className: {
-          form: 'profile-form',
-          vertical: 'profile-stack',
-          item: 'profile-field',
-          control: 'profile-control',
-          help: 'profile-help',
-          buttons: 'profile-actions',
-        } as Record<string, string>,
-      },
-      app()
-    ).build();
+    form = createForm({
+      id: 'custom-form',
+      fields: [{ label: 'Name', name: 'name', help: 'Static help' }],
+      className: {
+        form: 'profile-form',
+        vertical: 'profile-stack',
+        item: 'profile-field',
+        control: 'profile-control',
+        help: 'profile-help',
+        buttons: 'profile-actions',
+      } as Record<string, string>,
+    }).build();
+    mountForm();
 
     expect(form.root?.classList.contains('profile-form')).toBe(true);
     expect(form.root?.classList.contains('profile-stack')).toBe(true);
@@ -95,22 +96,18 @@ describe('Form', () => {
     expect(form.root?.querySelector('[data-form-buttons]')).toBeTruthy();
   });
 
-  it('updates fields and preserves stable data selectors', () => {
-    form = createForm(
-      {
-        id: 'update-form',
-        fields: [{ label: 'Name', name: 'name' }],
-        buttons: false,
-      },
-      app()
-    ).build();
+  it('reactively updates fields and preserves stable data selectors', () => {
+    form = createForm({
+      id: 'update-form',
+      fields: [{ label: 'Name', name: 'name' }],
+      buttons: false,
+    }).build();
+    mountForm();
 
-    form.update({
-      fields: [
-        { label: 'Name', name: 'name' },
-        { label: 'Bio', name: 'bio', type: 'textarea' },
-      ],
-    });
+    form.setFields([
+      { label: 'Name', name: 'name' },
+      { label: 'Bio', name: 'bio', type: 'textarea' },
+    ]);
 
     expect(form.root?.querySelectorAll('[data-form-item]')).toHaveLength(2);
     expect(form.root?.querySelector('[data-form-field="bio"]')).toBeInstanceOf(
@@ -119,28 +116,27 @@ describe('Form', () => {
   });
 
   it('collects submitted form data', async () => {
-    const onSubmit = vi.fn<(data: FormDataRecord, form: Form) => void>();
+    const onSubmit =
+      vi.fn<(data: FormDataRecord, form: FormInstance) => void>();
 
-    form = createForm(
-      {
-        id: 'submit-form',
-        fields: [
-          { label: 'Email', name: 'email', type: 'email' },
-          {
-            label: 'Tags',
-            name: 'tags',
-            type: 'checkbox',
-            options: [
-              { value: 'ui', text: 'UI', checked: true },
-              { value: 'dx', text: 'DX', checked: true },
-            ],
-          },
-        ],
-        buttons: false,
-        onSubmit,
-      },
-      app()
-    ).build();
+    form = createForm({
+      id: 'submit-form',
+      fields: [
+        { label: 'Email', name: 'email', type: 'email' },
+        {
+          label: 'Tags',
+          name: 'tags',
+          type: 'checkbox',
+          options: [
+            { value: 'ui', text: 'UI', checked: true },
+            { value: 'dx', text: 'DX', checked: true },
+          ],
+        },
+      ],
+      buttons: false,
+      onSubmit,
+    }).build();
+    mountForm();
 
     const email = form.root?.elements.namedItem('email');
     if (!(email instanceof HTMLInputElement) || !form.root) {

@@ -7,30 +7,21 @@ import {
   render,
 } from 'vanilla-signal';
 
+import { type RenderableContent } from '../utilities/dom.ts';
+import { randomId } from '../utilities/id.ts';
+import { isPlainObject } from '../utilities/object.ts';
 import {
   type ResolveSchema,
-  isPlainObject,
-  randomId,
   resolveProps,
   validateParam,
-} from '../utilities/core.ts';
-import {
-  type DOMReference,
-  type RenderableContent,
-  isRenderableContent,
-  requireContainer,
-} from '../utilities/dom.ts';
+} from '../utilities/types.ts';
 
 export type FlowData = Record<string, unknown>;
 export type FlowPayload = FlowData | null;
 export type FlowAction = 'next' | 'back' | 'goTo' | 'finish';
 export type FlowBusyStrategy = 'ignore' | 'throw';
 export type FlowDirection = string;
-export type FlowSlotName =
-  | 'renderHeader'
-  | 'renderSteps'
-  | 'renderBody'
-  | 'renderFooter';
+export type FlowSlotName = 'renderHeader' | 'renderBody' | 'renderFooter';
 export type FlowCleanup = () => void;
 export type FlowStepResult =
   | string
@@ -42,8 +33,6 @@ export type FlowStepResult =
 export interface FlowClassNames {
   root: string;
   header: string;
-  title: string;
-  description: string;
   steps: string;
   step: string;
   active: string;
@@ -54,8 +43,6 @@ export interface FlowClassNames {
   body: string;
   footer: string;
   button: string;
-  buttonGhost: string;
-  buttonPrimary: string;
   reset: string;
   back: string;
   next: string;
@@ -66,11 +53,9 @@ export type FlowClassNameConfig = Partial<FlowClassNames>;
 export interface FlowStep {
   id: string;
   title?: string;
-  description?: string;
   content?: RenderableContent<FlowContext>;
   data?: FlowData;
   modal?: FlowData | ((context: FlowContext) => FlowData | null) | null;
-  view?: FlowData;
   onEnter?: FlowLifecycleHook;
   onLeave?: FlowLifecycleHook;
   onNext?: FlowMoveHook;
@@ -199,7 +184,7 @@ export interface FlowText {
   [key: string]: string;
 }
 
-export interface FlowOptions extends Record<string, unknown> {
+export interface FlowProps extends Record<string, unknown> {
   id?: string | null;
   steps?: FlowStep[];
   initial?: string | number | null;
@@ -208,16 +193,12 @@ export interface FlowOptions extends Record<string, unknown> {
   render?: boolean;
   rollbackOnError?: boolean;
   busyStrategy?: FlowBusyStrategy;
-  showHeader?: boolean;
-  showFooter?: boolean;
-  showSteps?: boolean;
   showBack?: boolean;
   showNext?: boolean;
   showReset?: boolean;
   text?: Partial<FlowText>;
   className?: FlowClassNameConfig | string;
   renderHeader?: FlowSlot;
-  renderSteps?: FlowSlot;
   renderBody?: FlowSlot;
   renderFooter?: FlowSlot;
   onChange?: FlowChangeHook | null;
@@ -228,7 +209,7 @@ export interface FlowOptions extends Record<string, unknown> {
   onBusy?: FlowBusyHook | null;
 }
 
-interface ResolvedFlowOptions extends Record<string, unknown> {
+interface ResolvedFlowProps extends Record<string, unknown> {
   id: string;
   steps: FlowStep[];
   initial: string | number | null;
@@ -237,16 +218,12 @@ interface ResolvedFlowOptions extends Record<string, unknown> {
   render: boolean;
   rollbackOnError: boolean;
   busyStrategy: FlowBusyStrategy;
-  showHeader: boolean;
-  showFooter: boolean;
-  showSteps: boolean;
   showBack: boolean;
   showNext: boolean;
   showReset: boolean;
   text: FlowText;
   className: FlowClassNames;
   renderHeader: FlowSlot;
-  renderSteps: FlowSlot;
   renderBody: FlowSlot;
   renderFooter: FlowSlot;
   onChange: FlowChangeHook | null;
@@ -278,8 +255,18 @@ interface InitialFlowData {
   global: FlowData;
 }
 
-interface FlowNodes {
-  root?: HTMLElement;
+interface FlowDOM {
+  root: HTMLElement | null;
+  header: HTMLElement | null;
+  body: HTMLElement | null;
+  footer: HTMLElement | null;
+}
+
+interface FlowRuntime {
+  built: boolean;
+  destroyed: boolean;
+  activeAction: FlowAction | null;
+  actionController: AbortController | null;
 }
 
 interface FlowGoToOptions {
@@ -327,8 +314,6 @@ interface FlowError extends Error {
 const DEFAULT_CLASS_NAMES: FlowClassNames = {
   root: 'j-flow',
   header: 'flow-header',
-  title: 'flow-title',
-  description: 'flow-description',
   steps: 'flow-steps',
   step: 'flow-step',
   active: 'is-active',
@@ -339,27 +324,17 @@ const DEFAULT_CLASS_NAMES: FlowClassNames = {
   body: 'flow-body',
   footer: 'flow-footer',
   button: 'j-button',
-  buttonGhost: 'is-ghost',
-  buttonPrimary: 'is-primary',
-  reset: 'flow-reset',
-  back: 'flow-back',
-  next: 'flow-next',
+  reset: 'is-ghost flow-reset',
+  back: 'is-ghost flow-back',
+  next: 'is-primary flow-next',
 };
-
-function isFlowStep(step: unknown): step is FlowStep {
-  return (
-    !!step &&
-    typeof step === 'object' &&
-    typeof (step as FlowStep).id === 'string'
-  );
-}
 
 function isFlowRenderSlot(slot: unknown): slot is FlowSlot {
   return slot == null || slot === false || typeof slot === 'function';
 }
 
 function clonePlainObject(value: unknown): FlowData {
-  return isPlainObject(value) ? { ...value } : {};
+  return isPlainObject(value) ? { ...(value as FlowData) } : {};
 }
 
 function cloneArray<T>(value: unknown): T[] {
@@ -369,7 +344,10 @@ function cloneArray<T>(value: unknown): T[] {
 function cloneSteps(steps: unknown): FlowStep[] {
   if (!Array.isArray(steps)) return [];
   return steps.map((step) => {
-    const source = step as FlowStep;
+    const source = { ...(step as FlowStep & Record<string, unknown>) };
+    delete source.description;
+    delete source.view;
+
     return {
       ...source,
       data: clonePlainObject(source.data),
@@ -377,7 +355,6 @@ function cloneSteps(steps: unknown): FlowStep[] {
         typeof source.modal === 'function' || source.modal == null
           ? source.modal
           : clonePlainObject(source.modal),
-      view: clonePlainObject(source.view),
     };
   });
 }
@@ -387,13 +364,17 @@ function normalizeStepResult(
   fallbackId: string
 ): { id: string; data?: FlowPayload } {
   if (typeof result === 'string') return { id: result };
-  if (isPlainObject(result) && typeof result.id === 'string') {
+  if (isPlainObject(result)) {
+    const source = result as { id?: unknown; data?: unknown };
+    if (typeof source.id !== 'string') return { id: fallbackId };
+    const data: FlowPayload | undefined = isPlainObject(source.data)
+      ? (source.data as FlowData)
+      : source.data == null
+        ? source.data
+        : undefined;
     return {
-      id: result.id,
-      data:
-        isPlainObject(result.data) || result.data == null
-          ? result.data
-          : undefined,
+      id: source.id,
+      data,
     };
   }
   return { id: fallbackId };
@@ -412,7 +393,7 @@ function normalizeClassNames(value: unknown): FlowClassNames {
 
   return {
     ...DEFAULT_CLASS_NAMES,
-    ...(isPlainObject(value) ? value : {}),
+    ...(isPlainObject(value) ? (value as Partial<FlowClassNames>) : {}),
   };
 }
 
@@ -423,23 +404,23 @@ function joinClasses(
 }
 
 const FLOW_STEP_RULE = {
-  validate: isFlowStep,
-  message: 'expects a step object with a string id.',
+  type: 'plainObject',
+  shape: {
+    id: { type: 'string', nonEmpty: true },
+  },
 };
 
 const FLOW_CONTENT_RULE = {
-  validate: isRenderableContent,
-  message: 'expects string, Node, array, function or null.',
+  type: 'renderable',
 };
 
 const FLOW_STEPS_RULE = {
-  validate: (value: unknown) => Array.isArray(value) && value.length > 0,
-  message: 'expects a non-empty steps array.',
+  type: 'array',
+  nonEmpty: true,
 };
 
 const FLOW_PAYLOAD_RULE = {
-  validate: (value: unknown) => value == null || isPlainObject(value),
-  message: 'expects an object or null.',
+  types: ['plainObject', 'null', 'undefined'],
 };
 
 const FLOW_RENDER_SLOT_RULE = {
@@ -449,10 +430,10 @@ const FLOW_RENDER_SLOT_RULE = {
 
 const FLOW_TEXT_RULE = {
   default: {},
-  validate: isPlainObject,
-  message: 'expects an object with text fields.',
+  type: 'plainObject',
   normalize: (value: unknown): FlowText => {
-    const text = isPlainObject(value) ? value : {};
+    const text = (isPlainObject(value) ? value : {}) as Partial<FlowText> &
+      Record<string, unknown>;
     return {
       ...Object.fromEntries(
         Object.entries(text).filter(([, item]) => typeof item === 'string')
@@ -465,7 +446,7 @@ const FLOW_TEXT_RULE = {
   },
 };
 
-const FLOW_OPTIONS_SCHEMA = {
+const FLOW_PROPS_SCHEMA = {
   id: {
     default: null,
     types: ['string', 'null'],
@@ -489,9 +470,6 @@ const FLOW_OPTIONS_SCHEMA = {
     type: 'string',
     enum: ['ignore', 'throw'],
   },
-  showHeader: { default: true, type: 'boolean' },
-  showFooter: { default: true, type: 'boolean' },
-  showSteps: { default: true, type: 'boolean' },
   showBack: { default: true, type: 'boolean' },
   showNext: { default: true, type: 'boolean' },
   showReset: { default: false, type: 'boolean' },
@@ -502,7 +480,6 @@ const FLOW_OPTIONS_SCHEMA = {
     normalize: normalizeClassNames,
   },
   renderHeader: { default: null, ...FLOW_RENDER_SLOT_RULE },
-  renderSteps: { default: null, ...FLOW_RENDER_SLOT_RULE },
   renderBody: { default: null, ...FLOW_RENDER_SLOT_RULE },
   renderFooter: { default: null, ...FLOW_RENDER_SLOT_RULE },
   onChange: { default: null, types: ['function', 'null'] },
@@ -511,37 +488,33 @@ const FLOW_OPTIONS_SCHEMA = {
   onFinish: { default: null, types: ['function', 'null'] },
   onError: { default: null, types: ['function', 'null'] },
   onBusy: { default: null, types: ['function', 'null'] },
-} satisfies ResolveSchema<FlowOptions>;
+} satisfies ResolveSchema<FlowProps>;
 
-function normalizeOptions(input: FlowOptions): ResolvedFlowOptions {
-  const options = resolveProps(input, FLOW_OPTIONS_SCHEMA, 'Flow.options');
+function normalizeProps(input: FlowProps): ResolvedFlowProps {
+  const props = resolveProps(input, FLOW_PROPS_SCHEMA, 'Flow.props');
   return {
-    id: options.id as string,
-    steps: cloneSteps(options.steps),
-    initial: options.initial as ResolvedFlowOptions['initial'],
-    cache: options.cache as boolean,
-    linear: options.linear as boolean,
-    render: options.render as boolean,
-    rollbackOnError: options.rollbackOnError as boolean,
-    busyStrategy: options.busyStrategy as FlowBusyStrategy,
-    showHeader: options.showHeader as boolean,
-    showFooter: options.showFooter as boolean,
-    showSteps: options.showSteps as boolean,
-    showBack: options.showBack as boolean,
-    showNext: options.showNext as boolean,
-    showReset: options.showReset as boolean,
-    text: options.text as FlowText,
-    className: options.className as FlowClassNames,
-    renderHeader: options.renderHeader as FlowSlot,
-    renderSteps: options.renderSteps as FlowSlot,
-    renderBody: options.renderBody as FlowSlot,
-    renderFooter: options.renderFooter as FlowSlot,
-    onChange: options.onChange as FlowChangeHook | null,
-    onNext: options.onNext as FlowMoveHook | null,
-    onBack: options.onBack as FlowMoveHook | null,
-    onFinish: options.onFinish as FlowFinishHook | null,
-    onError: options.onError as FlowErrorHook | null,
-    onBusy: options.onBusy as FlowBusyHook | null,
+    id: props.id as string,
+    steps: cloneSteps(props.steps),
+    initial: props.initial as ResolvedFlowProps['initial'],
+    cache: props.cache as boolean,
+    linear: props.linear as boolean,
+    render: props.render as boolean,
+    rollbackOnError: props.rollbackOnError as boolean,
+    busyStrategy: props.busyStrategy as FlowBusyStrategy,
+    showBack: props.showBack as boolean,
+    showNext: props.showNext as boolean,
+    showReset: props.showReset as boolean,
+    text: props.text as FlowText,
+    className: props.className as FlowClassNames,
+    renderHeader: props.renderHeader as FlowSlot,
+    renderBody: props.renderBody as FlowSlot,
+    renderFooter: props.renderFooter as FlowSlot,
+    onChange: props.onChange as FlowChangeHook | null,
+    onNext: props.onNext as FlowMoveHook | null,
+    onBack: props.onBack as FlowMoveHook | null,
+    onFinish: props.onFinish as FlowFinishHook | null,
+    onError: props.onError as FlowErrorHook | null,
+    onBusy: props.onBusy as FlowBusyHook | null,
   };
 }
 
@@ -550,44 +523,48 @@ function normalizeOptions(input: FlowOptions): ResolvedFlowOptions {
  *
  * 适合在 Modal、Offcanvas、页面表单或任意业务组件中复用 next/back/goTo、步骤缓存和生命周期。
  */
-export class Flow {
-  options: ResolvedFlowOptions;
+class Flow {
+  props: ResolvedFlowProps;
   steps: FlowStep[];
   state: FlowState;
-  root: HTMLElement | null;
+  dom: FlowDOM;
+  runtime: FlowRuntime;
   private stepMap: Map<string, number>;
   private initialStepId: string;
   private initialData: InitialFlowData;
   private subscribers: Set<FlowSubscriber>;
   private renderDispose: FlowCleanup | null;
   private cleanupTasks: Set<FlowCleanup>;
-  private nodes: FlowNodes;
-  private destroyed: boolean;
-  private activeAction: FlowAction | null;
-  private actionController: AbortController | null;
 
   /**
    * 创建 Flow 实例。
-   * @param {FlowOptions} [options={}] Flow 配置。
+   * @param {FlowProps} [props={}] Flow 配置。
    */
-  constructor(options: FlowOptions = {}) {
-    this.options = normalizeOptions(options);
-    this.steps = this.options.steps;
+  constructor(props: FlowProps = {}) {
+    this.props = normalizeProps(props);
+    this.steps = this.props.steps;
     this.validateSteps(this.steps);
     this.stepMap = new Map(this.steps.map((step, index) => [step.id, index]));
-    this.initialStepId = this.resolveInitialStepId(this.options.initial);
+    this.initialStepId = this.resolveInitialStepId(this.props.initial);
     this.initialData = this.createInitialStepData();
     this.subscribers = new Set();
     this.renderDispose = null;
     this.cleanupTasks = new Set();
-    this.nodes = {};
-    this.destroyed = false;
-    this.activeAction = null;
-    this.actionController = null;
-    this.root = null;
+    this.dom = {
+      root: null,
+      header: null,
+      body: null,
+      footer: null,
+    };
+    this.runtime = {
+      built: false,
+      destroyed: false,
+      activeAction: null,
+      actionController: null,
+    };
 
     this.state = createDeepStore({
-      id: this.options.id,
+      id: this.props.id,
       currentId: this.initialStepId,
       currentIndex: this.stepMap.get(this.initialStepId) ?? 0,
       previousId: null,
@@ -694,38 +671,30 @@ export class Flow {
   }
 
   /**
-   * 挂载默认 Flow UI。
-   * @param {Element|Node|string|Array} container DOM 容器、选择器或 JSX/h 返回节点。
+   * 构建默认 Flow UI。
    * @returns {Flow}
    */
-  mount(container: DOMReference): this {
-    this.assertActive('mount');
-    if (!this.options.render) return this;
+  build(): this {
+    this.assertActive('build');
+    if (this.runtime.built) return this;
 
-    const target = requireContainer(
-      container,
-      'Flow.mount.container',
-      'element'
-    );
+    this.runtime.built = true;
+    if (!this.props.render) return this;
 
-    this.unmount();
-    this.root = this.buildRoot();
-    target.appendChild(this.root);
+    this.dom.root = this.buildRoot();
     this.mountView();
     return this;
   }
 
-  /**
-   * 卸载默认 UI。
-   * @returns {Flow}
-   */
-  unmount(): this {
+  private teardownView(): void {
     this.renderDispose?.();
     this.renderDispose = null;
-    if (this.root?.parentNode) this.root.parentNode.removeChild(this.root);
-    this.root = null;
-    this.nodes = {};
-    return this;
+    this.dom.root?.remove();
+    this.dom.root = null;
+    this.dom.header = null;
+    this.dom.body = null;
+    this.dom.footer = null;
+    this.runtime.built = false;
   }
 
   /**
@@ -868,7 +837,7 @@ export class Flow {
         ...clonePlainObject(this.state.stepData[stepId]),
         ...data,
       };
-      if (this.options.cache) Object.assign(this.state.data, data);
+      if (this.props.cache) Object.assign(this.state.data, data);
       this.state.version += 1;
     });
     if (!options.silent) this.emitChange();
@@ -936,7 +905,7 @@ export class Flow {
       'finish',
       async () => {
         if (payload) this.setStepData(this.state.currentId, payload);
-        await this.callHook(this.options.onFinish, [this.snapshot(), this]);
+        await this.callHook(this.props.onFinish, [this.snapshot(), this]);
         return this.snapshot();
       },
       { internal: options.internal }
@@ -948,10 +917,10 @@ export class Flow {
    * @returns {void}
    */
   destroy(): void {
-    if (this.destroyed) return;
-    this.destroyed = true;
+    if (this.runtime.destroyed) return;
+    this.runtime.destroyed = true;
     this.abortActiveAction();
-    this.unmount();
+    this.teardownView();
     for (const cleanup of Array.from(this.cleanupTasks)) {
       cleanup();
     }
@@ -959,21 +928,19 @@ export class Flow {
     this.subscribers.clear();
     this.steps = [];
     this.stepMap.clear();
-    this.activeAction = null;
-    this.actionController = null;
+    this.runtime.activeAction = null;
+    this.runtime.actionController = null;
   }
 
   private resolveInitialStepId(initial: string | number | null): string {
     if (typeof initial === 'number') {
       const step = this.steps[initial];
-      if (!step) throw new Error('Flow.options.initial index is out of range.');
+      if (!step) throw new Error('Flow.props.initial index is out of range.');
       return step.id;
     }
     if (typeof initial === 'string') {
       if (!this.stepMap.has(initial)) {
-        throw new Error(
-          `Flow.options.initial step "${initial}" does not exist.`
-        );
+        throw new Error(`Flow.props.initial step "${initial}" does not exist.`);
       }
       return initial;
     }
@@ -983,15 +950,15 @@ export class Flow {
   private validateSteps(steps: FlowStep[]): void {
     const ids = new Set<string>();
     for (const [index, step] of steps.entries()) {
-      validateParam(String(index), step, FLOW_STEP_RULE, 'Flow.options.steps');
+      validateParam(String(index), step, FLOW_STEP_RULE, 'Flow.props.steps');
       validateParam(
         'content',
         step.content ?? null,
         FLOW_CONTENT_RULE,
-        `Flow.options.steps.${index}`
+        `Flow.props.steps.${index}`
       );
       if (ids.has(step.id)) {
-        throw new Error(`Flow.options.steps: duplicated step id "${step.id}".`);
+        throw new Error(`Flow.props.steps: duplicated step id "${step.id}".`);
       }
       ids.add(step.id);
     }
@@ -1029,8 +996,7 @@ export class Flow {
     payload: FlowPayload,
     fallbackId: string
   ): Promise<FlowStepResult | FlowPayload | void> {
-    const globalHook =
-      type === 'back' ? this.options.onBack : this.options.onNext;
+    const globalHook = type === 'back' ? this.props.onBack : this.props.onNext;
     const stepHook = type === 'back' ? step.onBack : step.onNext;
     const context = this.createContext({ payload, targetId: fallbackId });
 
@@ -1098,8 +1064,8 @@ export class Flow {
 
       this.emitChange(fromSnapshot);
     } catch (error) {
-      if (this.destroyed) throw error;
-      if (this.options.rollbackOnError) {
+      if (this.runtime.destroyed) throw error;
+      if (this.props.rollbackOnError) {
         this.restoreState(rollbackState, { keepLoading: true });
       }
       this.handleError(error, fromSnapshot);
@@ -1143,7 +1109,7 @@ export class Flow {
       flow: this,
       step,
       state: this.state,
-      signal: this.actionController?.signal || null,
+      signal: this.runtime.actionController?.signal || null,
       snapshot,
       data: clonePlainObject(this.state.data),
       currentData: this.getStepData(step.id),
@@ -1164,23 +1130,23 @@ export class Flow {
   ): Promise<FlowSnapshot | null> {
     const isOuterAction = !options.internal && !this.state.loading;
     if (isOuterAction) {
-      this.actionController =
+      this.runtime.actionController =
         typeof AbortController !== 'undefined' ? new AbortController() : null;
-      this.activeAction = action;
+      this.runtime.activeAction = action;
       this.setLoading(true, action);
     }
 
     try {
       return await task();
     } catch (error) {
-      if (this.destroyed) return null;
+      if (this.runtime.destroyed) return null;
       if (this.state.error !== error) this.handleError(error);
       throw error;
     } finally {
-      if (isOuterAction && !this.destroyed) {
+      if (isOuterAction && !this.runtime.destroyed) {
         this.setLoading(false, null);
-        this.activeAction = null;
-        this.actionController = null;
+        this.runtime.activeAction = null;
+        this.runtime.actionController = null;
       }
     }
   }
@@ -1193,19 +1159,19 @@ export class Flow {
     ) as FlowError;
     error.code = 'FLOW_BUSY';
 
-    if (typeof this.options.onBusy === 'function') {
-      this.options.onBusy(action, this.snapshot(), this);
+    if (typeof this.props.onBusy === 'function') {
+      this.props.onBusy(action, this.snapshot(), this);
     }
 
-    if (this.options.busyStrategy === 'throw') throw error;
+    if (this.props.busyStrategy === 'throw') throw error;
 
     return this.snapshot();
   }
 
   private abortActiveAction(): void {
-    this.actionController?.abort();
-    this.actionController = null;
-    this.activeAction = null;
+    this.runtime.actionController?.abort();
+    this.runtime.actionController = null;
+    this.runtime.activeAction = null;
   }
 
   private async callHook<TResult>(
@@ -1216,7 +1182,7 @@ export class Flow {
     const result = await (
       hook as (...args: unknown[]) => TResult | Promise<TResult>
     )(...args);
-    if (this.destroyed) throw this.createAbortError();
+    if (this.runtime.destroyed) throw this.createAbortError();
     return result;
   }
 
@@ -1230,10 +1196,17 @@ export class Flow {
     value: boolean,
     action: FlowAction | null = this.state.busyAction
   ): void {
+    const previous = this.snapshot();
+    const busyAction = value ? action : null;
+    if (this.state.loading === value && this.state.busyAction === busyAction)
+      return;
+
     flushSync(() => {
       this.state.loading = value;
-      this.state.busyAction = value ? action : null;
+      this.state.busyAction = busyAction;
+      this.state.version += 1;
     });
+    this.emitChange(previous);
   }
 
   private handleError(
@@ -1244,8 +1217,8 @@ export class Flow {
       this.state.error = error;
       this.state.version += 1;
     });
-    if (typeof this.options.onError === 'function') {
-      this.options.onError(error, this.snapshot(), this, previous);
+    if (typeof this.props.onError === 'function') {
+      this.props.onError(error, this.snapshot(), this, previous);
     }
   }
 
@@ -1254,8 +1227,8 @@ export class Flow {
     for (const handler of Array.from(this.subscribers)) {
       handler(next, this, previous);
     }
-    if (typeof this.options.onChange === 'function') {
-      this.options.onChange(next, this, previous);
+    if (typeof this.props.onChange === 'function') {
+      this.props.onChange(next, this, previous);
     }
   }
 
@@ -1312,7 +1285,7 @@ export class Flow {
     if (typeof cleanup !== 'function') {
       throw new Error('Flow.addCleanup: cleanup expects a function.');
     }
-    if (this.destroyed) {
+    if (this.runtime.destroyed) {
       cleanup();
       return () => {};
     }
@@ -1321,7 +1294,7 @@ export class Flow {
   }
 
   private assertActive(method: string): void {
-    if (this.destroyed) {
+    if (this.runtime.destroyed) {
       throw new Error(`Flow.${method}: instance has been destroyed.`);
     }
   }
@@ -1342,22 +1315,21 @@ export class Flow {
 
   private buildRoot(): HTMLElement {
     return jsx('div', {
-      className: this.options.className.root,
-      id: this.options.id,
+      className: this.props.className.root,
+      id: this.props.id,
       role: 'group',
       'data-flow': 'root',
       'aria-busy': () => (this.state.loading ? 'true' : 'false'),
-      'aria-labelledby': `${this.options.id}-title`,
-      ref: (element: HTMLElement) => {
-        this.nodes.root = element;
-      },
     }) as HTMLElement;
   }
 
   private mountView(): void {
-    if (this.renderDispose || !this.root) return;
+    if (this.renderDispose || !this.dom.root) return;
     this.renderDispose = createRoot((dispose: FlowCleanup) => {
-      const viewDispose = render(() => this.view(), this.root as HTMLElement);
+      const viewDispose = render(
+        () => this.view(),
+        this.dom.root as HTMLElement
+      );
       onCleanup(viewDispose);
       return dispose;
     });
@@ -1366,16 +1338,9 @@ export class Flow {
   private view(): RenderableContent<FlowRenderContext> {
     const snapshot = this.snapshot();
     return [
-      this.renderSlot('renderHeader', snapshot, () =>
-        this.options.showHeader ? this.headerView(snapshot) : null
-      ),
-      this.renderSlot('renderSteps', snapshot, () =>
-        this.options.showSteps ? this.stepsView(snapshot) : null
-      ),
-      this.renderSlot('renderBody', snapshot, () => this.bodyView(snapshot)),
-      this.renderSlot('renderFooter', snapshot, () =>
-        this.options.showFooter ? this.footerView(snapshot) : null
-      ),
+      this.headerView(snapshot),
+      this.bodyView(snapshot),
+      this.footerView(snapshot),
     ];
   }
 
@@ -1384,7 +1349,7 @@ export class Flow {
     snapshot: FlowSnapshot,
     fallback: () => RenderableContent<FlowRenderContext>
   ): RenderableContent<FlowRenderContext> {
-    const slot = this.options[name];
+    const slot = this.props[name];
     if (slot === false) return null;
     if (typeof slot === 'function') {
       return slot(this.createRenderContext(snapshot, fallback));
@@ -1414,30 +1379,20 @@ export class Flow {
 
   private headerView(snapshot: FlowSnapshot): HTMLElement {
     return jsx('div', {
-      className: this.options.className.header,
+      className: this.props.className.header,
       'data-flow-header': '',
-      children: [
-        jsx('div', {
-          id: `${this.options.id}-title`,
-          className: this.options.className.title,
-          'data-flow-title': '',
-          children:
-            snapshot.currentStep?.title || snapshot.currentStep?.id || '',
-        }),
-        snapshot.currentStep?.description
-          ? jsx('div', {
-              className: this.options.className.description,
-              'data-flow-description': '',
-              children: snapshot.currentStep.description,
-            })
-          : null,
-      ],
+      ref: (element: HTMLElement) => {
+        this.dom.header = element;
+      },
+      children: this.renderSlot('renderHeader', snapshot, () =>
+        this.stepsView(snapshot)
+      ),
     }) as HTMLElement;
   }
 
   private stepsView(snapshot: FlowSnapshot): HTMLOListElement {
     return jsx('ol', {
-      className: this.options.className.steps,
+      className: this.props.className.steps,
       'data-flow-steps': '',
       role: 'list',
       'aria-label': 'Flow steps',
@@ -1450,12 +1405,12 @@ export class Flow {
           children: [
             jsx('button', {
               type: 'button',
-              className: this.options.className.stepButton,
-              disabled: this.options.linear && index > snapshot.currentIndex,
+              className: this.props.className.stepButton,
+              disabled: this.props.linear && index > snapshot.currentIndex,
               'aria-current':
                 index === snapshot.currentIndex ? 'step' : undefined,
               'aria-disabled':
-                this.options.linear && index > snapshot.currentIndex
+                this.props.linear && index > snapshot.currentIndex
                   ? 'true'
                   : 'false',
               'aria-label': `${index + 1}. ${step.title || step.id}`,
@@ -1466,12 +1421,12 @@ export class Flow {
               },
               children: [
                 jsx('span', {
-                  className: this.options.className.stepIndex,
+                  className: this.props.className.stepIndex,
                   'data-flow-step-number': '',
                   children: index + 1,
                 }),
                 jsx('span', {
-                  className: this.options.className.stepTitle,
+                  className: this.props.className.stepTitle,
                   'data-flow-step-title': '',
                   children: step.title || step.id,
                 }),
@@ -1485,76 +1440,85 @@ export class Flow {
 
   private bodyView(snapshot: FlowSnapshot): HTMLElement {
     return jsx('div', {
-      className: this.options.className.body,
+      className: this.props.className.body,
       'data-flow-body': '',
       role: 'region',
       'aria-live': 'polite',
       'aria-busy': snapshot.loading ? 'true' : 'false',
-      children: this.contentView(this.currentStep.content),
+      ref: (element: HTMLElement) => {
+        this.dom.body = element;
+      },
+      children: this.renderSlot('renderBody', snapshot, () =>
+        this.contentView(this.currentStep.content)
+      ),
     }) as HTMLElement;
   }
 
   private footerView(snapshot: FlowSnapshot): HTMLElement {
-    const ghostButton = joinClasses(
-      this.options.className.button,
-      this.options.className.buttonGhost
-    );
-    const primaryButton = joinClasses(
-      this.options.className.button,
-      this.options.className.buttonPrimary
-    );
-
     return jsx('div', {
-      className: this.options.className.footer,
+      className: this.props.className.footer,
       'data-flow-footer': '',
-      children: [
-        this.options.showReset
+      ref: (element: HTMLElement) => {
+        this.dom.footer = element;
+      },
+      children: this.renderSlot('renderFooter', snapshot, () => [
+        this.props.showReset
           ? jsx('button', {
               type: 'button',
-              className: joinClasses(ghostButton, this.options.className.reset),
+              className: joinClasses(
+                this.props.className.button,
+                this.props.className.reset
+              ),
               'data-action': 'reset',
               onClick: () => this.reset(),
               disabled: snapshot.loading,
               'aria-disabled': snapshot.loading ? 'true' : 'false',
-              children: this.options.text.reset,
+              children: this.props.text.reset,
             })
           : null,
-        this.options.showBack
+        this.props.showBack
           ? jsx('button', {
               type: 'button',
-              className: joinClasses(ghostButton, this.options.className.back),
+              className: joinClasses(
+                this.props.className.button,
+                this.props.className.back
+              ),
               'data-action': 'back',
               onClick: () => void this.back(),
               disabled: !snapshot.canBack,
               'aria-disabled': !snapshot.canBack ? 'true' : 'false',
-              children: this.options.text.back,
+              children: this.props.text.back,
             })
           : null,
-        this.options.showNext
+        this.props.showNext
           ? jsx('button', {
               type: 'button',
               className: joinClasses(
-                primaryButton,
-                this.options.className.next
+                this.props.className.button,
+                this.props.className.next
               ),
               'data-action': 'next',
               onClick: () => void this.next(),
               disabled: snapshot.loading,
               'aria-disabled': snapshot.loading ? 'true' : 'false',
               children: snapshot.isLast
-                ? this.options.text.finish
-                : this.options.text.next,
+                ? this.props.text.finish
+                : this.props.text.next,
             })
           : null,
-      ],
+      ]),
     }) as HTMLElement;
   }
 
   private contentView(
     content: FlowStep['content']
-  ): RenderableContent<FlowContext> {
-    if (typeof content === 'function') return content(this.createContext());
-    return content ?? '';
+  ): RenderableContent<FlowRenderContext> {
+    if (typeof content === 'function') {
+      return content(
+        this.createContext()
+      ) as RenderableContent<FlowRenderContext>;
+    }
+    return (content ?? '') as RenderableContent<FlowRenderContext>;
   }
 
   private stepClass(
@@ -1562,18 +1526,18 @@ export class Flow {
     currentIndex = this.state.currentIndex
   ): string {
     return joinClasses(
-      this.options.className.step,
-      index === currentIndex && this.options.className.active,
-      index < currentIndex && this.options.className.complete
+      this.props.className.step,
+      index === currentIndex && this.props.className.active,
+      index < currentIndex && this.props.className.complete
     );
   }
 }
 
 /**
  * 创建 Flow 实例。
- * @param {FlowOptions} options Flow 配置。
+ * @param {FlowProps} props Flow 配置。
  * @returns {Flow}
  */
-export function createFlow(options: FlowOptions = {}): Flow {
-  return new Flow(options);
+export function createFlow(props: FlowProps = {}): Flow {
+  return new Flow(props);
 }

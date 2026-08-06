@@ -1,6 +1,7 @@
 import { createDeepStore, flushSync } from 'vanilla-signal';
 
 import { createEventManager } from '../utilities/events.ts';
+import { isPlainObject } from '../utilities/object.ts';
 
 export type ComponentProps = Record<string, unknown>;
 export type ComponentState = Record<string, unknown>;
@@ -13,14 +14,16 @@ export interface ComponentRuntime {
   destroyed: boolean;
 }
 
-export interface ComponentUpdateOptions {
+export type ComponentCache = unknown;
+
+export interface ComponentReCreateOptions {
   force?: boolean;
 }
 
 export type ComponentLifecycleEvent =
   | 'init'
-  | 'beforeUpdate'
-  | 'afterUpdate'
+  | 'beforeReCreate'
+  | 'afterReCreate'
   | 'destroy';
 export type ComponentEventName = string;
 export type ComponentListener = (...args: unknown[]) => void;
@@ -56,12 +59,6 @@ export interface ComponentCleanupRegistry {
   [key: string]: unknown;
 }
 
-function isPlainObject(value: unknown): value is ComponentProps {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
-  const proto = Object.getPrototypeOf(value);
-  return proto === Object.prototype || proto === null;
-}
-
 /**
  * 轻量级组件基类，集成 vanilla-signal 响应式状态和插件系统
  * 为所有 UI 组件提供统一的状态管理、生命周期钩子和插件支持
@@ -70,6 +67,7 @@ export default class Component<
   TProps extends ComponentProps = ComponentProps,
   TState extends ComponentState = ComponentState,
   TDOM extends ComponentDOM = ComponentDOM,
+  TCache = ComponentCache,
 > {
   /** 全局插件注册表，所有新创建的组件实例会自动安装这些插件 */
   static globalPlugins = new Map<string, ComponentPlugin<Component>>();
@@ -79,6 +77,9 @@ export default class Component<
 
   /** DOM 引用容器，存储根元素及其他 DOM 节点引用 */
   dom: TDOM;
+
+  /** 实例缓存容器，存储组件运行时派生数据 */
+  cache: TCache;
 
   /** 已安装的插件映射表 */
   plugins: Map<ComponentPlugin<unknown>, ComponentCleanup>;
@@ -105,6 +106,9 @@ export default class Component<
     /** DOM 引用容器，存储根元素及其他 DOM 节点引用 */
     this.dom = { root: null } as TDOM;
 
+    /** 实例缓存容器，存储组件运行时派生数据 */
+    this.cache = {} as TCache;
+
     /** 已安装的插件映射表 */
     this.plugins = new Map();
 
@@ -114,8 +118,8 @@ export default class Component<
     /** 内部事件监听器注册表，用于生命周期和自定义事件 */
     this._listeners = {
       init: [], // 初始化完成事件
-      beforeUpdate: [], // 更新前事件
-      afterUpdate: [], // 更新后事件
+      beforeReCreate: [], // 重新实例化前事件
+      afterReCreate: [], // 重新实例化后事件
       destroy: [], // 销毁事件
     };
 
@@ -127,23 +131,6 @@ export default class Component<
 
     /** 自动安装全局插件 */
     this.installGlobalPlugins();
-  }
-
-  /**
-   * 获取组件的根 DOM 元素
-   * @returns {HTMLElement|null} 根 DOM 元素或 null
-   */
-  get root(): Element | null {
-    return this.dom?.root || null;
-  }
-
-  /**
-   * 设置组件的根 DOM 元素
-   * @param {HTMLElement} value - 要设置的根 DOM 元素
-   */
-  set root(value: Element | null) {
-    if (!this.dom) this.dom = { root: null } as TDOM;
-    this.dom.root = value;
   }
 
   /**
@@ -169,7 +156,7 @@ export default class Component<
 
   /**
    * 注册事件监听器
-   * 用于监听组件生命周期事件（init、beforeUpdate、afterUpdate、destroy）或自定义事件
+   * 用于监听组件生命周期事件（init、beforeReCreate、afterReCreate、destroy）或自定义事件
    * @param {string} event - 事件名称
    * @param {Function} callback - 事件回调函数
    * @returns {Component} 返回当前实例，支持链式调用
@@ -283,39 +270,57 @@ export default class Component<
       throw new Error('Component.setState: expects a plain object patch.');
     }
 
+    const normalizedPatch = this.normalizeStatePatch(patch as Partial<TState>);
+    if (!isPlainObject(normalizedPatch)) {
+      throw new Error('Component.setState: expects a plain object patch.');
+    }
+    this.validateStatePatch(normalizedPatch);
+
     flushSync(() => {
-      for (const [k, v] of Object.entries(patch)) {
+      for (const [k, v] of Object.entries(normalizedPatch)) {
         if (!this.state) return;
         this.state[k as keyof TState] = v as TState[keyof TState];
       }
     });
+    this.afterSetState(normalizedPatch);
     return this;
   }
 
   /**
-   * 更新组件属性和触发更新生命周期
-   * 合并新的属性配置，触发 beforeUpdate 和 afterUpdate 事件
-   * 子类可以重写 onUpdate 方法实现自定义更新逻辑
+   * 根据新的 props 重新创建组件实例并触发生命周期
+   * 合并新的属性配置，触发 beforeReCreate 和 afterReCreate 事件
+   * 子类可以重写 onReCreate 方法实现自定义重建前逻辑
    * @param {Object} [propsPatch={}] - 要合并的属性补丁对象
    * @param {Object} [options] - 更新选项
    * @param {boolean} [options.force=false] - 是否强制更新（由子类处理）
-   * @returns {Component} 返回当前实例，支持链式调用
+   * @returns {Component} 返回新创建的实例
    * @throws {Error} 如果组件已被销毁则抛出异常
    */
-  update(
+  reCreate(
     propsPatch: Partial<TProps> | null | undefined = {},
-    { force = false }: ComponentUpdateOptions = {}
+    { force = false }: ComponentReCreateOptions = {}
   ): this {
     if (this.runtime.destroyed)
-      throw new Error('Component.update: instance destroyed');
-    if (isPlainObject(propsPatch)) {
-      this.props = Object.assign({}, this.props, propsPatch);
-    }
-    this.emit('beforeUpdate', propsPatch, { force });
-    if (typeof this.onUpdate === 'function')
-      this.onUpdate(propsPatch, { force });
-    this.emit('afterUpdate', propsPatch, { force });
-    return this;
+      throw new Error('Component.reCreate: instance destroyed');
+
+    if (!isPlainObject(propsPatch)) return this;
+
+    const nextProps = Object.assign({}, this.props, propsPatch);
+    this.emit('beforeReCreate', propsPatch, { force });
+    if (typeof this.onReCreate === 'function')
+      this.onReCreate(propsPatch, { force });
+
+    const nextInstance = this.createInstance(nextProps);
+    this.destroy();
+    nextInstance.emit('afterReCreate', propsPatch, { force });
+    return nextInstance;
+  }
+
+  protected createInstance(props: TProps): this {
+    const ComponentConstructor = this.constructor as new (
+      props: TProps
+    ) => this;
+    return new ComponentConstructor(props);
   }
 
   /**
@@ -343,13 +348,30 @@ export default class Component<
     this.cleanup.plugins.clear();
     this.cleanup.events.clear();
     this.dom = { root: null } as TDOM;
+    this.cache = {} as TCache;
     this.state = null;
   }
 
   protected onInit?(props: TProps): void;
-  protected onUpdate?(
+  protected onReCreate?(
     propsPatch: Partial<TProps> | null | undefined,
-    options: Required<ComponentUpdateOptions>
+    options: Required<ComponentReCreateOptions>
   ): void;
+  protected normalizeStatePatch(patch: Partial<TState>): Partial<TState> {
+    return patch;
+  }
+  protected validateStatePatch(patch: Partial<TState>): void {
+    if (!this.state) return;
+    for (const key of Object.keys(patch)) {
+      const stateKey = String(key);
+      const exists = Object.hasOwn(this.state as object, stateKey);
+      if (!exists) {
+        throw new Error(
+          `Component.setState: "${stateKey}" is not a supported state key.`
+        );
+      }
+    }
+  }
+  protected afterSetState(_patch: Partial<TState>): void {}
   protected onDestroy?(): void;
 }

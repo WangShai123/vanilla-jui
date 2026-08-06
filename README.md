@@ -2,6 +2,12 @@
 
 A lightweight vanilla UI library for building user interfaces.
 
+## Features
+
+- Lightweight
+- Reactive data management
+- Customizable UI: Supports `tailwindcss` or hand-written styles to fully customize component styles, without using the default `style.css`.
+
 ## Installation
 
 NPM

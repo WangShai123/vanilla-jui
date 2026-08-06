@@ -1,36 +1,36 @@
-import { createDeepStore, flushSync, jsx } from 'vanilla-signal';
+import {
+  createDeepStore,
+  createEffect,
+  createRoot,
+  flushSync,
+  jsx,
+  untrack,
+} from 'vanilla-signal';
 
 import Component, {
   type ComponentDOM,
   type ComponentRuntime,
 } from '../core/Component.ts';
-import {
-  type ResolveSchema,
-  randomId,
-  resolveProps,
-  timer,
-} from '../utilities/core.ts';
+import { createLoading } from '../primitives/loading.ts';
 import {
   type RenderableContent,
-  createLoading,
-  isRenderableContent,
   normalizeContentNodes,
 } from '../utilities/dom.ts';
+import { randomId } from '../utilities/id.ts';
+import { timer } from '../utilities/timer.ts';
+import {
+  type ResolveSchema,
+  resolveProps,
+  validateParam,
+} from '../utilities/types.ts';
 
 export type OffcanvasDirection = 'top' | 'right' | 'bottom' | 'left';
-export type OffcanvasAnimation = 'slide' | 'none';
+export type OffcanvasAnimate = string;
 
 export interface OffcanvasClassNames {
   root: string;
   overlay: string;
   content: string;
-  active: string;
-  top: string;
-  right: string;
-  bottom: string;
-  left: string;
-  slide: string;
-  none: string;
 }
 
 export type OffcanvasClassNameConfig = Partial<OffcanvasClassNames>;
@@ -43,10 +43,11 @@ export interface OffcanvasProps extends Record<string, unknown> {
   content?: OffcanvasContent;
   overlay?: boolean;
   filter?: boolean;
+  bodyOverflow?: boolean;
   cache?: boolean;
   ttl?: number;
   direction?: OffcanvasDirection;
-  animation?: OffcanvasAnimation;
+  animate?: OffcanvasAnimate;
   bgClose?: boolean;
   escClose?: boolean;
   id?: string | null;
@@ -61,10 +62,11 @@ interface ResolvedOffcanvasProps extends Record<string, unknown> {
   content: OffcanvasContent;
   overlay: boolean;
   filter: boolean;
+  bodyOverflow: boolean;
   cache: boolean;
   ttl: number;
   direction: OffcanvasDirection;
-  animation: OffcanvasAnimation;
+  animate: OffcanvasAnimate;
   bgClose: boolean;
   escClose: boolean;
   id: string;
@@ -76,12 +78,14 @@ interface ResolvedOffcanvasProps extends Record<string, unknown> {
 }
 
 interface OffcanvasState extends Record<string, unknown> {
+  content: OffcanvasContent;
   visible: boolean;
   loading: boolean;
 }
 
 interface OffcanvasDOM extends ComponentDOM {
   root: HTMLElement | null;
+  overlay: HTMLElement | null;
   content: HTMLElement | null;
 }
 
@@ -92,31 +96,29 @@ interface OffcanvasCache {
 }
 
 interface OffcanvasRuntime extends ComponentRuntime {
+  built: boolean;
   cache: OffcanvasCache;
   contentLoadId: number;
+}
+
+interface OffcanvasCleanupExtras {
+  state?: (() => void) | null;
 }
 
 const DEFAULT_CLASS_NAMES: OffcanvasClassNames = {
   root: 'j-offcanvas',
   overlay: 'j-offcanvas-overlay',
   content: 'offcanvas-content',
-  active: 'is-active',
-  top: 'is-top',
-  right: 'is-right',
-  bottom: 'is-bottom',
-  left: 'is-left',
-  slide: 'is-slide',
-  none: 'is-none',
 };
 
 const OFFCANVAS_PROPS_SCHEMA = {
   content: {
     default: '',
-    validate: isRenderableContent,
-    message: 'expects string, Node, array, function or null.',
+    type: 'renderable',
   },
   overlay: { default: true, type: 'boolean' },
   filter: { default: true, type: 'boolean' },
+  bodyOverflow: { default: true, type: 'boolean' },
   cache: { default: false, type: 'boolean' },
   ttl: { default: 0, type: 'number' },
   direction: {
@@ -124,10 +126,9 @@ const OFFCANVAS_PROPS_SCHEMA = {
     type: 'string',
     enum: ['top', 'right', 'bottom', 'left'],
   },
-  animation: {
+  animate: {
     default: 'slide',
     type: 'string',
-    enum: ['slide', 'none'],
   },
   bgClose: { default: true, type: 'boolean' },
   escClose: { default: true, type: 'boolean' },
@@ -157,6 +158,10 @@ const OFFCANVAS_PROPS_SCHEMA = {
   onHidden: { default: null, types: ['function', 'null'] },
 } satisfies ResolveSchema<OffcanvasProps>;
 
+const OFFCANVAS_STATE_SCHEMA = {
+  content: OFFCANVAS_PROPS_SCHEMA.content,
+};
+
 function normalizeTtl(ttl: number): number {
   return ttl > 0 ? ttl : 0;
 }
@@ -167,10 +172,11 @@ function normalizeProps(input: OffcanvasProps): ResolvedOffcanvasProps {
     content: props.content as OffcanvasContent,
     overlay: props.overlay as boolean,
     filter: props.filter as boolean,
+    bodyOverflow: props.bodyOverflow as boolean,
     cache: props.cache as boolean,
     ttl: props.ttl as number,
     direction: props.direction as OffcanvasDirection,
-    animation: props.animation as OffcanvasAnimation,
+    animate: props.animate as OffcanvasAnimate,
     bgClose: props.bgClose as boolean,
     escClose: props.escClose as boolean,
     id: props.id as string,
@@ -182,32 +188,25 @@ function normalizeProps(input: OffcanvasProps): ResolvedOffcanvasProps {
   };
 }
 
-function joinClasses(
-  ...classes: Array<string | null | undefined | false>
-): string {
-  return classes.filter(Boolean).join(' ');
-}
-
-/**
- * 侧滑面板组件，继承 Component。
- *
- * 适用于侧边菜单、筛选面板、移动端抽屉等场景。
- */
-export class Offcanvas extends Component<
+class OffcanvasComponent extends Component<
   ResolvedOffcanvasProps,
   OffcanvasState,
   OffcanvasDOM
 > {
   declare runtime: OffcanvasRuntime;
   declare state: OffcanvasState;
-  _overlay: HTMLElement | null;
+  declare cleanup: Component['cleanup'] & OffcanvasCleanupExtras;
 
   constructor(input: OffcanvasProps = {}) {
     const props = normalizeProps(input);
     super(props);
 
+    this.dom.overlay = null;
     this.dom.content = null;
-    this._overlay = null;
+
+    this.cleanup.state = null;
+
+    this.runtime.built = false;
     this.runtime.cache = {
       content: null,
       hasContent: false,
@@ -216,49 +215,126 @@ export class Offcanvas extends Component<
     this.runtime.contentLoadId = 0;
 
     this.state = createDeepStore({
+      content: props.content,
       visible: false,
       loading: false,
     }) as OffcanvasState;
-
-    this.onInit(props);
   }
 
-  protected onInit(props: ResolvedOffcanvasProps): void {
-    if (props.overlay) this._overlay = this.buildOverlay(props);
-    this.root = this.buildRoot(props);
+  build(): this {
+    if (this.runtime.destroyed) {
+      throw new Error('Offcanvas.build: instance has been destroyed.');
+    }
+    if (this.runtime.built) return this;
+
+    try {
+      this.dom.root = this.buildRoot();
+      this.runtime.built = true;
+      this.bindState();
+    } catch (error) {
+      this.destroy();
+      throw error;
+    }
+
+    this.emit('init', this.props);
+    return this;
   }
 
-  private buildOverlay(props: ResolvedOffcanvasProps): HTMLElement {
+  private assertBuilt(method: string): void {
+    if (this.runtime.destroyed) {
+      throw new Error(`Offcanvas.${method}: instance has been destroyed.`);
+    }
+    if (!this.runtime.built) {
+      throw new Error(`Offcanvas.${method}: call build() first.`);
+    }
+  }
+
+  private buildRoot(): HTMLElement {
+    if (this.props.overlay) {
+      this.dom.overlay = this.buildOverlay();
+    }
+
+    return this.buildPanel();
+  }
+
+  private buildOverlay(): HTMLElement {
+    const filterStyle = this.props.filter
+      ? { backdropFilter: 'blur(2px)' }
+      : {};
     return jsx('div', {
-      className: props.className.overlay,
-      'data-offcanvas-overlay': props.id,
-      style: props.filter ? { backdropFilter: 'blur(2px)' } : {},
+      className: this.props.className.overlay,
+      hidden: true,
+      'data-offcanvas-overlay': this.props.id,
+      style: {
+        ...filterStyle,
+      },
     }) as HTMLElement;
   }
 
-  private buildRoot(props: ResolvedOffcanvasProps): HTMLElement {
+  private buildPanel(): HTMLElement {
     const content = jsx('div', {
-      className: props.className.content,
-      'data-offcanvas-content': props.id,
+      className: this.props.className.content,
+      'data-offcanvas-content': this.props.id,
     }) as HTMLElement;
     this.dom.content = content;
 
-    if (typeof props.content !== 'function') {
-      content.append(...normalizeContentNodes(props.content, this));
+    if (typeof this.state.content !== 'function') {
+      this.renderContent(this.state.content);
     }
 
     return jsx('div', {
-      className: joinClasses(
-        props.className.root,
-        props.className[props.direction],
-        props.className[props.animation]
-      ),
-      id: props.id,
+      className: this.props.className.root,
+      id: this.props.id,
+      role: 'dialog',
+      'aria-modal': this.props.overlay ? 'true' : 'false',
+      'aria-expanded': 'false',
       'data-offcanvas': 'root',
-      'data-offcanvas-direction': props.direction,
-      'data-offcanvas-animation': props.animation,
+      'data-direction': this.props.direction,
+      'data-animate': this.props.animate,
       children: content,
     }) as HTMLElement;
+  }
+
+  private bindState(): void {
+    if (this.cleanup.state) return;
+
+    this.cleanup.state = createRoot((dispose) => {
+      let initialized = false;
+      createEffect(() => {
+        const content = this.state.content;
+        if (!initialized) {
+          initialized = true;
+          return;
+        }
+        void untrack(() => this.syncContent(content));
+      });
+      return dispose;
+    });
+  }
+
+  private async syncContent(content: OffcanvasContent): Promise<void> {
+    if (!this.runtime.built) return;
+    validateParam(
+      'content',
+      content,
+      OFFCANVAS_STATE_SCHEMA.content,
+      'Offcanvas.state'
+    );
+    this.runtime.cache.hasContent = false;
+    this.runtime.cache.content = null;
+    this.runtime.cache.updatedAt = 0;
+
+    if (typeof content === 'function') {
+      if (this.state.visible) await this.loadContent();
+      else this.clearContent();
+      return;
+    }
+
+    this.runtime.contentLoadId += 1;
+    flushSync(() => {
+      this.state.loading = false;
+    });
+    this.renderContent(content);
   }
 
   private isCacheValid(): boolean {
@@ -268,15 +344,20 @@ export class Offcanvas extends Component<
     return !ttl || Date.now() - this.runtime.cache.updatedAt <= ttl;
   }
 
+  private clearContent(): void {
+    if (this.dom.content) this.dom.content.textContent = '';
+  }
+
   private renderContent(content: RenderableContent<Offcanvas>): void {
     if (!this.dom.content) return;
 
-    this.dom.content.textContent = '';
+    this.clearContent();
     this.dom.content.append(...normalizeContentNodes(content, this));
   }
 
   private async loadContent(): Promise<void> {
-    const { content, cache } = this.props;
+    const { cache } = this.props;
+    const content = this.state.content;
     if (typeof content !== 'function') {
       this.runtime.contentLoadId += 1;
       flushSync(() => {
@@ -300,7 +381,7 @@ export class Offcanvas extends Component<
     });
 
     if (this.dom.content) {
-      this.dom.content.textContent = '';
+      this.clearContent();
       this.dom.content.appendChild(createLoading());
     }
 
@@ -330,8 +411,8 @@ export class Offcanvas extends Component<
     this.unbindEvents();
     const { bgClose, escClose } = this.props;
 
-    if (this._overlay && bgClose) {
-      this.cleanup.events.on('overlay', this._overlay, 'click', () => {
+    if (this.dom.overlay && bgClose) {
+      this.cleanup.events.on('overlay', this.dom.overlay, 'click', () => {
         void this.hide();
       });
     }
@@ -356,47 +437,54 @@ export class Offcanvas extends Component<
     }
   }
 
-  unbindEvents(): void {
-    this.cleanup?.events.clear();
+  private unbindEvents(): void {
+    this.cleanup.events.clear();
   }
 
-  private renderPanel(): void {
-    const { overlay, id, className } = this.props;
-    const body = document.body;
+  private showPanel(): void {
+    const { id } = this.props;
+    timer.cancel(`oc-hide-${id}`);
 
-    if (overlay && this._overlay) body.appendChild(this._overlay);
-    if (this.dom.root) body.appendChild(this.dom.root);
-
-    body.style.overflow = 'hidden';
+    if (this.dom.overlay && !this.dom.overlay.isConnected) {
+      this.dom.overlay.hidden = false;
+      document.body.appendChild(this.dom.overlay);
+    }
+    if (this.dom.root && !this.dom.root.isConnected) {
+      document.body.appendChild(this.dom.root);
+    }
+    if (this.props.bodyOverflow) {
+      document.body.style.overflow = 'hidden';
+    }
 
     timer.start(`oc-show-${id}`, 10, () => {
-      if (!this.dom.root) return;
-      this._overlay?.classList.add(className.active);
-      this.dom.root.classList.add(className.active);
+      this.dom.root?.setAttribute('aria-expanded', 'true');
     });
   }
 
-  private removePanel(): void {
-    const { id, className } = this.props;
-    const body = document.body;
+  private hidePanel(): void {
+    const { id } = this.props;
+    timer.cancel(`oc-show-${id}`);
+    timer.cancel(`oc-shown-${id}`);
 
-    this._overlay?.classList.remove(className.active);
-    this.dom.root?.classList.remove(className.active);
+    this.dom.root?.setAttribute('aria-expanded', 'false');
 
-    timer.start(`oc-remove-${id}`, 100, () => {
-      this._overlay?.remove();
+    timer.start(`oc-hide-${id}`, 100, () => {
+      this.dom.overlay?.remove();
       this.dom.root?.remove();
-      body.style.overflow = '';
+      if (this.props.bodyOverflow) {
+        document.body.style.overflow = '';
+      }
     });
   }
 
   async show(): Promise<void> {
-    if (this.runtime.destroyed || this.state.visible) return;
+    this.assertBuilt('show');
+    if (this.state.visible) return;
 
     const { onShow, onShown, id } = this.props;
     if (onShow) await Promise.resolve(onShow(this));
 
-    this.renderPanel();
+    this.showPanel();
     this.bindEvents();
 
     flushSync(() => {
@@ -412,7 +500,8 @@ export class Offcanvas extends Component<
   }
 
   async hide(): Promise<void> {
-    if (this.runtime.destroyed || !this.state.visible) return;
+    this.assertBuilt('hide');
+    if (!this.state.visible) return;
 
     const { onHide, onHidden } = this.props;
     if (onHide) await Promise.resolve(onHide(this));
@@ -423,7 +512,7 @@ export class Offcanvas extends Component<
     });
 
     this.unbindEvents();
-    this.removePanel();
+    this.hidePanel();
 
     flushSync(() => {
       this.state.visible = false;
@@ -432,26 +521,56 @@ export class Offcanvas extends Component<
     void onHidden?.(this);
   }
 
-  onDestroy(): void {
-    const { id, className } = this.props;
+  protected onDestroy(): void {
+    const { id } = this.props;
 
     timer.cancel(`oc-show-${id}`);
-    timer.cancel(`oc-remove-${id}`);
+    timer.cancel(`oc-hide-${id}`);
     timer.cancel(`oc-shown-${id}`);
 
-    if (this.state.visible) this.unbindEvents();
+    this.unbindEvents();
+    this.cleanup.state?.();
+    this.cleanup.state = null;
 
-    this.dom.root?.classList.remove(className.active);
+    this.dom.root?.setAttribute('aria-expanded', 'false');
+    this.dom.overlay?.remove();
     this.dom.root?.remove();
-    this._overlay?.remove();
+    if (this.props.bodyOverflow) {
+      document.body.style.overflow = '';
+    }
 
-    const body = document.body;
-    body.style.overflow = '';
+    this.runtime.built = false;
+  }
 
-    this._overlay = null;
+  protected override validateStatePatch(patch: Partial<OffcanvasState>): void {
+    validateParam(
+      'state',
+      patch,
+      {
+        type: 'plainObject',
+      },
+      'Offcanvas.setState'
+    );
+
+    for (const key of Object.keys(patch)) {
+      if (!Object.hasOwn(OFFCANVAS_STATE_SCHEMA, key)) {
+        throw new Error(
+          `Offcanvas.setState: "${key}" is not a supported state key.`
+        );
+      }
+      const stateKey = key as keyof typeof OFFCANVAS_STATE_SCHEMA;
+      validateParam(
+        key,
+        patch[key as keyof OffcanvasState],
+        OFFCANVAS_STATE_SCHEMA[stateKey],
+        'Offcanvas.setState'
+      );
+    }
   }
 }
 
-export function createOffcanvas(options: OffcanvasProps = {}): Offcanvas {
-  return new Offcanvas(options);
+export type Offcanvas = OffcanvasComponent;
+
+export function createOffcanvas(input: OffcanvasProps = {}): Offcanvas {
+  return new OffcanvasComponent(input);
 }

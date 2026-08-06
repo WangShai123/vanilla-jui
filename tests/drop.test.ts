@@ -9,9 +9,9 @@ import {
   vi,
 } from 'vite-plus/test';
 
-import { Drop, createDrop } from '../src/components/drop.ts';
+import { createDrop } from '../src/primitives/drop.ts';
 
-let drop: Drop | null = null;
+let drop: ReturnType<typeof createDrop> | null = null;
 
 function target(id = 'target'): HTMLButtonElement {
   const button = document.createElement('button');
@@ -37,22 +37,22 @@ afterEach(() => {
 describe('Drop', () => {
   it('builds default classes and stable data markers', () => {
     const button = target();
-    drop = new Drop(button, {
+    drop = createDrop(button, {
       id: 'default-drop',
       name: 'menu',
       content: '<b>Drop content</b>',
     });
 
-    expect(drop.root?.classList.contains('j-drop')).toBe(true);
-    expect(drop.root?.getAttribute('data-drop')).toBe('menu');
+    expect(drop.dom.root?.classList.contains('j-drop')).toBe(true);
+    expect(drop.dom.root?.getAttribute('data-drop')).toBe('menu');
     expect(
-      drop.root?.querySelector('[data-drop-container="menu"]')
+      drop.dom.root?.querySelector('[data-drop-container="menu"]')
     ).toBeTruthy();
 
     drop.show(false);
-    expect(document.body.contains(drop.root)).toBe(true);
-    expect(drop.root?.getAttribute('aria-expanded')).toBe('true');
-    expect(drop.root?.querySelector('b')?.textContent).toBe('Drop content');
+    expect(document.body.contains(drop.dom.root)).toBe(true);
+    expect(drop.dom.root?.getAttribute('aria-expanded')).toBe('true');
+    expect(drop.dom.root?.querySelector('b')?.textContent).toBe('Drop content');
   });
 
   it('allows className overrides without changing data selectors', () => {
@@ -67,10 +67,10 @@ describe('Drop', () => {
       },
     });
 
-    expect(drop.root?.classList.contains('qa-drop')).toBe(true);
-    expect(drop.root?.classList.contains('j-drop')).toBe(false);
+    expect(drop.dom.root?.classList.contains('qa-drop')).toBe(true);
+    expect(drop.dom.root?.classList.contains('j-drop')).toBe(false);
     expect(
-      drop.root?.querySelector('[data-drop-container="custom"]')
+      drop.dom.root?.querySelector('[data-drop-container="custom"]')
     ).toBeTruthy();
   });
 
@@ -78,7 +78,7 @@ describe('Drop', () => {
     const button = target();
     const onShown = vi.fn();
     const onHidden = vi.fn();
-    drop = new Drop(button, {
+    drop = createDrop(button, {
       content: 'Click content',
       onShown,
       onHidden,
@@ -95,7 +95,7 @@ describe('Drop', () => {
 
   it('supports hover mode and delay', () => {
     const button = target();
-    drop = new Drop(button, {
+    drop = createDrop(button, {
       mode: 'hover',
       hoverIntent: false,
       delay: { show: 20, hide: 30 },
@@ -119,9 +119,9 @@ describe('Drop', () => {
     section.dataset.customWrapper = 'true';
     section.textContent = 'Node content';
 
-    drop = new Drop(button, { content: section });
+    drop = createDrop(button, { content: section });
 
-    expect(drop.root?.firstElementChild).toBe(section);
-    expect(drop.root?.querySelector('[data-custom-wrapper]')).toBe(section);
+    expect(drop.dom.root?.firstElementChild).toBe(section);
+    expect(drop.dom.root?.querySelector('[data-custom-wrapper]')).toBe(section);
   });
 });

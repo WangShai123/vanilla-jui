@@ -20,7 +20,7 @@ function assertIconName(name: IconName): void {
 
 function svgMarkup(name: IconName): string {
   assertIconName(name);
-  return `<svg xmlns="${SVG_NS}" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">${defaultSvgObjects[name]}</svg>`;
+  return `<svg xmlns="${SVG_NS}" viewBox="0 0 24 24" fill="currentColor">${defaultSvgObjects[name]}</svg>`;
 }
 
 function isSVGElement(value: Element | null): value is SVGElement {

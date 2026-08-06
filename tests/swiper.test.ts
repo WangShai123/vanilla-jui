@@ -9,9 +9,11 @@ import {
   vi,
 } from 'vite-plus/test';
 
-import { Swiper, createSwiper } from '../src/components/swiper.ts';
+import { createSwiper } from '../src/components/swiper.ts';
 
-let swiper: Swiper | null = null;
+type SwiperInstance = ReturnType<typeof createSwiper>;
+
+let swiper: SwiperInstance | null = null;
 
 const SLIDES = [
   { children: 'Slide 1', title: 'One' },
@@ -36,6 +38,20 @@ function setWidth(element: HTMLElement, width = 320): void {
   });
 }
 
+function mount(instance: SwiperInstance): SwiperInstance {
+  instance.build();
+  if (!instance.dom.root) throw new Error('Swiper did not build a root.');
+  app().appendChild(instance.dom.root);
+  setWidth(instance.dom.root);
+  instance.refresh();
+  return instance;
+}
+
+async function tick(): Promise<void> {
+  await Promise.resolve();
+  await Promise.resolve();
+}
+
 beforeEach(() => {
   document.body.innerHTML = '<div id="app"></div>';
   vi.useFakeTimers();
@@ -50,16 +66,26 @@ afterEach(() => {
 });
 
 describe('Swiper', () => {
-  it('builds dynamic DOM with default classes and stable data markers', () => {
-    swiper = new Swiper(app(), {
+  it('builds dynamic DOM without mounting automatically', () => {
+    swiper = createSwiper({
+      id: 'banner-swiper',
       data: SLIDES,
       autoplay: false,
-    }).build();
-    if (swiper.dom.root) setWidth(swiper.dom.root);
-    swiper.update();
+    });
 
-    expect(swiper.root?.classList.contains('j-swiper')).toBe(true);
-    expect(swiper.root?.getAttribute('data-swiper')).toBe('root');
+    expect(swiper.dom.root).toBeNull();
+
+    swiper.build();
+    expect(swiper.dom.root?.id).toBe('banner-swiper');
+    expect(swiper.dom.root?.classList.contains('j-swiper')).toBe(true);
+    expect(swiper.dom.root?.getAttribute('data-swiper')).toBe('root');
+    expect(app().contains(swiper.dom.root)).toBe(false);
+
+    if (!swiper.dom.root) throw new Error('Expected Swiper root.');
+    app().appendChild(swiper.dom.root);
+    setWidth(swiper.dom.root);
+    swiper.refresh();
+
     expect(swiper.dom.wrapper?.hasAttribute('data-swiper-wrapper')).toBe(true);
     expect(swiper.dom.slides).toHaveLength(5);
     expect(
@@ -75,29 +101,64 @@ describe('Swiper', () => {
     expect(swiper.dom.nextButton?.dataset.action).toBe('next');
   });
 
-  it('uses data markers for navigation when className is customized', () => {
-    swiper = createSwiper(app(), {
-      data: SLIDES,
-      loop: false,
+  it('binds an existing root by unique id', () => {
+    app().innerHTML = `
+      <section id="static-swiper" class="qa-shell">
+        <div class="qa-track" data-swiper-wrapper>
+          <div class="qa-slide" data-swiper-slide>Static 1</div>
+          <div class="qa-slide" data-swiper-slide>Static 2</div>
+        </div>
+      </section>
+    `;
+    const root = document.getElementById('static-swiper');
+    if (!(root instanceof HTMLElement)) {
+      throw new Error('Expected static swiper root.');
+    }
+    setWidth(root);
+
+    swiper = createSwiper({
+      id: 'static-swiper',
       autoplay: false,
-      className: {
-        root: 'qa-swiper',
-        wrapper: 'qa-swiper-wrapper',
-        slide: 'qa-swiper-slide',
-        pagination: 'qa-swiper-pagination',
-        indicator: 'qa-swiper-indicator',
-        bullet: 'qa-swiper-bullet',
-        navigation: 'qa-swiper-navigation',
-        prev: 'qa-prev',
-        next: 'qa-next',
-      },
+      loop: false,
+      pagination: false,
+      navigation: false,
     }).build();
 
-    expect(swiper.root?.classList.contains('qa-swiper')).toBe(true);
-    expect(swiper.root?.classList.contains('j-swiper')).toBe(false);
-    expect(swiper.root?.querySelector('.swiper-wrapper')).toBeNull();
+    expect(swiper.dom.root).toBe(root);
+    expect(swiper.dom.createdRoot).toBe(false);
+    expect(swiper.dom.root?.getAttribute('data-swiper')).toBeNull();
+    expect(swiper.dom.slides).toHaveLength(2);
+    expect(swiper.dom.wrapper?.classList.contains('qa-track')).toBe(true);
 
-    swiper.root
+    swiper.destroy();
+    expect(document.getElementById('static-swiper')).toBe(root);
+  });
+
+  it('uses data markers for navigation when className is customized', () => {
+    swiper = mount(
+      createSwiper({
+        data: SLIDES,
+        loop: false,
+        autoplay: false,
+        className: {
+          root: 'qa-swiper',
+          wrapper: 'qa-swiper-wrapper',
+          slide: 'qa-swiper-slide',
+          pagination: 'qa-swiper-pagination',
+          indicator: 'qa-swiper-indicator',
+          bullet: 'qa-swiper-bullet',
+          navigation: 'qa-swiper-navigation',
+          prev: 'qa-prev',
+          next: 'qa-next',
+        },
+      })
+    );
+
+    expect(swiper.dom.root?.classList.contains('qa-swiper')).toBe(true);
+    expect(swiper.dom.root?.classList.contains('j-swiper')).toBe(false);
+    expect(swiper.dom.root?.querySelector('.swiper-wrapper')).toBeNull();
+
+    swiper.dom.root
       ?.querySelector<HTMLButtonElement>('[data-action="next"]')
       ?.click();
 
@@ -106,52 +167,54 @@ describe('Swiper', () => {
     expect(swiper.dom.bullets[1]?.classList.contains('is-active')).toBe(true);
   });
 
-  it('binds existing DOM by data markers instead of class selectors', () => {
-    app().innerHTML = `
-      <section class="qa-shell" data-swiper="root">
-        <div class="qa-track" data-swiper-wrapper>
-          <div class="qa-slide" data-swiper-slide>Static 1</div>
-          <div class="qa-slide" data-swiper-slide>Static 2</div>
-        </div>
-      </section>
-    `;
-    const root = app().querySelector<HTMLElement>('[data-swiper="root"]');
-    if (root) setWidth(root);
+  it('refreshes dynamic slides when state data changes through setState', async () => {
+    swiper = mount(
+      createSwiper({
+        data: SLIDES,
+        autoplay: false,
+      })
+    );
 
-    swiper = new Swiper(app(), {
-      autoplay: false,
-      loop: false,
-    }).build();
+    swiper.slideTo(2);
+    expect(swiper.realIndex).toBe(2);
 
-    expect(swiper.dom.root).toBe(root);
-    expect(swiper.dom.createdRoot).toBe(false);
-    expect(swiper.dom.slides).toHaveLength(2);
-    expect(swiper.dom.wrapper?.classList.contains('qa-track')).toBe(true);
-  });
-
-  it('updates data and cleans up created root on destroy', () => {
-    swiper = new Swiper(app(), {
-      data: SLIDES,
-      autoplay: false,
-    }).build();
-
-    swiper.updateData([{ children: 'Only slide' }]);
+    swiper.setState({
+      data: [{ children: 'Only slide' }],
+    });
+    await tick();
 
     expect(swiper.realCount).toBe(1);
     expect(swiper.dom.bullets).toHaveLength(1);
     expect(swiper.dom.slides).toHaveLength(1);
+    expect(swiper.state.index).toBe(0);
+    expect(swiper.dom.root?.textContent).toContain('Only slide');
+  });
 
-    swiper.destroy();
-    swiper = null;
+  it('refreshes dynamic slides when state data is assigned directly', async () => {
+    swiper = mount(
+      createSwiper({
+        data: [],
+        autoplay: false,
+      })
+    );
 
-    expect(app().children).toHaveLength(0);
+    expect(swiper.realCount).toBe(0);
+
+    swiper.state.data = [{ children: 'Direct 1' }, { children: 'Direct 2' }];
+    await tick();
+
+    expect(swiper.realCount).toBe(2);
+    expect(swiper.dom.bullets).toHaveLength(2);
+    expect(swiper.dom.root?.textContent).toContain('Direct 2');
   });
 
   it('clears autoplay timer before destroy finishes', () => {
-    swiper = new Swiper(app(), {
-      data: SLIDES,
-      delay: 40,
-    }).build();
+    swiper = mount(
+      createSwiper({
+        data: SLIDES,
+        delay: 40,
+      })
+    );
 
     const nextSpy = vi.spyOn(swiper, 'next');
 
@@ -168,15 +231,18 @@ describe('Swiper', () => {
     expect(nextSpy).not.toHaveBeenCalled();
   });
 
-  it('createSwiper passes container and options through', () => {
-    swiper = createSwiper(app(), {
+  it('exposes factory-created instances with current controls', () => {
+    swiper = createSwiper({
       data: SLIDES,
       autoplay: false,
       loop: false,
     }).build();
 
-    expect(swiper).toBeInstanceOf(Swiper);
     expect(swiper.props.loop).toBe(false);
-    expect(swiper.dom.mountTarget).toBe(app());
+    expect(swiper.dom.root?.getAttribute('data-swiper')).toBe('root');
+    expect(typeof swiper.refresh).toBe('function');
+    expect(typeof swiper.next).toBe('function');
+    expect(typeof swiper.prev).toBe('function');
+    expect(typeof swiper.setState).toBe('function');
   });
 });

@@ -1,4 +1,11 @@
 /**
+ * 当前站点 WordPress REST API 根地址。
+ * @type {string}
+ */
+export const restUrl: string =
+  typeof window !== 'undefined' ? `${window.location.origin}/wp-json` : '';
+
+/**
  * 发送 JSON POST 请求并解析 JSON 响应。
  * @template T - 期望返回的 JSON 数据类型
  * @param {string} url - 请求地址
@@ -26,10 +33,3 @@ export async function postJson<T = unknown>(
 
   return res.json() as Promise<T>;
 }
-
-/**
- * 当前站点 WordPress REST API 根地址。
- * @type {string}
- */
-export const restUrl: string =
-  typeof window !== 'undefined' ? `${window.location.origin}/wp-json` : '';

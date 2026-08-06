@@ -1,18 +1,18 @@
 @layer themes {
-    .j-table-container {
-        --table-container-max-width: 100%;
-    }
+  .j-table-container {
+    --table-container-max-width: 100%;
+  }
 
-    .j-table {
-        --table-selected-bg: var(--tone-soft);
-        --table-border-width: 0 0 1px;
-        --table-border-style: solid;
-        --table-border-color: var(--ui-border);
-        --table-cell-padding: 0.5em 0.75em;
-        --table-cell-text-align: left;
-        --table-link-fg: var(--tone-solid);
-        --table-striped-bg: var(--tone-soft);
-        --table-hover-bg: var(--tone-soft);
-        --table-bordered-width: 1px;
-    }
+  .j-table {
+    --table-selected-bg: var(--tone-soft);
+    --table-border-width: 0 0 1px;
+    --table-border-style: solid;
+    --table-border-color: var(--ui-border);
+    --table-cell-padding: 0.5em 0.75em;
+    --table-cell-text-align: left;
+    --table-link-fg: var(--tone-solid);
+    --table-striped-bg: var(--tone-soft);
+    --table-hover-bg: var(--tone-soft);
+    --table-bordered-width: 1px;
+  }
 }

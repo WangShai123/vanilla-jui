@@ -10,18 +10,7 @@
 
   .j-flow .flow-header {
     display: grid;
-    gap: calc(var(--space) / 2);
-  }
-
-  .j-flow .flow-title {
-    font-size: var(--font-size-lg);
-    font-weight: 600;
-  }
-
-  .j-flow .flow-description {
-    color: var(--ui-fg-muted);
-    font-size: var(--font-size-sm);
-    line-height: var(--line-height-paragraph);
+    gap: var(--flow-gap);
   }
 
   .j-flow .flow-steps {
@@ -72,7 +61,7 @@
     color: var(--tone-fg);
   }
 
-  s .j-flow .flow-body {
+  .j-flow .flow-body {
     min-width: 0;
   }
 
@@ -82,5 +71,6 @@
     gap: var(--space);
     justify-content: flex-end;
     padding-top: var(--flow-gap);
+    position: relative;
   }
 }

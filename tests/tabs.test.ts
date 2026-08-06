@@ -9,9 +9,11 @@ import {
   vi,
 } from 'vite-plus/test';
 
-import { Tabs, createTabs, type TabItem } from '../src/components/tabs.ts';
+import { createTabs, type TabItem } from '../src/components/tabs.ts';
 
-let tabs: Tabs | null = null;
+type TabsInstance = ReturnType<typeof createTabs>;
+
+let tabs: TabsInstance | null = null;
 
 function app(): HTMLElement {
   const element = document.querySelector<HTMLElement>('#app');
@@ -27,6 +29,14 @@ function tabItems(): TabItem[] {
   ];
 }
 
+function mount(instance: TabsInstance): TabsInstance {
+  instance.build();
+  if (!instance.dom.root) throw new Error('Tabs did not build a root.');
+  app().appendChild(instance.dom.root);
+  instance.refresh();
+  return instance;
+}
+
 beforeEach(() => {
   document.body.innerHTML = '<div id="app"></div>';
 });
@@ -39,19 +49,27 @@ afterEach(() => {
 
 describe('Tabs', () => {
   it('builds default classes and stable data markers', () => {
-    tabs = new Tabs(app(), {
+    tabs = createTabs({
       id: 'default-tabs',
       active: 'usage',
-      tabs: tabItems(),
-    }).build();
+      data: tabItems(),
+    });
 
-    expect(tabs.root?.classList.contains('j-tabs')).toBe(true);
-    expect(tabs.root?.classList.contains('is-top')).toBe(true);
-    expect(tabs.root?.getAttribute('data-tabs')).toBe('root');
-    expect(tabs.root?.querySelectorAll('[data-tabs-tab]')).toHaveLength(3);
-    expect(tabs.root?.querySelectorAll('[data-tabs-panel]')).toHaveLength(3);
-    expect(tabs.root?.querySelector('[data-tabs-tab-title]')).toBeNull();
-    expect(tabs.root?.querySelector('[data-tabs-panel-body]')).toBeNull();
+    expect(tabs.dom.root).toBeNull();
+
+    tabs.build();
+    expect(app().contains(tabs.dom.root)).toBe(false);
+    if (!tabs.dom.root) throw new Error('Expected Tabs root.');
+    app().appendChild(tabs.dom.root);
+    tabs.refresh();
+
+    expect(tabs.dom.root.classList.contains('j-tabs')).toBe(true);
+    expect(tabs.dom.root.getAttribute('data-tabs-direction')).toBe('top');
+    expect(tabs.dom.root.getAttribute('data-tabs')).toBe('root');
+    expect(tabs.dom.root.querySelectorAll('[data-tabs-tab]')).toHaveLength(3);
+    expect(tabs.dom.root.querySelectorAll('[data-tabs-panel]')).toHaveLength(3);
+    expect(tabs.dom.root.querySelector('[data-tabs-tab-title]')).toBeNull();
+    expect(tabs.dom.root.querySelector('[data-tabs-panel-body]')).toBeNull();
     expect(tabs.dom.tabs[1]?.textContent).toBe('Usage');
     expect(tabs.dom.panels[1]?.textContent).toBe('Usage panel');
     expect(tabs.dom.tabs[1]?.getAttribute('aria-selected')).toBe('true');
@@ -62,26 +80,29 @@ describe('Tabs', () => {
   it('uses data markers for interaction when className is customized', async () => {
     const onChange = vi.fn();
 
-    tabs = createTabs(app(), {
-      active: 'intro',
-      className: {
-        root: 'qa-tabs',
-        top: 'qa-top',
-        wrap: 'qa-wrap',
-        list: 'qa-list',
-        tab: 'qa-tab',
-        panelWrap: 'qa-panel-wrap',
-        panel: 'qa-panel',
-      },
-      tabs: tabItems(),
-      onChange,
-    }).build();
+    tabs = mount(
+      createTabs({
+        active: 'intro',
+        className: {
+          root: 'qa-tabs',
+          wrap: 'qa-wrap',
+          list: 'qa-list',
+          tab: 'qa-tab',
+          panelWrap: 'qa-panel-wrap',
+          panel: 'qa-panel',
+        },
+        data: tabItems(),
+        onChange,
+      })
+    );
 
-    expect(tabs.root?.classList.contains('qa-tabs')).toBe(true);
-    expect(tabs.root?.classList.contains('j-tabs')).toBe(false);
-    expect(tabs.root?.querySelector('.tab-item')).toBeNull();
+    expect(tabs.dom.root?.classList.contains('qa-tabs')).toBe(true);
+    expect(tabs.dom.root?.classList.contains('j-tabs')).toBe(false);
+    expect(tabs.dom.root?.querySelector('.tab-item')).toBeNull();
 
-    tabs.root?.querySelector<HTMLElement>('[data-tabs-tab="usage"]')?.click();
+    tabs.dom.root
+      ?.querySelector<HTMLElement>('[data-tabs-tab="usage"]')
+      ?.click();
     await Promise.resolve();
 
     expect(tabs.state.current.name).toBe('usage');
@@ -94,19 +115,25 @@ describe('Tabs', () => {
   });
 
   it('honors disabled tabs and can enable them later', async () => {
-    tabs = createTabs(app(), {
-      active: 'intro',
-      disabled: 'usage',
-      tabs: tabItems(),
-    }).build();
+    tabs = mount(
+      createTabs({
+        active: 'intro',
+        disabled: 'usage',
+        data: tabItems(),
+      })
+    );
 
-    tabs.root?.querySelector<HTMLElement>('[data-tabs-tab="usage"]')?.click();
+    tabs.dom.root
+      ?.querySelector<HTMLElement>('[data-tabs-tab="usage"]')
+      ?.click();
     await Promise.resolve();
     expect(tabs.state.current.name).toBe('intro');
     expect(tabs.dom.tabs[1]?.getAttribute('aria-disabled')).toBe('true');
 
-    tabs.enable('usage');
-    tabs.root?.querySelector<HTMLElement>('[data-tabs-tab="usage"]')?.click();
+    tabs.state.disabled = [];
+    tabs.dom.root
+      ?.querySelector<HTMLElement>('[data-tabs-tab="usage"]')
+      ?.click();
     await Promise.resolve();
     expect(tabs.state.current.name).toBe('usage');
   });
@@ -114,13 +141,15 @@ describe('Tabs', () => {
   it('loads async panel content and caches it', async () => {
     const load = vi.fn(async () => 'Async content');
 
-    tabs = createTabs(app(), {
-      active: 'intro',
-      tabs: [
-        { name: 'intro', title: 'Intro', panel: 'Intro panel' },
-        { name: 'async', title: 'Async', panel: load, cache: true },
-      ],
-    }).build();
+    tabs = mount(
+      createTabs({
+        active: 'intro',
+        data: [
+          { name: 'intro', title: 'Intro', panel: 'Intro panel' },
+          { name: 'async', title: 'Async', panel: load, cache: true },
+        ],
+      })
+    );
 
     await tabs.activate('async');
     await Promise.resolve();
@@ -135,24 +164,32 @@ describe('Tabs', () => {
     expect(load).toHaveBeenCalledTimes(1);
   });
 
-  it('supports add, delete and reInit', async () => {
-    tabs = createTabs(app(), {
-      active: 'intro',
-      tabs: tabItems(),
-    }).build();
+  it('refreshes tabs when state data changes', async () => {
+    tabs = mount(
+      createTabs({
+        active: 'intro',
+        data: tabItems(),
+      })
+    );
 
-    await tabs.add({ name: 'more', title: 'More', panel: 'More panel' });
-    expect(tabs.root?.querySelector('[data-tabs-tab="more"]')).toBeTruthy();
+    tabs.state.data = [
+      ...tabs.state.data,
+      { name: 'more', title: 'More', panel: 'More panel' },
+    ];
+    await Promise.resolve();
+    expect(tabs.dom.root?.querySelector('[data-tabs-tab="more"]')).toBeTruthy();
 
-    await tabs.delete('usage');
-    expect(tabs.root?.querySelector('[data-tabs-tab="usage"]')).toBeNull();
+    tabs.state.data = tabs.state.data.filter((item) => item.name !== 'usage');
+    await Promise.resolve();
+    expect(tabs.dom.root?.querySelector('[data-tabs-tab="usage"]')).toBeNull();
 
-    await tabs.reInit({
+    tabs.setState({
       active: 'new',
-      tabs: [{ name: 'new', title: 'New', panel: 'New panel' }],
+      data: [{ name: 'new', title: 'New', panel: 'New panel' }],
     });
+    await Promise.resolve();
 
-    expect(tabs.root?.querySelectorAll('[data-tabs-tab]')).toHaveLength(1);
+    expect(tabs.dom.root?.querySelectorAll('[data-tabs-tab]')).toHaveLength(1);
     expect(tabs.state.current.name).toBe('new');
   });
 });

@@ -1,31 +1,29 @@
 import {
   bindAttr,
   createDeepStore,
+  createEffect,
   createRoot,
   flushSync,
-  insert,
   jsx,
+  untrack,
 } from 'vanilla-signal';
 
 import Component, {
   type ComponentDOM,
   type ComponentRuntime,
 } from '../core/Component.ts';
+import { createLoading } from '../primitives/loading.ts';
 import {
-  type ResolveSchema,
-  randomId,
-  resolveProps,
-  validateParam,
-} from '../utilities/core.ts';
-import {
-  type DOMReference,
   type RenderableContent,
-  createLoading,
-  isRenderableContent,
   normalizeContentNodes,
   q,
-  requireContainer,
 } from '../utilities/dom.ts';
+import { randomId } from '../utilities/id.ts';
+import {
+  type ResolveSchema,
+  resolveProps,
+  validateParam,
+} from '../utilities/types.ts';
 
 export type TabsDirection = 'top' | 'bottom' | 'left' | 'right';
 export type TabsValue = number | string;
@@ -33,10 +31,6 @@ export type TabsDisabled = TabsValue | TabsValue[];
 
 export interface TabsClassNames {
   root: string;
-  top: string;
-  bottom: string;
-  left: string;
-  right: string;
   wrap: string;
   list: string;
   tab: string;
@@ -88,19 +82,8 @@ export interface TabsProps extends Record<string, unknown> {
         panel: HTMLElement | undefined
       ) => void | Promise<void>)
     | null;
-  tabs?: TabItem[];
+  data?: TabItem[];
   className?: TabsClassNameConfig;
-  onAdd?:
-    | ((
-        index: number,
-        item: TabItem,
-        tab: HTMLElement | undefined,
-        panel: HTMLElement | undefined
-      ) => void | Promise<void>)
-    | null;
-  onRemove?:
-    | ((index: number, name: string | undefined) => void | Promise<void>)
-    | null;
 }
 
 interface ResolvedTabsProps extends Record<string, unknown> {
@@ -109,29 +92,31 @@ interface ResolvedTabsProps extends Record<string, unknown> {
   active: TabsValue;
   disabled: TabsDisabled;
   onChange: NonNullable<TabsProps['onChange']> | null;
-  tabs: TabItem[];
+  data: TabItem[];
   className: TabsClassNames;
-  onAdd: NonNullable<TabsProps['onAdd']> | null;
-  onRemove: NonNullable<TabsProps['onRemove']> | null;
 }
 
 interface TabsState extends Record<string, unknown> {
+  data: TabItem[];
+  active: TabsValue;
+  disabled: TabsDisabled;
+  direction: TabsDirection;
   current: {
     index: number;
     name: string | null;
-  };
-  disabled: {
-    names: string[];
-    indexes: number[];
   };
   isVertical: boolean;
   draggable: boolean;
   loading: boolean;
 }
 
+interface TabsDisabledState {
+  names: string[];
+  indexes: number[];
+}
+
 interface TabsDOM extends ComponentDOM {
   root: HTMLElement | null;
-  container: Element;
   tabs: HTMLElement[];
   panels: HTMLElement[];
 }
@@ -142,6 +127,7 @@ interface TabsPanelCacheEntry {
 }
 
 interface TabsRuntime extends ComponentRuntime {
+  built: boolean;
   cache: {
     panels: Map<string, TabsPanelCacheEntry>;
   };
@@ -152,10 +138,6 @@ type PointerDragEvent = MouseEvent | TouchEvent;
 
 const DEFAULT_CLASS_NAMES: TabsClassNames = {
   root: 'j-tabs',
-  top: 'is-top',
-  bottom: 'is-bottom',
-  left: 'is-left',
-  right: 'is-right',
   wrap: 'tab-wrap',
   list: 'tab-list',
   tab: 'tab-item',
@@ -186,7 +168,7 @@ const TABS_PROPS_SCHEMA = {
   active: { default: 0, types: ['number', 'string'] },
   disabled: { default: [], types: ['number', 'string', 'array'] },
   onChange: { default: null, types: ['function', 'null'] },
-  tabs: { default: [], type: 'array' },
+  data: { default: [], type: 'array' },
   className: {
     default: DEFAULT_CLASS_NAMES,
     type: 'object',
@@ -195,29 +177,53 @@ const TABS_PROPS_SCHEMA = {
       ...(value && typeof value === 'object' ? value : {}),
     }),
   },
-  onAdd: { default: null, types: ['function', 'null'] },
-  onRemove: { default: null, types: ['function', 'null'] },
 } satisfies ResolveSchema<TabsProps>;
 
 const TAB_CONFIG_RULE = {
-  type: 'object',
-  validate: (value: unknown) => {
-    const item = value as Partial<TabItem>;
-    return (
-      !!item &&
-      typeof item === 'object' &&
-      isRenderableContent(item.title) &&
-      isRenderableContent(item.panel)
-    );
+  type: 'plainObject',
+  shape: {
+    title: 'renderable',
+    panel: 'renderable',
   },
-  message:
-    'expects an object with renderable title and panel: string, Node, array, function or null.',
 };
 
 function cloneTabItems(tabs: unknown): TabItem[] {
   return Array.isArray(tabs)
-    ? tabs.map((item) => ({ ...(item as TabItem) }))
+    ? tabs.map((item) => {
+        const nextItem = { ...(item as TabItem) };
+        nextItem.name = nextItem.name || randomId();
+        return nextItem;
+      })
     : [];
+}
+
+function cloneDisabled(disabled: TabsDisabled): TabsDisabled {
+  return Array.isArray(disabled) ? disabled.slice() : disabled;
+}
+
+function resolveDisabledState(
+  disabled: TabsDisabled,
+  data: TabItem[]
+): TabsDisabledState {
+  const toName = (val: TabsValue): string | null => {
+    if (typeof val === 'number') return data[val]?.name || null;
+    if (typeof val === 'string') return val;
+    return null;
+  };
+  const names = Array.isArray(disabled)
+    ? disabled.map(toName).filter((name): name is string => !!name)
+    : (() => {
+        const name = toName(disabled);
+        return name ? [name] : [];
+      })();
+  const uniqNames = Array.from(new Set(names));
+
+  return {
+    names: uniqNames,
+    indexes: uniqNames
+      .map((name) => data.findIndex((tab) => tab.name === name))
+      .filter((index) => index >= 0),
+  };
 }
 
 function normalizeTtl(ttl: unknown): number {
@@ -232,83 +238,79 @@ function normalizeProps(input: TabsProps): ResolvedTabsProps {
     active: props.active as TabsValue,
     disabled: props.disabled as TabsDisabled,
     onChange: props.onChange as ResolvedTabsProps['onChange'],
-    tabs: cloneTabItems(props.tabs),
+    data: cloneTabItems(props.data),
     className: props.className as TabsClassNames,
-    onAdd: props.onAdd as ResolvedTabsProps['onAdd'],
-    onRemove: props.onRemove as ResolvedTabsProps['onRemove'],
   };
 }
 
-function joinClasses(
-  ...classes: Array<string | false | null | undefined>
-): string {
-  return classes.filter(Boolean).join(' ');
-}
+const TABS_STATE_SCHEMA = {
+  data: TABS_PROPS_SCHEMA.data,
+  active: TABS_PROPS_SCHEMA.active,
+  disabled: TABS_PROPS_SCHEMA.disabled,
+  direction: TABS_PROPS_SCHEMA.direction,
+};
 
 /**
  * 标签页组件，继承 Component。
  *
  * DOM 创建一次，通过 createEffect 细粒度更新 class/ARIA。
  */
-export class Tabs extends Component<ResolvedTabsProps, TabsState, TabsDOM> {
+class TabsComponent extends Component<ResolvedTabsProps, TabsState, TabsDOM> {
   declare runtime: TabsRuntime;
   declare state: TabsState;
   private bindingsDispose: (() => void) | null;
+  private stateDispose: (() => void) | null;
   private isDragging: boolean;
   private raf: number;
   private resizeRaf: number;
   private velocity: number;
 
   /**
-   * @param {Element|Node|string|Array} container 挂载容器（元素、选择器或 JSX/h 返回节点）。
    * @param {object} [input={}] 标签页配置。
    */
-  constructor(container: DOMReference, input: TabsProps = {}) {
-    const el = requireContainer(container, 'Tabs');
+  constructor(input: TabsProps = {}) {
     const props = normalizeProps(input);
     super(props);
 
-    this.dom.container = el;
     this.dom.tabs = [];
     this.dom.panels = [];
     this.bindingsDispose = null;
+    this.stateDispose = null;
     this.isDragging = false;
     this.raf = 0;
     this.resizeRaf = 0;
     this.velocity = 0;
 
     this.state = createDeepStore({
+      data: cloneTabItems(props.data),
+      active: props.active,
+      disabled: cloneDisabled(props.disabled),
+      direction: props.direction,
       current: {
         index: -1,
         name: null,
       },
-      disabled: this.parseDisabled(props.disabled),
       isVertical: props.direction === 'left' || props.direction === 'right',
       draggable: false,
       loading: false,
     }) as TabsState;
 
     this.runtime.cache = { panels: new Map() };
+    this.runtime.built = false;
     this.runtime.panelLoadId = 0;
-
-    try {
-      this.onInit(props);
-    } catch (error) {
-      this.destroy();
-      throw error;
-    }
   }
 
   protected onInit(props: ResolvedTabsProps): void {
-    this.root = this.buildRoot(props);
-    this.rebuildItems();
-    void this.activateInternal(props.active, false);
+    this.dom.root = this.buildRoot(props);
+    this.renderItems();
+    void this.activateInternal(this.state.active, false);
     this.bindEvents();
     this.initDrag();
+    this.bindState();
   }
 
   private buildRoot(props: ResolvedTabsProps): HTMLElement {
-    const { id, direction, className } = props;
+    const { id, className } = props;
     const nav = jsx('nav', {
       className: className.list,
       'data-tabs-list': '',
@@ -324,18 +326,21 @@ export class Tabs extends Component<ResolvedTabsProps, TabsState, TabsDOM> {
     }) as HTMLElement;
 
     return jsx('div', {
-      className: joinClasses(className.root, className[direction]),
+      className: className.root,
       id,
       'data-tabs': 'root',
-      'data-tabs-direction': direction,
+      'data-tabs-direction': this.state.direction,
       children: [wrap, panelWrapper],
     }) as HTMLElement;
   }
 
-  private rebuildItems(): void {
-    if (!this.root) return;
-    const tabList = q<HTMLElement>('[data-tabs-list]', this.root);
-    const panelWrapper = q<HTMLElement>('[data-tabs-panel-wrap]', this.root);
+  private renderItems(): void {
+    if (!this.dom.root) return;
+    const tabList = q<HTMLElement>('[data-tabs-list]', this.dom.root);
+    const panelWrapper = q<HTMLElement>(
+      '[data-tabs-panel-wrap]',
+      this.dom.root
+    );
     if (!tabList || !panelWrapper) return;
 
     tabList.textContent = '';
@@ -347,7 +352,7 @@ export class Tabs extends Component<ResolvedTabsProps, TabsState, TabsDOM> {
     const tabFragment = document.createDocumentFragment();
     const panelFragment = document.createDocumentFragment();
 
-    this.props.tabs.forEach((item, index) => {
+    this.state.data.forEach((item, index) => {
       const name = item.name || randomId();
 
       const tab = jsx('div', {
@@ -390,7 +395,7 @@ export class Tabs extends Component<ResolvedTabsProps, TabsState, TabsDOM> {
           this.state.current.index === index ? 'true' : 'false'
         );
         bindAttr(tab, 'aria-disabled', () =>
-          this.state.disabled.names.includes(name) ? 'true' : 'false'
+          this.isDisabledName(name) ? 'true' : 'false'
         );
       });
       this.dom.panels.forEach((panel, index) => {
@@ -402,31 +407,100 @@ export class Tabs extends Component<ResolvedTabsProps, TabsState, TabsDOM> {
     });
   }
 
-  private parseDisabled(disabled: TabsDisabled): TabsState['disabled'] {
-    if (disabled == null) return { names: [], indexes: [] };
-    const toName = (val: TabsValue): string | null => {
-      if (typeof val === 'number') return this.props.tabs[val]?.name || null;
-      if (typeof val === 'string') return val;
-      return null;
-    };
-    const names = Array.isArray(disabled)
-      ? disabled.map(toName).filter((name): name is string => !!name)
-      : (() => {
-          const name = toName(disabled);
-          return name ? [name] : [];
-        })();
+  private bindState(): void {
+    if (this.stateDispose) return;
 
-    return this.createDisabledState(names);
+    this.stateDispose = createRoot((dispose) => {
+      let initialized = false;
+      let previousData = this.state.data;
+      let previousDirection = this.state.direction;
+      let previousActive = this.state.active;
+      createEffect(() => {
+        const data = this.state.data;
+        const direction = this.state.direction;
+        const disabled = this.state.disabled;
+        const active = this.state.active;
+        if (!initialized) {
+          initialized = true;
+          return;
+        }
+
+        const dataChanged = data !== previousData;
+        const directionChanged = direction !== previousDirection;
+        const activeChanged = active !== previousActive;
+        previousData = data;
+        previousDirection = direction;
+        previousActive = active;
+
+        void untrack(() =>
+          this.syncStateView({ dataChanged, directionChanged, activeChanged })
+        );
+        void disabled;
+      });
+      return dispose;
+    });
   }
 
-  private createDisabledState(names: string[]): TabsState['disabled'] {
-    const uniqNames = Array.from(new Set(names));
-    return {
-      names: uniqNames,
-      indexes: uniqNames
-        .map((name) => this.props.tabs.findIndex((tab) => tab.name === name))
-        .filter((index) => index >= 0),
-    };
+  private async syncStateView({
+    dataChanged,
+    directionChanged,
+    activeChanged,
+  }: {
+    dataChanged: boolean;
+    directionChanged: boolean;
+    activeChanged: boolean;
+  }): Promise<void> {
+    if (!this.runtime.built || !this.dom.root) return;
+    this.validateData(this.state.data);
+    validateParam(
+      'direction',
+      this.state.direction,
+      TABS_STATE_SCHEMA.direction,
+      'Tabs.state'
+    );
+    validateParam(
+      'disabled',
+      this.state.disabled,
+      TABS_STATE_SCHEMA.disabled,
+      'Tabs.state'
+    );
+    validateParam(
+      'active',
+      this.state.active,
+      TABS_STATE_SCHEMA.active,
+      'Tabs.state'
+    );
+
+    if (directionChanged) {
+      this.dom.root.setAttribute('data-tabs-direction', this.state.direction);
+      flushSync(() => {
+        this.state.isVertical =
+          this.state.direction === 'left' || this.state.direction === 'right';
+      });
+    }
+
+    if (dataChanged) {
+      this.runtime.cache.panels.clear();
+      this.renderItems();
+      this.bindEvents();
+      flushSync(() => {
+        this.syncCurrent(-1);
+      });
+    }
+
+    if (dataChanged || activeChanged) {
+      await this.activateInternal(this.state.active, activeChanged);
+    }
+
+    this.refreshDrag();
+  }
+
+  private get disabledState(): TabsDisabledState {
+    return resolveDisabledState(this.state.disabled, this.state.data);
+  }
+
+  private isDisabledName(name: string): boolean {
+    return this.disabledState.names.includes(name);
   }
 
   private syncCurrent(index: number): void {
@@ -480,7 +554,7 @@ export class Tabs extends Component<ResolvedTabsProps, TabsState, TabsDOM> {
     content: RenderableContent<TabsPanelContext>
   ): void {
     const panel = this.dom.panels[index];
-    const item = this.props.tabs[index];
+    const item = this.state.data[index];
     if (!panel || !item) return;
 
     panel.textContent = '';
@@ -495,7 +569,7 @@ export class Tabs extends Component<ResolvedTabsProps, TabsState, TabsDOM> {
   }
 
   private async loadPanel(index: number): Promise<void> {
-    const item = this.props.tabs[index];
+    const item = this.state.data[index];
     const panel = this.dom.panels[index];
     if (!item || !panel || typeof item.panel !== 'function') {
       this.runtime.panelLoadId += 1;
@@ -553,14 +627,14 @@ export class Tabs extends Component<ResolvedTabsProps, TabsState, TabsDOM> {
   }
 
   get disabledNames(): string[] {
-    return this.state.disabled.names;
+    return this.disabledState.names;
   }
 
   private bindEvents(): void {
     this.unbindEvents();
 
-    if (!this.root) return;
-    const tabList = q<HTMLElement>('[data-tabs-list]', this.root);
+    if (!this.dom.root) return;
+    const tabList = q<HTMLElement>('[data-tabs-list]', this.dom.root);
     if (!tabList) return;
 
     this.cleanup.events.on('tabClick', tabList, 'click', (event) => {
@@ -568,7 +642,7 @@ export class Tabs extends Component<ResolvedTabsProps, TabsState, TabsDOM> {
       const tab = event.target.closest<HTMLElement>('[data-tabs-tab]');
       if (!tab || !tabList.contains(tab)) return;
       const name = tab.dataset.tabsTab;
-      if (name && !this.state.disabled.names.includes(name)) {
+      if (name && !this.isDisabledName(name)) {
         void this.activate(name);
       }
     });
@@ -581,6 +655,9 @@ export class Tabs extends Component<ResolvedTabsProps, TabsState, TabsDOM> {
   private assertActive(method: string): void {
     if (this.runtime.destroyed) {
       throw new Error(`Tabs.${method}: instance has been destroyed.`);
+    }
+    if (!this.runtime.built) {
+      throw new Error(`Tabs.${method}: call build() first.`);
     }
   }
 
@@ -601,7 +678,7 @@ export class Tabs extends Component<ResolvedTabsProps, TabsState, TabsDOM> {
     if (
       index < 0 ||
       index >= this.dom.tabs.length ||
-      this.state.disabled.names.includes(name) ||
+      this.isDisabledName(name) ||
       this.state.current.index === index
     ) {
       return;
@@ -633,172 +710,49 @@ export class Tabs extends Component<ResolvedTabsProps, TabsState, TabsDOM> {
    */
   async activate(val: TabsValue): Promise<void> {
     this.assertActive('activate');
+    this.state.active = val;
     await this.activateInternal(val, true);
   }
 
   /**
-   * 将组件挂载到构造器指定的容器中。
+   * 构建 Tabs DOM。
    */
   build(): this {
-    this.assertActive('build');
-    insert(this.dom.container, () => this.root);
+    if (this.runtime.destroyed) {
+      throw new Error('Tabs.build: instance has been destroyed.');
+    }
+    if (this.runtime.built) return this;
+    try {
+      this.runtime.built = true;
+      this.onInit(this.props);
+    } catch (error) {
+      this.destroy();
+      throw error;
+    }
+    this.emit('init', this.props);
     return this;
   }
 
-  render(): this {
-    return this.build();
-  }
-
-  /**
-   * 动态新增标签。
-   * @param {object} tabConfig 标签配置。
-   */
-  async add(tabConfig: TabItem): Promise<void> {
-    this.assertActive('add');
-    validateParam('tabConfig', tabConfig, TAB_CONFIG_RULE, 'Tabs.add');
-
-    tabConfig.name = tabConfig.name || randomId();
-    this.props.tabs = [...cloneTabItems(this.props.tabs), tabConfig];
-    this.runtime.cache.panels.clear();
-
-    this.rebuildItems();
-    this.syncActiveNames(this.resolveActiveIndex(this.props.active));
-    this.bindEvents();
+  refresh(): this {
+    this.assertActive('refresh');
     this.refreshDrag();
-
-    const { onAdd } = this.props;
-    if (onAdd) {
-      const index = this.props.tabs.length - 1;
-      await Promise.resolve(
-        onAdd(index, tabConfig, this.dom.tabs[index], this.dom.panels[index])
-      );
-    }
-  }
-
-  /**
-   * 根据索引或名称删除标签。
-   * @param {number|string} val 标签索引或名称。
-   */
-  async delete(val: TabsValue): Promise<void> {
-    this.assertActive('delete');
-    if (this.props.tabs.length <= 1) return;
-
-    const index = this.getIndex(val);
-    if (index < 0 || index >= this.props.tabs.length) return;
-
-    const removedName = this.props.tabs[index].name;
-    const { onRemove } = this.props;
-
-    this.props.tabs = this.props.tabs.filter((_, i) => i !== index);
-    if (removedName) this.runtime.cache.panels.delete(removedName);
-
-    if (this.state.current.index >= this.props.tabs.length) {
-      flushSync(() => {
-        this.syncCurrent(this.props.tabs.length - 1);
-      });
-    } else if (this.state.current.index > index) {
-      flushSync(() => {
-        this.syncCurrent(this.state.current.index - 1);
-      });
-    }
-
-    this.rebuildItems();
-    this.bindEvents();
-    await this.loadPanel(this.state.current.index);
-    this.refreshDrag();
-
-    if (onRemove) await Promise.resolve(onRemove(index, removedName));
-  }
-
-  /**
-   * 根据索引或名称禁用标签。
-   * @param {number|string} val 标签索引或名称。
-   */
-  disable(val: TabsValue): void {
-    this.assertActive('disable');
-    const name =
-      typeof val === 'number' ? this.dom.tabs[val]?.dataset.tabsTab : val;
-    if (name && !this.state.disabled.names.includes(name)) {
-      flushSync(() => {
-        this.state.disabled = this.createDisabledState([
-          ...this.state.disabled.names,
-          name,
-        ]);
-      });
-    }
-  }
-
-  /**
-   * 根据索引或名称启用标签。
-   * @param {number|string} val 标签索引或名称。
-   */
-  enable(val: TabsValue): void {
-    this.assertActive('enable');
-    const name =
-      typeof val === 'number' ? this.dom.tabs[val]?.dataset.tabsTab : val;
-    if (name) {
-      flushSync(() => {
-        this.state.disabled = this.createDisabledState(
-          this.state.disabled.names.filter((n) => n !== name)
-        );
-      });
-    }
-  }
-
-  private resolveActiveIndex(active: TabsValue | null | undefined): number {
-    if (active == null) return -1;
-    if (typeof active === 'number') return active;
-    if (typeof active === 'string') {
-      return this.dom.tabs.findIndex((tab) => tab.dataset.tabsTab === active);
-    }
-    return 0;
-  }
-
-  private syncActiveNames(index: number): void {
-    flushSync(() => {
-      this.syncCurrent(index);
-    });
-  }
-
-  /**
-   * 使用新配置重新初始化状态。
-   * @param {object} [patch={}] 需要覆盖的配置。
-   */
-  async reInit(patch: TabsProps = {}): Promise<void> {
-    this.assertActive('reInit');
-    Object.assign(
-      this.props,
-      normalizeProps({
-        ...this.props,
-        ...patch,
-        className: {
-          ...this.props.className,
-          ...patch.className,
-        },
-      })
-    );
-
-    flushSync(() => {
-      this.state.disabled = this.parseDisabled(this.props.disabled);
-    });
-
-    this.rebuildItems();
-    this.syncActiveNames(this.resolveActiveIndex(this.props.active));
-    this.bindEvents();
-    await this.loadPanel(this.state.current.index);
-    this.refreshDrag();
+    return this;
   }
 
   private get dragContainer(): HTMLElement | null {
-    return this.root ? q<HTMLElement>('[data-tabs-wrap]', this.root) : null;
+    return this.dom.root
+      ? q<HTMLElement>('[data-tabs-wrap]', this.dom.root)
+      : null;
   }
 
   private get dragInner(): HTMLElement | null {
-    return this.root ? q<HTMLElement>('[data-tabs-list]', this.root) : null;
+    return this.dom.root
+      ? q<HTMLElement>('[data-tabs-list]', this.dom.root)
+      : null;
   }
 
   private initDrag(): void {
-    const { direction } = this.props;
+    const direction = this.state.direction;
     const container = this.dragContainer;
     const inner = this.dragInner;
     if (!container || !inner) return;
@@ -948,17 +902,70 @@ export class Tabs extends Component<ResolvedTabsProps, TabsState, TabsDOM> {
     this.removeDragEvents();
     this.bindingsDispose?.();
     this.bindingsDispose = null;
+    this.stateDispose?.();
+    this.stateDispose = null;
     cancelAnimationFrame(this.raf);
     cancelAnimationFrame(this.resizeRaf);
     this.cleanup.events.off('resize');
 
-    if (this.root?.parentNode) this.root.parentNode.removeChild(this.root);
+    this.dom.root?.remove();
+    this.runtime.built = false;
+  }
+
+  private validateData(data: TabItem[]): void {
+    validateParam('data', data, TABS_STATE_SCHEMA.data, 'Tabs.state');
+    data.forEach((item, index) => {
+      validateParam(String(index), item, TAB_CONFIG_RULE, 'Tabs.state.data');
+    });
+  }
+
+  protected override normalizeStatePatch(
+    patch: Partial<TabsState>
+  ): Partial<TabsState> {
+    const nextPatch = { ...patch };
+    if (Object.hasOwn(nextPatch, 'data') && Array.isArray(nextPatch.data)) {
+      nextPatch.data = cloneTabItems(nextPatch.data);
+    }
+    if (
+      Object.hasOwn(nextPatch, 'disabled') &&
+      Array.isArray(nextPatch.disabled)
+    ) {
+      nextPatch.disabled = cloneDisabled(nextPatch.disabled);
+    }
+    return nextPatch;
+  }
+
+  protected override validateStatePatch(patch: Partial<TabsState>): void {
+    validateParam(
+      'state',
+      patch,
+      {
+        type: 'plainObject',
+      },
+      'Tabs.setState'
+    );
+
+    for (const key of Object.keys(patch)) {
+      if (!Object.hasOwn(TABS_STATE_SCHEMA, key)) {
+        throw new Error(
+          `Tabs.setState: "${key}" is not a supported state key.`
+        );
+      }
+      const stateKey = key as keyof typeof TABS_STATE_SCHEMA;
+      validateParam(
+        key,
+        patch[key as keyof TabsState],
+        TABS_STATE_SCHEMA[stateKey],
+        'Tabs.setState'
+      );
+    }
+
+    if (Array.isArray(patch.data)) this.validateData(patch.data);
   }
 }
 
-export function createTabs(
-  container: DOMReference,
-  input: TabsProps = {}
-): Tabs {
-  return new Tabs(container, input);
+export type Tabs = TabsComponent;
+
+export function createTabs(input: TabsProps = {}): Tabs {
+  return new TabsComponent(input);
 }

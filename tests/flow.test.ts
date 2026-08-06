@@ -2,16 +2,17 @@
 
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 
-import { Flow, createFlow } from '../src/components/flow.ts';
+import { createFlow } from '../src/components/flow.ts';
 
-let flow: Flow | null = null;
+type FlowInstance = ReturnType<typeof createFlow>;
+
+let flow: FlowInstance | null = null;
 
 function steps() {
   return [
     {
       id: 'account',
       title: 'Account',
-      description: 'Basic info',
       data: { initial: 'yes' },
       content: 'Account content',
     },
@@ -31,11 +32,18 @@ function steps() {
   ];
 }
 
-function mountRoot(): HTMLElement {
+function app(): HTMLElement {
   document.body.innerHTML = '<div id="app"></div>';
   const root = document.querySelector<HTMLElement>('#app');
   if (!root) throw new Error('Missing Flow fixture.');
   return root;
+}
+
+function mount(instance: FlowInstance): FlowInstance {
+  instance.build();
+  if (!instance.dom.root) throw new Error('Flow did not build a root.');
+  app().appendChild(instance.dom.root);
+  return instance;
 }
 
 async function tick(): Promise<void> {
@@ -52,103 +60,136 @@ afterEach(() => {
 });
 
 describe('Flow', () => {
+  it('builds default UI without mounting automatically', () => {
+    const instance = createFlow({
+      id: 'flow-default',
+      steps: steps(),
+      showReset: true,
+    });
+    flow = instance;
+
+    expect(instance.dom.root).toBeNull();
+
+    instance.build();
+    expect(document.body.contains(instance.dom.root)).toBe(false);
+    if (!instance.dom.root) throw new Error('Expected Flow root.');
+    app().appendChild(instance.dom.root);
+
+    expect(instance.dom.root.classList.contains('j-flow')).toBe(true);
+    expect(instance.dom.root.getAttribute('data-flow')).toBe('root');
+    expect(
+      Array.from(instance.dom.root.children).map((child) => child.className)
+    ).toEqual(['flow-header', 'flow-body', 'flow-footer']);
+    expect(
+      instance.dom.root.querySelector(':scope > .flow-header > .flow-steps')
+    ).toBeTruthy();
+    expect(instance.dom.root.querySelector('.flow-title')).toBeNull();
+    expect(instance.dom.root.querySelector('.flow-description')).toBeNull();
+    expect(instance.dom.root.querySelectorAll('[data-flow-step]')).toHaveLength(
+      3
+    );
+    expect(
+      instance.dom.root
+        .querySelector('[data-flow-step="account"]')
+        ?.classList.contains('is-active')
+    ).toBe(true);
+    expect(
+      instance.dom.root.querySelector('[data-action="back"]')
+    ).toBeTruthy();
+    expect(
+      instance.dom.root.querySelector('[data-action="next"]')
+    ).toBeTruthy();
+    expect(
+      instance.dom.root.querySelector('[data-action="reset"]')
+    ).toBeTruthy();
+    expect(instance.dom.root.textContent).toContain('Account content');
+  });
+
   it('runs headless transitions and caches step payloads', async () => {
     const onChange = vi.fn();
-    flow = createFlow({
+    const instance = createFlow({
       id: 'checkout',
       render: false,
       steps: steps(),
       onChange,
-    });
+    }).build();
+    flow = instance;
 
-    expect(flow.snapshot().currentId).toBe('account');
-    await flow.next({ email: 'demo@example.com' });
+    expect(instance.dom.root).toBeNull();
+    expect(instance.snapshot().currentId).toBe('account');
 
-    expect(flow.state.currentId).toBe('profile');
-    expect(flow.state.data.email).toBe('demo@example.com');
-    expect(flow.getStepData('account').email).toBe('demo@example.com');
+    await instance.next({ email: 'demo@example.com' });
 
-    await flow.back({ name: 'Alice' });
-    expect(flow.state.currentId).toBe('account');
-    expect(flow.getStepData('profile').name).toBe('Alice');
+    expect(instance.state.currentId).toBe('profile');
+    expect(instance.state.data.email).toBe('demo@example.com');
+    expect(instance.getStepData('account').email).toBe('demo@example.com');
+
+    await instance.back({ name: 'Alice' });
+    expect(instance.state.currentId).toBe('account');
+    expect(instance.getStepData('profile').name).toBe('Alice');
     expect(onChange).toHaveBeenCalled();
   });
 
   it('preserves functional modal step config while cloning steps', () => {
-    const modal = vi.fn(() => ({ size: 'sm' }));
-    flow = new Flow({
+    const modal = vi.fn(() => ({ content: 'Modal content' }));
+    const instance = createFlow({
       id: 'modal-flow',
-      steps: [{ id: 'one', modal }],
+      render: false,
+      steps: [
+        {
+          id: 'one',
+          description: 'Legacy description',
+          modal,
+          view: { content: 'Legacy view' },
+        },
+      ],
     });
+    flow = instance;
 
-    expect(typeof flow.currentStep.modal).toBe('function');
-    expect(flow.currentStep.modal).toBe(modal);
-  });
-
-  it('mounts default UI with data markers and default classes', () => {
-    const root = mountRoot();
-    flow = new Flow({
-      id: 'flow-default',
-      steps: steps(),
-      showReset: true,
-    }).mount(root);
-
-    expect(
-      root.querySelector('[data-flow="root"]')?.classList.contains('j-flow')
-    ).toBe(true);
-    expect(
-      root
-        .querySelector('[data-flow-header]')
-        ?.classList.contains('flow-header')
-    ).toBe(true);
-    expect(root.querySelectorAll('[data-flow-step]')).toHaveLength(3);
-    expect(
-      root
-        .querySelector('[data-flow-step="account"]')
-        ?.classList.contains('is-active')
-    ).toBe(true);
-    expect(root.querySelector('[data-action="back"]')).toBeTruthy();
-    expect(root.querySelector('[data-action="next"]')).toBeTruthy();
-    expect(root.querySelector('[data-action="reset"]')).toBeTruthy();
+    expect(typeof instance.currentStep.modal).toBe('function');
+    expect(instance.currentStep.modal).toBe(modal);
+    expect(instance.snapshot().currentStep?.modal).toBe(modal);
+    expect(Object.hasOwn(instance.currentStep, 'view')).toBe(false);
+    expect(Object.hasOwn(instance.currentStep, 'description')).toBe(false);
   });
 
   it('allows className overrides while keeping data-action behavior', async () => {
-    const root = mountRoot();
-    flow = new Flow({
-      id: 'flow-custom',
-      steps: steps(),
-      className: {
-        root: 'wizard',
-        header: 'wizard-head',
-        title: 'wizard-title',
-        steps: 'wizard-steps',
-        step: 'wizard-step',
-        active: 'wizard-active',
-        body: 'wizard-body',
-        footer: 'wizard-footer',
-        button: 'wizard-button',
-        buttonPrimary: 'wizard-primary',
-        next: 'wizard-next',
-      },
-    }).mount(root);
+    const instance = mount(
+      createFlow({
+        id: 'flow-custom',
+        steps: steps(),
+        className: {
+          root: 'wizard',
+          header: 'wizard-head',
+          steps: 'wizard-steps',
+          step: 'wizard-step',
+          active: 'wizard-active',
+          body: 'wizard-body',
+          footer: 'wizard-footer',
+          button: 'wizard-button',
+          next: 'wizard-next',
+        },
+      })
+    );
+    flow = instance;
 
-    const next = root.querySelector<HTMLButtonElement>('[data-action="next"]');
-    expect(
-      root.querySelector('[data-flow="root"]')?.classList.contains('wizard')
-    ).toBe(true);
-    expect(
-      root.querySelector('[data-flow="root"]')?.classList.contains('j-flow')
-    ).toBe(false);
+    const next = instance.dom.root?.querySelector<HTMLButtonElement>(
+      '[data-action="next"]'
+    );
+    expect(instance.dom.root?.classList.contains('wizard')).toBe(true);
+    expect(instance.dom.root?.classList.contains('j-flow')).toBe(false);
     expect(next?.classList.contains('wizard-next')).toBe(true);
+    expect(next?.classList.contains('is-primary')).toBe(false);
 
     next?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     await tick();
-    expect(flow.state.currentId).toBe('profile');
+    expect(instance.state.currentId).toBe('profile');
   });
 
   it('rolls back failed transitions and stores the error', async () => {
-    flow = new Flow({
+    const instance = createFlow({
       id: 'guarded',
+      render: false,
       steps: [
         { id: 'one', title: 'One' },
         {
@@ -158,18 +199,21 @@ describe('Flow', () => {
         },
       ],
     });
+    flow = instance;
 
-    await expect(flow.next()).rejects.toThrow('blocked entering');
-    expect(flow.state.currentId).toBe('one');
-    expect(flow.state.error).toBeInstanceOf(Error);
-    expect(flow.state.loading).toBe(false);
+    await expect(instance.next()).rejects.toThrow('blocked entering');
+    expect(instance.state.currentId).toBe('one');
+    expect(instance.state.error).toBeInstanceOf(Error);
+    expect(instance.state.loading).toBe(false);
   });
 
-  it('handles repeated actions while loading', async () => {
+  it('notifies subscribers for async loading and handles repeated actions', async () => {
     let release = () => {};
     const onBusy = vi.fn();
-    flow = new Flow({
+    const changes: Array<{ id: string; loading: boolean }> = [];
+    const instance = createFlow({
       id: 'busy',
+      render: false,
       steps: [
         {
           id: 'one',
@@ -182,15 +226,32 @@ describe('Flow', () => {
       ],
       onBusy,
     });
+    flow = instance;
+    instance.subscribe((snapshot) => {
+      changes.push({
+        id: snapshot.currentId,
+        loading: snapshot.loading,
+      });
+    });
 
-    const first = flow.next();
+    const first = instance.next();
     await tick();
-    const second = await flow.next();
+    expect(instance.state.loading).toBe(true);
+
+    const second = await instance.next();
     expect(second?.currentId).toBe('one');
-    expect(onBusy).toHaveBeenCalledWith('next', expect.any(Object), flow);
+    expect(onBusy).toHaveBeenCalledWith('next', expect.any(Object), instance);
 
     release();
     await first;
-    expect(flow.state.currentId).toBe('two');
+
+    expect(instance.state.currentId).toBe('two');
+    expect(instance.state.loading).toBe(false);
+    expect(changes).toEqual(
+      expect.arrayContaining([
+        { id: 'one', loading: true },
+        { id: 'two', loading: false },
+      ])
+    );
   });
 });

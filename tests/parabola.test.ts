@@ -9,9 +9,9 @@ import {
   vi,
 } from 'vite-plus/test';
 
-import { Parabola, createParabola } from '../src/components/parabola.ts';
+import { createParabola } from '../src/primitives/parabola.ts';
 
-let instances: Parabola[] = [];
+let instances: Array<ReturnType<typeof createParabola>> = [];
 
 function mount(): { from: HTMLElement; to: HTMLElement } {
   document.body.innerHTML = `
@@ -51,14 +51,18 @@ function raf(time: number): void {
   callback?.(time);
 }
 
+function balls(): HTMLElement[] {
+  return [...document.querySelectorAll<HTMLElement>('[data-parabola="ball"]')];
+}
+
 beforeEach(() => {
   vi.useFakeTimers();
+  let animationFrameId = 0;
   Object.defineProperty(window, 'requestAnimationFrame', {
-    value: vi.fn(() => 1),
-    configurable: true,
-  });
-  Object.defineProperty(window, 'cancelAnimationFrame', {
-    value: vi.fn(),
+    value: vi.fn(() => {
+      animationFrameId += 1;
+      return animationFrameId;
+    }),
     configurable: true,
   });
   vi.spyOn(performance, 'now').mockReturnValue(0);
@@ -73,22 +77,37 @@ afterEach(() => {
 });
 
 describe('Parabola', () => {
-  it('creates a default ball with data marker and default styles', () => {
+  it('creates a root without producing a ball during instantiation', () => {
     const { from, to } = mount();
     const parabola = createParabola({ from, to });
     instances.push(parabola);
 
-    const ball = document.querySelector<HTMLElement>('[data-parabola="ball"]');
-    expect(ball).toBe(parabola._ball);
+    expect(parabola.dom.root).toBe(
+      document.querySelector('[data-parabola="root"]')
+    );
+    expect(balls()).toHaveLength(0);
+    expect(parabola.runtime.destroyed).toBe(false);
+  });
+
+  it('produces a default ball when show is called', async () => {
+    const { from, to } = mount();
+    const parabola = createParabola({ from, to });
+    instances.push(parabola);
+
+    const started = parabola.show();
+    vi.runOnlyPendingTimers();
+    await expect(started).resolves.toBe(true);
+
+    const [ball] = balls();
+    expect(ball?.parentElement).toBe(parabola.dom.root);
     expect(ball?.classList.contains('parabola-ball')).toBe(true);
     expect(ball?.style.backgroundColor).toBe('var(--tone-solid)');
     expect(ball?.style.width).toBe('12px');
-    expect(parabola.hidden).toBe(false);
   });
 
-  it('allows className and ball overrides', () => {
+  it('allows className and ball overrides', async () => {
     const { from, to } = mount();
-    const parabola = new Parabola({
+    const parabola = createParabola({
       from,
       to,
       ball: { color: 'rgb(255, 0, 0)', size: '16px' },
@@ -96,7 +115,11 @@ describe('Parabola', () => {
     });
     instances.push(parabola);
 
-    const ball = document.querySelector<HTMLElement>('[data-parabola="ball"]');
+    const started = parabola.show();
+    vi.runOnlyPendingTimers();
+    await expect(started).resolves.toBe(true);
+
+    const [ball] = balls();
     expect(ball?.classList.contains('cart-fly-ball')).toBe(true);
     expect(ball?.classList.contains('parabola-ball')).toBe(false);
     expect(ball?.style.backgroundColor).toBe('rgb(255, 0, 0)');
@@ -106,7 +129,7 @@ describe('Parabola', () => {
   it('starts from the configured direction and calls onShow', async () => {
     const { from, to } = mount();
     const onShow = vi.fn();
-    const parabola = new Parabola({
+    const parabola = createParabola({
       from,
       to,
       direction: 'top-right',
@@ -119,15 +142,16 @@ describe('Parabola', () => {
     await expect(started).resolves.toBe(true);
 
     expect(onShow).toHaveBeenCalledWith(parabola);
-    expect(parabola._ball?.style.left).toBe('90px');
-    expect(parabola._ball?.style.top).toBe('30px');
+    const [ball] = balls();
+    expect(ball?.style.left).toBe('90px');
+    expect(ball?.style.top).toBe('30px');
     expect(window.requestAnimationFrame).toHaveBeenCalled();
   });
 
-  it('destroys and returns false when endpoints are missing', async () => {
+  it('returns false without destroying when endpoints are missing', async () => {
     mount();
     const onHidden = vi.fn();
-    const parabola = new Parabola({
+    const parabola = createParabola({
       from: '#missing',
       to: '#cart',
       onHidden,
@@ -138,17 +162,25 @@ describe('Parabola', () => {
     vi.runOnlyPendingTimers();
     await expect(started).resolves.toBe(false);
 
-    expect(parabola.hidden).toBe(true);
-    expect(document.querySelector('[data-parabola="ball"]')).toBeNull();
-    expect(onHidden).toHaveBeenCalledWith(parabola);
+    expect(parabola.runtime.destroyed).toBe(false);
+    expect(parabola.dom.root).toBe(
+      document.querySelector('[data-parabola="root"]')
+    );
+    expect(balls()).toHaveLength(0);
+    expect(onHidden).not.toHaveBeenCalled();
   });
 
   it('keeps showDelay timers isolated per instance', async () => {
     const { from, to } = mount();
     const firstShow = vi.fn();
     const secondShow = vi.fn();
-    const first = new Parabola({ from, to, showDelay: 20, onShow: firstShow });
-    const second = new Parabola({
+    const first = createParabola({
+      from,
+      to,
+      showDelay: 20,
+      onShow: firstShow,
+    });
+    const second = createParabola({
       from,
       to,
       showDelay: 20,
@@ -166,21 +198,63 @@ describe('Parabola', () => {
     expect(secondShow).toHaveBeenCalledTimes(1);
   });
 
-  it('auto destroys when animation completes', async () => {
+  it('produces an independent ball for every show call', async () => {
     const { from, to } = mount();
-    const onHidden = vi.fn();
-    const parabola = new Parabola({ from, to, onHidden });
+    const onShow = vi.fn();
+    const parabola = createParabola({ from, to, onShow });
     instances.push(parabola);
 
-    const started = parabola.start();
+    const first = parabola.show();
+    const second = parabola.show();
+    vi.runOnlyPendingTimers();
+
+    await expect(first).resolves.toBe(true);
+    await expect(second).resolves.toBe(true);
+    expect(onShow).toHaveBeenCalledTimes(2);
+    expect(balls()).toHaveLength(2);
+  });
+
+  it('removes each ball after its animation completes without destroying the instance', async () => {
+    const { from, to } = mount();
+    const onShow = vi.fn();
+    const onHidden = vi.fn();
+    const parabola = createParabola({ from, to, onShow, onHidden });
+    instances.push(parabola);
+
+    const started = parabola.show();
     vi.runOnlyPendingTimers();
     await expect(started).resolves.toBe(true);
 
     raf(900);
 
-    expect(parabola.hidden).toBe(true);
-    expect(parabola._ball).toBeNull();
-    expect(document.querySelector('[data-parabola="ball"]')).toBeNull();
+    expect(parabola.runtime.destroyed).toBe(false);
+    expect(parabola.dom.root).toBe(
+      document.querySelector('[data-parabola="root"]')
+    );
+    expect(balls()).toHaveLength(0);
     expect(onHidden).toHaveBeenCalledWith(parabola);
+
+    const replayed = parabola.show();
+    vi.runOnlyPendingTimers();
+    await expect(replayed).resolves.toBe(true);
+    expect(onShow).toHaveBeenCalledTimes(2);
+    expect(balls()).toHaveLength(1);
+  });
+
+  it('destroy disables future production without manually removing active balls', async () => {
+    const { from, to } = mount();
+    const parabola = createParabola({ from, to });
+    instances.push(parabola);
+
+    const started = parabola.show();
+    vi.runOnlyPendingTimers();
+    await expect(started).resolves.toBe(true);
+    expect(balls()).toHaveLength(1);
+
+    parabola.destroy();
+
+    expect(parabola.runtime.destroyed).toBe(true);
+    expect(balls()).toHaveLength(1);
+    await expect(parabola.show()).resolves.toBe(false);
   });
 });

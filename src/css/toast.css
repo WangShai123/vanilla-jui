@@ -43,13 +43,13 @@
     transform: translateY(0);
   }
 
-  .j-toast .toast-icon {
+  .j-toast .el-icon {
     margin-right: var(--s2);
     width: var(--toast-icon-size);
     color: inherit;
   }
 
-  .j-toast .toast-message {
+  .j-toast .el-text {
     flex: 1;
     word-break: normal;
   }

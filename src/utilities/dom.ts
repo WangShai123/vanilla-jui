@@ -1,6 +1,8 @@
-import { jsx } from 'vanilla-signal';
-
-import { icon } from '../components/icons';
+import {
+  isDomElementValue,
+  isDomNodeValue,
+  isRenderableValue,
+} from './types.ts';
 
 export type ContainerExpect = 'node' | 'element' | 'array';
 export type ResolveContainerResult<
@@ -49,7 +51,7 @@ function isContainerExpect(value: unknown): value is ContainerExpect {
  * @returns {boolean}
  */
 export function isNode(value: unknown): value is Node {
-  return value instanceof Node;
+  return isDomNodeValue(value);
 }
 
 /**
@@ -58,7 +60,7 @@ export function isNode(value: unknown): value is Node {
  * @returns {boolean}
  */
 export function isElement(value: unknown): value is Element {
-  return value instanceof Element;
+  return isDomElementValue(value);
 }
 
 /**
@@ -294,35 +296,15 @@ export function requireContainer<TExpect extends ContainerExpect = 'element'>(
 export function isRenderableContent(
   value: unknown
 ): value is RenderableContent {
-  return (
-    value == null ||
-    typeof value === 'string' ||
-    typeof value === 'number' ||
-    typeof value === 'boolean' ||
-    typeof value === 'function' ||
-    Array.isArray(value) ||
-    isNode(value)
-  );
+  return isRenderableValue(value);
 }
 
-/**
- * 创建通用加载状态节点。
- * @returns {HTMLElement}
- */
-export function createLoading(): HTMLDivElement {
-  return jsx('div', {
-    'aria-live': 'polite',
-    style: {
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      position: 'absolute',
-      width: '100%',
-      height: '100%',
-      backdropFilter: 'blur(4px)',
-    },
-    children: icon('loader', { width: 24, className: 'animate-spin' }),
-  });
+export function normalizeRenderableContentNodes<TContext>(
+  content: unknown,
+  context: TContext
+): Node[] | null {
+  if (!isRenderableContent(content)) return null;
+  return normalizeContentNodes(content, context);
 }
 
 /**

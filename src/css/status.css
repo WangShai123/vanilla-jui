@@ -8,7 +8,6 @@
  * - drag status
  */
 @layer status {
-
   /* sad mode */
   .is-sad {
     filter: grayscale(100%);
@@ -48,7 +47,7 @@
   [disabled],
   :disabled,
   .is-disabled,
-  [aria-disabled="true"] {
+  [aria-disabled='true'] {
     cursor: not-allowed;
     user-select: none;
   }

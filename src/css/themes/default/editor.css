@@ -1,10 +1,10 @@
 @layer themes {
-    #j-editor {
-        --editor-max-width: 880px;
-        --editor-min-height: calc(100vh - 51px);
-        --editor-padding: 1.5rem 1.5rem 4rem;
-        --editor-border-width: 1px;
-        --editor-border-style: solid;
-        --editor-border-color: var(--ui-border);
-    }
+  #j-editor {
+    --editor-max-width: 880px;
+    --editor-min-height: calc(100vh - 51px);
+    --editor-padding: 1.5rem 1.5rem 4rem;
+    --editor-border-width: 1px;
+    --editor-border-style: solid;
+    --editor-border-color: var(--ui-border);
+  }
 }

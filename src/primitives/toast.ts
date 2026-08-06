@@ -2,10 +2,13 @@ import { jsx } from 'vanilla-signal';
 import { t } from 'vanilla-signal-i18n';
 
 import locales from '../locales/index.ts';
-import { randomId, timer, validateParam } from '../utilities/core.ts';
+import { icon } from '../primitives/icons.ts';
+import { joinClasses } from '../utilities/class-name.ts';
 import { q } from '../utilities/dom.ts';
 import { listen } from '../utilities/events.ts';
-import { icon } from './icons.ts';
+import { randomId } from '../utilities/id.ts';
+import { timer } from '../utilities/timer.ts';
+import { validateParam } from '../utilities/types.ts';
 
 export type ToastType = 'info' | 'success' | 'warning' | 'error' | 'primary';
 
@@ -14,13 +17,12 @@ export interface ToastClassNames {
   toast: string;
   icon: string;
   message: string;
-  hidden: string;
   lite: string;
   action: string;
   actions: string;
   button: string;
-  closeButton: string;
-  actionButton: string;
+  closeBtn: string;
+  actionBtn: string;
   info: string;
   success: string;
   warning: string;
@@ -50,20 +52,19 @@ interface ResolvedToastOptions {
 const DEFAULT_CLASS_NAMES: ToastClassNames = {
   container: 'j-toast-container',
   toast: 'j-toast',
-  icon: 'toast-icon',
-  message: 'toast-message',
-  hidden: 'is-hidden',
+  icon: 'el-icon',
+  message: 'el-text',
   lite: 'j-toast-lite',
-  action: 'is-action',
+  action: 'j-toast is-action',
   actions: 'toast-actions',
   button: 'j-button is-sm',
-  closeButton: 'is-ghost',
-  actionButton: 'is-outline',
+  closeBtn: 'is-ghost',
+  actionBtn: 'is-outline',
   info: 'is-info',
+  primary: 'is-primary',
   success: 'is-success',
   warning: 'is-warning',
   error: 'is-error',
-  primary: 'is-primary',
 };
 
 const TOAST_TYPE_RULE = {
@@ -73,24 +74,16 @@ const TOAST_TYPE_RULE = {
 
 const TOAST_DURATION_RULE = {
   type: 'number',
-  validate: (value: unknown) => typeof value === 'number' && value >= 0,
-  message: 'expects a positive number or 0.',
+  min: 0,
 };
 
 const LITE_DURATION_RULE = {
   type: 'number',
-  validate: (value: unknown) => typeof value === 'number' && value > 0,
-  message: 'expects a number greater than 0.',
+  greaterThan: 0,
 };
 
 function mergeClassNames(className?: ToastClassNameConfig): ToastClassNames {
   return { ...DEFAULT_CLASS_NAMES, ...className };
-}
-
-function joinClasses(
-  ...classes: Array<string | null | undefined | false>
-): string {
-  return classes.filter(Boolean).join(' ');
 }
 
 /**
@@ -284,7 +277,7 @@ export class Toast {
     const toastContainer = Toast.getOrCreateContainer(className);
     const id = randomId();
     const action = jsx('div', {
-      className: joinClasses(className.toast, className.action),
+      className: className.action,
       'data-toast': id,
       'data-toast-action': '',
       children: [
@@ -298,7 +291,7 @@ export class Toast {
           'data-toast-actions': id,
           children: [
             jsx('button', {
-              className: joinClasses(className.button, className.closeButton),
+              className: joinClasses(className.button, className.closeBtn),
               children: props.text?.close || c,
               'data-action': 'close',
               'aria-label': props.text?.close || c,
@@ -308,7 +301,7 @@ export class Toast {
               },
             }),
             jsx('button', {
-              className: joinClasses(className.button, className.actionButton),
+              className: joinClasses(className.button, className.actionBtn),
               children: props.text?.action || a,
               'data-action': 'toast-action',
               'aria-label': props.text?.action || a,

@@ -22,4 +22,8 @@
   .j-pagination .is-active {
     cursor: default;
   }
+
+  .j-pagination ul.pagination li {
+    margin: 0;
+  }
 }

@@ -9,9 +9,9 @@ import {
   vi,
 } from 'vite-plus/test';
 
-import { Validator } from '../src/components/validator.ts';
+import { createValidator } from '../src/validation/validator.ts';
 
-let validator: Validator | null = null;
+let validator: ReturnType<typeof createValidator> | null = null;
 
 function mount(html: string): HTMLFormElement {
   document.body.innerHTML = html;
@@ -52,7 +52,7 @@ describe('Validator', () => {
       </form>
     `);
 
-    validator = new Validator(form, {
+    validator = createValidator(form, {
       rules: { email: { required: true } },
       messages: { email: { required: 'Email required' } },
     });
@@ -85,7 +85,7 @@ describe('Validator', () => {
       </form>
     `);
 
-    validator = new Validator(form, {
+    validator = createValidator(form, {
       rules: { email: { email: true } },
       messages: { email: { email: 'Invalid email' } },
     });
@@ -109,7 +109,7 @@ describe('Validator', () => {
       </form>
     `);
 
-    validator = new Validator(
+    validator = createValidator(
       form,
       {
         rules: { email: { required: true } },
@@ -129,7 +129,8 @@ describe('Validator', () => {
   });
 
   it('uses custom validator string as the error message', () => {
-    const onSubmit = vi.fn<(validator: Validator) => void>();
+    const onSubmit =
+      vi.fn<(validator: ReturnType<typeof createValidator>) => void>();
     const form = mount(`
       <form>
         <div data-form-control="username">
@@ -138,7 +139,7 @@ describe('Validator', () => {
       </form>
     `);
 
-    validator = new Validator(form, {
+    validator = createValidator(form, {
       rules: {
         username: {
           validate: (element) =>

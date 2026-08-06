@@ -1,8 +1,8 @@
 @layer themes {
-    .j-pagination {
-        --pagination-font-size: var(--font-size-md);
-        --pagination-link-fg: var(--ui-fg);
-        --pagination-link-decoration: none;
-        --pagination-gap: var(--space);
-    }
+  .j-pagination {
+    --pagination-font-size: var(--font-size-md);
+    --pagination-link-fg: var(--ui-fg);
+    --pagination-link-decoration: none;
+    --pagination-gap: var(--space);
+  }
 }

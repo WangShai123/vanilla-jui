@@ -1,5 +1,4 @@
 @layer components {
-
   .j-breadcrumb {
     font-size: var(--breadcrumb-font-size);
     color: var(--breadcrumb-fg);
@@ -12,8 +11,8 @@
     height: var(--breadcrumb-icon-size);
   }
 
-  .j-breadcrumb>ol,
-  .j-breadcrumb>ul {
+  .j-breadcrumb > ol,
+  .j-breadcrumb > ul {
     display: flex;
     flex-wrap: wrap;
     justify-content: flex-start;
@@ -22,8 +21,8 @@
     padding: 0;
   }
 
-  .j-breadcrumb>ol li,
-  .j-breadcrumb>ul li {
+  .j-breadcrumb > ol li,
+  .j-breadcrumb > ul li {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -33,20 +32,20 @@
     padding-inline-start: 0;
   }
 
-  .j-breadcrumb li+li::before {
+  .j-breadcrumb li + li::before {
     color: var(--breadcrumb-divider-fg);
     content: '/';
   }
 
-  .j-breadcrumb.is-dot li+li::before {
+  .j-breadcrumb.is-dot li + li::before {
     content: '•';
   }
 
-  .j-breadcrumb.is-arrow li+li::before {
+  .j-breadcrumb.is-arrow li + li::before {
     content: '>';
   }
 
-  .j-breadcrumb.is-dash li+li::before {
+  .j-breadcrumb.is-dash li + li::before {
     content: '–';
   }
 

@@ -1,10 +1,9 @@
 .DS_Store
 node_modules
 .vscode
-
-docs
-demo
+docs/
+demo/
 demo*.html
-
-AGENTS.md
 index.html
+index.js
+AGENTS.md

@@ -1,22 +1,18 @@
 import { jsx } from 'vanilla-signal';
 
 import {
-  type ResolveSchema,
-  randomId,
-  resolveProps,
-} from '../utilities/core.ts';
-import {
   type DOMReference,
   type RenderableContent,
   isNode,
-  isRenderableContent,
   normalizeContentNodes,
   resolveElement,
 } from '../utilities/dom.ts';
 import { createEventManager, type IEventManager } from '../utilities/events.ts';
+import { randomId } from '../utilities/id.ts';
+import { type ResolveSchema, resolveProps } from '../utilities/types.ts';
 
-export type DropMode = 'hover' | 'click';
-export type DropPosition =
+type DropMode = 'hover' | 'click';
+type DropPosition =
   | 'auto'
   | 'top-left'
   | 'top-center'
@@ -27,30 +23,30 @@ export type DropPosition =
   | 'left'
   | 'right';
 
-export interface DropClassNames {
+interface DropClassNames {
   root: string;
   container: string;
 }
 
-export type DropClassNameConfig = Partial<DropClassNames>;
+type DropClassNameConfig = Partial<DropClassNames>;
 
-export interface DropDelay {
+interface DropDelay {
   show?: number;
   hide?: number;
 }
 
-export interface DropProps extends Record<string, unknown> {
+interface DropProps extends Record<string, unknown> {
   name?: string | null;
   mode?: DropMode;
   position?: DropPosition;
   offset?: number;
-  content?: RenderableContent<Drop>;
+  content?: RenderableContent<DropInstance>;
   className?: DropClassNameConfig;
   id?: string | null;
   delay?: number | DropDelay;
   hoverIntent?: boolean;
-  onShown?: ((drop: Drop) => void | Promise<void>) | null;
-  onHidden?: ((drop: Drop) => void | Promise<void>) | null;
+  onShown?: ((drop: DropInstance) => void | Promise<void>) | null;
+  onHidden?: ((drop: DropInstance) => void | Promise<void>) | null;
 }
 
 interface ResolvedDropProps extends Record<string, unknown> {
@@ -58,7 +54,7 @@ interface ResolvedDropProps extends Record<string, unknown> {
   mode: DropMode;
   position: DropPosition;
   offset: number;
-  content: RenderableContent<Drop>;
+  content: RenderableContent<DropInstance>;
   className: DropClassNames;
   id: string;
   delay: number | DropDelay;
@@ -74,6 +70,23 @@ interface DropTimer {
 
 interface DropCleanup {
   events: IEventManager;
+}
+
+interface DropDom {
+  root: HTMLElement | null;
+}
+
+interface DropInstance {
+  target: Element | null;
+  props: Record<string, unknown> | null;
+  dom: DropDom;
+  isVisible: boolean;
+  delayShow: number;
+  delayHide: number;
+  show(useDelay?: boolean): void;
+  hide(useDelay?: boolean): void;
+  toggle(): void;
+  destroy(): void;
 }
 
 interface HoverIntentData {
@@ -108,13 +121,11 @@ const DROP_PROPS_SCHEMA = {
   offset: {
     default: 10,
     type: 'number',
-    validate: (value: unknown) => typeof value === 'number' && value >= 0,
-    message: 'expects a positive number or 0.',
+    min: 0,
   },
   content: {
     default: '',
-    validate: isRenderableContent,
-    message: 'expects string, Node, array, function or null.',
+    type: 'renderable',
   },
   className: {
     default: DEFAULT_CLASS_NAMES,
@@ -149,7 +160,7 @@ function normalizeProps(input: DropProps): ResolvedDropProps {
     mode: props.mode as DropMode,
     position: props.position as DropPosition,
     offset: props.offset as number,
-    content: props.content as RenderableContent<Drop>,
+    content: props.content as RenderableContent<DropInstance>,
     className: props.className as DropClassNames,
     id: props.id as string,
     delay: props.delay as number | DropDelay,
@@ -177,10 +188,10 @@ function normalizeDelay(delay: number | DropDelay): Required<DropDelay> {
  *
  * 可用于菜单、提示、下拉面板等场景，支持点击或 hover 触发，并自动计算视口内位置。
  */
-export class Drop {
+class Drop implements DropInstance {
   target: Element | null;
   props: ResolvedDropProps | null;
-  root: HTMLElement | null;
+  dom: DropDom;
   isVisible: boolean;
   cleanup: DropCleanup | null;
   delayShow: number;
@@ -193,7 +204,7 @@ export class Drop {
   constructor(element: DOMReference, options: DropProps = {}) {
     this.target = resolveElement(element);
     this.props = normalizeProps(options);
-    this.root = null;
+    this.dom = { root: null };
     this.isVisible = false;
     this.cleanup = null;
     this.delayShow = 0;
@@ -230,7 +241,7 @@ export class Drop {
             children: normalizeContentNodes(content, this),
           });
 
-    this.root = jsx('div', {
+    this.dom.root = jsx('div', {
       className: className.root,
       id,
       'data-drop': name || randomId(),
@@ -271,13 +282,10 @@ export class Drop {
   }
 
   private bindRootEvents(): void {
-    if (!this.root || this.props?.mode !== 'hover' || !this.cleanup) return;
-    this.cleanup.events.on('root:enter', this.root, 'mouseenter', () =>
-      this.show()
-    );
-    this.cleanup.events.on('root:leave', this.root, 'mouseleave', () =>
-      this.hide()
-    );
+    const { root } = this.dom;
+    if (!root || this.props?.mode !== 'hover' || !this.cleanup) return;
+    this.cleanup.events.on('root:enter', root, 'mouseenter', () => this.show());
+    this.cleanup.events.on('root:leave', root, 'mouseleave', () => this.hide());
   }
 
   private unbindRootEvents(): void {
@@ -331,10 +339,10 @@ export class Drop {
   }
 
   private setPosition(): void {
-    if (!this.target || !this.root || !this.props) return;
+    if (!this.target || !this.dom.root || !this.props) return;
 
     const rect = this.target.getBoundingClientRect();
-    const drop = this.root;
+    const drop = this.dom.root;
     const { offset, position } = this.props;
 
     drop.style.visibility = 'hidden';
@@ -398,9 +406,9 @@ export class Drop {
 
   private docClick(event: Event): void {
     if (!(event.target instanceof Node)) return;
-    if (!this.root || !this.target) return;
+    if (!this.dom.root || !this.target) return;
     if (
-      !this.root.contains(event.target) &&
+      !this.dom.root.contains(event.target) &&
       !this.target.contains(event.target)
     ) {
       this.hide();
@@ -408,21 +416,22 @@ export class Drop {
   }
 
   private exec(visible: boolean): void {
-    if (!this.root || !this.props) return;
+    const { root } = this.dom;
+    if (!root || !this.props) return;
 
     if (visible) {
-      if (!this.root.parentNode) document.body.appendChild(this.root);
+      if (!root.parentNode) document.body.appendChild(root);
       this.bindRootEvents();
       this.setPosition();
     } else {
       this.unbindRootEvents();
-      this.root.style.top = '';
-      this.root.style.left = '';
-      this.root.remove();
+      root.style.top = '';
+      root.style.left = '';
+      root.remove();
     }
 
-    this.root.setAttribute('aria-hidden', visible ? 'false' : 'true');
-    this.root.setAttribute('aria-expanded', visible ? 'true' : 'false');
+    root.setAttribute('aria-hidden', visible ? 'false' : 'true');
+    root.setAttribute('aria-expanded', visible ? 'true' : 'false');
 
     this.isVisible = visible;
   }
@@ -467,10 +476,10 @@ export class Drop {
     if (this.timer.hide) clearTimeout(this.timer.hide);
 
     this.unbindEvents();
-    this.root?.remove();
+    this.dom.root?.remove();
 
     this.props = null;
-    this.root = null;
+    this.dom.root = null;
     this.target = null;
     this.timer = { show: null, hide: null };
     this.cleanup?.events.clear();
@@ -480,8 +489,8 @@ export class Drop {
 }
 
 export function createDrop(
-  container: DOMReference,
-  input: DropProps = {}
-): Drop {
-  return new Drop(container, input);
+  element: DOMReference,
+  props: DropProps = {}
+): DropInstance {
+  return new Drop(element, props);
 }

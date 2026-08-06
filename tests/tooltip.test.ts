@@ -9,9 +9,9 @@ import {
   vi,
 } from 'vite-plus/test';
 
-import { Tooltip, createTooltip } from '../src/components/tooltip.ts';
+import { createTooltip } from '../src/primitives/tooltip.ts';
 
-let tooltip: Tooltip | null = null;
+let tooltip: ReturnType<typeof createTooltip> | null = null;
 
 function target(id = 'target'): HTMLButtonElement {
   const button = document.createElement('button');
@@ -34,18 +34,18 @@ afterEach(() => {
 describe('Tooltip', () => {
   it('builds tooltip content through Drop with stable data markers', () => {
     const button = target();
-    tooltip = new Tooltip(button, {
+    tooltip = createTooltip(button, {
       id: 'tip',
       name: 'help',
       message: 'Helpful message',
     });
 
-    expect(tooltip.drop?.root?.getAttribute('data-drop')).toBe('help');
+    expect(tooltip.dom.root?.getAttribute('data-drop')).toBe('help');
     expect(
-      tooltip.drop?.root?.querySelector('[data-tooltip="help"]')
+      tooltip.dom.root?.querySelector('[data-tooltip="help"]')
     ).toBeTruthy();
     expect(
-      tooltip.drop?.root?.querySelector('[data-tooltip-message]')?.textContent
+      tooltip.dom.root?.querySelector('[data-tooltip-message]')?.textContent
     ).toBe('Helpful message');
   });
 
@@ -59,25 +59,71 @@ describe('Tooltip', () => {
       },
     });
 
-    expect(tooltip.drop?.root?.classList.contains('j-drop')).toBe(true);
+    expect(tooltip.dom.root?.classList.contains('j-drop')).toBe(true);
     expect(
-      tooltip.drop?.root
+      tooltip.dom.root
         ?.querySelector('[data-tooltip]')
         ?.classList.contains('qa-tooltip')
     ).toBe(true);
     expect(
-      tooltip.drop?.root
+      tooltip.dom.root
         ?.querySelector('[data-tooltip-message]')
         ?.classList.contains('qa-tooltip-message')
     ).toBe(true);
 
     tooltip.show(false);
-    expect(tooltip.drop?.root?.getAttribute('aria-expanded')).toBe('true');
+    expect(tooltip.dom.root?.getAttribute('aria-expanded')).toBe('true');
+  });
+
+  it('sets theme class only when theme is configured', () => {
+    const defaultButton = target('default-theme');
+    tooltip = createTooltip(defaultButton, {
+      message: 'Default theme',
+    });
+
+    expect(
+      tooltip.dom.root
+        ?.querySelector('[data-tooltip]')
+        ?.classList.contains('is-primary')
+    ).toBe(false);
+
+    tooltip.destroy();
+
+    const themedButton = target('primary-theme');
+    tooltip = createTooltip(themedButton, {
+      message: 'Primary theme',
+      theme: 'primary',
+    });
+
+    expect(
+      tooltip.dom.root
+        ?.querySelector('[data-tooltip]')
+        ?.classList.contains('is-primary')
+    ).toBe(true);
+  });
+
+  it('allows ui theme className overrides', () => {
+    const button = target('theme-class');
+    tooltip = createTooltip(button, {
+      message: 'Theme class',
+      theme: 'error',
+      className: {
+        ui: {
+          error: 'qa-error-theme',
+        },
+      },
+    });
+
+    const container = tooltip.dom.root?.querySelector('[data-tooltip]');
+
+    expect(container?.classList.contains('j-tooltip')).toBe(true);
+    expect(container?.classList.contains('qa-error-theme')).toBe(true);
+    expect(container?.classList.contains('ui-error')).toBe(false);
   });
 
   it('proxies show, hide and toggle to Drop', () => {
     const button = target();
-    tooltip = new Tooltip(button, {
+    tooltip = createTooltip(button, {
       message: 'Proxy message',
       mode: 'click',
       delay: 0,
@@ -93,17 +139,26 @@ describe('Tooltip', () => {
 
   it('validates message and clears drop on destroy', () => {
     const button = target();
-    expect(() => new Tooltip(button, { message: '   ' })).toThrow(
+    expect(() => createTooltip(button, { message: '   ' })).toThrow(
       /Tooltip\.props\.message/
     );
+    expect(() =>
+      createTooltip(button, { message: 'Invalid', theme: true as never })
+    ).toThrow(/Tooltip\.props\.theme/);
+    expect(() =>
+      createTooltip(button, {
+        message: 'Invalid',
+        theme: 'secondary' as never,
+      })
+    ).toThrow(/Tooltip\.props\.theme/);
 
     const onShown = vi.fn();
-    tooltip = new Tooltip(button, {
+    tooltip = createTooltip(button, {
       message: 'Destroy message',
       onShown,
     });
     tooltip.show(false);
-    const root = tooltip.drop?.root;
+    const root = tooltip.dom.root;
     expect(onShown).toHaveBeenCalled();
 
     tooltip.destroy();

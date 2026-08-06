@@ -1,7 +1,7 @@
 @layer themes {
-    .j-popup-layout {
-        --popup-layout-padding: var(--s4);
-        --popup-bg: var(--ui-popup-bg);
-        --popup-backdrop-filter: blur(4px);
-    }
+  .j-popup-layout {
+    --popup-layout-padding: var(--s4);
+    --popup-bg: var(--ui-popup-bg);
+    --popup-backdrop-filter: blur(4px);
+  }
 }

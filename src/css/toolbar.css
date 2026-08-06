@@ -46,26 +46,25 @@
   .heading-drop-menu,
   .editor-size-menu,
   .color-drop-menu,
-
   .editor-drop-heading,
   .editor-drop-size,
   .editor-drop-color {
-    background: var(--toolbar-drop-bg);
-    box-shadow: var(--toolbar-drop-box-shadow);
-    border: var(--toolbar-drop-border);
-    border-radius: var(--toolbar-drop-radius);
-    font-size: var(--toolbar-drop-font-size);
+    background: var(--toolbar-drop-bg, var(--ui-bg-subtle));
+    box-shadow: var(--toolbar-drop-box-shadow, var(--shadow-md));
+    border: var(--toolbar-drop-border, 1px solid var(--ui-border));
+    border-radius: var(--toolbar-drop-radius, var(--radius-sm));
+    font-size: var(--toolbar-drop-font-size, var(--font-size-md));
   }
 
   .editor-drop-color {
-    padding: var(--toolbar-drop-padding);
+    padding: var(--toolbar-drop-padding, var(--space));
   }
 
   .editor-drop-color .color-panel {
-    padding: .5rem;
+    padding: 0.5rem;
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    gap: .5rem;
+    gap: 0.5rem;
   }
 
   .editor-drop-color .color-panel button.color-btn {

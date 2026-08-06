@@ -1,34 +1,32 @@
 import {
   bindAttr,
   createDeepStore,
+  createEffect,
   createRoot,
   flushSync,
-  insert,
   jsx,
+  untrack,
 } from 'vanilla-signal';
 
 import Component, {
   type ComponentDOM,
   type ComponentRuntime,
 } from '../core/Component.ts';
+import { icon } from '../primitives/icons.ts';
+import {
+  type RenderableContent,
+  normalizeContentNodes,
+} from '../utilities/dom.ts';
+import { randomId } from '../utilities/id.ts';
 import {
   type ResolveSchema,
-  randomId,
   resolveProps,
   validateParam,
-} from '../utilities/core.ts';
-import {
-  type DOMReference,
-  type RenderableContent,
-  isRenderableContent,
-  normalizeContentNodes,
-  requireContainer,
-} from '../utilities/dom.ts';
-import { icon } from './icons.ts';
+} from '../utilities/types.ts';
 
-export type AccordionActive = number | string | Array<number | string> | null;
+type AccordionActive = number | string | Array<number | string> | null;
 
-export interface AccordionClassNames {
+interface AccordionClassNames {
   root: string;
   header: string;
   title: string;
@@ -37,28 +35,28 @@ export interface AccordionClassNames {
   content: string;
 }
 
-export type AccordionClassNameConfig = Partial<AccordionClassNames>;
+type AccordionClassNameConfig = Partial<AccordionClassNames>;
 
-export interface AccordionItem extends Record<string, unknown> {
+interface AccordionItem extends Record<string, unknown> {
   name?: string;
   title: RenderableContent<AccordionContentContext>;
   content: RenderableContent<AccordionContentContext>;
 }
 
-export interface AccordionProps extends Record<string, unknown> {
+interface AccordionProps extends Record<string, unknown> {
   id?: string | null;
   active?: AccordionActive;
   collapsible?: boolean;
   multiple?: boolean;
   className?: AccordionClassNameConfig;
-  items?: AccordionItem[];
+  items: AccordionItem[];
   onChange?:
     | ((
         index: number,
         name: string,
         header: HTMLElement,
         panel: HTMLElement,
-        accordion: Accordion
+        accordion: AccordionInstance
       ) => void | Promise<void>)
     | null;
 }
@@ -73,30 +71,47 @@ interface ResolvedAccordionProps extends Record<string, unknown> {
   onChange: NonNullable<AccordionProps['onChange']> | null;
 }
 
+interface AccordionCurrent {
+  index: number | null;
+  name: string | null;
+}
+
 interface AccordionState extends Record<string, unknown> {
+  items: AccordionItem[];
   activeNames: string[];
-  current: {
-    index: number | null;
-    name: string | null;
-  };
+  current: AccordionCurrent;
 }
 
 interface AccordionDOM extends ComponentDOM {
   root: HTMLElement | null;
-  container: Element;
   headers: HTMLElement[];
   panels: HTMLElement[];
 }
 
-interface AccordionRuntime extends ComponentRuntime {}
+interface AccordionRuntime extends ComponentRuntime {
+  built: boolean;
+}
 
-export interface AccordionContentContext {
-  accordion: Accordion;
+interface AccordionContentContext {
+  accordion: AccordionInstance;
   item: AccordionItem;
   index: number;
   type: 'title' | 'content';
   active: boolean;
 }
+
+type AccordionInstance = Component<
+  ResolvedAccordionProps,
+  AccordionState,
+  AccordionDOM
+> & {
+  runtime: AccordionRuntime;
+  state: AccordionState;
+  build(): AccordionInstance;
+  isActive(name: string): boolean;
+  getIndex(value: number | string | undefined | null): number;
+  activate(value: number | string | undefined): Promise<void>;
+};
 
 const DEFAULT_CLASS_NAMES: AccordionClassNames = {
   root: 'j-accordion',
@@ -107,25 +122,29 @@ const DEFAULT_CLASS_NAMES: AccordionClassNames = {
   content: 'panel-content',
 };
 
+const ACCORDION_ITEM_RULE = {
+  type: 'plainObject',
+  shape: {
+    name: ['string', 'null', 'undefined'],
+    title: 'renderable',
+    content: 'renderable',
+  },
+};
+
 const ACCORDION_ITEMS_RULE = {
   type: 'array',
-  validate: (value: unknown) => Array.isArray(value) && value.length > 0,
-  message: 'expects a non-empty array.',
+  nonEmpty: true,
+  items: ACCORDION_ITEM_RULE,
 };
 
 const ACCORDION_ACTIVE_RULE = {
   types: ['number', 'string', 'array', 'null'],
   validate: (value: unknown) => {
     if (value == null) return true;
-    if (Array.isArray(value)) {
-      return value.every(
-        (item) => typeof item === 'number' || typeof item === 'string'
-      );
-    }
-    if (typeof value === 'number') return Number.isInteger(value) && value >= 0;
-    return typeof value === 'string' && value.trim().length > 0;
+    if (Array.isArray(value)) return value.every(isActiveValue);
+    return isActiveValue(value);
   },
-  message: 'expects a positive number, string, array or null.',
+  message: 'expects a non-negative integer, non-empty string, array or null.',
 };
 
 const ACCORDION_PROPS_SCHEMA = {
@@ -153,58 +172,116 @@ const ACCORDION_PROPS_SCHEMA = {
     }),
   },
   onChange: { default: null, types: ['function', 'null'] },
-  items: { default: [], type: 'array' },
+  items: { default: [], ...ACCORDION_ITEMS_RULE },
 } satisfies ResolveSchema<AccordionProps>;
 
-function cloneItems(items: unknown): AccordionItem[] {
-  return Array.isArray(items)
-    ? items.map((item) => ({ ...(item as AccordionItem) }))
-    : [];
+function isActiveValue(value: unknown): value is number | string {
+  if (typeof value === 'number') return Number.isInteger(value) && value >= 0;
+  return typeof value === 'string' && value.trim().length > 0;
 }
 
-function normalizeProps(input: AccordionProps): ResolvedAccordionProps {
-  const props = resolveProps(input, ACCORDION_PROPS_SCHEMA, 'Accordion');
+function normalizeProps(props: AccordionProps): ResolvedAccordionProps {
+  const resolved = resolveProps(
+    props,
+    ACCORDION_PROPS_SCHEMA,
+    'Accordion.props'
+  );
   return {
-    id: props.id as string,
-    active: props.active as AccordionActive,
-    collapsible: props.collapsible as boolean,
-    multiple: props.multiple as boolean,
-    className: props.className as AccordionClassNames,
-    items: cloneItems(props.items),
-    onChange: props.onChange as ResolvedAccordionProps['onChange'],
+    id: resolved.id as string,
+    active: resolved.active as AccordionActive,
+    collapsible: resolved.collapsible as boolean,
+    multiple: resolved.multiple as boolean,
+    className: resolved.className as AccordionClassNames,
+    items: normalizeItems(resolved.items, false),
+    onChange: resolved.onChange as ResolvedAccordionProps['onChange'],
   };
 }
 
-function normalizeItems(items: AccordionItem[]): AccordionItem[] {
-  validateParam('items', items, ACCORDION_ITEMS_RULE, 'Accordion');
+function normalizeItems(items: unknown, validate = true): AccordionItem[] {
+  if (validate) {
+    validateParam('items', items, ACCORDION_ITEMS_RULE, 'Accordion');
+  }
 
-  return items.map((item) => {
-    if (!item || typeof item !== 'object' || Array.isArray(item)) {
-      throw new Error('Accordion: item expects an object.');
+  const names = new Set<string>();
+
+  return (items as unknown[]).map((item) => {
+    const source = item as AccordionItem;
+    const name = typeof source.name === 'string' ? source.name.trim() : '';
+    if (name) {
+      if (names.has(name)) {
+        throw new Error(`Accordion: item name "${name}" must be unique.`);
+      }
+      names.add(name);
     }
-    if (item.name != null && typeof item.name !== 'string') {
-      throw new Error('Accordion: item name expects a string.');
-    }
-    if (!isRenderableContent(item.title)) {
-      throw new Error(
-        'Accordion: item title expects string, Node, array, function or null.'
-      );
-    }
-    if (!isRenderableContent(item.content)) {
-      throw new Error(
-        'Accordion: item content expects string, Node, array, function or null.'
-      );
-    }
-    return { ...item, name: item.name || randomId() };
+
+    return {
+      ...source,
+      name: name || randomId(),
+    };
   });
+}
+
+function needsItemsSync(
+  source: AccordionItem[],
+  normalized: AccordionItem[]
+): boolean {
+  return normalized.some((item, index) => source[index]?.name !== item.name);
+}
+
+function resolveActiveItemNames(
+  active: AccordionActive,
+  items: AccordionItem[],
+  multiple: boolean
+): string[] {
+  if (active == null) return [];
+
+  const values = Array.isArray(active) ? active : [active];
+  const names: string[] = [];
+
+  for (const value of values) {
+    const index =
+      typeof value === 'number'
+        ? value
+        : items.findIndex((item) => item.name === value);
+    const name = items[index]?.name;
+
+    if (!name) continue;
+
+    names.push(name);
+    if (!multiple) break;
+  }
+
+  return Array.from(new Set(names));
+}
+
+function reconcileActiveNames(
+  activeNames: string[],
+  items: AccordionItem[],
+  multiple: boolean
+): string[] {
+  const names = new Set(items.map((item) => item.name).filter(Boolean));
+  const nextNames = activeNames.filter((name) => names.has(name));
+  return multiple ? nextNames : nextNames.slice(0, 1);
+}
+
+function createCurrentState(
+  activeNames: string[],
+  items: AccordionItem[]
+): AccordionCurrent {
+  const name = activeNames[0] || null;
+  if (!name) return { index: null, name: null };
+
+  const index = items.findIndex((item) => item.name === name);
+  return index >= 0 ? { index, name } : { index: null, name: null };
 }
 
 /**
  * 轻量手风琴组件，继承 Component。
  *
- * DOM 创建一次，通过 createEffect 细粒度更新 class/ARIA。
+ * 构造器只验证和保存初始配置；调用 build() 后才创建 DOM 和绑定交互。
+ * items 属于响应式 state，变更后自动重建面板结构。
  */
-export class Accordion extends Component<
+class Accordion extends Component<
   ResolvedAccordionProps,
   AccordionState,
   AccordionDOM
@@ -212,38 +289,33 @@ export class Accordion extends Component<
   declare runtime: AccordionRuntime;
   declare state: AccordionState;
   private bindingsDispose: (() => void) | null;
+  private itemsDispose: (() => void) | null;
 
-  /**
-   * @param {Element|Node|string|Array} container 挂载容器（元素、选择器或 JSX/h 返回节点）。
-   * @param {object} [input={}] 手风琴配置。
-   */
-  constructor(container: DOMReference, input: AccordionProps = {}) {
-    const el = requireContainer(container, 'Accordion');
-    const props = normalizeProps(input);
-    super(props);
+  constructor(props: AccordionProps) {
+    const resolvedProps = normalizeProps(props);
+    super(resolvedProps);
 
-    this.dom.container = el;
+    const activeNames = resolveActiveItemNames(
+      resolvedProps.active,
+      resolvedProps.items,
+      resolvedProps.multiple
+    );
+
     this.dom.headers = [];
     this.dom.panels = [];
     this.bindingsDispose = null;
-
+    this.itemsDispose = null;
+    this.runtime.built = false;
     this.state = createDeepStore({
-      activeNames: [],
-      current: { index: null, name: null },
+      items: resolvedProps.items,
+      activeNames,
+      current: createCurrentState(activeNames, resolvedProps.items),
     }) as AccordionState;
-
-    try {
-      this.onInit(props);
-    } catch (error) {
-      this.destroy();
-      throw error;
-    }
   }
 
   protected onInit(props: ResolvedAccordionProps): void {
-    this.root = this.buildRoot(props);
-    this.buildItems(props);
-    this.syncActiveNames(this.resolveActiveNames(props.active));
+    this.dom.root = this.buildRoot(props);
+    this.bindItems();
     this.bindEvents();
   }
 
@@ -255,33 +327,64 @@ export class Accordion extends Component<
     }) as HTMLElement;
   }
 
-  private buildItems(props: ResolvedAccordionProps): void {
-    const items = normalizeItems(props.items);
-    const fragment = document.createDocumentFragment();
+  private bindItems(): void {
+    this.itemsDispose?.();
+    this.itemsDispose = createRoot((dispose) => {
+      createEffect(() => {
+        const sourceItems = this.state.items;
+        const items = normalizeItems(sourceItems);
 
+        untrack(() => {
+          if (needsItemsSync(sourceItems, items)) {
+            this.state.items = items;
+          }
+
+          const activeNames = reconcileActiveNames(
+            this.state.activeNames,
+            items,
+            this.props.multiple
+          );
+          this.buildItems(items, activeNames);
+          this.syncActiveNames(activeNames, items);
+        });
+      });
+
+      return dispose;
+    });
+  }
+
+  private buildItems(items: AccordionItem[], activeNames: string[]): void {
+    if (!this.dom.root) return;
+
+    const fragment = document.createDocumentFragment();
+    this.bindingsDispose?.();
+    this.bindingsDispose = null;
+    this.dom.root.textContent = '';
     this.dom.headers = [];
     this.dom.panels = [];
 
     items.forEach((item, index) => {
       const name = item.name || randomId();
-      const headerId = `${props.id}_header_${index}`;
-      const panelId = `${props.id}_panel_${index}`;
+      const active = activeNames.includes(name);
+      const headerId = `${this.props.id}_header_${index}`;
+      const panelId = `${this.props.id}_panel_${index}`;
 
       const header = jsx('div', {
-        className: props.className.header,
-        'data-accordion-header': name,
+        className: this.props.className.header,
         id: headerId,
+        'data-accordion-header': name,
         role: 'button',
         tabindex: '0',
         'aria-controls': panelId,
         children: [
           jsx('span', {
-            className: props.className.title,
+            className: this.props.className.title,
             'data-accordion-title': name,
-            children: this.contentView(item, index, 'title'),
+            role: 'heading',
+            children: this.contentView(item, index, 'title', active),
           }),
           jsx('span', {
-            className: props.className.arrow,
+            className: this.props.className.arrow,
             'data-accordion-arrow': name,
             'aria-hidden': 'true',
             children: icon('arrow-down'),
@@ -290,15 +393,15 @@ export class Accordion extends Component<
       }) as HTMLElement;
 
       const panel = jsx('div', {
-        className: props.className.panel,
+        className: this.props.className.panel,
         'data-accordion-panel': name,
         id: panelId,
         role: 'region',
         'aria-labelledby': headerId,
         children: jsx('div', {
-          className: props.className.content,
+          className: this.props.className.content,
           'data-accordion-content': name,
-          children: this.contentView(item, index, 'content'),
+          children: this.contentView(item, index, 'content', active),
         }),
       }) as HTMLElement;
 
@@ -307,29 +410,27 @@ export class Accordion extends Component<
       fragment.append(header, panel);
     });
 
-    this.root?.append(fragment);
+    this.dom.root.append(fragment);
+    this.bindItemState();
+  }
 
-    this.bindingsDispose?.();
+  private bindItemState(): void {
     this.bindingsDispose = createRoot((dispose) => {
       this.dom.headers.forEach((header) => {
         const name = header.dataset.accordionHeader || '';
-        // bindClass(header, this.props.className.active, () =>
-        //   this.state.activeNames.includes(name)
-        // );
         bindAttr(header, 'aria-expanded', () =>
           this.state.activeNames.includes(name) ? 'true' : 'false'
         );
       });
-      this.dom.panels.forEach((panel, i) => {
-        const name = this.dom.headers[i]?.dataset.accordionHeader || '';
-        // bindClass(panel, this.props.className.active, () =>
-        //   this.state.activeNames.includes(name)
-        // );
+
+      this.dom.panels.forEach((panel, index) => {
+        const name = this.dom.headers[index]?.dataset.accordionHeader || '';
         bindAttr(panel, 'aria-hidden', () =>
           this.state.activeNames.includes(name) ? 'false' : 'true'
         );
         bindAttr(panel, 'hidden', () => !this.state.activeNames.includes(name));
       });
+
       return dispose;
     });
   }
@@ -337,64 +438,48 @@ export class Accordion extends Component<
   private contentView(
     item: AccordionItem,
     index: number,
-    type: 'title' | 'content'
+    type: 'title' | 'content',
+    active: boolean
   ): Node[] {
     return normalizeContentNodes(type === 'title' ? item.title : item.content, {
       accordion: this,
       item,
       index,
       type,
-      active: false,
+      active,
     });
   }
 
-  private resolveActiveNames(active: AccordionActive): string[] {
-    if (active == null) return [];
-    const values = Array.isArray(active) ? active : [active];
-    const names: string[] = [];
-    for (const value of values) {
-      const index = this.getIndex(value);
-      if (index < 0 || index >= this.dom.headers.length) continue;
-      names.push(
-        this.dom.headers[index].dataset.accordionHeader || String(index)
-      );
-      if (!this.props.multiple) break;
-    }
-    return Array.from(new Set(names));
-  }
-
-  private syncActiveNames(names: string[]): void {
-    const firstName = names[0] || null;
-    const index = firstName ? this.getIndex(firstName) : null;
+  private syncActiveNames(names: string[], items = this.state.items): void {
     flushSync(() => {
       this.state.activeNames = names;
-      this.state.current = { index, name: firstName };
+      this.state.current = createCurrentState(names, items);
     });
   }
 
   private bindEvents(): void {
     this.unbindEvents();
-    if (!this.root) return;
+    if (!this.dom.root) return;
 
-    this.cleanup.events.on('click', this.root, 'click', (event) => {
+    this.cleanup.events.on('click', this.dom.root, 'click', (event) => {
       if (!(event.target instanceof Element)) return;
       const header = event.target.closest<HTMLElement>(
         '[data-accordion-header]'
       );
-      if (!header || !this.root?.contains(header)) return;
-      void this.active(header.dataset.accordionHeader);
+      if (!header || !this.dom.root?.contains(header)) return;
+      void this.activate(header.dataset.accordionHeader);
     });
 
-    this.cleanup.events.on('keydown', this.root, 'keydown', (event) => {
+    this.cleanup.events.on('keydown', this.dom.root, 'keydown', (event) => {
       if (!(event instanceof KeyboardEvent)) return;
       if (event.key !== 'Enter' && event.key !== ' ') return;
       if (!(event.target instanceof Element)) return;
       const header = event.target.closest<HTMLElement>(
         '[data-accordion-header]'
       );
-      if (!header || !this.root?.contains(header)) return;
+      if (!header || !this.dom.root?.contains(header)) return;
       event.preventDefault();
-      void this.active(header.dataset.accordionHeader);
+      void this.activate(header.dataset.accordionHeader);
     });
   }
 
@@ -404,46 +489,6 @@ export class Accordion extends Component<
 
   isActive(name: string): boolean {
     return this.state.activeNames.includes(name);
-  }
-
-  private assertActive(method: string): void {
-    if (this.runtime.destroyed) {
-      throw new Error(`Accordion.${method}: instance has been destroyed.`);
-    }
-  }
-
-  private async activateItem(
-    val: number | string | undefined,
-    fireEvent = true
-  ): Promise<void> {
-    const index = this.getIndex(val);
-    if (index < 0 || index >= this.dom.headers.length) return;
-
-    const headerEl = this.dom.headers[index];
-    const panelEl = this.dom.panels[index];
-    const name = headerEl.dataset.accordionHeader || String(index);
-    const active = this.isActive(name);
-
-    if (active && !this.props.multiple && !this.props.collapsible) return;
-
-    let nextNames: string[];
-    if (this.props.multiple) {
-      nextNames = active
-        ? this.state.activeNames.filter((n) => n !== name)
-        : [...this.state.activeNames, name];
-    } else if (active) {
-      nextNames = this.props.collapsible ? [] : this.state.activeNames;
-    } else {
-      nextNames = [name];
-    }
-
-    this.syncActiveNames(nextNames);
-
-    if (fireEvent && this.props.onChange) {
-      await Promise.resolve(
-        this.props.onChange(index, name, headerEl, panelEl, this)
-      );
-    }
   }
 
   getIndex(val: number | string | undefined | null): number {
@@ -456,64 +501,100 @@ export class Accordion extends Component<
     return -1;
   }
 
-  /**
-   * 激活指定面板。
-   * @param {number|string} val 面板索引或名称。
-   */
-  async active(val: number | string | undefined): Promise<void> {
-    this.assertActive('active');
-    await this.activateItem(val, true);
+  async activate(value: number | string | undefined): Promise<void> {
+    this.assertActive('activate');
+    this.assertBuilt('activate');
+
+    const index = this.getIndex(value);
+    if (index < 0 || index >= this.dom.headers.length) return;
+
+    const headerEl = this.dom.headers[index];
+    const panelEl = this.dom.panels[index];
+    const name = headerEl.dataset.accordionHeader || String(index);
+    const isActive = this.isActive(name);
+
+    if (isActive && !this.props.multiple && !this.props.collapsible) return;
+
+    let activeNames: string[];
+    if (this.props.multiple) {
+      if (isActive) {
+        const nextNames = this.state.activeNames.filter(
+          (item) => item !== name
+        );
+        activeNames =
+          !this.props.collapsible && nextNames.length === 0
+            ? this.state.activeNames
+            : nextNames;
+      } else {
+        activeNames = [...this.state.activeNames, name];
+      }
+    } else if (isActive) {
+      activeNames = this.props.collapsible ? [] : this.state.activeNames;
+    } else {
+      activeNames = [name];
+    }
+
+    this.syncActiveNames(activeNames);
+
+    if (this.props.onChange) {
+      await Promise.resolve(
+        this.props.onChange(index, name, headerEl, panelEl, this)
+      );
+    }
   }
 
-  /**
-   * 将组件挂载到构造器指定的容器中。
-   */
   build(): this {
     this.assertActive('build');
-    insert(this.dom.container, () => this.root);
+    if (this.runtime.built) return this;
+
+    this.runtime.built = true;
+    try {
+      this.init(this.props);
+    } catch (error) {
+      this.runtime.built = false;
+      this.destroy();
+      throw error;
+    }
+
     return this;
   }
 
-  render(): this {
-    return this.build();
+  protected normalizeStatePatch(
+    patch: Partial<AccordionState>
+  ): Partial<AccordionState> {
+    return {
+      ...patch,
+      ...(Object.hasOwn(patch, 'items')
+        ? { items: normalizeItems(patch.items) }
+        : {}),
+    };
   }
 
-  /**
-   * 动态替换全部面板条目。
-   * @param {AccordionItem[]} items 新面板配置。
-   * @param {number|string|Array<number|string>|null} [active=0] 替换后默认激活项。
-   */
-  setItems(items: AccordionItem[], active: AccordionActive = 0): this {
-    this.assertActive('setItems');
-    validateParam('items', items, ACCORDION_ITEMS_RULE, 'Accordion.setItems');
-    validateParam(
-      'active',
-      active,
-      ACCORDION_ACTIVE_RULE,
-      'Accordion.setItems'
-    );
+  private assertActive(method: string): void {
+    if (this.runtime.destroyed) {
+      throw new Error(`Accordion.${method}: instance has been destroyed.`);
+    }
+  }
 
-    this.props.items = cloneItems(normalizeItems(items));
-    this.props.active = active;
-
-    if (this.root) this.root.textContent = '';
-    this.buildItems(this.props);
-    this.syncActiveNames(this.resolveActiveNames(active));
-    this.bindEvents();
-    return this;
+  private assertBuilt(method: string): void {
+    if (!this.runtime.built) {
+      throw new Error(`Accordion.${method}: call build() first.`);
+    }
   }
 
   protected onDestroy(): void {
     this.unbindEvents();
+    this.itemsDispose?.();
     this.bindingsDispose?.();
+    this.itemsDispose = null;
     this.bindingsDispose = null;
-    if (this.root?.parentNode) this.root.parentNode.removeChild(this.root);
+    if (this.dom.root?.parentNode) {
+      this.dom.root.parentNode.removeChild(this.dom.root);
+    }
+    this.runtime.built = false;
   }
 }
 
-export function createAccordion(
-  container: DOMReference,
-  input: AccordionProps = {}
-): Accordion {
-  return new Accordion(container, input);
+export function createAccordion(props: AccordionProps): AccordionInstance {
+  return new Accordion(props);
 }

@@ -1,33 +1,79 @@
 import { jsx } from 'vanilla-signal';
 
-import { type ResolveSchema, resolveProps } from '../utilities/core.ts';
+import { joinClasses } from '../utilities/class-name.ts';
 import { type DOMReference } from '../utilities/dom.ts';
-import {
-  Drop,
-  type DropDelay,
-  type DropMode,
-  type DropPosition,
-} from './drop.ts';
+import { type ResolveSchema, resolveProps } from '../utilities/types.ts';
+import { createDrop } from './drop.ts';
 
-export interface TooltipClassNames {
-  container: string;
-  message: string;
+type DropInstance = ReturnType<typeof createDrop>;
+type DropMode = 'hover' | 'click';
+type DropPosition =
+  | 'auto'
+  | 'top-left'
+  | 'top-center'
+  | 'top-right'
+  | 'bottom-left'
+  | 'bottom-center'
+  | 'bottom-right'
+  | 'left'
+  | 'right';
+
+interface DropDelay {
+  show?: number;
+  hide?: number;
 }
 
-export type TooltipClassNameConfig = Partial<TooltipClassNames>;
+interface TooltipDom {
+  root: HTMLElement | null;
+}
 
-export interface TooltipProps extends Record<string, unknown> {
+interface TooltipInstance {
+  dom: TooltipDom;
+  drop: DropInstance | null;
+  show(useDelay?: boolean): void;
+  hide(useDelay?: boolean): void;
+  toggle(): void;
+  destroy(): void;
+}
+
+interface TooltipClassNames {
+  container: string;
+  message: string;
+  ui: TooltipThemeClassNames;
+}
+
+interface TooltipThemeClassNames {
+  reverse: string;
+  primary: string;
+  success: string;
+  warning: string;
+  error: string;
+}
+
+type TooltipTheme =
+  | false
+  | 'reverse'
+  | 'primary'
+  | 'success'
+  | 'warning'
+  | 'error';
+type TooltipClassNameConfig = Partial<Omit<TooltipClassNames, 'ui'>> & {
+  ui?: Partial<TooltipThemeClassNames>;
+};
+
+interface TooltipProps extends Record<string, unknown> {
   name?: string | null;
   mode?: DropMode;
   position?: DropPosition;
   offset?: number;
   message?: string;
+  theme?: TooltipTheme;
   className?: TooltipClassNameConfig;
   id?: string | null;
   delay?: number | DropDelay;
   hoverIntent?: boolean;
-  onShown?: ((drop: Drop) => void | Promise<void>) | null;
-  onHidden?: ((drop: Drop) => void | Promise<void>) | null;
+  onShown?: ((drop: DropInstance) => void | Promise<void>) | null;
+  onHidden?: ((drop: DropInstance) => void | Promise<void>) | null;
 }
 
 interface ResolvedTooltipProps extends Record<string, unknown> {
@@ -36,6 +82,7 @@ interface ResolvedTooltipProps extends Record<string, unknown> {
   position: DropPosition;
   offset: number;
   message: string;
+  theme: TooltipTheme;
   className: TooltipClassNames;
   id: string | null;
   delay: number | DropDelay;
@@ -46,8 +93,29 @@ interface ResolvedTooltipProps extends Record<string, unknown> {
 
 const DEFAULT_CLASS_NAMES: TooltipClassNames = {
   container: 'j-tooltip',
-  message: 'tooltip-message',
+  message: 'el-text',
+  ui: {
+    reverse: 'is-reverse',
+    primary: 'is-primary',
+    success: 'is-success',
+    warning: 'is-warning',
+    error: 'is-error',
+  },
 };
+
+function normalizeClassNames(value: unknown): TooltipClassNames {
+  const input = value && typeof value === 'object' ? value : {};
+  const ui =
+    'ui' in input && input.ui && typeof input.ui === 'object' ? input.ui : {};
+  return {
+    ...DEFAULT_CLASS_NAMES,
+    ...input,
+    ui: {
+      ...DEFAULT_CLASS_NAMES.ui,
+      ...ui,
+    },
+  };
+}
 
 const TOOLTIP_OPTIONS_SCHEMA = {
   name: { default: null, types: ['string', 'null'] },
@@ -73,16 +141,17 @@ const TOOLTIP_OPTIONS_SCHEMA = {
     type: 'string',
     normalize: (value: unknown) =>
       typeof value === 'string' ? value.trim() : value,
-    validate: (value: unknown) => typeof value === 'string' && value.length > 0,
-    message: 'expects a non-empty string.',
+    nonEmpty: true,
+  },
+  theme: {
+    default: false,
+    types: ['string', 'boolean'],
+    enum: [false, 'reverse', 'primary', 'success', 'warning', 'error'],
   },
   className: {
     default: DEFAULT_CLASS_NAMES,
     type: 'object',
-    normalize: (value: unknown) => ({
-      ...DEFAULT_CLASS_NAMES,
-      ...(value && typeof value === 'object' ? value : {}),
-    }),
+    normalize: normalizeClassNames,
   },
   id: { default: null, types: ['string', 'null'] },
   delay: { default: 100, types: ['number', 'object'] },
@@ -99,6 +168,7 @@ function normalizeProps(input: TooltipProps): ResolvedTooltipProps {
     position: props.position as DropPosition,
     offset: props.offset as number,
     message: props.message as string,
+    theme: props.theme as TooltipTheme,
     className: props.className as TooltipClassNames,
     id: props.id as string | null,
     delay: props.delay as number | DropDelay,
@@ -113,14 +183,15 @@ function normalizeProps(input: TooltipProps): ResolvedTooltipProps {
  *
  * 基于 Drop 实现，提供更轻量的文本提示封装。
  */
-export class Tooltip {
-  drop: Drop | null;
+class Tooltip implements TooltipInstance {
+  dom: TooltipDom;
+  drop: DropInstance | null;
   props: ResolvedTooltipProps | null;
 
   constructor(element: DOMReference, props: TooltipProps = {}) {
     const settings = normalizeProps(props);
     this.props = settings;
-    this.drop = new Drop(element, {
+    this.drop = createDrop(element, {
       name: settings.name,
       mode: settings.mode,
       position: settings.position,
@@ -132,11 +203,15 @@ export class Tooltip {
       onHidden: settings.onHidden,
       content: this.buildContent(settings),
     });
+    this.dom = this.drop.dom;
   }
 
   private buildContent(settings: ResolvedTooltipProps): HTMLElement {
     return jsx('div', {
-      className: settings.className.container,
+      className: joinClasses(
+        settings.className.container,
+        settings.theme && settings.className.ui[settings.theme]
+      ),
       'data-tooltip': settings.name || settings.id || '',
       children: jsx('div', {
         className: settings.className.message,
@@ -168,6 +243,6 @@ export class Tooltip {
 export function createTooltip(
   element: DOMReference,
   props: TooltipProps = {}
-): Tooltip {
+): TooltipInstance {
   return new Tooltip(element, props);
 }

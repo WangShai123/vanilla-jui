@@ -1,3 +1,4 @@
+import { createStorage, type Storage } from 'vanilla-create-storage';
 import {
   bindAttr,
   bindClass,
@@ -9,18 +10,16 @@ import {
 import { t } from 'vanilla-signal-i18n';
 
 import locales from '../locales/index.ts';
+import { joinClasses } from '../utilities/class-name.ts';
 import { all } from '../utilities/dom.ts';
 import { createEventManager, type IEventManager } from '../utilities/events.ts';
-import { getCookie, setCookie } from '../utilities/storage.ts';
+import { isPlainObject } from '../utilities/object.ts';
 
 export type ThemeConfigKey = 'mode' | 'theme' | 'radius' | 'shadow' | 'font';
 
 export interface ThemeClassNames {
   panel: string;
-  closeWrap: string;
-  closeButton: string;
   title: string;
-  description: string;
   container: string;
   item: string;
   itemTitle: string;
@@ -50,7 +49,7 @@ export interface ThemePanelGroup {
   buttons: Array<[string, string]>;
 }
 
-interface ResolvedThemeOptions {
+export interface ThemeResolvedOptions {
   mode: string;
   theme: string;
   radius: string;
@@ -65,12 +64,23 @@ interface ThemeCleanup {
   events: IEventManager;
 }
 
+export interface ThemeInstance {
+  props: ThemeResolvedOptions;
+  createPanel(
+    containerClass?: string | null,
+    panelConfig?: ThemePanelGroup[] | null
+  ): HTMLElement;
+  setConfig(newConfig: ThemeOptions): void;
+  destroy(): void;
+}
+
+type ThemeStoredConfig = Partial<Record<ThemeConfigKey, string>> & {
+  render?: string;
+};
+
 const DEFAULT_CLASS_NAMES: ThemeClassNames = {
   panel: 'j-theme-palette',
-  closeWrap: 'theme-palette-close',
-  closeButton: 'j-button is-text',
   title: 'theme-palette-title',
-  description: 'theme-palette-description',
   container: 'palette-container',
   item: 'palette-item',
   itemTitle: 'item-title',
@@ -82,7 +92,7 @@ const DEFAULT_CLASS_NAMES: ThemeClassNames = {
   buttonText: 'button-text',
 };
 
-const DEFAULT_OPTIONS: ResolvedThemeOptions = {
+const DEFAULT_OPTIONS: ThemeResolvedOptions = {
   mode: 'dark',
   theme: 'indigo',
   radius: 'sm',
@@ -103,7 +113,7 @@ function mergeClassNames(className?: ThemeClassNameConfig): ThemeClassNames {
   return { ...DEFAULT_CLASS_NAMES, ...className };
 }
 
-function normalizeOptions(options: ThemeOptions = {}): ResolvedThemeOptions {
+function normalizeOptions(options: ThemeOptions = {}): ThemeResolvedOptions {
   return {
     ...DEFAULT_OPTIONS,
     ...options,
@@ -121,29 +131,52 @@ function isThemeConfigKey(value: string | undefined): value is ThemeConfigKey {
   );
 }
 
-function joinClasses(
-  ...classes: Array<string | null | undefined | false>
-): string {
-  return classes.filter(Boolean).join(' ');
+function createThemeStorage(): Storage {
+  return createStorage({
+    driver: 'cookie',
+    codec: 'json',
+    driverOptions: {
+      path: '/',
+      sameSite: 'Lax',
+      secure: typeof location !== 'undefined' && location.protocol === 'https:',
+    },
+  });
+}
+
+function normalizeStoredConfig(value: unknown): Partial<ThemeOptions> | null {
+  if (!isPlainObject(value)) return null;
+
+  const source = value as Record<string, unknown>;
+  const config: Partial<ThemeOptions> = {};
+  const keys: ThemeConfigKey[] = ['mode', 'theme', 'radius', 'shadow', 'font'];
+
+  for (const key of keys) {
+    const item = source[key];
+    if (typeof item === 'string') config[key] = item;
+  }
+
+  return Object.keys(config).length ? config : null;
 }
 
 /**
  * 主题管理组件。
  *
- * 负责主题配置的实例化、主题面板交互和 Cookie 读写。实例初始化不修改 html
- * 类名，仅在面板点击交互时同步当前点击项对应的 html class。
+ * 负责主题配置的实例化、主题面板交互和 createStorage 持久化。实例初始化不修改
+ * html 类名，仅在面板点击交互时同步当前点击项对应的 html class。
  */
-export class Theme {
-  props: ResolvedThemeOptions;
+class Theme implements ThemeInstance {
+  props: ThemeResolvedOptions;
   languages: typeof locales;
   cleanup: ThemeCleanup | null;
-  runtime: { destroyed: boolean };
+  runtime: { configVersion: number; destroyed: boolean };
+  storage: Storage;
 
   constructor(options: ThemeOptions = {}) {
     this.props = createDeepStore(normalizeOptions(options));
     this.languages = locales;
     this.cleanup = null;
-    this.runtime = { destroyed: false };
+    this.runtime = { configVersion: 0, destroyed: false };
+    this.storage = createThemeStorage();
 
     this.init();
   }
@@ -159,26 +192,39 @@ export class Theme {
   }
 
   private loadConfig(): void {
-    try {
-      const result = getCookie(this.props.key);
-      if (!result?.trim()) return;
-      const parsed = JSON.parse(result) as Partial<ThemeOptions>;
-      Object.assign(this.props, parsed, {
-        className: mergeClassNames({
-          ...this.props.className,
-          ...parsed.className,
-        }),
-      });
-    } catch {}
+    const configVersion = this.runtime.configVersion;
+    void this.storage
+      .get<unknown>(this.props.key)
+      .then((result) => {
+        if (
+          this.runtime.destroyed ||
+          this.runtime.configVersion !== configVersion
+        )
+          return;
+
+        const config = normalizeStoredConfig(result);
+        if (!config) return;
+
+        flushSync(() => {
+          Object.assign(this.props, config);
+        });
+      })
+      .catch(() => {});
   }
 
   private saveConfig(): void {
     const { mode, theme, radius, shadow, font } = this.props;
     const render = mode === 'auto' ? this.scheme() : mode;
-    setCookie(
-      this.props.key,
-      JSON.stringify({ mode, theme, radius, shadow, font, render })
-    );
+    const config: ThemeStoredConfig = {
+      mode,
+      theme,
+      radius,
+      shadow,
+      font,
+      render,
+    };
+
+    void this.storage.set(this.props.key, config).catch(() => {});
   }
 
   private scheme(): string {
@@ -224,6 +270,7 @@ export class Theme {
       if (button.classList.contains(this.props.className.active)) return;
 
       const previous = this.props[type];
+      this.runtime.configVersion += 1;
       flushSync(() => {
         this.props[type] = value;
       });
@@ -260,19 +307,6 @@ export class Theme {
       className: containerClass || className.panel,
       'data-theme-palette': 'root',
       children: [
-        // jsx('div', {
-        //   className: className.closeWrap,
-        //   'data-theme-close-wrap': '',
-        //   style: {
-        //     display: 'flex',
-        //     justifyContent: 'center',
-        //   },
-        //   children: jsx('button', {
-        //     className: className.closeButton,
-        //     'data-action': 'close',
-        //     children: this.translate('b'),
-        //   }),
-        // }),
         jsx('h3', {
           className: className.title,
           'data-theme-title': '',
@@ -281,15 +315,6 @@ export class Theme {
           },
           children: this.translate('t'),
         }),
-        // jsx('p', {
-        //   className: className.description,
-        //   'data-theme-description': '',
-        //   style: {
-        //     marginTop: 0,
-        //     fontSize: 'var(--text-sm, 0.875rem)',
-        //   },
-        //   children: this.translate('d'),
-        // }),
         jsx('div', {
           className: className.container,
           'data-theme-container': '',
@@ -353,6 +378,7 @@ export class Theme {
   }
 
   setConfig(newConfig: ThemeOptions): void {
+    this.runtime.configVersion += 1;
     flushSync(() => {
       Object.assign(this.props, newConfig, {
         className: mergeClassNames({
@@ -371,6 +397,7 @@ export class Theme {
     this.cleanup?.bindings.forEach((dispose) => dispose());
     this.cleanup?.bindings.clear();
     this.cleanup = null;
+    void this.storage.close().catch(() => {});
   }
 
   private defaultPanelConfig(): ThemePanelGroup[] {
@@ -437,4 +464,8 @@ export class Theme {
       },
     ];
   }
+}
+
+export function createTheme(options: ThemeOptions = {}): ThemeInstance {
+  return new Theme(options);
 }

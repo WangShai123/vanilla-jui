@@ -1,11 +1,11 @@
 @layer themes {
-    .j-drop {
-        --drop-border-width: 1px;
-        --drop-border-style: solid;
-        --drop-border-color: var(--ui-border);
-        --drop-border-radius: var(--radius-md);
-        --drop-fg: var(--ui-fg);
-        --drop-bg: var(--ui-bg);
-        --drop-box-shadow: var(--shadow-sm);
-    }
+  .j-drop {
+    --drop-border-width: 1px;
+    --drop-border-style: solid;
+    --drop-border-color: var(--ui-border);
+    --drop-border-radius: var(--radius-md);
+    --drop-fg: var(--ui-fg);
+    --drop-bg: var(--ui-bg);
+    --drop-box-shadow: var(--shadow-sm);
+  }
 }

@@ -141,7 +141,7 @@
     padding: var(--vertical-card-footer-padding, var(--s4));
   }
 
-  .j-card .card-content+.card-footer {
+  .j-card .card-content + .card-footer {
     padding-top: 0;
   }
 

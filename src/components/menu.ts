@@ -1,16 +1,28 @@
-import { render, jsx } from 'vanilla-signal';
+import {
+  createDeepStore,
+  createEffect,
+  createRoot,
+  jsx,
+  untrack,
+} from 'vanilla-signal';
+import { t } from 'vanilla-signal-i18n';
 
+import Component, {
+  type ComponentDOM,
+  type ComponentRuntime,
+} from '../core/Component.ts';
+import locales from '../locales/index.ts';
+import { icon } from '../primitives/icons.ts';
+import { joinClasses } from '../utilities/class-name.ts';
+import { all } from '../utilities/dom.ts';
+import { randomId } from '../utilities/id.ts';
 import {
   type ResolveSchema,
-  randomId,
   resolveProps,
   validateParam,
-} from '../utilities/core.ts';
-import { all, type DOMReference, q, resolveElement } from '../utilities/dom.ts';
-import { createEventManager, type IEventManager } from '../utilities/events.ts';
-import { icon } from './icons.ts';
+} from '../utilities/types.ts';
 
-export type MenuType = string;
+export type MenuType = string | undefined;
 export type MenuItemId = string | number;
 
 export interface MenuClassNames {
@@ -20,10 +32,9 @@ export interface MenuClassNames {
   hasChildren: string;
   link: string;
   subMenu: string;
-  back: string;
+  backItem: string;
   active: string;
-  icon: string;
-  iconPrefix: string;
+  backIcon: string;
   text: string;
 }
 
@@ -38,57 +49,88 @@ export interface MenuItem extends Record<string, unknown> {
   children?: MenuItem[];
 }
 
-export interface MenuOptions extends Record<string, unknown> {
+export interface MenuProps extends Record<string, unknown> {
   type?: MenuType;
-  id?: string;
-  items?: MenuItem[];
+  id?: string | null;
+  data?: MenuItem[];
   backText?: string;
   className?: MenuClassNameConfig;
 }
 
-interface ResolvedMenuOptions extends Record<string, unknown> {
-  type: MenuType;
+interface ResolvedMenuProps extends Record<string, unknown> {
+  type?: MenuType;
   id: string;
-  items: MenuItem[];
+  data: MenuItem[];
   backText: string;
   className: MenuClassNames;
 }
 
-interface MenuDOM {
-  root: HTMLElement | null;
+interface MenuState extends Record<string, unknown> {
+  data: MenuItem[];
 }
 
-interface MenuCleanup {
-  events: IEventManager;
-  items?: (() => void) | null;
+interface MenuDOM extends ComponentDOM {
+  root: HTMLElement | null;
+  list: HTMLElement | null;
+}
+
+interface MenuRuntime extends ComponentRuntime {
+  built: boolean;
+}
+
+interface MenuCleanupExtras {
+  state?: (() => void) | null;
+}
+
+interface MenuSnapshot {
+  data: unknown;
 }
 
 const DEFAULT_CLASS_NAMES: MenuClassNames = {
-  root: '',
+  root: 'j-menu',
   list: 'menu',
   item: 'menu-item',
   hasChildren: 'menu-item-has-children',
   link: 'menu-link',
   subMenu: 'sub-menu',
-  back: 'back',
   active: 'is-active',
-  icon: 'el-icon',
-  iconPrefix: 'el-prefix',
   text: 'menu-text',
+  backItem: 'menu-item back',
+  backIcon: 'el-icon el-prefix',
 };
 
-const MENU_OPTIONS_SCHEMA = {
-  type: { default: 'mobile', type: 'string' },
+const MENU_ITEM_RULE = {
+  type: 'object',
+  validate: isMenuItem,
+  message: 'expects { title, id?, url?, target?, classes?, children? }.',
+};
+
+const MENU_DATA_RULE = {
+  type: 'array',
+  items: MENU_ITEM_RULE,
+};
+
+const MENU_PROPS_SCHEMA = {
+  type: { default: undefined, types: ['string', 'undefined'] },
   id: {
-    default: '',
-    type: 'string',
+    default: null,
+    types: ['string', 'null'],
     normalize: (value: unknown) => {
-      if (typeof value !== 'string') return value;
-      return value.trim() === '' ? randomId() : value.trim();
+      if (typeof value === 'string') {
+        const id = value.trim();
+        return id || randomId();
+      }
+      if (value == null) return randomId();
+      return value;
     },
   },
-  items: { default: [], type: 'array' },
-  backText: { default: 'Back', type: 'string' },
+  data: {
+    default: [],
+    type: 'array',
+    normalize: cloneMenuData,
+    items: MENU_ITEM_RULE,
+  },
+  backText: { default: t('b', locales), type: 'string' },
   className: {
     default: DEFAULT_CLASS_NAMES,
     type: 'object',
@@ -97,41 +139,40 @@ const MENU_OPTIONS_SCHEMA = {
       ...(value && typeof value === 'object' ? value : {}),
     }),
   },
-} satisfies ResolveSchema<MenuOptions>;
+} satisfies ResolveSchema<MenuProps>;
 
-const MENU_ITEMS_RULE = { type: 'array' };
+const MENU_STATE_SCHEMA = {
+  data: MENU_DATA_RULE,
+};
 
-function normalizeOptions(options: MenuOptions = {}): ResolvedMenuOptions {
+function normalizeProps(input: MenuProps = {}): ResolvedMenuProps {
   const props = resolveProps(
-    options,
-    MENU_OPTIONS_SCHEMA,
-    'Menu.options'
-  ) as ResolvedMenuOptions;
+    input,
+    MENU_PROPS_SCHEMA,
+    'Menu.props'
+  ) as ResolvedMenuProps;
+
   return {
     ...props,
-    items: props.items.slice(),
+    data: cloneMenuData(props.data),
     className: { ...props.className },
   };
 }
 
-function classList(...tokens: Array<string | null | undefined>): string {
-  return tokens.filter(Boolean).join(' ');
-}
-
 function normalizeItemClasses(classes: MenuItem['classes']): string[] {
   if (classes == null) return [];
-  if (typeof classes === 'string')
+  if (typeof classes === 'string') {
     return classes.trim().split(/\s+/).filter(Boolean);
-  return classes;
+  }
+  return classes.slice();
 }
 
 function itemId(id: MenuItemId | undefined): string {
   return `menu-item-${id ?? randomId()}`;
 }
 
-function isListElement(element: Element): element is HTMLUListElement {
-  const tag = element.tagName.toLowerCase();
-  return tag === 'ul' || tag === 'ol';
+function itemUrl(url: MenuItem['url']): string {
+  return typeof url === 'string' ? url.trim() : '';
 }
 
 function isMenuItem(value: unknown): value is MenuItem {
@@ -156,10 +197,19 @@ function isMenuItem(value: unknown): value is MenuItem {
   );
 }
 
-function findMenuList(root: HTMLElement): HTMLElement | null {
-  if (root.hasAttribute('data-menu-list')) return root;
-  if (isListElement(root)) return root;
-  return q<HTMLElement>('[data-menu-list]', root);
+function cloneMenuData(data: unknown): MenuItem[] {
+  if (!Array.isArray(data)) return [];
+  return data.map((item) => {
+    validateParam('item', item, MENU_ITEM_RULE, 'Menu.data');
+    const nextItem = { ...(item as MenuItem) };
+    if (Array.isArray(nextItem.classes)) {
+      nextItem.classes = nextItem.classes.slice();
+    }
+    if (Array.isArray(nextItem.children)) {
+      nextItem.children = cloneMenuData(nextItem.children);
+    }
+    return nextItem;
+  });
 }
 
 function findDirectMenuLink(menuItem: HTMLElement): HTMLElement | null {
@@ -186,153 +236,113 @@ function findDirectBackItem(subMenu: HTMLElement): HTMLElement | null {
   );
 }
 
-/**
- * 菜单组件。
- *
- * 支持绑定已有菜单 DOM，也支持通过配置动态创建移动菜单或底部菜单。
- */
-export class Menu {
-  options: ResolvedMenuOptions | null;
-  dom: MenuDOM;
-  cleanup: MenuCleanup | null;
-  private _element: DOMReference;
-  private _bound: boolean;
-  private _destroyed: boolean;
+class MenuComponent extends Component<ResolvedMenuProps, MenuState, MenuDOM> {
+  declare runtime: MenuRuntime;
+  declare state: MenuState;
+  declare cleanup: Component['cleanup'] & MenuCleanupExtras;
 
-  /**
-   * 创建菜单实例。
-   * @param {MenuOptions} [options={}] 菜单配置。
-   * @param {Element|Node|string|Array|false} [element=false] 已有菜单节点、选择器或 JSX/h 返回节点；默认 `false` 按 items 动态创建。
-   */
-  constructor(options: MenuOptions = {}, element: DOMReference = false) {
-    this.options = normalizeOptions(options);
-    this._element = element;
-    this.dom = {
-      root: null,
-    };
-    this.cleanup = {
-      events: createEventManager(),
-    };
-    this._bound = false;
-    this._destroyed = false;
+  constructor(input: MenuProps = {}) {
+    const props = normalizeProps(input);
+    super(props);
+
+    this.dom.list = null;
+    this.cleanup.state = null;
+    this.runtime.built = false;
+
+    this.state = createDeepStore({
+      data: cloneMenuData(props.data),
+    }) as MenuState;
   }
 
-  get root(): HTMLElement | null {
-    return this.dom.root;
-  }
-
-  /**
-   * 校验菜单数据。
-   * @private
-   * @param {MenuItem[]} items 菜单数据。
-   * @returns {void}
-   */
-  _verifyItems(items: MenuItem[]): void {
-    validateParam('items', items, MENU_ITEMS_RULE, 'Menu');
-    items.forEach((item, index) => {
-      validateParam(
-        String(index),
-        item,
-        {
-          validate: isMenuItem,
-          message:
-            'expects { title, id?, url?, target?, classes?, children? }.',
-        },
-        'Menu.items'
-      );
-    });
-  }
-
-  /**
-   * 构建菜单。
-   *
-   * element 为 false 时动态创建 DOM；否则绑定已有节点。
-   * @returns {Menu}
-   */
   build(): this {
-    if (this._bound) return this;
-    if (!this.options) throw new Error('Menu.build: instance destroyed.');
-
-    if (this._element === false) {
-      this._verifyItems(this.options.items);
-      this.dom.root = this._buildRoot();
-      this._bound = true;
-    } else {
-      const root = resolveElement(this._element);
-      if (!root) throw new Error('Menu.element: container not found.');
-      this.dom.root = root as HTMLElement;
-      this._bound = true;
+    if (this.runtime.destroyed) {
+      throw new Error('Menu.build: instance has been destroyed.');
     }
+    if (this.runtime.built) return this;
 
-    this._bindEvents();
-
+    this.validateData(this.state.data);
+    this.dom.root = jsx('nav', {
+      className: this.props.className.root,
+      'data-menu': 'root',
+      ...(this.props.type !== undefined && {
+        'data-menu-type': this.props.type,
+      }),
+      children: jsx('ul', {
+        className: this.props.className.list,
+        id: this.props.id,
+        'data-menu-list': 'root',
+      }),
+    }) as HTMLElement;
+    this.dom.list = this.dom.root.querySelector('[data-menu-list="root"]');
+    this.runtime.built = true;
+    this.bindState();
+    this.bindEvents();
+    this.emit('init', this.props);
     return this;
   }
 
-  /**
-   * 根据 items 创建菜单根节点。
-   * @private
-   * @returns {HTMLElement}
-   */
-  _buildRoot(): HTMLElement {
-    if (!this.options) throw new Error('Menu._buildRoot: instance destroyed.');
-    const { items, id, type, className } = this.options;
-    const rootClass = className.root || `j-${type}-menu`;
+  private bindState(): void {
+    if (this.cleanup.state) return;
 
-    return jsx('nav', {
-      className: rootClass,
-      'data-menu': 'root',
-      'data-menu-type': type,
-      children: jsx('ul', {
-        className: className.list,
-        id: id,
-        'data-menu-list': 'root',
-        children: items.map((item) => this._buildItem(item)),
-      }),
-    }) as HTMLElement;
+    this.cleanup.state = createRoot((dispose) => {
+      createEffect(() => {
+        const snapshot = {
+          data: this.state.data,
+        };
+        untrack(() => this.renderSnapshot(snapshot));
+      });
+      return dispose;
+    });
   }
 
-  /**
-   * 递归创建菜单项。
-   * @private
-   * @param {MenuItem} item 菜单项配置。
-   * @returns {HTMLElement}
-   */
-  _buildItem(item: MenuItem): HTMLElement {
-    if (!this.options) throw new Error('Menu._buildItem: instance destroyed.');
-    const { className } = this.options;
+  private renderSnapshot(snapshot: MenuSnapshot): void {
+    if (!this.runtime.built || !this.dom.root || !this.dom.list) return;
+    this.validateData(snapshot.data);
+    const data = cloneMenuData(snapshot.data);
+
+    this.dom.list.textContent = '';
+    this.dom.list.append(...data.map((item) => this.buildItem(item)));
+  }
+
+  private buildItem(item: MenuItem): HTMLElement {
+    const { className } = this.props;
     const childrenItems = item.children || [];
     const hasChildren = childrenItems.length > 0;
     const classes = [className.item];
 
-    if (hasChildren) {
-      classes.push(className.hasChildren);
-    }
-
+    if (hasChildren) classes.push(className.hasChildren);
     classes.push(...normalizeItemClasses(item.classes));
 
-    const children: Node[] = [
-      jsx('a', {
-        className: className.link,
-        href: item.url || '',
-        ...(item.target && { target: item.target }),
-        'data-menu-link': '',
-        children: item.title,
-      }) as HTMLElement,
-    ];
+    const url = itemUrl(item.url);
+    const shouldRenderSpan = !hasChildren && !url;
+    const title = shouldRenderSpan
+      ? (jsx('span', {
+          className: className.link,
+          'data-menu-link': '',
+          children: item.title,
+        }) as HTMLElement)
+      : (jsx('a', {
+          className: className.link,
+          href: url,
+          ...(item.target && { target: item.target }),
+          'data-menu-link': '',
+          children: item.title,
+        }) as HTMLElement);
+
+    const children: Node[] = [title];
 
     if (hasChildren) {
       children.push(
         jsx('ul', {
           className: className.subMenu,
           'data-menu-list': 'sub',
-          children: childrenItems.map((child) => this._buildItem(child)),
+          children: childrenItems.map((child) => this.buildItem(child)),
         }) as HTMLElement
       );
     }
 
     return jsx('li', {
-      className: classList(...classes),
+      className: joinClasses(...classes),
       id: itemId(item.id),
       'data-menu-item': item.id == null ? '' : String(item.id),
       ...(hasChildren && { 'data-menu-has-children': '' }),
@@ -340,109 +350,72 @@ export class Menu {
     }) as HTMLElement;
   }
 
-  /**
-   * 根据菜单类型绑定交互事件。
-   * @private
-   * @returns {void}
-   */
-  _bindEvents(): void {
-    if (!this.dom.root || !this.options || !this.cleanup) return;
+  private bindEvents(): void {
+    this.unbindEvents();
+    const root = this.dom.root;
+    if (!root) return;
 
-    if (this.options.type === 'mobile') {
-      this.cleanup.events.on('mobile', this.dom.root, 'click', (event) => {
+    if (this.props.type === 'mobile') {
+      this.cleanup.events.on('mobile', root, 'click', (event) => {
         const target = event.target;
         if (!(target instanceof Element)) return;
 
         const backItem = target.closest<HTMLElement>('[data-menu-back]');
-        if (backItem && this.dom.root?.contains(backItem)) {
+        if (backItem && root.contains(backItem)) {
           event.preventDefault();
-          this._handleBack(backItem);
+          this.handleBack(backItem);
           return;
         }
 
         const menuItem = target.closest<HTMLElement>(
           '[data-menu-has-children]'
         );
+        if (!menuItem || !root.contains(menuItem)) return;
 
-        if (menuItem && this.dom.root?.contains(menuItem)) {
-          const directLink = findDirectMenuLink(menuItem);
-          if (
-            directLink &&
-            (target === directLink || directLink.contains(target))
-          ) {
-            event.preventDefault();
-            this._handleMenuClick(menuItem);
-          }
+        const subMenu = findDirectSubMenu(menuItem);
+        if (subMenu?.contains(target)) return;
+
+        const directLink = findDirectMenuLink(menuItem);
+        if (
+          target === menuItem ||
+          (directLink && (target === directLink || directLink.contains(target)))
+        ) {
+          event.preventDefault();
+          this.handleMenuClick(menuItem);
         }
       });
-    } else if (this.options.type === 'bottom') {
+    }
+
+    if (this.props.type === 'bottom') {
       this.cleanup.events.on('bottom', document, 'click', (event) => {
         const target = event.target;
-        if (!(target instanceof Element) || !this.dom.root) return;
+        if (!(target instanceof Element) || !root.isConnected) return;
 
         const submenuLink = target.closest(
           '[data-menu-list="sub"] [data-menu-link]'
         );
-        if (submenuLink && this.dom.root.contains(submenuLink)) {
-          return;
-        }
+        if (submenuLink && root.contains(submenuLink)) return;
 
         const firstLevelMenuItem = target.closest<HTMLElement>(
           '[data-menu-list="root"] > [data-menu-has-children]'
         );
 
-        if (firstLevelMenuItem && this.dom.root.contains(firstLevelMenuItem)) {
+        if (firstLevelMenuItem && root.contains(firstLevelMenuItem)) {
           event.preventDefault();
-          this._toggleActive(firstLevelMenuItem);
+          this.toggleActive(firstLevelMenuItem);
         } else {
-          this._clearActive();
+          this.clearActive();
         }
       });
     }
   }
 
-  /**
-   * 解绑当前菜单实例绑定的事件。
-   * @private
-   * @returns {void}
-   */
-  _unbindEvents(): void {
-    this.cleanup?.events.clear();
+  private unbindEvents(): void {
+    this.cleanup.events.clear();
   }
 
-  /**
-   * 清理当前构建出的 DOM 与事件，可选择保留实例引用用于重建。
-   * @private
-   * @param {object} [options={}] 清理选项。
-   * @param {boolean} [options.keepElement=false] 是否保留初始 element 引用。
-   * @returns {void}
-   */
-  _teardown({ keepElement = false }: { keepElement?: boolean } = {}): void {
-    this._unbindEvents();
-    this.cleanup?.items?.();
-    if (this.cleanup) this.cleanup.items = null;
-
-    if (this._element === false && this.dom.root?.parentElement) {
-      this.dom.root.remove();
-    }
-
-    if (!keepElement) {
-      this._element = null;
-    }
-
-    this.dom.root = null;
-    this._bound = false;
-  }
-
-  /**
-   * 处理移动端有子菜单项的进入操作。
-   * @private
-   * @param {HTMLElement} menuItem 菜单项节点。
-   * @returns {void}
-   */
-  _handleMenuClick(menuItem: HTMLElement): void {
-    if (!this.options) return;
-    menuItem.classList.add(this.options.className.active);
+  private handleMenuClick(menuItem: HTMLElement): void {
+    menuItem.classList.add(this.props.className.active);
 
     const subMenu = findDirectSubMenu(menuItem);
     if (!subMenu) return;
@@ -450,22 +423,22 @@ export class Menu {
     const existingBack = findDirectBackItem(subMenu);
     if (existingBack) return;
 
-    const { className } = this.options;
+    const { className } = this.props;
     const backButton = jsx('li', {
-      className: classList(className.item, className.back),
+      className: className.backItem,
       'data-menu-back': '',
       children: jsx('a', {
         className: className.link,
         href: '',
         'data-menu-link': '',
         children: [
-          jsx('icon', {
-            className: classList(className.icon, className.iconPrefix),
+          jsx('span', {
+            className: className.backIcon,
             children: icon('arrow-left'),
           }),
           jsx('span', {
             className: className.text,
-            children: this.options.backText,
+            children: this.props.backText,
           }),
         ],
       }),
@@ -474,15 +447,7 @@ export class Menu {
     subMenu.insertBefore(backButton, subMenu.firstChild);
   }
 
-  /**
-   * 处理移动端子菜单返回操作。
-   * @private
-   * @param {Element} target 点击目标。
-   * @returns {void}
-   */
-  _handleBack(target: Element): void {
-    if (!this.options) return;
-
+  private handleBack(target: Element): void {
     const backItem = target.closest<HTMLElement>('[data-menu-back]');
     if (!backItem) return;
 
@@ -490,132 +455,79 @@ export class Menu {
     const parentMenuItem = subMenu?.parentElement;
 
     if (parentMenuItem?.hasAttribute('data-menu-has-children')) {
-      parentMenuItem.classList.remove(this.options.className.active);
+      parentMenuItem.classList.remove(this.props.className.active);
     }
 
     backItem.remove();
   }
 
-  /**
-   * 切换底部菜单激活状态。
-   * @private
-   * @param {HTMLElement} menuItem 菜单项节点。
-   * @returns {void}
-   */
-  _toggleActive(menuItem: HTMLElement): void {
-    if (!this.options) return;
-    const isActive = menuItem.classList.contains(this.options.className.active);
-
-    this._clearActive();
-
-    if (!isActive) {
-      menuItem.classList.add(this.options.className.active);
-    }
+  private toggleActive(menuItem: HTMLElement): void {
+    const isActive = menuItem.classList.contains(this.props.className.active);
+    this.clearActive();
+    if (!isActive) menuItem.classList.add(this.props.className.active);
   }
 
-  _clearActive(): void {
-    if (!this.dom.root || !this.options) return;
+  private clearActive(): void {
+    if (!this.dom.root) return;
     all<HTMLElement>('[data-menu-item]', this.dom.root).forEach((item) => {
-      item.classList.remove(this.options?.className.active || 'is-active');
+      item.classList.remove(this.props.className.active);
     });
   }
 
-  /**
-   * 替换菜单数据；动态创建的菜单会在已构建时重建 DOM。
-   * @param {MenuItem[]} items 新菜单数据。
-   * @returns {Menu}
-   */
-  setItems(items: MenuItem[]): this {
-    if (!this.options) throw new Error('Menu.setItems: instance destroyed.');
-    this._verifyItems(items);
-
-    this.options.items = items;
-
-    if (this._bound) {
-      if (this._element === false) {
-        const element = this._element;
-        this._teardown({ keepElement: true });
-        this._element = element;
-        this.build();
-      } else if (this.dom.root) {
-        const list = findMenuList(this.dom.root);
-
-        if (!list) {
-          throw new Error('Menu: [data-menu-list] element not found.');
-        }
-
-        this._unbindEvents();
-        this.cleanup?.items?.();
-        if (this.cleanup) {
-          this.cleanup.items = render(
-            () => items.map((item) => this._buildItem(item)),
-            list
-          );
-        }
-        this._bindEvents();
-      }
-    }
-
-    return this;
+  private validateData(data: unknown): void {
+    validateParam('data', data, MENU_DATA_RULE, 'Menu');
   }
 
-  /**
-   * 根据 id 移除菜单项。
-   * @param {string|number} id 菜单项 id。
-   * @returns {Menu}
-   */
-  removeItem(id: MenuItemId): this {
-    if (!this.dom.root) return this;
+  private assertStatePatchKey(key: string): void {
+    if (!Object.hasOwn(MENU_STATE_SCHEMA, key)) {
+      throw new Error(`Menu.setState: "${key}" is not a supported state key.`);
+    }
+  }
 
-    const item = all<HTMLElement>('[data-menu-item]', this.dom.root).find(
-      (node) => node.dataset.menuItem === String(id)
+  protected override normalizeStatePatch(
+    patch: Partial<MenuState>
+  ): Partial<MenuState> {
+    const nextPatch = { ...patch };
+    if (Object.hasOwn(nextPatch, 'data')) {
+      nextPatch.data = cloneMenuData(nextPatch.data);
+    }
+    return nextPatch;
+  }
+
+  protected override validateStatePatch(patch: Partial<MenuState>): void {
+    validateParam(
+      'state',
+      patch,
+      {
+        type: 'plainObject',
+      },
+      'Menu.setState'
     );
 
-    if (item) {
-      item.remove();
+    for (const key of Object.keys(patch)) {
+      this.assertStatePatchKey(key);
+      const stateKey = key as keyof typeof MENU_STATE_SCHEMA;
+      validateParam(
+        key,
+        patch[key as keyof MenuState],
+        MENU_STATE_SCHEMA[stateKey],
+        'Menu.setState'
+      );
     }
-
-    if (this.options?.items) {
-      const removeFromArray = (arr: MenuItem[]): void => {
-        for (let i = arr.length - 1; i >= 0; i--) {
-          if (arr[i].id === id) {
-            arr.splice(i, 1);
-          } else {
-            const children = arr[i].children;
-            if (children) removeFromArray(children);
-          }
-        }
-      };
-      removeFromArray(this.options.items);
-    }
-
-    return this;
   }
 
-  /**
-   * 销毁当前菜单实例并解绑事件。
-   * @returns {void}
-   */
-  destroy(): void {
-    if (this._destroyed) return;
-    this._destroyed = true;
-
-    if (this._bound) {
-      this._teardown();
-    } else {
-      this._element = null;
-      this.dom.root = null;
-      this.cleanup?.events.clear();
-    }
-
-    this.cleanup = null;
-    this.options = null;
+  protected onDestroy(): void {
+    this.unbindEvents();
+    this.cleanup.state?.();
+    this.cleanup.state = null;
+    this.dom.root?.remove();
+    this.dom.list = null;
+    this.runtime.built = false;
   }
 }
 
-export function createMenu(
-  options: MenuOptions = {},
-  element: DOMReference = false
-): Menu {
-  return new Menu(options, element);
+export type Menu = MenuComponent;
+
+export function createMenu(input: MenuProps = {}): Menu {
+  return new MenuComponent(input);
 }

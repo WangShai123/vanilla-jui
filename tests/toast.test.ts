@@ -9,7 +9,7 @@ import {
   vi,
 } from 'vite-plus/test';
 
-import { Toast } from '../src/components/toast.ts';
+import { Toast } from '../src/primitives/toast.ts';
 
 beforeEach(() => {
   document.body.innerHTML = '';
@@ -45,7 +45,6 @@ describe('Toast', () => {
         toast: 'qa-toast',
         success: 'qa-success',
         message: 'qa-message',
-        hidden: 'qa-hidden',
       },
     });
 

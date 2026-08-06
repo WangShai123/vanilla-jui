@@ -4,14 +4,12 @@ import Component, {
   type ComponentDOM,
   type ComponentRuntime,
 } from '../core/Component.ts';
-import {
-  type ResolveSchema,
-  randomId,
-  resolveProps,
-} from '../utilities/core.ts';
+import { joinClasses } from '../utilities/class-name.ts';
 import { type DOMReference, all, requireContainer } from '../utilities/dom.ts';
+import { randomId } from '../utilities/id.ts';
+import { type ResolveSchema, resolveProps } from '../utilities/types.ts';
 
-export interface TocClassNames {
+interface TocClassNames {
   toc: string;
   list: string;
   link: string;
@@ -19,36 +17,38 @@ export interface TocClassNames {
   levelPrefix: string;
 }
 
-export type TocClassNameConfig = Partial<TocClassNames>;
+type TocClassNameConfig = Partial<TocClassNames>;
 
-export interface TocItem {
+interface TocItem {
   id: string;
   text: string;
   level: number;
   element: HTMLHeadingElement;
 }
 
-export interface TocCurrent {
+interface TocCurrent {
   index: number;
   item: TocItem | null;
 }
 
-export interface TocProps extends Record<string, unknown> {
-  container?: DOMReference;
+interface TocProps extends Record<string, unknown> {
   target?: DOMReference;
   headings?: string;
   offset?: number;
   className?: TocClassNameConfig;
-  onUpdate?: ((item: TocItem | null, index: number, toc: Toc) => void) | null;
+  onChange?:
+    | ((item: TocItem | null, index: number, toc: TocInstance) => void)
+    | null;
 }
 
 interface ResolvedTocProps extends Record<string, unknown> {
-  container: DOMReference;
   target: DOMReference;
   headings: string;
   offset: number;
   className: TocClassNames;
-  onUpdate: ((item: TocItem | null, index: number, toc: Toc) => void) | null;
+  onChange:
+    | ((item: TocItem | null, index: number, toc: TocInstance) => void)
+    | null;
 }
 
 interface TocState extends Record<string, unknown> {
@@ -58,7 +58,6 @@ interface TocState extends Record<string, unknown> {
 
 interface TocDOM extends ComponentDOM {
   root: HTMLElement | null;
-  container: Element | null;
   target: Element | null;
   list: HTMLElement | null;
   headings: HTMLHeadingElement[];
@@ -75,6 +74,13 @@ interface TocScrollOptions {
   updateHash?: boolean;
 }
 
+type TocInstance = Component<ResolvedTocProps, TocState, TocDOM> & {
+  runtime: TocRuntime;
+  build(): TocInstance;
+  refresh(): TocInstance;
+  activate(index: number): TocInstance;
+};
+
 const DEFAULT_CLASS_NAMES: TocClassNames = {
   toc: 'j-toc',
   list: 'toc-list',
@@ -84,14 +90,12 @@ const DEFAULT_CLASS_NAMES: TocClassNames = {
 };
 
 const TOC_PROPS_SCHEMA = {
-  container: { default: null },
   target: { default: '.j-content' },
   headings: { default: 'h2, h3', type: 'string' },
   offset: {
     default: 80,
     type: 'number',
-    validate: (value) => typeof value === 'number' && value >= 0,
-    message: 'expects a positive number or 0.',
+    min: 0,
   },
   className: {
     default: DEFAULT_CLASS_NAMES,
@@ -101,7 +105,7 @@ const TOC_PROPS_SCHEMA = {
       ...(value && typeof value === 'object' ? value : {}),
     }),
   },
-  onUpdate: { default: null, types: ['function', 'null'] },
+  onChange: { default: null, types: ['function', 'null'] },
 } satisfies ResolveSchema<TocProps>;
 
 const ACTIVE_OFFSET_TOLERANCE = 1;
@@ -109,12 +113,11 @@ const ACTIVE_OFFSET_TOLERANCE = 1;
 function normalizeProps(input: TocProps): ResolvedTocProps {
   const props = resolveProps(input, TOC_PROPS_SCHEMA, 'Toc.props');
   return {
-    container: props.container as DOMReference,
     target: props.target as DOMReference,
     headings: props.headings as string,
     offset: props.offset as number,
     className: props.className as TocClassNames,
-    onUpdate: props.onUpdate as ResolvedTocProps['onUpdate'],
+    onChange: props.onChange as ResolvedTocProps['onChange'],
   };
 }
 
@@ -138,18 +141,17 @@ function normalizeHeading(element: HTMLHeadingElement, index: number): TocItem {
  *
  * 扫描内容区域内的标题，生成锚点列表，并随页面滚动更新 active 状态。
  */
-export class Toc extends Component<ResolvedTocProps, TocState, TocDOM> {
+class Toc extends Component<ResolvedTocProps, TocState, TocDOM> {
   declare runtime: TocRuntime;
 
   /**
    * 创建 Toc 实例。
    * @param {object} [input={}] Toc 配置。
    */
-  constructor(input: TocProps = {}) {
-    const props = normalizeProps(input);
-    super(props);
+  constructor(props: TocProps = {}) {
+    const settings = normalizeProps(props);
+    super(settings);
 
-    this.dom.container = null;
     this.dom.target = null;
     this.dom.list = null;
     this.dom.headings = [];
@@ -177,21 +179,16 @@ export class Toc extends Component<ResolvedTocProps, TocState, TocDOM> {
     if (this.runtime.built) return this;
 
     this.init(this.props);
-    this.dom.container = requireContainer(
-      this.props.container,
-      'Toc.container'
-    );
     this.dom.target = requireContainer(this.props.target, 'Toc.target');
-    const root = document.createElement('nav');
-    root.className = this.props.className.toc;
-    root.dataset.toc = 'root';
-    this.root = root;
-    this.dom.list = document.createElement('div');
-    this.dom.list.className = this.props.className.list;
-    this.dom.list.dataset.tocList = 'root';
-    root.appendChild(this.dom.list);
-    this.dom.container.innerHTML = '';
-    this.dom.container.appendChild(root);
+    this.dom.list = jsx('div', {
+      className: this.props.className.list,
+      'data-toc-list': 'root',
+    }) as HTMLElement;
+    this.dom.root = jsx('nav', {
+      className: this.props.className.toc,
+      'data-toc': 'root',
+      children: this.dom.list,
+    }) as HTMLElement;
 
     this.runtime.built = true;
     this.refresh();
@@ -259,7 +256,7 @@ export class Toc extends Component<ResolvedTocProps, TocState, TocDOM> {
       `${this.props.className.levelPrefix}${item.level}`,
     ];
     if (active) classes.push(this.props.className.active);
-    return classes.filter(Boolean).join(' ');
+    return joinClasses(...classes);
   }
 
   private buildLink(item: TocItem, index: number): HTMLAnchorElement {
@@ -302,8 +299,8 @@ export class Toc extends Component<ResolvedTocProps, TocState, TocDOM> {
       link.className = this.linkClassName(items[i], active);
     });
 
-    if (typeof this.props.onUpdate === 'function') {
-      this.props.onUpdate(current, index, this);
+    if (typeof this.props.onChange === 'function') {
+      this.props.onChange(current, index, this);
     }
   }
 
@@ -368,11 +365,10 @@ export class Toc extends Component<ResolvedTocProps, TocState, TocDOM> {
    */
   protected onDestroy(): void {
     this.cleanup.events.clear();
-    if (this.dom.container) this.dom.container.innerHTML = '';
+    this.dom.root?.remove();
 
     this.runtime.built = false;
     this.runtime.ticking = false;
-    this.dom.container = null;
     this.dom.target = null;
     this.dom.list = null;
     this.dom.headings = [];
@@ -380,6 +376,6 @@ export class Toc extends Component<ResolvedTocProps, TocState, TocDOM> {
   }
 }
 
-export function createToc(props: TocProps = {}): Toc {
+export function createToc(props: TocProps = {}): TocInstance {
   return new Toc(props);
 }

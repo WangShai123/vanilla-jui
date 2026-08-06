@@ -2,32 +2,31 @@ import {
   bindAttr,
   bindClass,
   createDeepStore,
+  createEffect,
   createRoot,
   h,
+  untrack,
 } from 'vanilla-signal';
 
 import Component, {
   type ComponentDOM,
   type ComponentRuntime,
-  type ComponentUpdateOptions,
 } from '../core/Component.ts';
-import {
-  type ResolveSchema,
-  isPlainObject,
-  resolveProps,
-  validateParam,
-} from '../utilities/core.ts';
+import { icon } from '../primitives/icons.ts';
+import { joinClasses } from '../utilities/class-name.ts';
 import {
   all,
-  type DOMReference,
   isElement,
-  isRenderableContent,
   normalizeContentNodes,
   q,
   type RenderableContent,
-  requireContainer,
 } from '../utilities/dom.ts';
-import { icon } from './icons.ts';
+import { randomId } from '../utilities/id.ts';
+import {
+  type ResolveSchema,
+  resolveProps,
+  validateParam,
+} from '../utilities/types.ts';
 
 const SWIPE_THRESHOLD = 6;
 const AUTOPLAY_DELAY_FLOOR = 16;
@@ -76,8 +75,9 @@ export interface SwiperSlideContext {
   index: number;
 }
 
-export interface SwiperOptions extends Record<string, unknown> {
-  data?: SwiperDataItem[] | null;
+export interface SwiperProps extends Record<string, unknown> {
+  id?: string | null;
+  data?: SwiperDataItem[];
   loop?: boolean;
   autoplay?: boolean;
   delay?: number;
@@ -93,8 +93,9 @@ export interface SwiperOptions extends Record<string, unknown> {
   className?: SwiperClassNameConfig;
 }
 
-interface ResolvedSwiperOptions extends Record<string, unknown> {
-  data: SwiperDataItem[] | null;
+interface ResolvedSwiperProps extends Record<string, unknown> {
+  id: string | null;
+  data: SwiperDataItem[];
   loop: boolean;
   autoplay: boolean;
   delay: number;
@@ -111,6 +112,7 @@ interface ResolvedSwiperOptions extends Record<string, unknown> {
 }
 
 interface SwiperState extends Record<string, unknown> {
+  data: SwiperDataItem[];
   index: number;
   trackIndex: number;
   transform: number;
@@ -120,10 +122,7 @@ interface SwiperState extends Record<string, unknown> {
 
 interface SwiperDOM extends ComponentDOM {
   root: HTMLElement | null;
-  container: DOMReference;
-  mountTarget: Element | null;
   createdRoot: boolean;
-  createdSlides: boolean;
   wrapper: HTMLElement | null;
   slides: HTMLElement[];
   pagination: HTMLElement | null;
@@ -149,6 +148,7 @@ interface SwipePoint {
 }
 
 interface SwiperRuntime extends ComponentRuntime {
+  built: boolean;
   logs: SwipeLog[];
   startTarget: EventTarget | null;
   touching: boolean;
@@ -163,9 +163,9 @@ interface SwiperRuntime extends ComponentRuntime {
 interface SwiperCleanupExtras {
   bindings?: (() => void) | null;
   navBindings?: (() => void) | null;
+  data?: (() => void) | null;
 }
 
-type SwiperUpdateOptions = Partial<ComponentUpdateOptions>;
 type SwiperDirection = 'prev' | 'next';
 type CreatedNavigationKey = 'createdPrevButton' | 'createdNextButton';
 
@@ -192,18 +192,20 @@ const DEFAULT_CLASS_NAMES: SwiperClassNames = {
 };
 
 const SWIPER_OPTIONS_SCHEMA = {
-  data: {
+  id: {
     default: null,
-    validate: (value: unknown) => value == null || Array.isArray(value),
-    message: 'expects an array or null.',
+    types: ['string', 'null'],
+    nonEmpty: true,
+    normalize: (value: unknown) =>
+      typeof value === 'string' ? value.trim() : value,
   },
+  data: { default: [], type: 'array' },
   loop: { default: true, type: 'boolean' },
   autoplay: { default: true, type: 'boolean' },
   delay: {
     default: 3000,
     type: 'number',
-    validate: (value: unknown) => Number(value) >= 0,
-    message: 'expects a positive number or 0.',
+    min: 0,
   },
   lazyload: { default: true, type: 'boolean' },
   pagination: { default: true, type: 'boolean' },
@@ -211,32 +213,29 @@ const SWIPER_OPTIONS_SCHEMA = {
   speed: {
     default: 300,
     type: 'number',
-    validate: (value: unknown) => Number(value) >= 0,
-    message: 'expects a positive number or 0.',
+    min: 0,
   },
   touchRatio: {
     default: 1,
     type: 'number',
-    validate: (value: unknown) => Number(value) > 0,
-    message: 'expects a number greater than 0.',
+    greaterThan: 0,
   },
   touchAngle: {
     default: 45,
     type: 'number',
-    validate: (value: unknown) => Number(value) >= 0 && Number(value) <= 90,
-    message: 'expects a number between 0 and 90.',
+    min: 0,
+    max: 90,
   },
   longSwipesMs: {
     default: 300,
     type: 'number',
-    validate: (value: unknown) => Number(value) >= 0,
-    message: 'expects a positive number or 0.',
+    min: 0,
   },
   longSwipesRatio: {
     default: 0.05,
     type: 'number',
-    validate: (value: unknown) => Number(value) >= 0 && Number(value) <= 1,
-    message: 'expects a number between 0 and 1.',
+    min: 0,
+    max: 1,
   },
   preventClick: { default: true, type: 'boolean' },
   className: {
@@ -247,26 +246,27 @@ const SWIPER_OPTIONS_SCHEMA = {
       ...(value && typeof value === 'object' ? value : {}),
     }),
   },
-} satisfies ResolveSchema<SwiperOptions>;
+} satisfies ResolveSchema<SwiperProps>;
 
 const SWIPER_DATA_ITEM_RULE = {
-  validate: (value: unknown) => {
-    if (!value || typeof value !== 'object' || Array.isArray(value)) {
-      return false;
-    }
-    const item = value as SwiperDataItem;
-
-    return (
-      (item.image == null || typeof item.image === 'string') &&
-      (item.url == null || typeof item.url === 'string') &&
-      (item.title == null || typeof item.title === 'string') &&
-      (item.sort == null || typeof item.sort === 'number') &&
-      (item.blank == null || typeof item.blank === 'boolean') &&
-      (item.children == null || isRenderableContent(item.children))
-    );
+  type: 'plainObject',
+  shape: {
+    image: ['string', 'null', 'undefined'],
+    url: ['string', 'null', 'undefined'],
+    title: ['string', 'null', 'undefined'],
+    sort: ['number', 'null', 'undefined'],
+    blank: ['boolean', 'null', 'undefined'],
+    children: 'renderable',
   },
-  message:
-    'expects items with optional image, url, title, sort, blank and children fields.',
+};
+
+const SWIPER_STATE_SCHEMA = {
+  data: SWIPER_OPTIONS_SCHEMA.data,
+  index: { type: 'number' },
+  trackIndex: { type: 'number' },
+  transform: { type: 'number' },
+  animating: { type: 'boolean' },
+  width: { type: 'number' },
 };
 
 function isInteractiveTarget(target: EventTarget | null): boolean {
@@ -290,42 +290,39 @@ function getRenderableNodes(
   return normalizeContentNodes(content, context);
 }
 
-function normalizeOptions(options: SwiperOptions = {}): ResolvedSwiperOptions {
+function cloneData(data: SwiperDataItem[] | undefined): SwiperDataItem[] {
+  if (!Array.isArray(data)) return [];
+  return data.map((item) => ({ ...item }));
+}
+
+function normalizeProps(input: SwiperProps = {}): ResolvedSwiperProps {
   const props = resolveProps(
-    options,
+    input,
     SWIPER_OPTIONS_SCHEMA,
-    'Swiper.options'
-  ) as ResolvedSwiperOptions;
+    'Swiper.props'
+  ) as ResolvedSwiperProps;
   return {
     ...props,
+    id: props.id?.trim() || null,
+    data: cloneData(props.data),
     className: { ...props.className },
   };
 }
 
-function resolveSwiperRoot(container: Element): HTMLElement {
-  const roots = all<HTMLElement>('[data-swiper="root"]', container);
+function findUniqueElementById(id: string): HTMLElement | null {
+  const matches = Array.from(
+    document.querySelectorAll<HTMLElement>('[id]')
+  ).filter((element) => element.id === id);
   validateParam(
-    'container',
-    roots,
+    'id',
+    matches,
     {
-      validate: (value: unknown) => Array.isArray(value) && value.length === 1,
-      message: 'expects exactly one [data-swiper="root"] descendant.',
+      type: 'array',
+      maxLength: 1,
     },
-    'Swiper'
+    'Swiper.props'
   );
-  return roots[0] as HTMLElement;
-}
-
-function classList(...tokens: Array<string | null | undefined>): string {
-  return tokens.filter(Boolean).join(' ');
-}
-
-function setDataMarker(element: Element, name: string, value = ''): void {
-  element.setAttribute(name, value);
-}
-
-function isObjectPatch(value: unknown): value is SwiperOptions {
-  return isPlainObject(value);
+  return matches[0] || null;
 }
 
 /**
@@ -334,35 +331,27 @@ function isObjectPatch(value: unknown): value is SwiperOptions {
  * 支持链接 slide、图片 lazyload、分页、导航、loop 和桌面/移动端拖拽滑动。
  * 使用 vanilla-signal 响应式管理 pagination 和 navigation 状态。
  */
-export class Swiper extends Component<
-  ResolvedSwiperOptions,
+class SwiperComponent extends Component<
+  ResolvedSwiperProps,
   SwiperState,
   SwiperDOM
 > {
-  declare props: ResolvedSwiperOptions;
+  declare props: ResolvedSwiperProps;
   declare state: SwiperState;
   declare dom: SwiperDOM;
   declare runtime: SwiperRuntime;
   declare cleanup: Component['cleanup'] & SwiperCleanupExtras;
 
-  private _built: boolean;
-
   /**
    * 创建轮播实例。
-   * @param {Element|Node|string|Array} container 挂载容器、选择器或 JSX/h 返回节点。
-   * @param {object} [options={}] Swiper 配置。
+   * @param {object} [props={}] Swiper 配置。
    */
-  constructor(container: DOMReference, options: SwiperOptions = {}) {
-    const resolvedOptions = normalizeOptions(options);
+  constructor(props: SwiperProps = {}) {
+    const resolvedOptions = normalizeProps(props);
 
     super(resolvedOptions);
 
-    this.dom.container = container;
-    this._built = false;
-
-    this.dom.mountTarget = null;
     this.dom.createdRoot = false;
-    this.dom.createdSlides = false;
     this.dom.wrapper = null;
     this.dom.slides = [];
     this.dom.pagination = null;
@@ -373,6 +362,11 @@ export class Swiper extends Component<
     this.dom.createdPrevButton = false;
     this.dom.createdNextButton = false;
 
+    this.cleanup.data = null;
+    this.cleanup.bindings = null;
+    this.cleanup.navBindings = null;
+
+    this.runtime.built = false;
     this.runtime.logs = [];
     this.runtime.startTarget = null;
     this.runtime.touching = false;
@@ -385,6 +379,7 @@ export class Swiper extends Component<
     this.runtime.realCount = 0;
 
     this.state = createDeepStore({
+      data: cloneData(this.props.data),
       index: 0,
       trackIndex: 0,
       transform: 0,
@@ -394,39 +389,31 @@ export class Swiper extends Component<
   }
 
   /**
-   * 构建或绑定 Swiper DOM。
+   * 构建 Swiper DOM。
    * @returns {Swiper} 当前实例。
    */
   build(): this {
     if (this.runtime.destroyed)
       throw new Error('Swiper.build: instance destroyed');
-    if (this._built) return this;
+    if (this.runtime.built) return this;
 
-    const hasData = Array.isArray(this.props.data);
-    const root = requireContainer(this.dom.container, 'Swiper');
-
-    let mountRoot = null;
-    let mountTarget = null;
-
-    if (hasData) {
-      mountTarget = root;
-      mountRoot = h('div', {
+    const boundRoot = this.props.id
+      ? findUniqueElementById(this.props.id)
+      : null;
+    const mountRoot =
+      boundRoot ||
+      (h('div', {
+        id: this.props.id || randomId(),
         className: this.props.className.root,
         'data-swiper': 'root',
-      }) as HTMLElement;
-      mountTarget.appendChild(mountRoot);
-    } else {
-      mountRoot = resolveSwiperRoot(root);
-    }
+      }) as HTMLElement);
 
     try {
       this.dom.root = mountRoot;
-      this.dom.mountTarget = mountTarget;
-      this.dom.createdRoot = hasData;
-      this.dom.createdSlides = hasData;
+      this.dom.createdRoot = !boundRoot;
 
-      const wrapper = hasData
-        ? this.createDataView(mountRoot, this.props.data)
+      const wrapper = this.dom.createdRoot
+        ? this.createDataView(mountRoot, this.state.data)
         : q<HTMLElement>('[data-swiper-wrapper]', mountRoot);
       validateParam(
         'wrapper',
@@ -461,9 +448,10 @@ export class Swiper extends Component<
       this.dom.createdNextButton = false;
 
       this.runtime.realCount = this.dom.slides.length;
-      this._built = true;
+      this.runtime.built = true;
 
       if (this.dom.slides.length > 0) this.onInit();
+      if (this.dom.createdRoot) this.bindStateData();
     } catch (error) {
       this.destroy();
       throw error;
@@ -502,15 +490,15 @@ export class Swiper extends Component<
     return this.toRealIndex();
   }
 
-  assertBuilt(method: string): void {
-    if (!this._built) {
+  private assertBuilt(method: string): void {
+    if (!this.runtime.built) {
       throw new Error(`Swiper.${method}: call build() first.`);
     }
   }
 
-  createDataView(
+  private createDataView(
     root: HTMLElement,
-    data: SwiperDataItem[] | null
+    data: SwiperDataItem[]
   ): HTMLElement {
     const items = this.normalizeData(data);
     const wrapper = h('div', {
@@ -528,9 +516,57 @@ export class Swiper extends Component<
     return wrapper;
   }
 
-  normalizeData(data: SwiperDataItem[] | null): NormalizedSwiperDataItem[] {
-    if (!Array.isArray(data)) return [];
+  private bindStateData(): void {
+    if (this.cleanup.data) return;
 
+    this.cleanup.data = createRoot((dispose) => {
+      let initialized = false;
+      createEffect(() => {
+        const data = this.state.data;
+        if (!initialized) {
+          initialized = true;
+          return;
+        }
+        untrack(() => this.syncStateData(data));
+      });
+      return dispose;
+    });
+  }
+
+  private syncStateData(data: SwiperDataItem[]): void {
+    if (!this.runtime.built || !this.dom.createdRoot) return;
+    validateParam('data', data, SWIPER_OPTIONS_SCHEMA.data, 'Swiper.state');
+
+    const realIndex = this.state.index;
+    let wrapper = this.dom.wrapper;
+    if (!wrapper && this.dom.root) {
+      wrapper = this.createDataView(this.dom.root, data);
+      this.dom.wrapper = wrapper;
+    }
+    if (!wrapper) return;
+
+    this.pause();
+    this.clearImageCleanups();
+    this.cleanup.bindings?.();
+    this.cleanup.bindings = null;
+    this.cleanup.navBindings?.();
+    this.cleanup.navBindings = null;
+    this.cleanup.events.clear();
+
+    all('[data-clone]', wrapper).forEach((slide) => slide.remove());
+    wrapper.textContent = '';
+    this.normalizeData(data).forEach((item, index) => {
+      wrapper.appendChild(this.createDataSlide(item, index));
+    });
+    this.refreshSlides();
+    this.runtime.realCount = this.dom.slides.length;
+    this.setState({
+      index: Math.min(realIndex, Math.max(0, this.realCount - 1)),
+    });
+    this.reInitView();
+  }
+
+  private normalizeData(data: SwiperDataItem[]): NormalizedSwiperDataItem[] {
     data.forEach((item, index) => {
       validateParam(
         String(index),
@@ -555,7 +591,10 @@ export class Swiper extends Component<
     });
   }
 
-  createDataSlide(item: NormalizedSwiperDataItem, index: number): HTMLElement {
+  private createDataSlide(
+    item: NormalizedSwiperDataItem,
+    index: number
+  ): HTMLElement {
     const slide = h(item.url ? 'a' : 'div', {
       className: this.props.className.slide,
       href: item.url || undefined,
@@ -621,6 +660,8 @@ export class Swiper extends Component<
     this.pause();
     this.clearImageCleanups();
     this.cleanup.events.clear();
+    this.cleanup.data?.();
+    this.cleanup.data = null;
     this.cleanup.bindings?.();
     this.cleanup.bindings = null;
     this.cleanup.navBindings?.();
@@ -633,16 +674,27 @@ export class Swiper extends Component<
     if (this.dom.createdPrevButton) this.dom.prevButton?.remove();
     if (this.dom.createdNextButton) this.dom.nextButton?.remove();
     if (this.dom.createdRoot) this.dom.root?.remove();
-    this._built = false;
+    this.runtime.built = false;
   }
 
-  updateSize(): void {
+  private updateSize(): void {
     this.assertBuilt('updateSize');
     if (!this.dom.root) return;
     this.width = this.dom.root.clientWidth || this.dom.root.offsetWidth;
   }
 
-  refreshSlides(): void {
+  refresh(): this {
+    this.assertBuilt('refresh');
+    this.updateSize();
+    this.setupStyles();
+    this.setTrackIndex(this.trackIndexForRealIndex(this.state.index), false);
+    if (this.props.lazyload) this.loadImages();
+    if (this.props.autoplay) this.resume();
+    else this.pause();
+    return this;
+  }
+
+  private refreshSlides(): void {
     if (!this.dom.wrapper) return;
     this.dom.slides = all<HTMLElement>('[data-swiper-slide]', this.dom.wrapper);
     this.runtime.realCount = this.dom.slides.filter(
@@ -650,7 +702,7 @@ export class Swiper extends Component<
     ).length;
   }
 
-  initLoop(): void {
+  private initLoop(): void {
     if (!this.dom.wrapper || this.dom.slides.length === 0) return;
 
     const first = this.dom.slides[0].cloneNode(true) as HTMLElement;
@@ -668,7 +720,7 @@ export class Swiper extends Component<
     this.refreshSlides();
   }
 
-  setupStyles(): void {
+  private setupStyles(): void {
     if (!this.dom.root) return;
     this.dom.root.style.setProperty(
       '--swiper-slide-width',
@@ -676,7 +728,7 @@ export class Swiper extends Component<
     );
   }
 
-  reInitView(): void {
+  private reInitView(): void {
     if (!this.dom.wrapper) return;
     this.pause();
     this.clearImageCleanups();
@@ -710,7 +762,7 @@ export class Swiper extends Component<
     if (this.props.autoplay) this.play();
   }
 
-  clearPagination(): void {
+  private clearPagination(): void {
     this.cleanup.bindings?.();
     this.cleanup.bindings = null;
     this.dom.bullets.forEach((_, index) => {
@@ -727,7 +779,7 @@ export class Swiper extends Component<
     }
   }
 
-  clearNavigation(): void {
+  private clearNavigation(): void {
     this.cleanup.navBindings?.();
     this.cleanup.navBindings = null;
     this.cleanup.events.off('nav:prev');
@@ -744,7 +796,7 @@ export class Swiper extends Component<
     }
   }
 
-  bindEvents(): void {
+  private bindEvents(): void {
     const root = this.dom.root;
     const wrapper = this.dom.wrapper;
     if (!root || !wrapper) return;
@@ -830,7 +882,7 @@ export class Swiper extends Component<
       this.onTransitionEnd(event)
     );
     this.cleanup.events.on('window:resize', window, 'resize', () =>
-      this.update(null, { force: true })
+      this.refresh()
     );
     this.cleanup.events.on('root:mouseenter', root, 'mouseenter', () =>
       this.pause()
@@ -840,7 +892,7 @@ export class Swiper extends Component<
     );
   }
 
-  onStart(point: SwipePoint, target: EventTarget | null = null): void {
+  private onStart(point: SwipePoint, target: EventTarget | null = null): void {
     if (this.state.animating) return;
 
     this.runtime.logs = [];
@@ -855,7 +907,7 @@ export class Swiper extends Component<
     if (this.dom.wrapper) this.dom.wrapper.style.transition = 'none';
   }
 
-  onMove(point: SwipePoint, event: Event): void {
+  private onMove(point: SwipePoint, event: Event): void {
     if (
       !this.runtime.touching ||
       this.runtime.scrolling ||
@@ -894,7 +946,7 @@ export class Swiper extends Component<
     }
   }
 
-  onEnd(): void {
+  private onEnd(): void {
     if (!this.runtime.touching) return;
 
     this.runtime.touching = false;
@@ -932,7 +984,7 @@ export class Swiper extends Component<
     this.resume();
   }
 
-  resetDrag(animate = true): void {
+  private resetDrag(animate = true): void {
     const target =
       this.state.trackIndex === 0
         ? 0
@@ -949,7 +1001,7 @@ export class Swiper extends Component<
     this.resume();
   }
 
-  onTransitionEnd(event?: Event): void {
+  private onTransitionEnd(event?: Event): void {
     if (
       event &&
       (event.target !== this.dom.wrapper ||
@@ -971,7 +1023,7 @@ export class Swiper extends Component<
     }
   }
 
-  pushLog(point: SwipePoint): void {
+  private pushLog(point: SwipePoint): void {
     this.runtime.logs.push({
       x: point.pageX ?? point.clientX ?? 0,
       y: point.pageY ?? point.clientY ?? 0,
@@ -980,7 +1032,7 @@ export class Swiper extends Component<
     if (this.runtime.logs.length > 5) this.runtime.logs.shift();
   }
 
-  getDuration(): number {
+  private getDuration(): number {
     if (this.runtime.logs.length === 0) return 0;
     return (
       this.runtime.logs[this.runtime.logs.length - 1].time -
@@ -988,7 +1040,7 @@ export class Swiper extends Component<
     );
   }
 
-  getOffset(): { x: number; y: number } {
+  private getOffset(): { x: number; y: number } {
     if (this.runtime.logs.length === 0) return { x: 0, y: 0 };
     const first = this.runtime.logs[0];
     const last = this.runtime.logs[this.runtime.logs.length - 1];
@@ -1009,7 +1061,10 @@ export class Swiper extends Component<
     return this.props.loop && this.realCount > 1 ? target + 1 : target;
   }
 
-  setTrackIndex(trackIndex: number, animate: boolean | null = true): void {
+  private setTrackIndex(
+    trackIndex: number,
+    animate: boolean | null = true
+  ): void {
     const target = normalizeNumber(trackIndex);
     this.setState({
       trackIndex: target,
@@ -1055,7 +1110,7 @@ export class Swiper extends Component<
     this.slideToTrack(this.state.trackIndex - 1);
   }
 
-  render(animate: boolean): void {
+  private render(animate: boolean): void {
     this.assertBuilt('render');
     if (!this.dom.wrapper) return;
     if (animate) {
@@ -1069,7 +1124,7 @@ export class Swiper extends Component<
     this.dom.wrapper.style.transform = `translate3d(${this.state.transform}px, 0, 0)`;
   }
 
-  loadImages(): void {
+  private loadImages(): void {
     this.assertBuilt('loadImages');
     const indices = [this.state.trackIndex];
     if (this.state.trackIndex > 0) indices.push(this.state.trackIndex - 1);
@@ -1104,17 +1159,17 @@ export class Swiper extends Component<
     });
   }
 
-  clearImageCleanups(): void {
+  private clearImageCleanups(): void {
     this.runtime.imageCleanups?.forEach((cleanup) => cleanup());
     this.runtime.imageCleanups?.clear();
   }
 
-  initPagination(): void {
+  private initPagination(): void {
     if (!this.dom.root) return;
 
     if (!this.dom.pagination) {
       this.dom.pagination = h('div', {
-        className: classList(
+        className: joinClasses(
           this.props.className.pagination,
           this.props.className.paginationHorizontal,
           this.props.className.paginationClickable,
@@ -1130,7 +1185,7 @@ export class Swiper extends Component<
         this.props.className.paginationClickable,
         this.props.className.paginationBulletGroup
       );
-      setDataMarker(this.dom.pagination, 'data-swiper-pagination');
+      this.dom.pagination.setAttribute('data-swiper-pagination', '');
     }
 
     const pagination = this.dom.pagination;
@@ -1142,7 +1197,7 @@ export class Swiper extends Component<
     for (let index = 0; index < this.realCount; index++) {
       const bullet = h('button', {
         type: 'button',
-        className: classList(
+        className: joinClasses(
           this.props.className.indicator,
           this.props.className.bullet
         ),
@@ -1181,7 +1236,7 @@ export class Swiper extends Component<
     });
   }
 
-  initNavigation(): void {
+  private initNavigation(): void {
     const prevButton = this.ensureNavigation('prev', 'arrow-left');
     const nextButton = this.ensureNavigation('next', 'arrow-right');
     this.dom.prevButton = prevButton;
@@ -1213,7 +1268,7 @@ export class Swiper extends Component<
     }
   }
 
-  ensureNavigation(
+  private ensureNavigation(
     direction: SwiperDirection,
     iconName: 'arrow-left' | 'arrow-right'
   ): HTMLButtonElement {
@@ -1227,7 +1282,7 @@ export class Swiper extends Component<
       direction === 'prev'
         ? this.props.className.prev
         : this.props.className.next;
-    const className = classList(
+    const className = joinClasses(
       this.props.className.navigation,
       directionClass
     );
@@ -1249,10 +1304,10 @@ export class Swiper extends Component<
       button.setAttribute('role', 'button');
       button.setAttribute('tabindex', '0');
       button.classList.add(this.props.className.navigation, directionClass);
-      setDataMarker(button, 'data-swiper-navigation', direction);
+      button.setAttribute('data-swiper-navigation', direction);
     } else {
       button.classList.add(this.props.className.navigation, directionClass);
-      setDataMarker(button, 'data-swiper-navigation', direction);
+      button.setAttribute('data-swiper-navigation', direction);
     }
 
     button.setAttribute(
@@ -1291,111 +1346,46 @@ export class Swiper extends Component<
     if (this.props.autoplay) this.play();
   }
 
-  update(
-    propsPatch: SwiperOptions | null | undefined = {},
-    { force = false }: SwiperUpdateOptions = {}
-  ): this {
-    if (this.runtime.destroyed)
-      throw new Error('Component.update: instance destroyed');
-    this.assertBuilt('update');
-
-    const patch = isObjectPatch(propsPatch) ? propsPatch : {};
-    const nextProps = normalizeOptions(Object.assign({}, this.props, patch));
-    const normalizedPatch: Partial<ResolvedSwiperOptions> = {};
-
-    Object.keys(patch).forEach((key) => {
-      const propKey = key as keyof ResolvedSwiperOptions;
-      normalizedPatch[propKey] = nextProps[propKey];
-    });
-
-    this.props = nextProps;
-    this.emit('beforeUpdate', normalizedPatch, { force });
-    this.onUpdate(normalizedPatch, { force });
-    this.emit('afterUpdate', normalizedPatch, { force });
-    return this;
+  protected override normalizeStatePatch(
+    patch: Partial<SwiperState>
+  ): Partial<SwiperState> {
+    const nextPatch = { ...patch };
+    if (Object.hasOwn(nextPatch, 'data') && Array.isArray(nextPatch.data)) {
+      nextPatch.data = cloneData(nextPatch.data);
+    }
+    return nextPatch;
   }
 
-  protected onUpdate(
-    propsPatch: Partial<ResolvedSwiperOptions> | null | undefined = {},
-    _options: Required<ComponentUpdateOptions> = { force: false }
-  ): void {
-    if (
-      propsPatch &&
-      Object.prototype.hasOwnProperty.call(propsPatch, 'data')
-    ) {
-      this.updateData(propsPatch.data);
-      return;
-    }
-
-    const needsReInit = ['loop', 'pagination', 'navigation', 'lazyload'].some(
-      (key) => Object.prototype.hasOwnProperty.call(propsPatch, key)
+  protected override validateStatePatch(patch: Partial<SwiperState>): void {
+    validateParam(
+      'state',
+      patch,
+      {
+        type: 'plainObject',
+      },
+      'Swiper.setState'
     );
 
-    if (needsReInit) {
-      this.reInitView();
-      return;
-    }
-
-    this.updateSize();
-    this.setupStyles();
-    this.setTrackIndex(this.trackIndexForRealIndex(this.state.index), false);
-
-    if (
-      Object.prototype.hasOwnProperty.call(propsPatch, 'autoplay') ||
-      Object.prototype.hasOwnProperty.call(propsPatch, 'delay')
-    ) {
-      this.restartAutoplay();
-    } else if (this.props.autoplay) this.resume();
-    else this.pause();
-  }
-
-  updateData(data: SwiperDataItem[] | null = this.props.data): this {
-    if (this.runtime.destroyed)
-      throw new Error('Swiper.updateData: instance destroyed');
-    this.assertBuilt('updateData');
-    if (!this.dom.createdRoot)
-      throw new Error(
-        'Swiper.updateData: not supported on DOM-bound instances.'
+    for (const key of Object.keys(patch)) {
+      if (!Object.hasOwn(SWIPER_STATE_SCHEMA, key)) {
+        throw new Error(
+          `Swiper.setState: "${key}" is not a supported state key.`
+        );
+      }
+      validateParam(
+        key,
+        patch[key as keyof SwiperState],
+        SWIPER_STATE_SCHEMA[key as keyof typeof SWIPER_STATE_SCHEMA],
+        'Swiper.setState'
       );
-
-    validateParam('data', data, SWIPER_OPTIONS_SCHEMA.data, 'Swiper.options');
-    if (!Array.isArray(data)) {
-      this.props.data = data;
-      this.reInitView();
-      return this;
     }
 
-    this.props.data = data;
-    const realIndex = this.state.index;
-    const wrapper = this.dom.wrapper;
-    if (!wrapper) return this;
-
-    this.pause();
-    this.clearImageCleanups();
-    this.cleanup.bindings?.();
-    this.cleanup.bindings = null;
-    this.cleanup.navBindings?.();
-    this.cleanup.navBindings = null;
-    this.cleanup.events.clear();
-
-    const items = this.normalizeData(data);
-    wrapper.textContent = '';
-    items.forEach((item, index) => {
-      wrapper.appendChild(this.createDataSlide(item, index));
-    });
-    this.refreshSlides();
-    this.runtime.realCount = this.dom.slides.length;
-    this.setState({
-      index: Math.min(realIndex, Math.max(0, this.realCount - 1)),
-    });
-    this.reInitView();
-    return this;
+    if (Array.isArray(patch.data)) this.normalizeData(patch.data);
   }
 }
 
-export function createSwiper(
-  container: DOMReference,
-  input: SwiperOptions = {}
-): Swiper {
-  return new Swiper(container, input);
+export type Swiper = SwiperComponent;
+
+export function createSwiper(input: SwiperProps = {}): Swiper {
+  return new SwiperComponent(input);
 }

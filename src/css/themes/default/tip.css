@@ -1,49 +1,49 @@
 @layer themes {
-    .j-tip {
-        --tip-gap: var(--s2);
-        --tip-width: 100%;
-        --tip-padding: var(--s3) var(--s4);
-        --tip-border-width: 1px;
-        --tip-border-style: solid;
-        --tip-border-color: var(--ui-border);
-        --tip-border-radius: var(--radius-md);
-        --tip-font-size: var(--font-size-md);
-        --tip-fg: var(--ui-fg);
-        --tip-bg: var(--ui-bg);
-        --tip-box-shadow: var(--shadow-sm);
-        --tip-icon-fg: var(--tip-fg);
-    }
+  .j-tip {
+    --tip-gap: var(--s2);
+    --tip-width: 100%;
+    --tip-padding: var(--s3) var(--s4);
+    --tip-border-width: 1px;
+    --tip-border-style: solid;
+    --tip-border-color: var(--ui-border);
+    --tip-border-radius: var(--radius-md);
+    --tip-font-size: var(--font-size-md);
+    --tip-fg: var(--ui-fg);
+    --tip-bg: var(--ui-bg);
+    --tip-box-shadow: var(--shadow-sm);
+    --tip-icon-fg: var(--tip-fg);
+  }
 
-    .j-tip .tip-icon,
-    .j-tip .tip-icon svg {
-        --tip-icon-size: var(--font-size-xl);
-    }
+  .j-tip .tip-icon,
+  .j-tip .tip-icon svg {
+    --tip-icon-size: var(--font-size-xl);
+  }
 
-    .j-tip .tip-title {
-        --tip-title-line-height: var(--line-height-paragraph);
-        --tip-title-font-weight: var(--font-medium);
-    }
+  .j-tip .tip-title {
+    --tip-title-line-height: var(--line-height-paragraph);
+    --tip-title-font-weight: var(--font-medium);
+  }
 
-    .j-tip .tip-content {
-        --tip-content-gap: var(--s2);
-        --tip-content-line-height: var(--line-height-paragraph);
-    }
+  .j-tip .tip-content {
+    --tip-content-gap: var(--s2);
+    --tip-content-line-height: var(--line-height-paragraph);
+  }
 
-    .j-tip.is-success {
-        --tip-border-color: var(--state-success);
-        --tip-bg: var(--state-success-muted);
-        --tip-icon-fg: var(--state-success);
-    }
+  .j-tip.is-success {
+    --tip-border-color: var(--state-success);
+    --tip-bg: var(--state-success-muted);
+    --tip-icon-fg: var(--state-success);
+  }
 
-    .j-tip.is-warning {
-        --tip-border-color: var(--state-warning);
-        --tip-bg: var(--state-warning-muted);
-        --tip-icon-fg: var(--state-warning);
-    }
+  .j-tip.is-warning {
+    --tip-border-color: var(--state-warning);
+    --tip-bg: var(--state-warning-muted);
+    --tip-icon-fg: var(--state-warning);
+  }
 
-    .j-tip.is-danger {
-        --tip-border-color: var(--state-danger);
-        --tip-bg: var(--state-danger-muted);
-        --tip-icon-fg: var(--state-danger);
-    }
+  .j-tip.is-danger {
+    --tip-border-color: var(--state-danger);
+    --tip-bg: var(--state-danger-muted);
+    --tip-icon-fg: var(--state-danger);
+  }
 }

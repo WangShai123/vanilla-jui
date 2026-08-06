@@ -1,5 +1,4 @@
 @layer animation {
-
   /* none */
   .animate-none {
     animation: none;
@@ -22,7 +21,6 @@
   }
 
   @keyframes animate-ping {
-
     75%,
     100% {
       transform: scale(2);
@@ -47,7 +45,6 @@
   }
 
   @keyframes animate-bounce {
-
     0%,
     100% {
       transform: translateY(-25%);
@@ -100,7 +97,6 @@
   }
 
   @keyframes animate-shake {
-
     0%,
     100% {
       transform: translateX(0);

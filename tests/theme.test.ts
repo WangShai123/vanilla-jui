@@ -1,11 +1,25 @@
 // @vitest-environment jsdom
 
+import { createStorage } from 'vanilla-create-storage';
 import { afterEach, beforeEach, describe, expect, it } from 'vite-plus/test';
 
-import { Theme } from '../src/components/theme.ts';
-import { getCookie } from '../src/utilities/storage.ts';
+import { createTheme } from '../src/primitives/theme.ts';
 
-let theme: Theme | null = null;
+let theme: ReturnType<typeof createTheme> | null = null;
+const themeStorage = createStorage({
+  driver: 'cookie',
+  codec: 'json',
+  driverOptions: {
+    path: '/',
+    sameSite: 'lax',
+  },
+});
+
+function waitStorage(): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, 0);
+  });
+}
 
 beforeEach(() => {
   document.body.innerHTML = '';
@@ -23,7 +37,7 @@ afterEach(() => {
 
 describe('Theme', () => {
   it('creates default panel classes and stable data markers', () => {
-    theme = new Theme({ theme: 'blue' });
+    theme = createTheme({ theme: 'blue' });
     const panel = theme.createPanel();
     document.body.appendChild(panel);
 
@@ -48,7 +62,7 @@ describe('Theme', () => {
   });
 
   it('uses data markers for interaction when className is customized', () => {
-    theme = new Theme({
+    theme = createTheme({
       theme: 'indigo',
       className: {
         panel: 'qa-theme-panel',
@@ -83,15 +97,17 @@ describe('Theme', () => {
     expect(indigo?.hasAttribute('aria-selected')).toBe(false);
   });
 
-  it('setConfig saves config and syncs active buttons without changing html class', () => {
-    theme = new Theme({ theme: 'indigo' });
+  it('setConfig saves config and syncs active buttons without changing html class', async () => {
+    theme = createTheme({ theme: 'indigo' });
     const panel = theme.createPanel();
     document.body.appendChild(panel);
 
     theme.setConfig({ theme: 'tomato' });
+    await waitStorage();
+    const stored = await themeStorage.get<Record<string, unknown>>('ui-theme');
 
     expect(theme.props.theme).toBe('tomato');
-    expect(getCookie('ui-theme')).toContain('"theme":"tomato"');
+    expect(stored).toMatchObject({ theme: 'tomato' });
     expect(document.documentElement.classList.contains('j-theme-tomato')).toBe(
       false
     );
@@ -113,7 +129,7 @@ describe('Theme', () => {
   });
 
   it('destroy unbinds document interaction', () => {
-    theme = new Theme({ theme: 'indigo' });
+    theme = createTheme({ theme: 'indigo' });
     const panel = theme.createPanel();
     document.body.appendChild(panel);
     theme.destroy();

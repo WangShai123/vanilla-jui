@@ -8,23 +8,20 @@ import {
 } from 'vanilla-signal';
 
 import Component, { type ComponentDOM } from '../core/Component.ts';
+import { joinClasses } from '../utilities/class-name.ts';
 import {
-  type ResolveSchema,
-  hasOwn,
-  isPlainObject,
-  randomId,
-  resolveProps,
-  validateParam,
-} from '../utilities/core.ts';
-import {
-  type DOMReference,
   type RenderableContent,
   all,
-  isRenderableContent,
-  normalizeContentNodes,
-  requireContainer,
+  normalizeRenderableContentNodes,
 } from '../utilities/dom.ts';
-import { Validator } from './validator.ts';
+import { randomId } from '../utilities/id.ts';
+import { isPlainObject } from '../utilities/object.ts';
+import {
+  type ResolveSchema,
+  resolveProps,
+  validateParam,
+} from '../utilities/types.ts';
+import { createValidator } from '../validation/validator.ts';
 
 type FormValue = string | number | boolean;
 type FormOptionInput = FormValue | FormOption;
@@ -35,7 +32,6 @@ type FormControlElement =
 type FormStyle = string | Partial<CSSStyleDeclaration> | null;
 export type FormDataValue = FormDataEntryValue | FormDataEntryValue[];
 export type FormDataRecord = Record<string, FormDataValue>;
-type FormContainer = Element | DocumentFragment | false | null;
 type FormControlType =
   | 'checkbox'
   | 'custom'
@@ -159,7 +155,6 @@ interface FormState extends ResolvedFormProps {
 
 interface FormDOM extends ComponentDOM {
   root: HTMLFormElement | null;
-  container: DOMReference | DocumentFragment;
   fields: Map<string, FormControlElement>;
 }
 
@@ -169,8 +164,8 @@ interface FormCache {
 }
 
 interface ValidatorInstance {
-  root: Element | null;
-  options: FormValidatorConfig & { onSubmit: null };
+  dom: { root: Element | null };
+  props: (FormValidatorConfig & { onSubmit: null }) | null;
   validate: () => boolean;
   reset: () => void;
   destroy: () => void;
@@ -251,11 +246,6 @@ const FORM_PROPS_SCHEMA = {
   onReset: { default: null, types: ['function', 'null'] },
 } satisfies ResolveSchema<FormProps>;
 
-const FORM_UPDATE_RULE = {
-  validate: (value: unknown) => isPlainObject(value),
-  message: 'expects a props object.',
-};
-
 function cloneOptions(
   options: readonly FormOptionInput[] | undefined
 ): FormOptionInput[] {
@@ -296,14 +286,6 @@ function stringifyFormValue(
   return value.name;
 }
 
-function contentView<TContext>(
-  content: unknown,
-  context: TContext
-): Node[] | null {
-  if (!isRenderableContent(content)) return null;
-  return normalizeContentNodes(content, context);
-}
-
 function fieldIsRequired(
   field: FormField,
   rules: FormValidatorConfig['rules']
@@ -312,14 +294,10 @@ function fieldIsRequired(
   return !!field.required || !!rules?.[field.name]?.required;
 }
 
-function resolveClassName(...parts: Array<string | false | null | undefined>) {
-  return parts.filter(Boolean).join(' ');
-}
-
 function resolveClassNames(value: unknown): FormClassNames {
   return {
     ...DEFAULT_CLASS_NAMES,
-    ...(isPlainObject(value) ? value : {}),
+    ...(isPlainObject(value) ? (value as Partial<FormClassNames>) : {}),
   } as FormClassNames;
 }
 
@@ -331,7 +309,8 @@ function setElementStyle(element: HTMLElement, style: FormStyle): void {
     return;
   }
   if (!isPlainObject(style)) return;
-  for (const [key, value] of Object.entries(style)) {
+  const styleRecord = style as Record<string, unknown>;
+  for (const [key, value] of Object.entries(styleRecord)) {
     if (value == null) continue;
     if (typeof value !== 'string' && typeof value !== 'number') continue;
     const name = key.startsWith('--')
@@ -342,7 +321,9 @@ function setElementStyle(element: HTMLElement, style: FormStyle): void {
 }
 
 function cloneValidator(validator: unknown): FormValidatorConfig {
-  const source = isPlainObject(validator) ? validator : {};
+  const source = (
+    isPlainObject(validator) ? validator : {}
+  ) as Partial<FormValidatorConfig> & Record<string, unknown>;
   return {
     ...source,
     rules: isPlainObject(source.rules)
@@ -371,16 +352,15 @@ function normalizeProps(input: FormProps): ResolvedFormProps {
   };
 }
 
-export class Form extends Component<ResolvedFormProps, FormState, FormDOM> {
+class Form extends Component<ResolvedFormProps, FormState, FormDOM> {
   declare state: FormState;
   validator: ValidatorInstance | null;
   cache: FormCache;
 
-  constructor(input: FormProps = {}, container: DOMReference = false) {
+  constructor(input: FormProps = {}) {
     const props = normalizeProps(input);
     super(props);
 
-    this.dom.container = container;
     this.dom.fields = new Map();
     this.validator = null;
     this.cleanup.view = null;
@@ -397,43 +377,23 @@ export class Form extends Component<ResolvedFormProps, FormState, FormDOM> {
     });
   }
 
-  override get root(): HTMLFormElement | null {
+  get root(): HTMLFormElement | null {
     return this.dom?.root || null;
   }
 
-  override set root(value: HTMLFormElement | null) {
+  set root(value: HTMLFormElement | null) {
     this.dom.root = value;
   }
 
-  protected onInit(): void {
-    if (
-      this.dom.container === false ||
-      this.dom.container == null ||
-      typeof this.dom.container === 'string'
-    ) {
-      return;
-    }
-    this.mount(this.dom.container as FormContainer);
-  }
-
-  build(container: DOMReference = this.dom.container): this {
+  build(): this {
     if (this.runtime.destroyed)
       throw new Error('Form.build: instance destroyed');
     if (this.cleanup.view) return this;
-    this.dom.container =
-      container === false
-        ? document.createDocumentFragment()
-        : requireContainer(container, 'Form.container');
     this.init(this.props);
-    return this;
-  }
 
-  mount(container: FormContainer = this.dom.container as FormContainer): this {
-    if (this.cleanup.view) return this;
-    if (!container) return this;
-
+    const host = document.createElement('div');
     this.cleanup.view = createRoot((dispose) => {
-      const viewDispose = render(() => this.view(), container as Element);
+      const viewDispose = render(() => this.view(), host);
       onCleanup(viewDispose);
       return dispose;
     });
@@ -445,7 +405,7 @@ export class Form extends Component<ResolvedFormProps, FormState, FormDOM> {
     const className = this.state.className;
     return jsx('form', {
       className: () =>
-        resolveClassName(
+        joinClasses(
           this.state.className.form,
           this.state.vertical ? className.vertical : className.horizontal,
           this.state.itemVertical
@@ -510,7 +470,7 @@ export class Form extends Component<ResolvedFormProps, FormState, FormDOM> {
     const className = this.state.className;
 
     return jsx('label', {
-      className: resolveClassName(
+      className: joinClasses(
         className.label,
         fieldIsRequired(field, this.state.validator?.rules)
           ? className.required
@@ -541,7 +501,11 @@ export class Form extends Component<ResolvedFormProps, FormState, FormDOM> {
       case 'switch':
         return this.switchView(field, id);
       case 'custom':
-        return contentView(field.content, { form: this, field, index });
+        return normalizeRenderableContentNodes(field.content, {
+          form: this,
+          field,
+          index,
+        });
       default:
         return this.inputView(field, id);
     }
@@ -601,7 +565,7 @@ export class Form extends Component<ResolvedFormProps, FormState, FormDOM> {
   ): HTMLElement {
     const direction = field.vertical ? 'vertical' : 'horizontal';
     const classNameConfig = this.state.className;
-    const className = resolveClassName(
+    const className = joinClasses(
       type === 'radio' ? classNameConfig.radio : classNameConfig.checkbox,
       direction === 'vertical'
         ? classNameConfig.choiceVertical
@@ -649,7 +613,7 @@ export class Form extends Component<ResolvedFormProps, FormState, FormDOM> {
   switchView(field: FormField, id: string): HTMLLabelElement {
     const className = this.state.className;
     return jsx('label', {
-      className: resolveClassName(
+      className: joinClasses(
         className.switch,
         field.variant ? `is-${field.variant}` : className.switchDefault,
         field.size ? `is-${field.size}` : className.switchSizeMd
@@ -684,7 +648,7 @@ export class Form extends Component<ResolvedFormProps, FormState, FormDOM> {
       children: this.state.buttons.map((button) =>
         jsx('button', {
           type: button.type || 'button',
-          className: resolveClassName(
+          className: joinClasses(
             className.button,
             button.theme ? `is-${button.theme}` : '',
             button.className || ''
@@ -743,13 +707,13 @@ export class Form extends Component<ResolvedFormProps, FormState, FormDOM> {
       onSubmit: null,
     };
 
-    if (this.validator?.root === this.root) {
-      this.validator.options = options;
+    if (this.validator?.dom.root === this.root) {
+      this.validator.props = options;
       return;
     }
 
     this.validator?.destroy();
-    this.validator = new Validator(
+    this.validator = createValidator(
       this.root,
       options,
       false
@@ -825,7 +789,7 @@ export class Form extends Component<ResolvedFormProps, FormState, FormDOM> {
     const formData = new FormData(form);
 
     for (const [key, value] of formData.entries()) {
-      if (hasOwn(data, key)) {
+      if (Object.hasOwn(data, key)) {
         data[key] = Array.isArray(data[key])
           ? [...data[key], value]
           : [data[key], value];
@@ -849,32 +813,13 @@ export class Form extends Component<ResolvedFormProps, FormState, FormDOM> {
     return this;
   }
 
-  override update(
-    patch: Partial<FormProps> | null | undefined = {},
-    _options = {}
-  ): this {
-    const propsPatch = patch || {};
-    validateParam('props', propsPatch, FORM_UPDATE_RULE, 'Form.update');
-    const nextProps = normalizeProps(Object.assign({}, this.props, propsPatch));
-
-    this.props = this.cloneProps(nextProps);
-    this.cache.fieldIds.clear();
-    super.update(nextProps);
-
-    flushSync(() => {
-      const statePatch = this.cloneProps(nextProps);
-      for (const key of Object.keys(statePatch) as Array<
-        keyof ResolvedFormProps
-      >) {
-        this.state[key] = statePatch[key] as FormState[typeof key];
-      }
-    });
-    return this;
-  }
-
   setFields(fields: readonly FormField[]): this {
     validateParam('fields', fields, 'array', 'Form.setFields');
-    return this.update({ fields });
+    this.cache.fieldIds.clear();
+    flushSync(() => {
+      this.state.fields = cloneFields(fields);
+    });
+    return this;
   }
 
   resetFields(): this {
@@ -945,9 +890,6 @@ export class Form extends Component<ResolvedFormProps, FormState, FormDOM> {
   }
 }
 
-export function createForm(
-  props: FormProps = {},
-  container: DOMReference = false
-): Form {
-  return new Form(props, container);
+export function createForm(props: FormProps = {}): Form {
+  return new Form(props);
 }

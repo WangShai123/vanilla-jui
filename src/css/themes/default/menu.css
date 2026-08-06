@@ -1,15 +1,79 @@
 @layer themes {
-    .j-menu {
-        --menu-font-size: var(--font-size-md);
-        --menu-font-weight: var(--font-normal);
+  .j-menu {
+    --menu-font-size: var(--font-size-md);
+    --menu-font-weight: var(--font-normal);
+    --menu-item-icon-size: var(--font-size-lg);
 
-        --menu-item-padding: 0.5rem 1rem;
-        --menu-item-height: var(--el-height-md);
-        --menu-item-line-height: var(--line-height);
+    --menu-item-padding: 0.5rem 1rem;
+    --menu-item-height: var(--el-height-md);
+    --menu-item-line-height: var(--line-height);
+    --menu-item-border-width: 1px;
+    --menu-item-border-style: solid;
+    --menu-item-border-color: transparent;
+    --menu-item-border-radius: var(--radius-md);
+    --menu-item-hover-bg: var(--tone-soft);
+    --menu-item-hover-fg: var(--tone-text);
+    --menu-item-error-bg: var(--state-danger-subtle);
+    --menu-item-error-tip-bg: var(--state-danger);
+    --menu-item-error-tip-fg: var(--state-danger-fg);
+    --menu-item-error-tip-font-size: var(--font-size-sm);
+    --menu-item-error-tip-padding: 0 var(--space);
 
-        --menu-link-font-weight: var(--font-medium);
-        --menu-link-gap: var(--space);
+    --menu-link-font-weight: var(--font-medium);
+    --menu-link-gap: var(--space);
+    --menu-link-current-fg: var(--tone-solid);
 
-        --menu-item-icon-size: var(--font-size-lg);
-    }
+    --sub-menu-bg: var(--ui-surface-subtle);
+    --sub-menu-border-width: 1px;
+    --sub-menu-border-style: solid;
+    --sub-menu-border-color: var(--ui-border);
+    --sub-menu-border-radius: var(--radius-md);
+    --sub-menu-min-width: 120px;
+    --sub-menu-max-width: 240px;
+    --sub-menu-box-shadow: var(--shadow-sm);
+    --sub-menu-item-hover-bg: var(--tone-solid);
+    --sub-menu-item-hover-fg: var(--tone-fg);
+    --sub-menu-item-hover-outline-width: 1px;
+    --sub-menu-item-hover-outline-style: solid;
+    --sub-menu-item-hover-outline-color: var(--tone-solid);
+  }
+
+  .j-menu[data-menu-type='mobile'] {
+    --menu-font-weight: var(--font-medium);
+    --menu-item-line-height: var(--line-height-paragraph);
+    --menu-item-height: var(--el-height-xl);
+    --menu-item-border-radius: none;
+    --menu-item-hover-bg: inherit;
+    --menu-item-hover-fg: inherit;
+    --menu-item-active-bg: var(--ui-bg-subtle);
+    --sub-menu-border-width: 0;
+    --sub-menu-item-hover-outline-width: 0;
+    --menu-link-gap: var(--s2);
+  }
+
+  .j-menu[data-menu-type='bottom'] {
+    --menu-bg: linear-gradient(
+      to bottom,
+      var(--ui-bg-subtle) 20%,
+      var(--ui-border) 40%,
+      var(--ui-outline) 50%,
+      var(--ui-border) 60%,
+      var(--ui-bg-subtle) 80%
+    );
+    --menu-item-bg: var(--ui-bg-subtle);
+    --menu-item-height: var(--el-height-2xl);
+    --menu-item-border-radius: none;
+    --menu-item-hover-bg: inherit;
+    --menu-item-hover-fg: inherit;
+
+    --sub-menu-bg: linear-gradient(
+      to right,
+      var(--ui-surface-subtle) 20%,
+      var(--ui-border) 40%,
+      var(--ui-outline) 50%,
+      var(--ui-border) 60%,
+      var(--ui-surface-subtle) 80%
+    );
+    --sub-menu-border-radius: var(--radius-md);
+  }
 }
