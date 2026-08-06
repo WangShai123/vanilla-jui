@@ -79,5 +79,12 @@
   "registry": {
     "type": "git",
     "url": "git+https://github.com/WangShai123/vanilla-jui.git"
+  },
+  "devEngines": {
+    "packageManager": {
+      "name": "npm",
+      "version": "12.0.2",
+      "onFail": "download"
+    }
   }
 }
