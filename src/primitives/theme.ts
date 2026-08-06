@@ -140,6 +140,7 @@ function createThemeStorage(): Storage {
       sameSite: 'Lax',
       secure: typeof location !== 'undefined' && location.protocol === 'https:',
     },
+    ttl: 864e5,
   });
 }
 
