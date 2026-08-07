@@ -1,12 +1,9 @@
-import {
-  createDeepStore,
-  createRoot,
-  flushSync,
-  jsx,
-  onCleanup,
-  render,
-} from 'vanilla-signal';
+import { createDeepStore, flushSync, jsx } from 'vanilla-signal';
 
+import {
+  type FunctionalComponent,
+  defineComponent,
+} from '../core/component.ts';
 import { type RenderableContent } from '../utilities/dom.ts';
 import { randomId } from '../utilities/id.ts';
 import { isPlainObject } from '../utilities/object.ts';
@@ -23,12 +20,8 @@ export type FlowBusyStrategy = 'ignore' | 'throw';
 export type FlowDirection = string;
 export type FlowSlotName = 'renderHeader' | 'renderBody' | 'renderFooter';
 export type FlowCleanup = () => void;
-export type FlowStepResult =
-  | string
-  | {
-      id: string;
-      data?: FlowPayload;
-    };
+export type FlowTarget = string | number;
+export type FlowStepResult = string | { id: string; data?: FlowPayload };
 
 export interface FlowClassNames {
   root: string;
@@ -88,6 +81,27 @@ export interface FlowSnapshot {
   loading: boolean;
   busyAction: FlowAction | null;
   error: unknown;
+}
+
+export interface FlowState extends Record<string, unknown> {
+  id: string;
+  currentId: string;
+  currentIndex: number;
+  previousId: string | null;
+  previousIndex: number | null;
+  direction: FlowDirection | null;
+  history: string[];
+  data: FlowData;
+  stepData: Record<string, FlowData>;
+  loading: boolean;
+  error: unknown;
+  busyAction: FlowAction | null;
+  version: number;
+}
+
+export interface FlowGoToOptions {
+  direction?: FlowDirection;
+  internal?: boolean;
 }
 
 export interface FlowContext {
@@ -174,7 +188,6 @@ export type FlowSubscriber = (
   flow: Flow,
   previous: FlowSnapshot | null
 ) => void;
-export type FlowTarget = string | number;
 
 export interface FlowText {
   back: string;
@@ -234,62 +247,50 @@ interface ResolvedFlowProps extends Record<string, unknown> {
   onBusy: FlowBusyHook | null;
 }
 
-export interface FlowState extends Record<string, unknown> {
-  id: string;
-  currentId: string;
-  currentIndex: number;
-  previousId: string | null;
-  previousIndex: number | null;
-  direction: FlowDirection | null;
-  history: string[];
-  data: FlowData;
-  stepData: Record<string, FlowData>;
-  loading: boolean;
-  error: unknown;
-  busyAction: FlowAction | null;
-  version: number;
-}
-
-interface InitialFlowData {
-  stepData: Record<string, FlowData>;
-  global: FlowData;
-}
-
-interface FlowDOM {
-  root: HTMLElement | null;
-  header: HTMLElement | null;
-  body: HTMLElement | null;
-  footer: HTMLElement | null;
-}
-
 interface FlowRuntime {
   built: boolean;
+  mounted: boolean;
   destroyed: boolean;
   activeAction: FlowAction | null;
   actionController: AbortController | null;
 }
 
-interface FlowGoToOptions {
-  direction?: FlowDirection;
-  internal?: boolean;
+interface FlowActions {
+  subscribe(handler: FlowSubscriber): FlowCleanup;
+  snapshot(): FlowSnapshot;
+  next(payload?: FlowPayload): Promise<FlowSnapshot | null>;
+  back(payload?: FlowPayload): Promise<FlowSnapshot | null>;
+  goTo(
+    target: FlowTarget,
+    payload?: FlowPayload,
+    options?: FlowGoToOptions
+  ): Promise<FlowSnapshot | null>;
+  setData(data: FlowPayload): Flow;
+  setStepData(
+    stepId: string,
+    data: FlowPayload,
+    options?: { silent?: boolean }
+  ): Flow;
+  getStepData(stepId: string): FlowData;
+  reset(): Flow;
+  finish(payload?: FlowPayload): Promise<FlowSnapshot | null>;
 }
 
-interface FlowRunActionOptions {
-  internal?: boolean;
-}
-
-interface FlowTransitionOptions {
-  direction: FlowDirection;
-  payload: FlowPayload;
-  fromStep: FlowStep;
-}
-
-interface FlowContextExtra {
-  step?: FlowStep;
-  payload?: FlowPayload;
-  direction?: FlowDirection;
-  fromId?: string | null;
-  targetId?: string | null;
+export interface Flow extends FlowActions {
+  readonly props: ResolvedFlowProps;
+  readonly steps: FlowStep[];
+  readonly state: FlowState;
+  readonly runtime: FlowRuntime;
+  readonly element: HTMLElement | null;
+  readonly currentStep: FlowStep;
+  readonly currentData: FlowData;
+  readonly canBack: boolean;
+  readonly canNext: boolean;
+  readonly isLast: boolean;
+  build(): this;
+  mount(container: Element | DocumentFragment): this;
+  unmount(): this;
+  destroy(): void;
 }
 
 interface CapturedFlowState {
@@ -329,16 +330,15 @@ const DEFAULT_CLASS_NAMES: FlowClassNames = {
   next: 'is-primary flow-next',
 };
 
-function isFlowRenderSlot(slot: unknown): slot is FlowSlot {
-  return slot == null || slot === false || typeof slot === 'function';
-}
+const FLOW_STEP_RULE = {
+  type: 'plainObject',
+  shape: { id: { type: 'string', nonEmpty: true } },
+};
+const FLOW_CONTENT_RULE = { type: 'renderable' };
+const FLOW_PAYLOAD_RULE = { types: ['plainObject', 'null', 'undefined'] };
 
 function clonePlainObject(value: unknown): FlowData {
   return isPlainObject(value) ? { ...(value as FlowData) } : {};
-}
-
-function cloneArray<T>(value: unknown): T[] {
-  return Array.isArray(value) ? [...value] : [];
 }
 
 function cloneSteps(steps: unknown): FlowStep[] {
@@ -347,7 +347,6 @@ function cloneSteps(steps: unknown): FlowStep[] {
     const source = { ...(step as FlowStep & Record<string, unknown>) };
     delete source.description;
     delete source.view;
-
     return {
       ...source,
       data: clonePlainObject(source.data),
@@ -359,107 +358,44 @@ function cloneSteps(steps: unknown): FlowStep[] {
   });
 }
 
+function normalizeClassNames(value: unknown): FlowClassNames {
+  if (typeof value === 'string') {
+    return {
+      ...DEFAULT_CLASS_NAMES,
+      root: [DEFAULT_CLASS_NAMES.root, value.trim()].filter(Boolean).join(' '),
+    };
+  }
+  return {
+    ...DEFAULT_CLASS_NAMES,
+    ...(isPlainObject(value) ? (value as FlowClassNameConfig) : {}),
+  };
+}
+
 function normalizeStepResult(
   result: FlowStepResult | FlowPayload | void,
   fallbackId: string
 ): { id: string; data?: FlowPayload } {
   if (typeof result === 'string') return { id: result };
-  if (isPlainObject(result)) {
-    const source = result as { id?: unknown; data?: unknown };
-    if (typeof source.id !== 'string') return { id: fallbackId };
-    const data: FlowPayload | undefined = isPlainObject(source.data)
-      ? (source.data as FlowData)
-      : source.data == null
-        ? source.data
-        : undefined;
-    return {
-      id: source.id,
-      data,
-    };
-  }
-  return { id: fallbackId };
-}
-
-function normalizeClassNames(value: unknown): FlowClassNames {
-  if (typeof value === 'string') {
-    const extra = value.trim();
-    return {
-      ...DEFAULT_CLASS_NAMES,
-      root: extra
-        ? `${DEFAULT_CLASS_NAMES.root} ${extra}`
-        : DEFAULT_CLASS_NAMES.root,
-    };
-  }
-
+  if (!isPlainObject(result)) return { id: fallbackId };
+  const source = result as { id?: unknown; data?: unknown };
+  if (typeof source.id !== 'string') return { id: fallbackId };
   return {
-    ...DEFAULT_CLASS_NAMES,
-    ...(isPlainObject(value) ? (value as Partial<FlowClassNames>) : {}),
+    id: source.id,
+    data:
+      isPlainObject(source.data) || source.data == null
+        ? (source.data as FlowPayload)
+        : undefined,
   };
 }
-
-function joinClasses(
-  ...classes: Array<string | false | null | undefined>
-): string {
-  return classes.filter(Boolean).join(' ');
-}
-
-const FLOW_STEP_RULE = {
-  type: 'plainObject',
-  shape: {
-    id: { type: 'string', nonEmpty: true },
-  },
-};
-
-const FLOW_CONTENT_RULE = {
-  type: 'renderable',
-};
-
-const FLOW_STEPS_RULE = {
-  type: 'array',
-  nonEmpty: true,
-};
-
-const FLOW_PAYLOAD_RULE = {
-  types: ['plainObject', 'null', 'undefined'],
-};
-
-const FLOW_RENDER_SLOT_RULE = {
-  validate: isFlowRenderSlot,
-  message: 'expects function, false or null.',
-};
-
-const FLOW_TEXT_RULE = {
-  default: {},
-  type: 'plainObject',
-  normalize: (value: unknown): FlowText => {
-    const text = (isPlainObject(value) ? value : {}) as Partial<FlowText> &
-      Record<string, unknown>;
-    return {
-      ...Object.fromEntries(
-        Object.entries(text).filter(([, item]) => typeof item === 'string')
-      ),
-      back: typeof text.back === 'string' ? text.back : 'Back',
-      next: typeof text.next === 'string' ? text.next : 'Next',
-      finish: typeof text.finish === 'string' ? text.finish : 'Finish',
-      reset: typeof text.reset === 'string' ? text.reset : 'Reset',
-    };
-  },
-};
 
 const FLOW_PROPS_SCHEMA = {
   id: {
     default: null,
     types: ['string', 'null'],
-    normalize: (value: unknown) => {
-      if (typeof value === 'string') {
-        const id = value.trim();
-        return id || randomId();
-      }
-      if (value == null) return randomId();
-      return value;
-    },
+    normalize: (value: unknown) =>
+      typeof value === 'string' ? value.trim() || randomId() : randomId(),
   },
-  steps: { default: [], ...FLOW_STEPS_RULE },
+  steps: { default: [], type: 'array', nonEmpty: true },
   initial: { default: null, types: ['string', 'number', 'null'] },
   cache: { default: true, type: 'boolean' },
   linear: { default: true, type: 'boolean' },
@@ -473,15 +409,39 @@ const FLOW_PROPS_SCHEMA = {
   showBack: { default: true, type: 'boolean' },
   showNext: { default: true, type: 'boolean' },
   showReset: { default: false, type: 'boolean' },
-  text: FLOW_TEXT_RULE,
+  text: {
+    default: {},
+    type: 'plainObject',
+    normalize: (value: unknown) => {
+      const text = isPlainObject(value) ? (value as Partial<FlowText>) : {};
+      return {
+        back: typeof text.back === 'string' ? text.back : 'Back',
+        next: typeof text.next === 'string' ? text.next : 'Next',
+        finish: typeof text.finish === 'string' ? text.finish : 'Finish',
+        reset: typeof text.reset === 'string' ? text.reset : 'Reset',
+      };
+    },
+  },
   className: {
     default: DEFAULT_CLASS_NAMES,
     types: ['object', 'string'],
     normalize: normalizeClassNames,
   },
-  renderHeader: { default: null, ...FLOW_RENDER_SLOT_RULE },
-  renderBody: { default: null, ...FLOW_RENDER_SLOT_RULE },
-  renderFooter: { default: null, ...FLOW_RENDER_SLOT_RULE },
+  renderHeader: {
+    default: null,
+    validate: (value: unknown) =>
+      value == null || value === false || typeof value === 'function',
+  },
+  renderBody: {
+    default: null,
+    validate: (value: unknown) =>
+      value == null || value === false || typeof value === 'function',
+  },
+  renderFooter: {
+    default: null,
+    validate: (value: unknown) =>
+      value == null || value === false || typeof value === 'function',
+  },
   onChange: { default: null, types: ['function', 'null'] },
   onNext: { default: null, types: ['function', 'null'] },
   onBack: { default: null, types: ['function', 'null'] },
@@ -495,7 +455,7 @@ function normalizeProps(input: FlowProps): ResolvedFlowProps {
   return {
     id: props.id as string,
     steps: cloneSteps(props.steps),
-    initial: props.initial as ResolvedFlowProps['initial'],
+    initial: props.initial as string | number | null,
     cache: props.cache as boolean,
     linear: props.linear as boolean,
     render: props.render as boolean,
@@ -518,788 +478,88 @@ function normalizeProps(input: FlowProps): ResolvedFlowProps {
   };
 }
 
-/**
- * Headless 流程控制器，带可选默认 UI。
- *
- * 适合在 Modal、Offcanvas、页面表单或任意业务组件中复用 next/back/goTo、步骤缓存和生命周期。
- */
-class Flow {
-  props: ResolvedFlowProps;
-  steps: FlowStep[];
-  state: FlowState;
-  dom: FlowDOM;
-  runtime: FlowRuntime;
-  private stepMap: Map<string, number>;
-  private initialStepId: string;
-  private initialData: InitialFlowData;
-  private subscribers: Set<FlowSubscriber>;
-  private renderDispose: FlowCleanup | null;
-  private cleanupTasks: Set<FlowCleanup>;
-
-  /**
-   * 创建 Flow 实例。
-   * @param {FlowProps} [props={}] Flow 配置。
-   */
-  constructor(props: FlowProps = {}) {
-    this.props = normalizeProps(props);
-    this.steps = this.props.steps;
-    this.validateSteps(this.steps);
-    this.stepMap = new Map(this.steps.map((step, index) => [step.id, index]));
-    this.initialStepId = this.resolveInitialStepId(this.props.initial);
-    this.initialData = this.createInitialStepData();
-    this.subscribers = new Set();
-    this.renderDispose = null;
-    this.cleanupTasks = new Set();
-    this.dom = {
-      root: null,
-      header: null,
-      body: null,
-      footer: null,
-    };
-    this.runtime = {
-      built: false,
-      destroyed: false,
-      activeAction: null,
-      actionController: null,
-    };
-
-    this.state = createDeepStore({
-      id: this.props.id,
-      currentId: this.initialStepId,
-      currentIndex: this.stepMap.get(this.initialStepId) ?? 0,
-      previousId: null,
-      previousIndex: null,
-      direction: null,
-      history: [this.initialStepId],
-      data: clonePlainObject(this.initialData.global),
-      stepData: clonePlainObject(this.initialData.stepData) as Record<
-        string,
-        FlowData
-      >,
-      loading: false,
-      error: null,
-      busyAction: null,
-      version: 0,
-    }) as FlowState;
-  }
-
-  /**
-   * 当前步骤。
-   * @returns {FlowStep}
-   */
-  get currentStep(): FlowStep {
-    return this.steps[this.state.currentIndex];
-  }
-
-  /**
-   * 当前步骤数据。
-   * @returns {object}
-   */
-  get currentData(): FlowData {
-    return this.getStepData(this.state.currentId);
-  }
-
-  /**
-   * 是否可以返回上一步。
-   * @returns {boolean}
-   */
-  get canBack(): boolean {
-    return this.state.currentIndex > 0 && !this.state.loading;
-  }
-
-  /**
-   * 是否可以前进。
-   * @returns {boolean}
-   */
-  get canNext(): boolean {
-    return (
-      this.state.currentIndex < this.steps.length - 1 && !this.state.loading
+export function createFlow(input: FlowProps = {}): Flow {
+  const props = normalizeProps(input);
+  const steps = props.steps;
+  const stepMap = new Map<string, number>();
+  for (const [index, step] of steps.entries()) {
+    validateParam(String(index), step, FLOW_STEP_RULE, 'Flow.props.steps');
+    validateParam(
+      'content',
+      step.content ?? null,
+      FLOW_CONTENT_RULE,
+      `Flow.props.steps.${index}`
     );
-  }
-
-  /**
-   * 是否处于最后一步。
-   * @returns {boolean}
-   */
-  get isLast(): boolean {
-    return this.state.currentIndex === this.steps.length - 1;
-  }
-
-  /**
-   * 订阅状态变化。
-   * @param {Function} handler 订阅函数。
-   * @returns {Function} 取消订阅函数。
-   */
-  subscribe(handler: FlowSubscriber): FlowCleanup {
-    this.assertActive('subscribe');
-    if (typeof handler !== 'function') {
-      throw new Error('Flow.subscribe: handler expects a function.');
+    if (stepMap.has(step.id)) {
+      throw new Error(`Flow.props.steps: duplicated step id "${step.id}".`);
     }
-    this.subscribers.add(handler);
-    handler(this.snapshot(), this, null);
-    return () => this.subscribers.delete(handler);
+    stepMap.set(step.id, index);
   }
-
-  /**
-   * 获取不可变快照。
-   * @returns {object}
-   */
-  snapshot(): FlowSnapshot {
-    const currentStep = this.currentStep;
-    return {
-      id: this.state.id,
-      currentId: this.state.currentId,
-      currentIndex: this.state.currentIndex,
-      previousId: this.state.previousId,
-      previousIndex: this.state.previousIndex,
-      direction: this.state.direction,
-      history: [...this.state.history],
-      data: clonePlainObject(this.state.data),
-      stepData: clonePlainObject(this.state.stepData) as Record<
-        string,
-        FlowData
-      >,
-      currentData: this.currentData,
-      currentStep: this.publicStep(currentStep),
-      canBack: this.canBack,
-      canNext: this.canNext,
-      isLast: this.isLast,
-      loading: this.state.loading,
-      busyAction: this.state.busyAction,
-      error: this.state.error,
-    };
-  }
-
-  /**
-   * 构建默认 Flow UI。
-   * @returns {Flow}
-   */
-  build(): this {
-    this.assertActive('build');
-    if (this.runtime.built) return this;
-
-    this.runtime.built = true;
-    if (!this.props.render) return this;
-
-    this.dom.root = this.buildRoot();
-    this.mountView();
-    return this;
-  }
-
-  private teardownView(): void {
-    this.renderDispose?.();
-    this.renderDispose = null;
-    this.dom.root?.remove();
-    this.dom.root = null;
-    this.dom.header = null;
-    this.dom.body = null;
-    this.dom.footer = null;
-    this.runtime.built = false;
-  }
-
-  /**
-   * 前进一步。
-   * @param {object|null} [payload=null] 当前步骤需要缓存的数据。
-   * @returns {Promise<object>} 切换后的快照。
-   */
-  async next(payload: FlowPayload = null): Promise<FlowSnapshot | null> {
-    this.assertActive('next');
-    validateParam('payload', payload, FLOW_PAYLOAD_RULE, 'Flow.next');
-    const busySnapshot = this.handleBusy('next');
-    if (busySnapshot) return busySnapshot;
-
-    return this.runAction('next', async () => {
-      if (this.isLast) return this.finish(payload, { internal: true });
-
-      const fromStep = this.currentStep;
-      const fallbackId = this.steps[this.state.currentIndex + 1]?.id;
-      const result = await this.runMoveHook(
-        'next',
-        fromStep,
-        payload,
-        fallbackId
-      );
-      const { id, data } = normalizeStepResult(result, fallbackId);
-      return this.goTo(id, data ?? payload, {
-        direction: 'next',
-        internal: true,
-      });
-    });
-  }
-
-  /**
-   * 返回上一步。
-   * @param {object|null} [payload=null] 当前步骤需要缓存的数据。
-   * @returns {Promise<object>} 切换后的快照。
-   */
-  async back(payload: FlowPayload = null): Promise<FlowSnapshot | null> {
-    this.assertActive('back');
-    validateParam('payload', payload, FLOW_PAYLOAD_RULE, 'Flow.back');
-    const busySnapshot = this.handleBusy('back');
-    if (busySnapshot) return busySnapshot;
-
-    if (!this.canBack) return this.snapshot();
-
-    return this.runAction('back', async () => {
-      const fromStep = this.currentStep;
-      const fallbackId = this.steps[this.state.currentIndex - 1]?.id;
-      const result = await this.runMoveHook(
-        'back',
-        fromStep,
-        payload,
-        fallbackId
-      );
-      const { id, data } = normalizeStepResult(result, fallbackId);
-      return this.goTo(id, data ?? payload, {
-        direction: 'back',
-        internal: true,
-      });
-    });
-  }
-
-  /**
-   * 跳转到指定步骤。
-   * @param {string|number} target 目标步骤 id 或索引。
-   * @param {object|null} [payload=null] 当前步骤需要缓存的数据。
-   * @param {{direction?:string, internal?:boolean}} [options={}] 跳转选项。
-   * @returns {Promise<object>} 切换后的快照。
-   */
-  async goTo(
-    target: FlowTarget,
-    payload: FlowPayload = null,
-    options: FlowGoToOptions = {}
-  ): Promise<FlowSnapshot | null> {
-    this.assertActive('goTo');
-    validateParam('payload', payload, FLOW_PAYLOAD_RULE, 'Flow.goTo');
-    const busySnapshot = options.internal ? null : this.handleBusy('goTo');
-    if (busySnapshot) return busySnapshot;
-
-    return this.runAction(
-      'goTo',
-      async () => {
-        const toIndex = this.resolveStepIndex(target);
-        const toStep = this.steps[toIndex];
-        const fromStep = this.currentStep;
-
-        if (!toStep || toStep.id === this.state.currentId) {
-          if (payload) this.setStepData(this.state.currentId, payload);
-          return this.snapshot();
-        }
-
-        await this.transitionTo(toStep, {
-          direction: options.direction || 'go',
-          payload,
-          fromStep,
-        });
-
-        return this.snapshot();
-      },
-      { internal: options.internal }
-    );
-  }
-
-  /**
-   * 合并全局数据。
-   * @param {object} data 数据补丁。
-   * @returns {Flow}
-   */
-  setData(data: FlowPayload): this {
-    this.assertActive('setData');
-    validateParam('data', data, FLOW_PAYLOAD_RULE, 'Flow.setData');
-    if (!data) return this;
-
-    flushSync(() => {
-      Object.assign(this.state.data, data);
-      this.state.version += 1;
-    });
-    this.emitChange();
-    return this;
-  }
-
-  /**
-   * 合并指定步骤缓存数据。
-   * @param {string} stepId 步骤 id。
-   * @param {object|null} data 数据补丁。
-   * @returns {Flow}
-   */
-  setStepData(
-    stepId: string,
-    data: FlowPayload,
-    options: { silent?: boolean } = {}
-  ): this {
-    this.assertActive('setStepData');
-    validateParam('stepId', stepId, { type: 'string' }, 'Flow.setStepData');
-    validateParam('data', data, FLOW_PAYLOAD_RULE, 'Flow.setStepData');
-    if (!data || !this.stepMap.has(stepId)) return this;
-
-    flushSync(() => {
-      this.state.stepData[stepId] = {
-        ...clonePlainObject(this.state.stepData[stepId]),
-        ...data,
-      };
-      if (this.props.cache) Object.assign(this.state.data, data);
-      this.state.version += 1;
-    });
-    if (!options.silent) this.emitChange();
-    return this;
-  }
-
-  /**
-   * 获取指定步骤缓存数据。
-   * @param {string} stepId 步骤 id。
-   * @returns {object}
-   */
-  getStepData(stepId: string): FlowData {
-    return clonePlainObject(this.state.stepData[stepId]);
-  }
-
-  /**
-   * 重置流程。
-   * @returns {Flow}
-   */
-  reset(): this {
-    this.assertActive('reset');
-    flushSync(() => {
-      this.state.currentId = this.initialStepId;
-      this.state.currentIndex = this.stepMap.get(this.initialStepId) ?? 0;
-      this.state.previousId = null;
-      this.state.previousIndex = null;
-      this.state.direction = null;
-      this.state.history.splice(
-        0,
-        this.state.history.length,
-        this.initialStepId
-      );
-      this.replaceObject(
-        this.state.data,
-        clonePlainObject(this.initialData.global)
-      );
-      this.replaceObject(
-        this.state.stepData,
-        clonePlainObject(this.initialData.stepData)
-      );
-      this.state.loading = false;
-      this.state.busyAction = null;
-      this.state.error = null;
-      this.state.version += 1;
-    });
-    this.emitChange();
-    return this;
-  }
-
-  /**
-   * 完成流程。
-   * @param {object|null} [payload=null] 最后一步需要缓存的数据。
-   * @returns {Promise<object>} 当前快照。
-   */
-  async finish(
-    payload: FlowPayload = null,
-    options: FlowRunActionOptions = {}
-  ): Promise<FlowSnapshot | null> {
-    this.assertActive('finish');
-    validateParam('payload', payload, FLOW_PAYLOAD_RULE, 'Flow.finish');
-    const busySnapshot = options.internal ? null : this.handleBusy('finish');
-    if (busySnapshot) return busySnapshot;
-
-    return this.runAction(
-      'finish',
-      async () => {
-        if (payload) this.setStepData(this.state.currentId, payload);
-        await this.callHook(this.props.onFinish, [this.snapshot(), this]);
-        return this.snapshot();
-      },
-      { internal: options.internal }
-    );
-  }
-
-  /**
-   * 销毁 Flow 实例。
-   * @returns {void}
-   */
-  destroy(): void {
-    if (this.runtime.destroyed) return;
-    this.runtime.destroyed = true;
-    this.abortActiveAction();
-    this.teardownView();
-    for (const cleanup of Array.from(this.cleanupTasks)) {
-      cleanup();
-    }
-    this.cleanupTasks.clear();
-    this.subscribers.clear();
-    this.steps = [];
-    this.stepMap.clear();
-    this.runtime.activeAction = null;
-    this.runtime.actionController = null;
-  }
-
-  private resolveInitialStepId(initial: string | number | null): string {
-    if (typeof initial === 'number') {
-      const step = this.steps[initial];
+  const initialStepId = (() => {
+    if (typeof props.initial === 'number') {
+      const step = steps[props.initial];
       if (!step) throw new Error('Flow.props.initial index is out of range.');
       return step.id;
     }
-    if (typeof initial === 'string') {
-      if (!this.stepMap.has(initial)) {
-        throw new Error(`Flow.props.initial step "${initial}" does not exist.`);
+    if (typeof props.initial === 'string') {
+      if (!stepMap.has(props.initial)) {
+        throw new Error(
+          `Flow.props.initial step "${props.initial}" does not exist.`
+        );
       }
-      return initial;
+      return props.initial;
     }
-    return this.steps[0].id;
+    return steps[0].id;
+  })();
+  const initialStepData: Record<string, FlowData> = {};
+  const initialGlobal: FlowData = {};
+  for (const step of steps) {
+    initialStepData[step.id] = clonePlainObject(step.data);
+    Object.assign(initialGlobal, initialStepData[step.id]);
   }
+  const state = createDeepStore({
+    id: props.id,
+    currentId: initialStepId,
+    currentIndex: stepMap.get(initialStepId) ?? 0,
+    previousId: null,
+    previousIndex: null,
+    direction: null,
+    history: [initialStepId],
+    data: clonePlainObject(initialGlobal),
+    stepData: clonePlainObject(initialStepData) as Record<string, FlowData>,
+    loading: false,
+    error: null,
+    busyAction: null,
+    version: 0,
+  }) as FlowState;
+  const runtime: FlowRuntime = {
+    built: false,
+    mounted: false,
+    destroyed: false,
+    activeAction: null,
+    actionController: null,
+  };
+  const subscribers = new Set<FlowSubscriber>();
+  const cleanupTasks = new Set<FlowCleanup>();
+  let ui: FunctionalComponent<
+    Record<string, unknown>,
+    FlowState,
+    HTMLElement,
+    object
+  > | null = null;
+  let flow!: Flow;
 
-  private validateSteps(steps: FlowStep[]): void {
-    const ids = new Set<string>();
-    for (const [index, step] of steps.entries()) {
-      validateParam(String(index), step, FLOW_STEP_RULE, 'Flow.props.steps');
-      validateParam(
-        'content',
-        step.content ?? null,
-        FLOW_CONTENT_RULE,
-        `Flow.props.steps.${index}`
-      );
-      if (ids.has(step.id)) {
-        throw new Error(`Flow.props.steps: duplicated step id "${step.id}".`);
-      }
-      ids.add(step.id);
-    }
-  }
-
-  private resolveStepIndex(target: FlowTarget): number {
-    if (typeof target === 'number') {
-      if (!this.steps[target])
-        throw new Error('Flow.goTo target is out of range.');
-      return target;
-    }
-    if (typeof target === 'string') {
-      const index = this.stepMap.get(target);
-      if (index == null) {
-        throw new Error(`Flow.goTo target "${target}" does not exist.`);
-      }
-      return index;
-    }
-    throw new Error('Flow.goTo target expects string or number.');
-  }
-
-  private createInitialStepData(): InitialFlowData {
-    const stepData: Record<string, FlowData> = {};
-    const global: FlowData = {};
-    for (const step of this.steps) {
-      stepData[step.id] = clonePlainObject(step.data);
-      Object.assign(global, stepData[step.id]);
-    }
-    return { stepData, global };
-  }
-
-  private async runMoveHook(
-    type: 'next' | 'back',
-    step: FlowStep,
-    payload: FlowPayload,
-    fallbackId: string
-  ): Promise<FlowStepResult | FlowPayload | void> {
-    const globalHook = type === 'back' ? this.props.onBack : this.props.onNext;
-    const stepHook = type === 'back' ? step.onBack : step.onNext;
-    const context = this.createContext({ payload, targetId: fallbackId });
-
-    if (typeof stepHook === 'function') {
-      const result = await this.callHook(stepHook, [context]);
-      if (result != null) return result;
-    }
-
-    if (typeof globalHook === 'function') {
-      const result = await this.callHook(globalHook, [context]);
-      if (result != null) return result;
-    }
-
-    return fallbackId;
-  }
-
-  private async transitionTo(
-    toStep: FlowStep,
-    { direction, payload, fromStep }: FlowTransitionOptions
-  ): Promise<void> {
-    const fromSnapshot = this.snapshot();
-    const rollbackState = this.captureState();
-
-    try {
-      if (payload) this.setStepData(fromStep.id, payload, { silent: true });
-
-      await this.assertCanLeave(fromStep, toStep, direction);
-      await this.assertCanEnter(toStep, fromStep, direction);
-
-      if (typeof fromStep.onLeave === 'function') {
-        await this.callHook(fromStep.onLeave, [
-          this.createContext({
-            direction,
-            step: fromStep,
-            targetId: toStep.id,
-          }),
-        ]);
-      }
-
-      const previousId = this.state.currentId;
-      const previousIndex = this.state.currentIndex;
-      const currentIndex = this.stepMap.get(toStep.id) ?? 0;
-
-      flushSync(() => {
-        this.state.previousId = previousId;
-        this.state.previousIndex = previousIndex;
-        this.state.currentId = toStep.id;
-        this.state.currentIndex = currentIndex;
-        this.state.direction = direction;
-        if (direction === 'back') this.state.history.pop();
-        else this.state.history.push(toStep.id);
-        this.state.error = null;
-        this.state.version += 1;
-      });
-
-      if (typeof toStep.onEnter === 'function') {
-        await this.callHook(toStep.onEnter, [
-          this.createContext({
-            direction,
-            fromId: previousId,
-            step: toStep,
-          }),
-        ]);
-      }
-
-      this.emitChange(fromSnapshot);
-    } catch (error) {
-      if (this.runtime.destroyed) throw error;
-      if (this.props.rollbackOnError) {
-        this.restoreState(rollbackState, { keepLoading: true });
-      }
-      this.handleError(error, fromSnapshot);
-      throw error;
-    }
-  }
-
-  private async assertCanLeave(
-    fromStep: FlowStep,
-    toStep: FlowStep,
-    direction: FlowDirection
-  ): Promise<void> {
-    if (typeof fromStep.canLeave !== 'function') return;
-    const result = await this.callHook(fromStep.canLeave, [
-      this.createContext({ direction, targetId: toStep.id }),
-    ]);
-    if (result === false) {
-      throw new Error(`Flow: step "${fromStep.id}" blocked leaving.`);
-    }
-  }
-
-  private async assertCanEnter(
-    toStep: FlowStep,
-    fromStep: FlowStep,
-    direction: FlowDirection
-  ): Promise<void> {
-    if (typeof toStep.canEnter !== 'function') return;
-    const result = await this.callHook(toStep.canEnter, [
-      this.createContext({ direction, fromId: fromStep.id }),
-    ]);
-    if (result === false) {
-      throw new Error(`Flow: step "${toStep.id}" blocked entering.`);
-    }
-  }
-
-  private createContext(extra: FlowContextExtra = {}): FlowContext {
-    const step = extra.step || this.currentStep;
-    const snapshot = this.snapshot();
-    return {
-      ...extra,
-      flow: this,
-      step,
-      state: this.state,
-      signal: this.runtime.actionController?.signal || null,
-      snapshot,
-      data: clonePlainObject(this.state.data),
-      currentData: this.getStepData(step.id),
-      setData: (data) => this.setData(data),
-      setStepData: (stepId, data) => this.setStepData(stepId, data),
-      getStepData: (stepId) => this.getStepData(stepId),
-      next: (payload) => this.next(payload),
-      back: (payload) => this.back(payload),
-      goTo: (target, payload, options) => this.goTo(target, payload, options),
-      addCleanup: (cleanup) => this.addCleanup(cleanup),
-    };
-  }
-
-  private async runAction(
-    action: FlowAction,
-    task: () => Promise<FlowSnapshot | null>,
-    options: FlowRunActionOptions = {}
-  ): Promise<FlowSnapshot | null> {
-    const isOuterAction = !options.internal && !this.state.loading;
-    if (isOuterAction) {
-      this.runtime.actionController =
-        typeof AbortController !== 'undefined' ? new AbortController() : null;
-      this.runtime.activeAction = action;
-      this.setLoading(true, action);
-    }
-
-    try {
-      return await task();
-    } catch (error) {
-      if (this.runtime.destroyed) return null;
-      if (this.state.error !== error) this.handleError(error);
-      throw error;
-    } finally {
-      if (isOuterAction && !this.runtime.destroyed) {
-        this.setLoading(false, null);
-        this.runtime.activeAction = null;
-        this.runtime.actionController = null;
-      }
-    }
-  }
-
-  private handleBusy(action: FlowAction): FlowSnapshot | null {
-    if (!this.state.loading) return null;
-
-    const error = new Error(
-      `Flow: action "${action}" ignored while loading.`
-    ) as FlowError;
-    error.code = 'FLOW_BUSY';
-
-    if (typeof this.props.onBusy === 'function') {
-      this.props.onBusy(action, this.snapshot(), this);
-    }
-
-    if (this.props.busyStrategy === 'throw') throw error;
-
-    return this.snapshot();
-  }
-
-  private abortActiveAction(): void {
-    this.runtime.actionController?.abort();
-    this.runtime.actionController = null;
-    this.runtime.activeAction = null;
-  }
-
-  private async callHook<TResult>(
-    hook: ((...args: never[]) => TResult | Promise<TResult>) | null | undefined,
-    args: unknown[]
-  ): Promise<TResult | undefined> {
-    if (typeof hook !== 'function') return undefined;
-    const result = await (
-      hook as (...args: unknown[]) => TResult | Promise<TResult>
-    )(...args);
-    if (this.runtime.destroyed) throw this.createAbortError();
-    return result;
-  }
-
-  private createAbortError(): FlowError {
-    const error = new Error('Flow: active action was aborted.') as FlowError;
-    error.code = 'FLOW_ABORTED';
-    return error;
-  }
-
-  private setLoading(
-    value: boolean,
-    action: FlowAction | null = this.state.busyAction
-  ): void {
-    const previous = this.snapshot();
-    const busyAction = value ? action : null;
-    if (this.state.loading === value && this.state.busyAction === busyAction)
-      return;
-
-    flushSync(() => {
-      this.state.loading = value;
-      this.state.busyAction = busyAction;
-      this.state.version += 1;
-    });
-    this.emitChange(previous);
-  }
-
-  private handleError(
-    error: unknown,
-    previous: FlowSnapshot | null = null
-  ): void {
-    flushSync(() => {
-      this.state.error = error;
-      this.state.version += 1;
-    });
-    if (typeof this.props.onError === 'function') {
-      this.props.onError(error, this.snapshot(), this, previous);
-    }
-  }
-
-  private emitChange(previous: FlowSnapshot | null = null): void {
-    const next = this.snapshot();
-    for (const handler of Array.from(this.subscribers)) {
-      handler(next, this, previous);
-    }
-    if (typeof this.props.onChange === 'function') {
-      this.props.onChange(next, this, previous);
-    }
-  }
-
-  private replaceObject(target: FlowData, source: FlowData): void {
-    for (const key of Object.keys(target)) delete target[key];
-    Object.assign(target, source);
-  }
-
-  private captureState(): CapturedFlowState {
-    return {
-      currentId: this.state.currentId,
-      currentIndex: this.state.currentIndex,
-      previousId: this.state.previousId,
-      previousIndex: this.state.previousIndex,
-      direction: this.state.direction,
-      history: cloneArray<string>(this.state.history),
-      data: clonePlainObject(this.state.data),
-      stepData: clonePlainObject(this.state.stepData) as Record<
-        string,
-        FlowData
-      >,
-      loading: this.state.loading,
-      busyAction: this.state.busyAction,
-      error: this.state.error,
-      version: this.state.version,
-    };
-  }
-
-  private restoreState(
-    snapshot: CapturedFlowState,
-    options: { keepLoading?: boolean } = {}
-  ): void {
-    flushSync(() => {
-      this.state.currentId = snapshot.currentId;
-      this.state.currentIndex = snapshot.currentIndex;
-      this.state.previousId = snapshot.previousId;
-      this.state.previousIndex = snapshot.previousIndex;
-      this.state.direction = snapshot.direction;
-      this.state.history.splice(
-        0,
-        this.state.history.length,
-        ...snapshot.history
-      );
-      this.replaceObject(this.state.data, snapshot.data);
-      this.replaceObject(this.state.stepData, snapshot.stepData);
-      this.state.loading = options.keepLoading ? true : snapshot.loading;
-      this.state.busyAction = snapshot.busyAction;
-      this.state.error = snapshot.error;
-      this.state.version = snapshot.version + 1;
-    });
-  }
-
-  private addCleanup(cleanup: FlowCleanup): FlowCleanup {
-    if (typeof cleanup !== 'function') {
-      throw new Error('Flow.addCleanup: cleanup expects a function.');
-    }
-    if (this.runtime.destroyed) {
-      cleanup();
-      return () => {};
-    }
-    this.cleanupTasks.add(cleanup);
-    return () => this.cleanupTasks.delete(cleanup);
-  }
-
-  private assertActive(method: string): void {
-    if (this.runtime.destroyed) {
+  const assertActive = (method: string): void => {
+    if (runtime.destroyed) {
       throw new Error(`Flow.${method}: instance has been destroyed.`);
     }
-  }
-
-  private publicStep(step: FlowStep | null | undefined): PublicFlowStep | null {
+  };
+  const currentStep = (): FlowStep => steps[state.currentIndex];
+  const getStepData = (stepId: string): FlowData =>
+    clonePlainObject(state.stepData[stepId]);
+  const publicStep = (
+    step: FlowStep | null | undefined
+  ): PublicFlowStep | null => {
     if (!step) return null;
     const {
       onEnter: _onEnter,
@@ -1308,236 +568,622 @@ class Flow {
       onBack: _onBack,
       canEnter: _canEnter,
       canLeave: _canLeave,
-      ...publicStep
+      ...result
     } = step;
-    return publicStep;
-  }
-
-  private buildRoot(): HTMLElement {
-    return jsx('div', {
-      className: this.props.className.root,
-      id: this.props.id,
-      role: 'group',
-      'data-flow': 'root',
-      'aria-busy': () => (this.state.loading ? 'true' : 'false'),
-    }) as HTMLElement;
-  }
-
-  private mountView(): void {
-    if (this.renderDispose || !this.dom.root) return;
-    this.renderDispose = createRoot((dispose: FlowCleanup) => {
-      const viewDispose = render(
-        () => this.view(),
-        this.dom.root as HTMLElement
-      );
-      onCleanup(viewDispose);
-      return dispose;
+    return result;
+  };
+  const snapshot = (): FlowSnapshot => ({
+    id: state.id,
+    currentId: state.currentId,
+    currentIndex: state.currentIndex,
+    previousId: state.previousId,
+    previousIndex: state.previousIndex,
+    direction: state.direction,
+    history: [...state.history],
+    data: clonePlainObject(state.data),
+    stepData: clonePlainObject(state.stepData) as Record<string, FlowData>,
+    currentData: getStepData(state.currentId),
+    currentStep: publicStep(currentStep()),
+    canBack: state.currentIndex > 0 && !state.loading,
+    canNext: state.currentIndex < steps.length - 1 && !state.loading,
+    isLast: state.currentIndex === steps.length - 1,
+    loading: state.loading,
+    busyAction: state.busyAction,
+    error: state.error,
+  });
+  const emitChange = (previous: FlowSnapshot | null = null): void => {
+    const next = snapshot();
+    for (const subscriber of subscribers) subscriber(next, flow, previous);
+    props.onChange?.(next, flow, previous);
+  };
+  const replaceObject = (target: FlowData, source: FlowData): void => {
+    for (const key of Object.keys(target)) delete target[key];
+    Object.assign(target, source);
+  };
+  const setStepData = (
+    stepId: string,
+    data: FlowPayload,
+    options: { silent?: boolean } = {}
+  ): Flow => {
+    assertActive('setStepData');
+    validateParam('stepId', stepId, { type: 'string' }, 'Flow.setStepData');
+    validateParam('data', data, FLOW_PAYLOAD_RULE, 'Flow.setStepData');
+    if (!data || !stepMap.has(stepId)) return flow;
+    flushSync(() => {
+      state.stepData[stepId] = {
+        ...clonePlainObject(state.stepData[stepId]),
+        ...data,
+      };
+      if (props.cache) Object.assign(state.data, data);
+      state.version += 1;
     });
-  }
-
-  private view(): RenderableContent<FlowRenderContext> {
-    const snapshot = this.snapshot();
-    return [
-      this.headerView(snapshot),
-      this.bodyView(snapshot),
-      this.footerView(snapshot),
-    ];
-  }
-
-  private renderSlot(
-    name: FlowSlotName,
-    snapshot: FlowSnapshot,
-    fallback: () => RenderableContent<FlowRenderContext>
-  ): RenderableContent<FlowRenderContext> {
-    const slot = this.props[name];
-    if (slot === false) return null;
-    if (typeof slot === 'function') {
-      return slot(this.createRenderContext(snapshot, fallback));
+    if (!options.silent) emitChange();
+    return flow;
+  };
+  const setData = (data: FlowPayload): Flow => {
+    assertActive('setData');
+    validateParam('data', data, FLOW_PAYLOAD_RULE, 'Flow.setData');
+    if (!data) return flow;
+    flushSync(() => {
+      Object.assign(state.data, data);
+      state.version += 1;
+    });
+    emitChange();
+    return flow;
+  };
+  const addCleanup = (cleanup: FlowCleanup): FlowCleanup => {
+    if (typeof cleanup !== 'function') {
+      throw new Error('Flow.addCleanup: cleanup expects a function.');
     }
-    return fallback();
-  }
-
-  private createRenderContext(
-    snapshot: FlowSnapshot,
-    fallback: () => RenderableContent<FlowRenderContext>
-  ): FlowRenderContext {
+    if (runtime.destroyed) {
+      cleanup();
+      return () => {};
+    }
+    cleanupTasks.add(cleanup);
+    return () => cleanupTasks.delete(cleanup);
+  };
+  const createAbortError = (): FlowError => {
+    const error = new Error('Flow: active action was aborted.') as FlowError;
+    error.code = 'FLOW_ABORTED';
+    return error;
+  };
+  const callHook = async <TResult>(
+    hook: ((...args: never[]) => TResult | Promise<TResult>) | null | undefined,
+    args: unknown[]
+  ): Promise<TResult | undefined> => {
+    if (typeof hook !== 'function') return undefined;
+    const result = await (
+      hook as (...values: unknown[]) => TResult | Promise<TResult>
+    )(...args);
+    if (runtime.destroyed) throw createAbortError();
+    return result;
+  };
+  const createContext = (
+    extra: Partial<
+      Pick<
+        FlowContext,
+        'step' | 'payload' | 'direction' | 'fromId' | 'targetId'
+      >
+    > = {}
+  ): FlowContext => {
+    const step = extra.step || currentStep();
     return {
-      flow: this,
-      snapshot,
-      state: this.state,
-      steps: this.steps.map((step) => this.publicStep(step)),
-      currentStep: snapshot.currentStep,
-      currentData: snapshot.currentData,
-      data: snapshot.data,
-      fallback,
-      next: (payload) => this.next(payload),
-      back: (payload) => this.back(payload),
-      goTo: (target, payload, options) => this.goTo(target, payload, options),
-      reset: () => this.reset(),
+      ...extra,
+      flow,
+      step,
+      state,
+      signal: runtime.actionController?.signal || null,
+      snapshot: snapshot(),
+      data: clonePlainObject(state.data),
+      currentData: getStepData(step.id),
+      setData,
+      setStepData: (id, data) => setStepData(id, data),
+      getStepData,
+      next: (payload) => flow.next(payload),
+      back: (payload) => flow.back(payload),
+      goTo: (target, payload, options) => flow.goTo(target, payload, options),
+      addCleanup,
     };
-  }
+  };
+  const handleError = (
+    error: unknown,
+    previous: FlowSnapshot | null = null
+  ): void => {
+    flushSync(() => {
+      state.error = error;
+      state.version += 1;
+    });
+    props.onError?.(error, snapshot(), flow, previous);
+  };
+  const setLoading = (value: boolean, action: FlowAction | null): void => {
+    const previous = snapshot();
+    if (state.loading === value && state.busyAction === action) return;
+    flushSync(() => {
+      state.loading = value;
+      state.busyAction = value ? action : null;
+      state.version += 1;
+    });
+    emitChange(previous);
+  };
+  const handleBusy = (action: FlowAction): FlowSnapshot | null => {
+    if (!state.loading) return null;
+    const error = new Error(
+      `Flow: action "${action}" ignored while loading.`
+    ) as FlowError;
+    error.code = 'FLOW_BUSY';
+    props.onBusy?.(action, snapshot(), flow);
+    if (props.busyStrategy === 'throw') throw error;
+    return snapshot();
+  };
+  const runAction = async (
+    action: FlowAction,
+    task: () => Promise<FlowSnapshot | null>,
+    internal = false
+  ): Promise<FlowSnapshot | null> => {
+    const outer = !internal && !state.loading;
+    if (outer) {
+      runtime.actionController = new AbortController();
+      runtime.activeAction = action;
+      setLoading(true, action);
+    }
+    try {
+      return await task();
+    } catch (error) {
+      if (runtime.destroyed) return null;
+      if (state.error !== error) handleError(error);
+      throw error;
+    } finally {
+      if (outer && !runtime.destroyed) {
+        setLoading(false, null);
+        runtime.activeAction = null;
+        runtime.actionController = null;
+      }
+    }
+  };
+  const captureState = (): CapturedFlowState => ({
+    currentId: state.currentId,
+    currentIndex: state.currentIndex,
+    previousId: state.previousId,
+    previousIndex: state.previousIndex,
+    direction: state.direction,
+    history: [...state.history],
+    data: clonePlainObject(state.data),
+    stepData: clonePlainObject(state.stepData) as Record<string, FlowData>,
+    loading: state.loading,
+    busyAction: state.busyAction,
+    error: state.error,
+    version: state.version,
+  });
+  const restoreState = (captured: CapturedFlowState): void => {
+    flushSync(() => {
+      state.currentId = captured.currentId;
+      state.currentIndex = captured.currentIndex;
+      state.previousId = captured.previousId;
+      state.previousIndex = captured.previousIndex;
+      state.direction = captured.direction;
+      state.history.splice(0, state.history.length, ...captured.history);
+      replaceObject(state.data, captured.data);
+      replaceObject(state.stepData, captured.stepData);
+      state.loading = true;
+      state.busyAction = captured.busyAction;
+      state.error = captured.error;
+      state.version = captured.version + 1;
+    });
+  };
+  const resolveStepIndex = (target: FlowTarget): number => {
+    if (typeof target === 'number') {
+      if (!steps[target]) throw new Error('Flow.goTo target is out of range.');
+      return target;
+    }
+    const index = stepMap.get(target);
+    if (index == null)
+      throw new Error(`Flow.goTo target "${target}" does not exist.`);
+    return index;
+  };
+  const transitionTo = async (
+    toStep: FlowStep,
+    direction: FlowDirection,
+    payload: FlowPayload,
+    fromStep: FlowStep
+  ): Promise<void> => {
+    const previous = snapshot();
+    const rollback = captureState();
+    try {
+      if (payload) setStepData(fromStep.id, payload, { silent: true });
+      if (fromStep.canLeave) {
+        const allowed = await callHook(fromStep.canLeave, [
+          createContext({ direction, targetId: toStep.id }),
+        ]);
+        if (allowed === false) {
+          throw new Error(`Flow: step "${fromStep.id}" blocked leaving.`);
+        }
+      }
+      if (toStep.canEnter) {
+        const allowed = await callHook(toStep.canEnter, [
+          createContext({ direction, fromId: fromStep.id, step: toStep }),
+        ]);
+        if (allowed === false) {
+          throw new Error(`Flow: step "${toStep.id}" blocked entering.`);
+        }
+      }
+      await callHook(fromStep.onLeave, [
+        createContext({ direction, step: fromStep, targetId: toStep.id }),
+      ]);
+      const previousId = state.currentId;
+      const previousIndex = state.currentIndex;
+      flushSync(() => {
+        state.previousId = previousId;
+        state.previousIndex = previousIndex;
+        state.currentId = toStep.id;
+        state.currentIndex = stepMap.get(toStep.id) ?? 0;
+        state.direction = direction;
+        if (direction === 'back') state.history.pop();
+        else state.history.push(toStep.id);
+        state.error = null;
+        state.version += 1;
+      });
+      await callHook(toStep.onEnter, [
+        createContext({ direction, fromId: previousId, step: toStep }),
+      ]);
+      emitChange(previous);
+    } catch (error) {
+      if (runtime.destroyed) throw error;
+      if (props.rollbackOnError) restoreState(rollback);
+      handleError(error, previous);
+      throw error;
+    }
+  };
+  const runMoveHook = async (
+    type: 'next' | 'back',
+    step: FlowStep,
+    payload: FlowPayload,
+    fallbackId: string
+  ): Promise<FlowStepResult | FlowPayload | void> => {
+    const stepHook = type === 'back' ? step.onBack : step.onNext;
+    const globalHook = type === 'back' ? props.onBack : props.onNext;
+    const context = createContext({ payload, targetId: fallbackId });
+    const stepResult = await callHook(stepHook, [context]);
+    if (stepResult != null) return stepResult;
+    const globalResult = await callHook(globalHook, [context]);
+    return globalResult ?? fallbackId;
+  };
 
-  private headerView(snapshot: FlowSnapshot): HTMLElement {
-    return jsx('div', {
-      className: this.props.className.header,
-      'data-flow-header': '',
-      ref: (element: HTMLElement) => {
-        this.dom.header = element;
-      },
-      children: this.renderSlot('renderHeader', snapshot, () =>
-        this.stepsView(snapshot)
-      ),
-    }) as HTMLElement;
-  }
-
-  private stepsView(snapshot: FlowSnapshot): HTMLOListElement {
-    return jsx('ol', {
-      className: this.props.className.steps,
-      'data-flow-steps': '',
-      role: 'list',
-      'aria-label': 'Flow steps',
-      children: this.steps.map((step, index) =>
-        jsx('li', {
-          className: this.stepClass(index, snapshot.currentIndex),
-          'data-flow-step': step.id,
-          'data-flow-step-index': String(index),
-          'aria-current': index === snapshot.currentIndex ? 'step' : undefined,
+  const createRenderContext = (
+    fallback: () => RenderableContent<FlowRenderContext>
+  ): FlowRenderContext => {
+    const current = snapshot();
+    return {
+      flow,
+      snapshot: current,
+      state,
+      steps: steps.map(publicStep),
+      currentStep: current.currentStep,
+      currentData: current.currentData,
+      data: current.data,
+      fallback,
+      next: (payload) => flow.next(payload),
+      back: (payload) => flow.back(payload),
+      goTo: (target, payload, options) => flow.goTo(target, payload, options),
+      reset: () => flow.reset(),
+    };
+  };
+  const renderSlot = (
+    name: FlowSlotName,
+    fallback: () => RenderableContent<FlowRenderContext>
+  ): RenderableContent<FlowRenderContext> => {
+    const slot = props[name];
+    if (slot === false) return null;
+    if (typeof slot !== 'function') return fallback();
+    return () => {
+      const version = state.version;
+      return version >= 0 ? slot(createRenderContext(fallback)) : null;
+    };
+  };
+  const contentView = (): RenderableContent<FlowRenderContext> => {
+    const content = currentStep().content;
+    return typeof content === 'function'
+      ? (content(createContext()) as RenderableContent<FlowRenderContext>)
+      : ((content ?? '') as RenderableContent<FlowRenderContext>);
+  };
+  const buildUi = (): FunctionalComponent<
+    Record<string, unknown>,
+    FlowState,
+    HTMLElement,
+    object
+  > =>
+    defineComponent({
+      name: 'FlowView',
+      props: {},
+      state,
+      view: () =>
+        jsx('div', {
+          className: props.className.root,
+          id: props.id,
+          role: 'group',
+          'data-flow': 'root',
+          'aria-busy': () => (state.loading ? 'true' : 'false'),
           children: [
-            jsx('button', {
-              type: 'button',
-              className: this.props.className.stepButton,
-              disabled: this.props.linear && index > snapshot.currentIndex,
-              'aria-current':
-                index === snapshot.currentIndex ? 'step' : undefined,
-              'aria-disabled':
-                this.props.linear && index > snapshot.currentIndex
-                  ? 'true'
-                  : 'false',
-              'aria-label': `${index + 1}. ${step.title || step.id}`,
-              'data-flow-step-action': 'goTo',
-              onClick: () => {
-                if (index === snapshot.currentIndex) return;
-                void this.goTo(index);
-              },
-              children: [
-                jsx('span', {
-                  className: this.props.className.stepIndex,
-                  'data-flow-step-number': '',
-                  children: index + 1,
-                }),
-                jsx('span', {
-                  className: this.props.className.stepTitle,
-                  'data-flow-step-title': '',
-                  children: step.title || step.id,
-                }),
-              ],
+            jsx('div', {
+              className: props.className.header,
+              'data-flow-header': '',
+              children: renderSlot('renderHeader', () =>
+                jsx('ol', {
+                  className: props.className.steps,
+                  'data-flow-steps': '',
+                  role: 'list',
+                  'aria-label': 'Flow steps',
+                  children: steps.map((step, index) =>
+                    jsx('li', {
+                      className: () =>
+                        [
+                          props.className.step,
+                          index === state.currentIndex
+                            ? props.className.active
+                            : '',
+                          index < state.currentIndex
+                            ? props.className.complete
+                            : '',
+                        ]
+                          .filter(Boolean)
+                          .join(' '),
+                      'data-flow-step': step.id,
+                      'data-flow-step-index': String(index),
+                      'aria-current': () =>
+                        index === state.currentIndex ? 'step' : null,
+                      children: jsx('button', {
+                        type: 'button',
+                        className: props.className.stepButton,
+                        disabled: () =>
+                          props.linear && index > state.currentIndex,
+                        'aria-current': () =>
+                          index === state.currentIndex ? 'step' : null,
+                        onClick: () => {
+                          if (index !== state.currentIndex)
+                            void flow.goTo(index);
+                        },
+                        children: [
+                          jsx('span', {
+                            className: props.className.stepIndex,
+                            'data-flow-step-number': '',
+                            children: index + 1,
+                          }),
+                          jsx('span', {
+                            className: props.className.stepTitle,
+                            'data-flow-step-title': '',
+                            children: step.title || step.id,
+                          }),
+                        ],
+                      }),
+                    })
+                  ),
+                })
+              ),
+            }),
+            jsx('div', {
+              className: props.className.body,
+              'data-flow-body': '',
+              role: 'region',
+              'aria-live': 'polite',
+              'aria-busy': () => (state.loading ? 'true' : 'false'),
+              children: renderSlot('renderBody', () => () => {
+                const version = state.version;
+                return version >= 0 ? contentView() : null;
+              }),
+            }),
+            jsx('div', {
+              className: props.className.footer,
+              'data-flow-footer': '',
+              children: renderSlot('renderFooter', () => [
+                props.showReset
+                  ? jsx('button', {
+                      type: 'button',
+                      className: [props.className.button, props.className.reset]
+                        .filter(Boolean)
+                        .join(' '),
+                      'data-action': 'reset',
+                      onClick: () => flow.reset(),
+                      disabled: () => state.loading,
+                      children: props.text.reset,
+                    })
+                  : null,
+                props.showBack
+                  ? jsx('button', {
+                      type: 'button',
+                      className: [props.className.button, props.className.back]
+                        .filter(Boolean)
+                        .join(' '),
+                      'data-action': 'back',
+                      onClick: () => void flow.back(),
+                      disabled: () => !flow.canBack,
+                      children: props.text.back,
+                    })
+                  : null,
+                props.showNext
+                  ? jsx('button', {
+                      type: 'button',
+                      className: [props.className.button, props.className.next]
+                        .filter(Boolean)
+                        .join(' '),
+                      'data-action': 'next',
+                      onClick: () => void flow.next(),
+                      disabled: () => state.loading,
+                      children: () =>
+                        flow.isLast ? props.text.finish : props.text.next,
+                    })
+                  : null,
+              ]),
             }),
           ],
-        })
-      ),
-    }) as HTMLOListElement;
-  }
+        }) as HTMLElement,
+    });
 
-  private bodyView(snapshot: FlowSnapshot): HTMLElement {
-    return jsx('div', {
-      className: this.props.className.body,
-      'data-flow-body': '',
-      role: 'region',
-      'aria-live': 'polite',
-      'aria-busy': snapshot.loading ? 'true' : 'false',
-      ref: (element: HTMLElement) => {
-        this.dom.body = element;
-      },
-      children: this.renderSlot('renderBody', snapshot, () =>
-        this.contentView(this.currentStep.content)
-      ),
-    }) as HTMLElement;
-  }
+  flow = {
+    props,
+    steps,
+    state,
+    runtime,
+    get element() {
+      return ui?.element || null;
+    },
+    get currentStep() {
+      return currentStep();
+    },
+    get currentData() {
+      return getStepData(state.currentId);
+    },
+    get canBack() {
+      return state.currentIndex > 0 && !state.loading;
+    },
+    get canNext() {
+      return state.currentIndex < steps.length - 1 && !state.loading;
+    },
+    get isLast() {
+      return state.currentIndex === steps.length - 1;
+    },
+    build() {
+      assertActive('build');
+      if (runtime.built) return flow;
+      if (props.render) {
+        ui ||= buildUi();
+        ui.build();
+      }
+      runtime.built = true;
+      return flow;
+    },
+    mount(container) {
+      assertActive('mount');
+      flow.build();
+      if (ui) ui.mount(container);
+      runtime.mounted = !!ui;
+      return flow;
+    },
+    unmount() {
+      assertActive('unmount');
+      ui?.unmount();
+      runtime.mounted = false;
+      return flow;
+    },
+    subscribe(handler) {
+      assertActive('subscribe');
+      if (typeof handler !== 'function') {
+        throw new Error('Flow.subscribe: handler expects a function.');
+      }
+      subscribers.add(handler);
+      handler(snapshot(), flow, null);
+      return () => subscribers.delete(handler);
+    },
+    snapshot,
+    async next(payload = null) {
+      assertActive('next');
+      validateParam('payload', payload, FLOW_PAYLOAD_RULE, 'Flow.next');
+      const busy = handleBusy('next');
+      if (busy) return busy;
+      return runAction('next', async () => {
+        if (flow.isLast) {
+          if (payload) setStepData(state.currentId, payload);
+          await callHook(props.onFinish, [snapshot(), flow]);
+          return snapshot();
+        }
+        const from = currentStep();
+        const fallback = steps[state.currentIndex + 1]?.id;
+        const result = await runMoveHook('next', from, payload, fallback);
+        const target = normalizeStepResult(result, fallback);
+        return flow.goTo(target.id, target.data ?? payload, {
+          direction: 'next',
+          internal: true,
+        });
+      });
+    },
+    async back(payload = null) {
+      assertActive('back');
+      validateParam('payload', payload, FLOW_PAYLOAD_RULE, 'Flow.back');
+      const busy = handleBusy('back');
+      if (busy) return busy;
+      if (!flow.canBack) return snapshot();
+      return runAction('back', async () => {
+        const from = currentStep();
+        const fallback = steps[state.currentIndex - 1]?.id;
+        const result = await runMoveHook('back', from, payload, fallback);
+        const target = normalizeStepResult(result, fallback);
+        return flow.goTo(target.id, target.data ?? payload, {
+          direction: 'back',
+          internal: true,
+        });
+      });
+    },
+    async goTo(target, payload = null, options = {}) {
+      assertActive('goTo');
+      validateParam('payload', payload, FLOW_PAYLOAD_RULE, 'Flow.goTo');
+      const busy = options.internal ? null : handleBusy('goTo');
+      if (busy) return busy;
+      return runAction(
+        'goTo',
+        async () => {
+          const index = resolveStepIndex(target);
+          const to = steps[index];
+          const from = currentStep();
+          if (to.id === state.currentId) {
+            if (payload) setStepData(state.currentId, payload);
+            return snapshot();
+          }
+          await transitionTo(to, options.direction || 'go', payload, from);
+          return snapshot();
+        },
+        !!options.internal
+      );
+    },
+    setData,
+    setStepData,
+    getStepData,
+    reset() {
+      assertActive('reset');
+      flushSync(() => {
+        state.currentId = initialStepId;
+        state.currentIndex = stepMap.get(initialStepId) ?? 0;
+        state.previousId = null;
+        state.previousIndex = null;
+        state.direction = null;
+        state.history.splice(0, state.history.length, initialStepId);
+        replaceObject(state.data, clonePlainObject(initialGlobal));
+        replaceObject(
+          state.stepData,
+          clonePlainObject(initialStepData) as Record<string, FlowData>
+        );
+        state.loading = false;
+        state.busyAction = null;
+        state.error = null;
+        state.version += 1;
+      });
+      emitChange();
+      return flow;
+    },
+    async finish(payload = null) {
+      assertActive('finish');
+      validateParam('payload', payload, FLOW_PAYLOAD_RULE, 'Flow.finish');
+      const busy = handleBusy('finish');
+      if (busy) return busy;
+      return runAction('finish', async () => {
+        if (payload) setStepData(state.currentId, payload);
+        await callHook(props.onFinish, [snapshot(), flow]);
+        return snapshot();
+      });
+    },
+    destroy() {
+      if (runtime.destroyed) return;
+      runtime.destroyed = true;
+      runtime.actionController?.abort();
+      runtime.actionController = null;
+      runtime.activeAction = null;
+      ui?.destroy();
+      ui = null;
+      for (const cleanup of cleanupTasks) cleanup();
+      cleanupTasks.clear();
+      subscribers.clear();
+      runtime.built = false;
+      runtime.mounted = false;
+      stepMap.clear();
+    },
+  };
 
-  private footerView(snapshot: FlowSnapshot): HTMLElement {
-    return jsx('div', {
-      className: this.props.className.footer,
-      'data-flow-footer': '',
-      ref: (element: HTMLElement) => {
-        this.dom.footer = element;
-      },
-      children: this.renderSlot('renderFooter', snapshot, () => [
-        this.props.showReset
-          ? jsx('button', {
-              type: 'button',
-              className: joinClasses(
-                this.props.className.button,
-                this.props.className.reset
-              ),
-              'data-action': 'reset',
-              onClick: () => this.reset(),
-              disabled: snapshot.loading,
-              'aria-disabled': snapshot.loading ? 'true' : 'false',
-              children: this.props.text.reset,
-            })
-          : null,
-        this.props.showBack
-          ? jsx('button', {
-              type: 'button',
-              className: joinClasses(
-                this.props.className.button,
-                this.props.className.back
-              ),
-              'data-action': 'back',
-              onClick: () => void this.back(),
-              disabled: !snapshot.canBack,
-              'aria-disabled': !snapshot.canBack ? 'true' : 'false',
-              children: this.props.text.back,
-            })
-          : null,
-        this.props.showNext
-          ? jsx('button', {
-              type: 'button',
-              className: joinClasses(
-                this.props.className.button,
-                this.props.className.next
-              ),
-              'data-action': 'next',
-              onClick: () => void this.next(),
-              disabled: snapshot.loading,
-              'aria-disabled': snapshot.loading ? 'true' : 'false',
-              children: snapshot.isLast
-                ? this.props.text.finish
-                : this.props.text.next,
-            })
-          : null,
-      ]),
-    }) as HTMLElement;
-  }
-
-  private contentView(
-    content: FlowStep['content']
-  ): RenderableContent<FlowRenderContext> {
-    if (typeof content === 'function') {
-      return content(
-        this.createContext()
-      ) as RenderableContent<FlowRenderContext>;
-    }
-    return (content ?? '') as RenderableContent<FlowRenderContext>;
-  }
-
-  private stepClass(
-    index: number,
-    currentIndex = this.state.currentIndex
-  ): string {
-    return joinClasses(
-      this.props.className.step,
-      index === currentIndex && this.props.className.active,
-      index < currentIndex && this.props.className.complete
-    );
-  }
-}
-
-/**
- * 创建 Flow 实例。
- * @param {FlowProps} props Flow 配置。
- * @returns {Flow}
- */
-export function createFlow(props: FlowProps = {}): Flow {
-  return new Flow(props);
+  return flow;
 }

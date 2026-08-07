@@ -17,13 +17,57 @@ let offcanvas: OffcanvasInstance | null = null;
 
 function mount(instance: OffcanvasInstance): OffcanvasInstance {
   instance.build();
-  if (!instance.dom.root) throw new Error('Offcanvas did not build a root.');
+  if (!instance.element) throw new Error('Offcanvas did not build a root.');
   return instance;
+}
+
+function overlay(instance: OffcanvasInstance): HTMLElement | null {
+  return document.querySelector<HTMLElement>(
+    `[data-offcanvas-overlay="${instance.props.id}"]`
+  );
+}
+
+function content(instance: OffcanvasInstance): HTMLElement | null {
+  return (
+    instance.element?.querySelector<HTMLElement>('[data-offcanvas-content]') ||
+    null
+  );
 }
 
 async function tick(): Promise<void> {
   await Promise.resolve();
   await Promise.resolve();
+}
+
+function mockTransition(element: HTMLElement): {
+  animation: Animation;
+  animate: ReturnType<typeof vi.fn>;
+  setFinished: (finished: Promise<void>) => void;
+} {
+  let finished = Promise.resolve();
+  const animation = {
+    effect: { getComputedTiming: () => ({ endTime: 300 }) },
+    get finished() {
+      return finished;
+    },
+    currentTime: null,
+    playbackRate: 1,
+    pause: vi.fn(),
+    play: vi.fn(),
+    cancel: vi.fn(),
+  } as unknown as Animation;
+  const animate = vi.fn(() => animation);
+  Object.defineProperty(element, 'animate', {
+    configurable: true,
+    value: animate,
+  });
+  return {
+    animation,
+    animate,
+    setFinished(next) {
+      finished = next;
+    },
+  };
 }
 
 beforeEach(() => {
@@ -61,34 +105,69 @@ describe('Offcanvas', () => {
       content: '<button data-action="close">Close</button><p>Panel</p>',
     });
 
-    expect(offcanvas.dom.root).toBeNull();
+    expect(offcanvas.element).toBeNull();
 
     offcanvas.build();
-    expect(document.body.contains(offcanvas.dom.root)).toBe(false);
-    if (!offcanvas.dom.root) throw new Error('Expected Offcanvas root.');
+    expect(document.body.contains(offcanvas.element)).toBe(false);
+    if (!offcanvas.element) throw new Error('Expected Offcanvas root.');
 
-    expect(offcanvas.dom.root.getAttribute('data-offcanvas')).toBe('root');
-    expect(offcanvas.dom.root.classList.contains('j-offcanvas')).toBe(true);
-    expect(offcanvas.dom.root.getAttribute('data-direction')).toBe('right');
+    expect(offcanvas.element.getAttribute('data-offcanvas')).toBe('root');
+    expect(offcanvas.element.classList.contains('j-offcanvas')).toBe(true);
+    expect(offcanvas.element.getAttribute('data-direction')).toBe('right');
     expect(
-      offcanvas.dom.root.querySelector(
+      offcanvas.element.querySelector(
         '[data-offcanvas-content="default-offcanvas"]'
       )
     ).toBeTruthy();
-    expect(offcanvas.dom.overlay?.hidden).toBe(true);
+    expect(overlay(offcanvas)).toBeNull();
 
     await offcanvas.show();
     vi.advanceTimersByTime(11);
 
-    expect(document.body.contains(offcanvas.dom.root)).toBe(true);
-    expect(document.body.contains(offcanvas.dom.overlay)).toBe(true);
-    expect(offcanvas.dom.root.getAttribute('aria-expanded')).toBe('true');
+    expect(document.body.contains(offcanvas.element)).toBe(true);
+    expect(document.body.contains(overlay(offcanvas))).toBe(true);
+    expect(offcanvas.element.getAttribute('aria-expanded')).toBe('true');
     expect(document.body.style.overflow).toBe('hidden');
 
     await offcanvas.hide();
-    vi.advanceTimersByTime(101);
-    expect(document.body.contains(offcanvas.dom.root)).toBe(false);
-    expect(document.body.contains(offcanvas.dom.overlay)).toBe(false);
+    expect(document.body.contains(offcanvas.element)).toBe(false);
+    expect(document.body.contains(overlay(offcanvas))).toBe(false);
+  });
+
+  it('unmounts and calls onHidden after active Motion settles', async () => {
+    const onHidden = vi.fn();
+    offcanvas = mount(
+      createOffcanvas({
+        id: 'hidden-lifecycle-offcanvas',
+        overlay: false,
+        content: 'Lifecycle panel',
+        className: { root: 'qa-motion-offcanvas' },
+        onHidden,
+      })
+    );
+
+    if (!offcanvas.element) throw new Error('Expected Offcanvas root.');
+    const motion = mockTransition(offcanvas.element);
+    await offcanvas.show();
+    expect(offcanvas.element.className).toBe('qa-motion-offcanvas');
+    expect(motion.animate).toHaveBeenCalledOnce();
+    let finishMotion!: () => void;
+    const finished = new Promise<void>((resolve) => {
+      finishMotion = resolve;
+    });
+    motion.setFinished(finished);
+
+    const hiding = offcanvas.hide();
+    await tick();
+
+    expect(document.body.contains(offcanvas.element)).toBe(true);
+    expect(onHidden).not.toHaveBeenCalled();
+
+    finishMotion();
+    await hiding;
+    expect(document.body.contains(offcanvas.element)).toBe(false);
+    expect(onHidden).toHaveBeenCalledWith(offcanvas);
+    expect(motion.animation.playbackRate).toBe(-1);
   });
 
   it('allows className overrides without changing data selectors', async () => {
@@ -106,10 +185,10 @@ describe('Offcanvas', () => {
       })
     );
 
-    expect(offcanvas.dom.root?.classList.contains('qa-offcanvas')).toBe(true);
-    expect(offcanvas.dom.root?.classList.contains('j-offcanvas')).toBe(false);
+    expect(offcanvas.element?.classList.contains('qa-offcanvas')).toBe(true);
+    expect(offcanvas.element?.classList.contains('j-offcanvas')).toBe(false);
     expect(
-      offcanvas.dom.root?.querySelector(
+      offcanvas.element?.querySelector(
         '[data-offcanvas-content="custom-offcanvas"]'
       )
     ).toBeTruthy();
@@ -117,8 +196,8 @@ describe('Offcanvas', () => {
     await offcanvas.show();
     vi.advanceTimersByTime(11);
 
-    expect(offcanvas.dom.root?.getAttribute('aria-expanded')).toBe('true');
-    expect(offcanvas.dom.root?.getAttribute('data-animate')).toBe('push');
+    expect(offcanvas.element?.getAttribute('aria-expanded')).toBe('true');
+    expect(offcanvas.element?.getAttribute('data-animate')).toBe('push');
     expect(document.body.className).toBe('');
   });
 
@@ -126,23 +205,34 @@ describe('Offcanvas', () => {
     offcanvas = mount(
       createOffcanvas({
         id: 'reopen-offcanvas',
+        overlay: false,
         content: 'Quick reopen',
       })
     );
 
+    if (!offcanvas.element) throw new Error('Expected Offcanvas root.');
+    const motion = mockTransition(offcanvas.element);
     await offcanvas.show();
-    vi.advanceTimersByTime(11);
-    await offcanvas.hide();
+    let finishMotion!: () => void;
+    const finished = new Promise<void>((resolve) => {
+      finishMotion = resolve;
+    });
+    motion.setFinished(finished);
 
-    expect(document.body.contains(offcanvas.dom.root)).toBe(true);
-    expect(offcanvas.dom.root?.getAttribute('aria-expanded')).toBe('false');
+    const hiding = offcanvas.hide();
+    await tick();
 
+    expect(document.body.contains(offcanvas.element)).toBe(true);
+    expect(offcanvas.element?.getAttribute('aria-expanded')).toBe('false');
+
+    motion.setFinished(Promise.resolve());
     await offcanvas.show();
-    vi.advanceTimersByTime(101);
+    finishMotion();
+    await hiding;
 
-    expect(document.body.contains(offcanvas.dom.root)).toBe(true);
-    expect(document.body.contains(offcanvas.dom.overlay)).toBe(true);
-    expect(offcanvas.dom.root?.getAttribute('aria-expanded')).toBe('true');
+    expect(document.body.contains(offcanvas.element)).toBe(true);
+    expect(overlay(offcanvas)).toBeNull();
+    expect(offcanvas.element?.getAttribute('aria-expanded')).toBe('true');
   });
 
   it('can skip body overflow control', async () => {
@@ -160,7 +250,6 @@ describe('Offcanvas', () => {
     expect(document.body.style.overflow).toBe('auto');
 
     await offcanvas.hide();
-    vi.advanceTimersByTime(101);
     expect(document.body.style.overflow).toBe('auto');
 
     offcanvas.destroy();
@@ -178,14 +267,14 @@ describe('Offcanvas', () => {
 
     await offcanvas.show();
     vi.advanceTimersByTime(11);
-    offcanvas.dom.root
+    offcanvas.element
       ?.querySelector<HTMLElement>('[data-testid="inner"]')
       ?.click();
     expect(offcanvas.state.visible).toBe(false);
 
     await offcanvas.show();
     vi.advanceTimersByTime(11);
-    offcanvas.dom.overlay?.click();
+    overlay(offcanvas)?.click();
     expect(offcanvas.state.visible).toBe(false);
 
     await offcanvas.show();
@@ -214,20 +303,20 @@ describe('Offcanvas', () => {
     await offcanvas.show();
     await tick();
     expect(offcanvas.state.loading).toBe(false);
-    expect(offcanvas.dom.content?.textContent).toBe('Async 1');
+    expect(content(offcanvas)?.textContent).toBe('Async 1');
     expect(load).toHaveBeenCalledTimes(1);
 
     await offcanvas.hide();
     vi.advanceTimersByTime(100);
     await offcanvas.show();
-    expect(offcanvas.dom.content?.textContent).toBe('Async 1');
+    expect(content(offcanvas)?.textContent).toBe('Async 1');
     expect(load).toHaveBeenCalledTimes(1);
 
     await offcanvas.hide();
     vi.advanceTimersByTime(1001);
     await offcanvas.show();
     await tick();
-    expect(offcanvas.dom.content?.textContent).toBe('Async 2');
+    expect(content(offcanvas)?.textContent).toBe('Async 2');
     expect(load).toHaveBeenCalledTimes(2);
   });
 
@@ -240,15 +329,15 @@ describe('Offcanvas', () => {
       })
     );
 
-    expect(offcanvas.dom.content?.textContent).toBe('Initial');
+    expect(content(offcanvas)?.textContent).toBe('Initial');
 
     offcanvas.setState({ content: 'Updated' });
     await tick();
-    expect(offcanvas.dom.content?.textContent).toBe('Updated');
+    expect(content(offcanvas)?.textContent).toBe('Updated');
 
     offcanvas.state.content = 'Direct';
     await tick();
-    expect(offcanvas.dom.content?.textContent).toBe('Direct');
+    expect(content(offcanvas)?.textContent).toBe('Direct');
   });
 
   it('ignores async content resolved after hide', async () => {
@@ -274,6 +363,6 @@ describe('Offcanvas', () => {
     await showing;
 
     expect(offcanvas.state.loading).toBe(false);
-    expect(offcanvas.dom.content?.textContent).not.toBe('Late content');
+    expect(content(offcanvas)?.textContent).not.toBe('Late content');
   });
 });

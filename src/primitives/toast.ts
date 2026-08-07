@@ -7,6 +7,11 @@ import { joinClasses } from '../utilities/class-name.ts';
 import { q } from '../utilities/dom.ts';
 import { listen } from '../utilities/events.ts';
 import { randomId } from '../utilities/id.ts';
+import { createTransition } from '../utilities/motion.ts';
+import {
+  createPresence,
+  type PresenceController,
+} from '../utilities/presence.ts';
 import { timer } from '../utilities/timer.ts';
 import { validateParam } from '../utilities/types.ts';
 
@@ -45,10 +50,6 @@ export interface ToastActionProps extends ToastOptions {
   onClose?: () => void | Promise<void>;
 }
 
-interface ResolvedToastOptions {
-  className: ToastClassNames;
-}
-
 const DEFAULT_CLASS_NAMES: ToastClassNames = {
   container: 'j-toast-container',
   toast: 'j-toast',
@@ -71,309 +72,288 @@ const TOAST_TYPE_RULE = {
   type: 'string',
   enum: ['info', 'success', 'warning', 'error', 'primary'],
 };
+const TOAST_DURATION_RULE = { type: 'number', min: 0 };
+const LITE_DURATION_RULE = { type: 'number', greaterThan: 0 };
 
-const TOAST_DURATION_RULE = {
-  type: 'number',
-  min: 0,
-};
+const timers = new Set<string>();
+const disposers = new Map<HTMLElement, () => void>();
+const presences = new Map<HTMLElement, PresenceController>();
+let classNames = DEFAULT_CLASS_NAMES;
 
-const LITE_DURATION_RULE = {
-  type: 'number',
-  greaterThan: 0,
-};
-
-function mergeClassNames(className?: ToastClassNameConfig): ToastClassNames {
-  return { ...DEFAULT_CLASS_NAMES, ...className };
+function mergeClassNames(value?: ToastClassNameConfig): ToastClassNames {
+  return { ...DEFAULT_CLASS_NAMES, ...value };
 }
 
-/**
- * Toast 消息提示工具。
- *
- * 以静态方法方式使用，支持多类型堆叠消息和单实例轻提示。
- */
-export class Toast {
-  static timers = new Set<string>();
-  static disposers = new Map<HTMLElement, () => void>();
-  private static classNames = new WeakMap<HTMLElement, ToastClassNames>();
-  private static options: ResolvedToastOptions = {
-    className: DEFAULT_CLASS_NAMES,
-  };
+function resolveClassNames(options?: ToastOptions): ToastClassNames {
+  return mergeClassNames({ ...classNames, ...options?.className });
+}
 
-  static configure(options: ToastOptions = {}): ToastOptions {
-    Toast.options = {
-      className: mergeClassNames(options.className),
-    };
-    return Toast.options;
-  }
-
-  private static resolveClassNames(options?: ToastOptions): ToastClassNames {
-    return mergeClassNames({
-      ...Toast.options.className,
-      ...options?.className,
-    });
-  }
-
-  static show(
-    message = '',
-    duration = 3000,
-    type: ToastType = 'info',
-    options: ToastOptions = {}
-  ): HTMLElement {
-    validateParam('message', message, 'string', 'Toast.show');
-    validateParam('duration', duration, TOAST_DURATION_RULE, 'Toast.show');
-    validateParam('type', type, TOAST_TYPE_RULE, 'Toast.show');
-
-    const className = Toast.resolveClassNames(options);
-    const toastContainer = Toast.getOrCreateContainer(className);
-    const id = randomId();
-    const toast = jsx('div', {
-      className: joinClasses(className.toast, className[type]),
-      'data-toast': id,
-      role: 'alert',
-      'aria-atomic': 'true',
-      children: [
-        jsx('span', {
-          className: className.icon,
-          'data-toast-icon': id,
-          children: icon(type === 'primary' ? 'info' : type),
-        }),
-        jsx('span', {
-          className: className.message,
-          'data-toast-message': id,
-          children: message,
-        }),
-      ],
+function getOrCreateContainer(names: ToastClassNames): HTMLElement {
+  let container = q<HTMLElement>('[data-toast-container]');
+  if (!container) {
+    container = jsx('div', {
+      className: names.container,
+      'data-toast-container': '',
     }) as HTMLElement;
-
-    Toast.classNames.set(toast, className);
-    toastContainer.appendChild(toast);
-
-    const v = type === 'error' ? 'assertive' : 'polite';
-    Toast.setTimer(id, 'show', () => toast.setAttribute('aria-live', v), 10);
-
-    if (duration > 0) {
-      Toast.setTimer(id, 'hide', () => Toast.hide(toast), duration);
-    }
-
-    const disposeClick = listen(toast, 'click', () => Toast.hide(toast));
-    Toast.disposers.set(toast, disposeClick);
-
-    return toast;
+    document.body.appendChild(container);
+  } else {
+    container.className = names.container;
   }
+  return container;
+}
 
-  static success(
-    message = '',
-    duration = 3000,
-    options: ToastOptions = {}
-  ): HTMLElement {
-    return Toast.show(message, duration, 'success', options);
-  }
+function setToastTimer(
+  id: string,
+  action: string,
+  callback: () => void,
+  delay: number
+): string {
+  const key = `${id}-${action}`;
+  timers.add(key);
+  timer.start(key, delay, () => {
+    timers.delete(key);
+    callback();
+  });
+  return key;
+}
 
-  static info(
-    message = '',
-    duration = 3000,
-    options: ToastOptions = {}
-  ): HTMLElement {
-    return Toast.show(message, duration, 'info', options);
-  }
-
-  static primary(
-    message = '',
-    duration = 3000,
-    options: ToastOptions = {}
-  ): HTMLElement {
-    return Toast.show(message, duration, 'primary', options);
-  }
-
-  static warning(
-    message = '',
-    duration = 3000,
-    options: ToastOptions = {}
-  ): HTMLElement {
-    return Toast.show(message, duration, 'warning', options);
-  }
-
-  static error(
-    message = '',
-    duration = 3000,
-    options: ToastOptions = {}
-  ): HTMLElement {
-    return Toast.show(message, duration, 'error', options);
-  }
-
-  static hide(toast: HTMLElement | null | undefined): void {
-    if (!toast) return;
-
-    Toast.disposers.get(toast)?.();
-    Toast.disposers.delete(toast);
-
-    toast.removeAttribute('aria-live');
-    toast.setAttribute('aria-hidden', 'true');
-
-    const id = toast.dataset.toast || randomId();
-    Toast.setTimer(
-      id,
-      'remove',
-      () => {
-        toast.remove();
-
-        const container = q<HTMLElement>('[data-toast-container]');
-        if (container && container.children.length === 0) {
-          container.remove();
-        }
-      },
-      300
-    );
-  }
-
-  static lite(
-    message = '',
-    duration = 2000,
-    options: ToastOptions = {}
-  ): HTMLElement {
-    validateParam('message', message, 'string', 'Toast.lite');
-    validateParam('duration', duration, LITE_DURATION_RULE, 'Toast.lite');
-
-    const className = Toast.resolveClassNames(options);
-    q<HTMLElement>('[data-toast-lite]')?.remove();
-
-    const id = randomId();
-    const lite = jsx('div', {
-      className: className.lite,
-      'data-toast': id,
-      'data-toast-lite': '',
-      children: message,
-    }) as HTMLElement;
-
-    Toast.classNames.set(lite, className);
-    document.body.appendChild(lite);
-
-    Toast.setTimer(
-      id,
-      'show',
-      () => lite.setAttribute('aria-live', 'polite'),
-      10
-    );
-
-    Toast.setTimer(
-      id,
-      'hide',
-      () => {
-        lite.removeAttribute('aria-live');
-        lite.setAttribute('aria-hidden', 'true');
-        Toast.setTimer(id, 'remove', () => lite.remove(), 300);
-      },
-      duration
-    );
-
-    return lite;
-  }
-
-  static action(message = '', props: ToastActionProps = {}): HTMLElement {
-    validateParam('message', message, 'string', 'Toast.action');
-    const c = t('Close', locales);
-    const a = t('Confirm', locales);
-    const className = Toast.resolveClassNames(props);
-    const toastContainer = Toast.getOrCreateContainer(className);
-    const id = randomId();
-    const action = jsx('div', {
-      className: className.action,
-      'data-toast': id,
-      'data-toast-action': '',
-      children: [
-        jsx('div', {
-          className: className.message,
-          'data-toast-message': id,
-          children: message,
-        }),
-        jsx('div', {
-          className: className.actions,
-          'data-toast-actions': id,
-          children: [
-            jsx('button', {
-              className: joinClasses(className.button, className.closeBtn),
-              children: props.text?.close || c,
-              'data-action': 'close',
-              'aria-label': props.text?.close || c,
-              onClick: async () => {
-                await props.onClose?.();
-                Toast.hide(action);
-              },
-            }),
-            jsx('button', {
-              className: joinClasses(className.button, className.actionBtn),
-              children: props.text?.action || a,
-              'data-action': 'toast-action',
-              'aria-label': props.text?.action || a,
-              onClick: async () => {
-                await props.onAction?.();
-                Toast.hide(action);
-              },
-            }),
-          ],
-        }),
-      ],
-    }) as HTMLElement;
-
-    Toast.classNames.set(action, className);
-    toastContainer.appendChild(action);
-
-    Toast.setTimer(
-      id,
-      'show',
-      () => {
-        action.setAttribute('aria-live', 'polite');
-        q<HTMLButtonElement>('[data-action="toast-action"]', action)?.focus();
-      },
-      10
-    );
-
-    return action;
-  }
-
-  private static getOrCreateContainer(className: ToastClassNames): HTMLElement {
-    let toastContainer = q<HTMLElement>('[data-toast-container]');
-    if (!toastContainer) {
-      toastContainer = jsx('div', {
-        className: className.container,
-        'data-toast-container': '',
-      }) as HTMLElement;
-      document.body.appendChild(toastContainer);
-    } else {
-      toastContainer.className = className.container;
-    }
-    return toastContainer;
-  }
-
-  private static setTimer(
-    id: string,
-    action: string,
-    callback: () => void,
-    delay: number
-  ): string {
-    const key = `${id}-${action}`;
-    Toast.timers.add(key);
-    timer.start(key, delay, () => {
-      Toast.timers.delete(key);
-      callback();
-    });
-    return key;
-  }
-
-  static clearAll(): void {
-    for (const key of Toast.timers) {
-      timer.cancel(key);
-    }
-    Toast.timers.clear();
-
-    for (const dispose of Toast.disposers.values()) dispose();
-    Toast.disposers.clear();
-
-    q<HTMLElement>('[data-toast-container]')?.remove();
-    q<HTMLElement>('[data-toast-lite]')?.remove();
-  }
-
-  static destroyAll(): void {
-    Toast.clearAll();
+function cancelToastTimers(id: string): void {
+  for (const key of Array.from(timers)) {
+    if (!key.startsWith(`${id}-`)) continue;
+    timer.cancel(key);
+    timers.delete(key);
   }
 }
+
+function removeToastElement(element: HTMLElement): void {
+  element.remove();
+  presences.delete(element);
+  disposers.get(element)?.();
+  disposers.delete(element);
+  const container = q<HTMLElement>('[data-toast-container]');
+  if (container && container.children.length === 0) container.remove();
+}
+
+function mountToast(
+  element: HTMLElement,
+  mount: () => void,
+  live: 'assertive' | 'polite',
+  onEntered?: () => void
+): void {
+  const lite = element.hasAttribute('data-toast-lite');
+  const motion = createTransition(() => element, {
+    keyframes: lite
+      ? [
+          {
+            opacity: 0,
+            transform: 'translate(-50%, -50%) scale(0.9)',
+          },
+          {
+            opacity: 1,
+            transform: 'translate(-50%, -50%) scale(1)',
+          },
+        ]
+      : [
+          { opacity: 0, transform: 'translateY(-100%)' },
+          { opacity: 1, transform: 'translateY(0)' },
+        ],
+    options: {
+      duration: lite ? 150 : 300,
+      easing: 'ease-in-out',
+    },
+  });
+  const presence = createPresence({
+    elements: () => [element],
+    mount,
+    activate: () => {
+      element.removeAttribute('aria-hidden');
+      element.setAttribute('aria-live', live);
+    },
+    deactivate: () => {
+      element.removeAttribute('aria-live');
+      element.setAttribute('aria-hidden', 'true');
+    },
+    motion,
+    unmount: () => removeToastElement(element),
+  });
+  presences.set(element, presence);
+  void presence.enter().then((completed) => {
+    if (completed && element.isConnected) onEntered?.();
+  });
+}
+
+function hide(toast: HTMLElement | null | undefined): void {
+  if (!toast) return;
+  if (toast.getAttribute('aria-hidden') === 'true') return;
+  disposers.get(toast)?.();
+  disposers.delete(toast);
+  const id = toast.dataset.toast || randomId();
+  cancelToastTimers(id);
+  const presence = presences.get(toast);
+  if (!presence) {
+    removeToastElement(toast);
+    return;
+  }
+  void presence.leave();
+}
+
+function show(
+  message = '',
+  duration = 3000,
+  type: ToastType = 'info',
+  options: ToastOptions = {}
+): HTMLElement {
+  validateParam('message', message, 'string', 'Toast.show');
+  validateParam('duration', duration, TOAST_DURATION_RULE, 'Toast.show');
+  validateParam('type', type, TOAST_TYPE_RULE, 'Toast.show');
+
+  const names = resolveClassNames(options);
+  const id = randomId();
+  const toast = jsx('div', {
+    className: joinClasses(names.toast, names[type]),
+    'data-toast': id,
+    role: 'alert',
+    'aria-atomic': 'true',
+    children: [
+      jsx('span', {
+        className: names.icon,
+        'data-toast-icon': id,
+        children: icon(type === 'primary' ? 'info' : type),
+      }),
+      jsx('span', {
+        className: names.message,
+        'data-toast-message': id,
+        children: message,
+      }),
+    ],
+  }) as HTMLElement;
+  mountToast(
+    toast,
+    () => getOrCreateContainer(names).appendChild(toast),
+    type === 'error' ? 'assertive' : 'polite'
+  );
+  if (duration > 0) setToastTimer(id, 'hide', () => hide(toast), duration);
+  disposers.set(
+    toast,
+    listen(toast, 'click', () => hide(toast))
+  );
+  return toast;
+}
+
+function lite(
+  message = '',
+  duration = 2000,
+  options: ToastOptions = {}
+): HTMLElement {
+  validateParam('message', message, 'string', 'Toast.lite');
+  validateParam('duration', duration, LITE_DURATION_RULE, 'Toast.lite');
+
+  const names = resolveClassNames(options);
+  const previous = q<HTMLElement>('[data-toast-lite]');
+  if (previous) {
+    cancelToastTimers(previous.dataset.toast || '');
+    presences.get(previous)?.cancel();
+    removeToastElement(previous);
+  }
+  const id = randomId();
+  const element = jsx('div', {
+    className: names.lite,
+    'data-toast': id,
+    'data-toast-lite': '',
+    children: message,
+  }) as HTMLElement;
+  mountToast(element, () => document.body.appendChild(element), 'polite');
+  setToastTimer(id, 'hide', () => hide(element), duration);
+  return element;
+}
+
+function action(message = '', props: ToastActionProps = {}): HTMLElement {
+  validateParam('message', message, 'string', 'Toast.action');
+  const closeText = props.text?.close || t('Close', locales);
+  const actionText = props.text?.action || t('Confirm', locales);
+  const names = resolveClassNames(props);
+  const id = randomId();
+  const element = jsx('div', {
+    className: names.action,
+    'data-toast': id,
+    'data-toast-action': '',
+    children: [
+      jsx('div', {
+        className: names.message,
+        'data-toast-message': id,
+        children: message,
+      }),
+      jsx('div', {
+        className: names.actions,
+        'data-toast-actions': id,
+        children: [
+          jsx('button', {
+            className: joinClasses(names.button, names.closeBtn),
+            children: closeText,
+            'data-action': 'close',
+            'aria-label': closeText,
+            onClick: async () => {
+              await props.onClose?.();
+              hide(element);
+            },
+          }),
+          jsx('button', {
+            className: joinClasses(names.button, names.actionBtn),
+            children: actionText,
+            'data-action': 'toast-action',
+            'aria-label': actionText,
+            onClick: async () => {
+              await props.onAction?.();
+              hide(element);
+            },
+          }),
+        ],
+      }),
+    ],
+  }) as HTMLElement;
+  mountToast(
+    element,
+    () => getOrCreateContainer(names).appendChild(element),
+    'polite',
+    () => {
+      q<HTMLButtonElement>('[data-action="toast-action"]', element)?.focus();
+    }
+  );
+  return element;
+}
+
+function clearAll(): void {
+  for (const key of timers) timer.cancel(key);
+  timers.clear();
+  for (const dispose of disposers.values()) dispose();
+  disposers.clear();
+  for (const presence of presences.values()) presence.cancel();
+  presences.clear();
+  q<HTMLElement>('[data-toast-container]')?.remove();
+  q<HTMLElement>('[data-toast-lite]')?.remove();
+}
+
+export const Toast = {
+  timers,
+  disposers,
+  configure(options: ToastOptions = {}): ToastOptions {
+    classNames = mergeClassNames(options.className);
+    return { className: classNames };
+  },
+  show,
+  success: (message = '', duration = 3000, options: ToastOptions = {}) =>
+    show(message, duration, 'success', options),
+  info: (message = '', duration = 3000, options: ToastOptions = {}) =>
+    show(message, duration, 'info', options),
+  primary: (message = '', duration = 3000, options: ToastOptions = {}) =>
+    show(message, duration, 'primary', options),
+  warning: (message = '', duration = 3000, options: ToastOptions = {}) =>
+    show(message, duration, 'warning', options),
+  error: (message = '', duration = 3000, options: ToastOptions = {}) =>
+    show(message, duration, 'error', options),
+  hide,
+  lite,
+  action,
+  clearAll,
+  destroyAll: clearAll,
+};

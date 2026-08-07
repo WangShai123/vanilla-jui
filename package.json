@@ -1,8 +1,8 @@
 {
   "name": "vanilla-jui",
-  "version": "1.4.8",
+  "version": "1.5.0",
   "private": false,
-  "description": "A lightweight vanilla JavaScript UI plugin library.",
+  "description": "A lightweight, reactive, and fully customizable vanilla JS UI library.",
   "keywords": [
     "accordion",
     "components",

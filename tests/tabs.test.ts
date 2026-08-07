@@ -31,10 +31,22 @@ function tabItems(): TabItem[] {
 
 function mount(instance: TabsInstance): TabsInstance {
   instance.build();
-  if (!instance.dom.root) throw new Error('Tabs did not build a root.');
-  app().appendChild(instance.dom.root);
+  if (!instance.element) throw new Error('Tabs did not build a root.');
+  app().appendChild(instance.element);
   instance.refresh();
   return instance;
+}
+
+function tabElements(instance: TabsInstance): HTMLElement[] {
+  return Array.from(
+    instance.element?.querySelectorAll<HTMLElement>('[data-tabs-tab]') || []
+  );
+}
+
+function panelElements(instance: TabsInstance): HTMLElement[] {
+  return Array.from(
+    instance.element?.querySelectorAll<HTMLElement>('[data-tabs-panel]') || []
+  );
 }
 
 async function tick(): Promise<void> {
@@ -60,26 +72,26 @@ describe('Tabs', () => {
       data: tabItems(),
     });
 
-    expect(tabs.dom.root).toBeNull();
+    expect(tabs.element).toBeNull();
 
     tabs.build();
-    expect(app().contains(tabs.dom.root)).toBe(false);
-    if (!tabs.dom.root) throw new Error('Expected Tabs root.');
-    app().appendChild(tabs.dom.root);
+    expect(app().contains(tabs.element)).toBe(false);
+    if (!tabs.element) throw new Error('Expected Tabs root.');
+    app().appendChild(tabs.element);
     tabs.refresh();
 
-    expect(tabs.dom.root.classList.contains('j-tabs')).toBe(true);
-    expect(tabs.dom.root.getAttribute('data-tabs-direction')).toBe('top');
-    expect(tabs.dom.root.getAttribute('data-tabs')).toBe('root');
-    expect(tabs.dom.root.querySelectorAll('[data-tabs-tab]')).toHaveLength(3);
-    expect(tabs.dom.root.querySelectorAll('[data-tabs-panel]')).toHaveLength(3);
-    expect(tabs.dom.root.querySelector('[data-tabs-tab-title]')).toBeNull();
-    expect(tabs.dom.root.querySelector('[data-tabs-panel-body]')).toBeNull();
-    expect(tabs.dom.tabs[1]?.textContent).toBe('Usage');
-    expect(tabs.dom.panels[1]?.textContent).toBe('Usage panel');
-    expect(tabs.dom.tabs[1]?.getAttribute('aria-selected')).toBe('true');
-    expect(tabs.dom.panels[1]?.getAttribute('aria-hidden')).toBe('false');
-    expect(tabs.state.current.name).toBe('usage');
+    expect(tabs.element.classList.contains('j-tabs')).toBe(true);
+    expect(tabs.element.getAttribute('data-tabs-direction')).toBe('top');
+    expect(tabs.element.getAttribute('data-tabs')).toBe('root');
+    expect(tabs.element.querySelectorAll('[data-tabs-tab]')).toHaveLength(3);
+    expect(tabs.element.querySelectorAll('[data-tabs-panel]')).toHaveLength(3);
+    expect(tabs.element.querySelector('[data-tabs-tab-title]')).toBeNull();
+    expect(tabs.element.querySelector('[data-tabs-panel-body]')).toBeNull();
+    expect(tabElements(tabs)[1]?.textContent).toBe('Usage');
+    expect(panelElements(tabs)[1]?.textContent).toBe('Usage panel');
+    expect(tabElements(tabs)[1]?.getAttribute('aria-selected')).toBe('true');
+    expect(panelElements(tabs)[1]?.getAttribute('aria-hidden')).toBe('false');
+    expect(tabs.current.name).toBe('usage');
   });
 
   it('uses data markers for interaction when className is customized', async () => {
@@ -101,21 +113,21 @@ describe('Tabs', () => {
       })
     );
 
-    expect(tabs.dom.root?.classList.contains('qa-tabs')).toBe(true);
-    expect(tabs.dom.root?.classList.contains('j-tabs')).toBe(false);
-    expect(tabs.dom.root?.querySelector('.tab-item')).toBeNull();
+    expect(tabs.element?.classList.contains('qa-tabs')).toBe(true);
+    expect(tabs.element?.classList.contains('j-tabs')).toBe(false);
+    expect(tabs.element?.querySelector('.tab-item')).toBeNull();
 
-    tabs.dom.root
+    tabs.element
       ?.querySelector<HTMLElement>('[data-tabs-tab="usage"]')
       ?.click();
     await Promise.resolve();
 
-    expect(tabs.state.current.name).toBe('usage');
+    expect(tabs.current.name).toBe('usage');
     expect(onChange).toHaveBeenCalledWith(
       1,
       'usage',
-      tabs.dom.tabs[1],
-      tabs.dom.panels[1]
+      tabElements(tabs)[1],
+      panelElements(tabs)[1]
     );
   });
 
@@ -128,19 +140,19 @@ describe('Tabs', () => {
       })
     );
 
-    tabs.dom.root
+    tabs.element
       ?.querySelector<HTMLElement>('[data-tabs-tab="usage"]')
       ?.click();
     await Promise.resolve();
-    expect(tabs.state.current.name).toBe('intro');
-    expect(tabs.dom.tabs[1]?.getAttribute('aria-disabled')).toBe('true');
+    expect(tabs.current.name).toBe('intro');
+    expect(tabElements(tabs)[1]?.getAttribute('aria-disabled')).toBe('true');
 
     tabs.state.disabled = [];
-    tabs.dom.root
+    tabs.element
       ?.querySelector<HTMLElement>('[data-tabs-tab="usage"]')
       ?.click();
     await Promise.resolve();
-    expect(tabs.state.current.name).toBe('usage');
+    expect(tabs.current.name).toBe('usage');
   });
 
   it('loads async panel content and caches it', async () => {
@@ -160,9 +172,9 @@ describe('Tabs', () => {
     await Promise.resolve();
 
     expect(load).toHaveBeenCalledTimes(1);
-    expect(tabs.dom.panels[1]?.textContent).toBe('Async content');
-    expect(tabs.dom.panels[1]?.getAttribute('aria-live')).toBe('polite');
-    expect(tabs.dom.panels[1]?.getAttribute('aria-busy')).toBe('false');
+    expect(panelElements(tabs)[1]?.textContent).toBe('Async content');
+    expect(panelElements(tabs)[1]?.getAttribute('aria-live')).toBe('polite');
+    expect(panelElements(tabs)[1]?.getAttribute('aria-busy')).toBe('false');
 
     await tabs.activate('intro');
     await tabs.activate('async');
@@ -182,11 +194,11 @@ describe('Tabs', () => {
       { name: 'more', title: 'More', panel: 'More panel' },
     ];
     await tick();
-    expect(tabs.dom.root?.querySelector('[data-tabs-tab="more"]')).toBeTruthy();
+    expect(tabs.element?.querySelector('[data-tabs-tab="more"]')).toBeTruthy();
 
     tabs.state.data = tabs.state.data.filter((item) => item.name !== 'usage');
     await tick();
-    expect(tabs.dom.root?.querySelector('[data-tabs-tab="usage"]')).toBeNull();
+    expect(tabs.element?.querySelector('[data-tabs-tab="usage"]')).toBeNull();
 
     tabs.setState({
       active: 'new',
@@ -194,7 +206,7 @@ describe('Tabs', () => {
     });
     await tick();
 
-    expect(tabs.dom.root?.querySelectorAll('[data-tabs-tab]')).toHaveLength(1);
-    expect(tabs.state.current.name).toBe('new');
+    expect(tabs.element?.querySelectorAll('[data-tabs-tab]')).toHaveLength(1);
+    expect(tabs.current.name).toBe('new');
   });
 });

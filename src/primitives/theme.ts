@@ -12,7 +12,7 @@ import { t } from 'vanilla-signal-i18n';
 import locales from '../locales/index.ts';
 import { joinClasses } from '../utilities/class-name.ts';
 import { all } from '../utilities/dom.ts';
-import { createEventManager, type IEventManager } from '../utilities/events.ts';
+import { createEventManager } from '../utilities/events.ts';
 import { isPlainObject } from '../utilities/object.ts';
 
 export type ThemeConfigKey = 'mode' | 'theme' | 'radius' | 'shadow' | 'font';
@@ -57,11 +57,6 @@ export interface ThemeResolvedOptions {
   font: string;
   key: string;
   className: ThemeClassNames;
-}
-
-interface ThemeCleanup {
-  bindings: Set<() => void>;
-  events: IEventManager;
 }
 
 export interface ThemeInstance {
@@ -159,151 +154,121 @@ function normalizeStoredConfig(value: unknown): Partial<ThemeOptions> | null {
   return Object.keys(config).length ? config : null;
 }
 
-/**
- * 主题管理组件。
- *
- * 负责主题配置的实例化、主题面板交互和 createStorage 持久化。实例初始化不修改
- * html 类名，仅在面板点击交互时同步当前点击项对应的 html class。
- */
-class Theme implements ThemeInstance {
-  props: ThemeResolvedOptions;
-  languages: typeof locales;
-  cleanup: ThemeCleanup | null;
-  runtime: { configVersion: number; destroyed: boolean };
-  storage: Storage;
+function defaultPanelConfig(
+  translate: (key: string) => string
+): ThemePanelGroup[] {
+  return [
+    {
+      title: translate('Primary'),
+      type: 'theme',
+      buttons: [
+        ['gray', translate('Gray')],
+        ['olive', translate('Olive')],
+        ['tomato', translate('Tomato')],
+        ['ruby', translate('Ruby')],
+        ['pink', translate('Pink')],
+        ['violet', translate('Violet')],
+        ['indigo', translate('Indigo')],
+        ['blue', translate('Blue')],
+        ['teal', translate('Teal')],
+        ['grass', translate('Grass')],
+        ['mint', translate('Mint')],
+        ['lime', translate('Lime')],
+        ['yellow', translate('Yellow')],
+        ['orange', translate('Orange')],
+        ['gold', translate('Gold')],
+      ],
+    },
+    {
+      title: translate('Radius'),
+      type: 'radius',
+      buttons: [
+        ['none', translate('None')],
+        ['sm', translate('sm')],
+        ['md', translate('md')],
+        ['lg', translate('lg')],
+        ['xl', translate('XL')],
+        ['round', translate('Round')],
+      ],
+    },
+    {
+      title: translate('Shadow'),
+      type: 'shadow',
+      buttons: [
+        ['none', translate('None')],
+        ['sm', translate('sm')],
+        ['md', translate('md')],
+        ['lg', translate('lg')],
+      ],
+    },
+    {
+      title: translate('Font'),
+      type: 'font',
+      buttons: [
+        ['sm', translate('sm')],
+        ['md', translate('md')],
+      ],
+    },
+    {
+      title: translate('Mode'),
+      type: 'mode',
+      buttons: [
+        ['light', translate('Light')],
+        ['dark', translate('Dark')],
+        ['auto', translate('Auto')],
+      ],
+    },
+  ];
+}
 
-  constructor(options: ThemeOptions = {}) {
-    this.props = createDeepStore(normalizeOptions(options));
-    this.languages = locales;
-    this.cleanup = null;
-    this.runtime = { configVersion: 0, destroyed: false };
-    this.storage = createThemeStorage();
-
-    this.init();
-  }
-
-  private init(): void {
-    this.cleanup = { bindings: new Set(), events: createEventManager() };
-    this.loadConfig();
-    this.bindEvent();
-  }
-
-  private translate(key: string): string {
-    return t(key, this.languages);
-  }
-
-  private loadConfig(): void {
-    const configVersion = this.runtime.configVersion;
-    void this.storage
-      .get<unknown>(this.props.key)
-      .then((result) => {
-        if (
-          this.runtime.destroyed ||
-          this.runtime.configVersion !== configVersion
-        )
-          return;
-
-        const config = normalizeStoredConfig(result);
-        if (!config) return;
-
-        flushSync(() => {
-          Object.assign(this.props, config);
-        });
-      })
-      .catch(() => {});
-  }
-
-  private saveConfig(): void {
-    const { mode, theme, radius, shadow, font } = this.props;
-    const render = mode === 'auto' ? this.scheme() : mode;
+export function createTheme(options: ThemeOptions = {}): ThemeInstance {
+  const props = createDeepStore(normalizeOptions(options));
+  const runtime = { configVersion: 0, destroyed: false };
+  const storage = createThemeStorage();
+  const bindings = new Set<() => void>();
+  const events = createEventManager();
+  const translate = (key: string): string => t(key, locales);
+  const scheme = (): string =>
+    window.matchMedia?.('(prefers-color-scheme: dark)').matches
+      ? 'dark'
+      : 'light';
+  const saveConfig = (): void => {
+    const { mode, theme, radius, shadow, font } = props;
     const config: ThemeStoredConfig = {
       mode,
       theme,
       radius,
       shadow,
       font,
-      render,
+      render: mode === 'auto' ? scheme() : mode,
     };
-
-    void this.storage.set(this.props.key, config).catch(() => {});
-  }
-
-  private scheme(): string {
-    return window.matchMedia?.('(prefers-color-scheme: dark)').matches
-      ? 'dark'
-      : 'light';
-  }
-
-  private bindActiveButtons(root: HTMLElement): void {
+    void storage.set(props.key, config).catch(() => {});
+  };
+  const bindActiveButtons = (root: HTMLElement): void => {
     const dispose = createRoot((dispose) => {
-      const items = all<HTMLElement>('[data-theme-group]', root);
-      for (const item of items) {
+      for (const item of all<HTMLElement>('[data-theme-group]', root)) {
         const type = item.dataset.themeGroup;
         if (!isThemeConfigKey(type)) continue;
-
-        const buttons = all<HTMLButtonElement>('[data-theme-button]', item);
-        for (const button of buttons) {
+        for (const button of all<HTMLButtonElement>(
+          '[data-theme-button]',
+          item
+        )) {
           const isActive = () =>
-            button.dataset.themeValue === String(this.props[type]);
-          bindClass(button, this.props.className.active, isActive);
+            button.dataset.themeValue === String(props[type]);
+          bindClass(button, props.className.active, isActive);
           bindAttr(button, 'aria-selected', () => (isActive() ? 'true' : null));
         }
       }
-
       return dispose;
     });
-    this.cleanup?.bindings.add(dispose);
-  }
-
-  private bindEvent(): void {
-    this.cleanup?.events.on('palette', document.body, 'click', (event) => {
-      if (!(event.target instanceof Element)) return;
-
-      const button = event.target.closest<HTMLButtonElement>(
-        '[data-theme-button]'
-      );
-      if (!button) return;
-
-      const groupEl = button.closest<HTMLElement>('[data-theme-group]');
-      const type = groupEl?.dataset.themeGroup;
-      const value = button.dataset.themeValue;
-      if (!groupEl || !isThemeConfigKey(type) || !value) return;
-      if (button.classList.contains(this.props.className.active)) return;
-
-      const previous = this.props[type];
-      this.runtime.configVersion += 1;
-      flushSync(() => {
-        this.props[type] = value;
-      });
-
-      const root = document.documentElement;
-      if (type === 'mode') {
-        const actual = value === 'auto' ? this.scheme() : value;
-        root.classList.remove('light', 'dark', previous);
-        root.classList.add(actual);
-      } else {
-        const prefix = THEME_CLASS_PREFIX[type];
-        const toRemove = Array.from(root.classList).filter((className) =>
-          className.startsWith(prefix)
-        );
-        if (toRemove.length) root.classList.remove(...toRemove);
-        root.classList.add(`${prefix}${value}`);
-      }
-
-      this.saveConfig();
-    });
-  }
-
-  private unbindEvent(): void {
-    this.cleanup?.events.clear();
-  }
-
-  createPanel(
-    containerClass: string | null = null,
-    panelConfig: ThemePanelGroup[] | null = null
-  ): HTMLElement {
-    const className = this.props.className;
-    const groups = panelConfig || this.defaultPanelConfig();
+    bindings.add(dispose);
+  };
+  const createPanel: ThemeInstance['createPanel'] = (
+    containerClass = null,
+    panelConfig = null
+  ) => {
+    const className = props.className;
+    const groups = panelConfig || defaultPanelConfig(translate);
     const panel = jsx('div', {
       className: containerClass || className.panel,
       'data-theme-palette': 'root',
@@ -314,7 +279,7 @@ class Theme implements ThemeInstance {
           style: {
             margin: '0 0 1rem',
           },
-          children: this.translate('t'),
+          children: translate('t'),
         }),
         jsx('div', {
           className: className.container,
@@ -335,7 +300,7 @@ class Theme implements ThemeInstance {
                   'data-theme-items': group.type,
                   children: group.buttons.map(([value, label]) => {
                     const isActive =
-                      String(this.props[group.type]) === String(value);
+                      String(props[group.type]) === String(value);
                     return jsx('button', {
                       className: joinClasses(
                         className.button,
@@ -374,99 +339,74 @@ class Theme implements ThemeInstance {
       ],
     }) as HTMLElement;
 
-    this.bindActiveButtons(panel);
+    bindActiveButtons(panel);
     return panel;
-  }
-
-  setConfig(newConfig: ThemeOptions): void {
-    this.runtime.configVersion += 1;
+  };
+  const setConfig = (newConfig: ThemeOptions): void => {
+    runtime.configVersion += 1;
     flushSync(() => {
-      Object.assign(this.props, newConfig, {
+      Object.assign(props, newConfig, {
         className: mergeClassNames({
-          ...this.props.className,
+          ...props.className,
           ...newConfig.className,
         }),
       });
     });
-    this.saveConfig();
-  }
+    saveConfig();
+  };
+  const destroy = (): void => {
+    if (runtime.destroyed) return;
+    runtime.destroyed = true;
+    events.clear();
+    for (const dispose of bindings) dispose();
+    bindings.clear();
+    void storage.close().catch(() => {});
+  };
 
-  destroy(): void {
-    if (this.runtime.destroyed) return;
-    this.runtime.destroyed = true;
-    this.unbindEvent();
-    this.cleanup?.bindings.forEach((dispose) => dispose());
-    this.cleanup?.bindings.clear();
-    this.cleanup = null;
-    void this.storage.close().catch(() => {});
-  }
+  events.on('palette', document.body, 'click', (event) => {
+    if (!(event.target instanceof Element)) return;
+    const button = event.target.closest<HTMLButtonElement>(
+      '[data-theme-button]'
+    );
+    const group = button?.closest<HTMLElement>('[data-theme-group]');
+    const type = group?.dataset.themeGroup;
+    const value = button?.dataset.themeValue;
+    if (!button || !isThemeConfigKey(type) || !value) return;
+    if (button.classList.contains(props.className.active)) return;
 
-  private defaultPanelConfig(): ThemePanelGroup[] {
-    return [
-      {
-        title: this.translate('Primary'),
-        type: 'theme',
-        buttons: [
-          ['gray', this.translate('Gray')],
-          ['olive', this.translate('Olive')],
-          ['tomato', this.translate('Tomato')],
-          ['ruby', this.translate('Ruby')],
-          ['pink', this.translate('Pink')],
-          ['violet', this.translate('Violet')],
-          ['indigo', this.translate('Indigo')],
-          ['blue', this.translate('Blue')],
-          ['teal', this.translate('Teal')],
-          ['grass', this.translate('Grass')],
-          ['mint', this.translate('Mint')],
-          ['lime', this.translate('Lime')],
-          ['yellow', this.translate('Yellow')],
-          ['orange', this.translate('Orange')],
-          ['gold', this.translate('Gold')],
-        ],
-      },
-      {
-        title: this.translate('Radius'),
-        type: 'radius',
-        buttons: [
-          ['none', this.translate('None')],
-          ['sm', this.translate('sm')],
-          ['md', this.translate('md')],
-          ['lg', this.translate('lg')],
-          ['xl', this.translate('XL')],
-          ['round', this.translate('Round')],
-        ],
-      },
-      {
-        title: this.translate('Shadow'),
-        type: 'shadow',
-        buttons: [
-          ['none', this.translate('None')],
-          ['sm', this.translate('sm')],
-          ['md', this.translate('md')],
-          ['lg', this.translate('lg')],
-        ],
-      },
-      {
-        title: this.translate('Font'),
-        type: 'font',
-        buttons: [
-          ['sm', this.translate('sm')],
-          ['md', this.translate('md')],
-        ],
-      },
-      {
-        title: this.translate('Mode'),
-        type: 'mode',
-        buttons: [
-          ['light', this.translate('Light')],
-          ['dark', this.translate('Dark')],
-          ['auto', this.translate('Auto')],
-        ],
-      },
-    ];
-  }
-}
+    const previous = props[type];
+    runtime.configVersion += 1;
+    flushSync(() => {
+      props[type] = value;
+    });
 
-export function createTheme(options: ThemeOptions = {}): ThemeInstance {
-  return new Theme(options);
+    const root = document.documentElement;
+    if (type === 'mode') {
+      root.classList.remove('light', 'dark', previous);
+      root.classList.add(value === 'auto' ? scheme() : value);
+    } else {
+      const prefix = THEME_CLASS_PREFIX[type];
+      const obsolete = Array.from(root.classList).filter((className) =>
+        className.startsWith(prefix)
+      );
+      if (obsolete.length) root.classList.remove(...obsolete);
+      root.classList.add(`${prefix}${value}`);
+    }
+    saveConfig();
+  });
+
+  const configVersion = runtime.configVersion;
+  void storage
+    .get<unknown>(props.key)
+    .then((result) => {
+      if (runtime.destroyed || runtime.configVersion !== configVersion) return;
+      const config = normalizeStoredConfig(result);
+      if (!config) return;
+      flushSync(() => {
+        Object.assign(props, config);
+      });
+    })
+    .catch(() => {});
+
+  return { props, createPanel, setConfig, destroy };
 }

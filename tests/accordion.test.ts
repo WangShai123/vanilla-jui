@@ -22,7 +22,7 @@ function app(): HTMLElement {
   return element;
 }
 
-function items() {
+function data() {
   return [
     { name: 'basic', title: 'Basic', content: 'Basic content' },
     { name: 'advanced', title: 'Advanced', content: 'Advanced content' },
@@ -31,9 +31,41 @@ function items() {
 
 function mount(instance: AccordionInstance): AccordionInstance {
   instance.build();
-  if (!instance.dom.root) throw new Error('Accordion did not build a root.');
-  app().appendChild(instance.dom.root);
+  if (!instance.element) throw new Error('Accordion did not build a root.');
+  app().appendChild(instance.element);
   return instance;
+}
+
+function headers(instance: AccordionInstance): HTMLElement[] {
+  return Array.from(
+    instance.element?.querySelectorAll<HTMLElement>(
+      '[data-accordion-header]'
+    ) || []
+  );
+}
+
+function panels(instance: AccordionInstance): HTMLElement[] {
+  return Array.from(
+    instance.element?.querySelectorAll<HTMLElement>('[data-accordion-panel]') ||
+      []
+  );
+}
+
+function controlledPanelAnimation(): {
+  animation: Animation;
+  resolve: () => void;
+  cancel: ReturnType<typeof vi.fn>;
+} {
+  let resolve!: () => void;
+  const finished = new Promise<void>((done) => {
+    resolve = done;
+  });
+  const cancel = vi.fn();
+  return {
+    animation: { finished, cancel } as unknown as Animation,
+    resolve,
+    cancel,
+  };
 }
 
 async function tick(): Promise<void> {
@@ -56,27 +88,100 @@ describe('Accordion', () => {
     accordion = createAccordion({
       id: 'default-accordion',
       active: 'advanced',
-      items: items(),
+      data: data(),
     });
 
-    expect(accordion.dom.root).toBeNull();
+    expect(accordion.element).toBeNull();
 
     accordion.build();
 
     expect(app().children).toHaveLength(0);
-    expect(accordion.dom.root?.classList.contains('j-accordion')).toBe(true);
-    expect(accordion.dom.root?.getAttribute('data-accordion')).toBe('root');
+    expect(accordion.element?.classList.contains('j-accordion')).toBe(true);
+    expect(accordion.element?.getAttribute('data-accordion')).toBe('root');
+    expect(accordion.element?.dataset.direction).toBe('vertical');
     expect(
-      accordion.dom.root?.querySelectorAll('[data-accordion-header]')
+      accordion.element?.querySelectorAll('[data-accordion-header]')
     ).toHaveLength(2);
     expect(
-      accordion.dom.root?.querySelectorAll('[data-accordion-panel]')
+      accordion.element?.querySelectorAll('[data-accordion-panel]')
     ).toHaveLength(2);
-    expect(accordion.dom.headers[1]?.getAttribute('aria-expanded')).toBe(
-      'true'
+    expect(headers(accordion)[1]?.getAttribute('aria-expanded')).toBe('true');
+    expect(panels(accordion)[1]?.getAttribute('aria-hidden')).toBe('false');
+    expect(panels(accordion)[0]?.hasAttribute('hidden')).toBe(false);
+    expect(panels(accordion)[0]?.style.height).toBe('0px');
+    expect(panels(accordion)[0]?.style.visibility).toBe('hidden');
+    expect(panels(accordion)[0]?.inert).toBe(true);
+    expect(panels(accordion)[1]?.style.height).toBe('');
+    expect(panels(accordion)[1]?.inert).toBe(false);
+  });
+
+  it('uses horizontal layout and width collapse for horizontal direction', async () => {
+    accordion = mount(
+      createAccordion({
+        active: 'basic',
+        direction: 'horizontal',
+        data: data(),
+      })
     );
-    expect(accordion.dom.panels[1]?.getAttribute('aria-hidden')).toBe('false');
-    expect(accordion.dom.panels[0]?.hidden).toBe(true);
+
+    expect(accordion.element?.dataset.direction).toBe('horizontal');
+    expect(panels(accordion)[0]?.style.width).toBe('');
+    expect(panels(accordion)[0]?.style.height).toBe('');
+    expect(panels(accordion)[1]?.style.width).toBe('0px');
+    expect(panels(accordion)[1]?.style.height).toBe('');
+
+    await accordion.activate('advanced');
+
+    expect(panels(accordion)[0]?.style.width).toBe('0px');
+    expect(panels(accordion)[1]?.style.width).toBe('');
+  });
+
+  it('animates measured panel height and settles both boundaries', async () => {
+    accordion = mount(
+      createAccordion({
+        active: 'basic',
+        collapsible: true,
+        data: data(),
+      })
+    );
+
+    const [basicPanel, advancedPanel] = panels(accordion);
+    const basicAnimation = controlledPanelAnimation();
+    const advancedAnimation = controlledPanelAnimation();
+    const animateBasic = vi.fn(() => basicAnimation.animation);
+    const animateAdvanced = vi.fn(() => advancedAnimation.animation);
+    Object.defineProperties(basicPanel, {
+      animate: { configurable: true, value: animateBasic },
+      scrollHeight: { configurable: true, value: 60 },
+    });
+    Object.defineProperties(advancedPanel, {
+      animate: { configurable: true, value: animateAdvanced },
+      scrollHeight: { configurable: true, value: 80 },
+    });
+
+    const switching = accordion.activate('advanced');
+
+    expect(basicPanel.dataset.state).toBe('closed');
+    expect(basicPanel.inert).toBe(true);
+    expect(advancedPanel.dataset.state).toBe('open');
+    expect(advancedPanel.inert).toBe(false);
+    expect(animateBasic).toHaveBeenCalledOnce();
+    expect(animateAdvanced).toHaveBeenCalledWith(
+      [
+        { height: '0px', opacity: '0' },
+        { height: '80px', opacity: '1' },
+      ],
+      expect.objectContaining({ duration: 250, easing: 'ease', fill: 'both' })
+    );
+
+    basicAnimation.resolve();
+    advancedAnimation.resolve();
+    await switching;
+
+    expect(basicPanel.style.height).toBe('0px');
+    expect(basicPanel.style.visibility).toBe('hidden');
+    expect(advancedPanel.style.height).toBe('');
+    expect(advancedPanel.style.visibility).toBe('');
   });
 
   it('uses data markers for interaction when className is customized', async () => {
@@ -93,27 +198,27 @@ describe('Accordion', () => {
           panel: 'qa-panel',
           content: 'qa-content',
         },
-        items: items(),
+        data: data(),
         onChange,
       })
     );
 
-    expect(accordion.dom.root?.classList.contains('qa-accordion')).toBe(true);
-    expect(accordion.dom.root?.classList.contains('j-accordion')).toBe(false);
-    expect(accordion.dom.root?.querySelector('.accordion-header')).toBeNull();
+    expect(accordion.element?.classList.contains('qa-accordion')).toBe(true);
+    expect(accordion.element?.classList.contains('j-accordion')).toBe(false);
+    expect(accordion.element?.querySelector('.accordion-header')).toBeNull();
 
-    const title = accordion.dom.root?.querySelector<HTMLElement>(
+    const title = accordion.element?.querySelector<HTMLElement>(
       '[data-accordion-title="advanced"]'
     );
     title?.click();
     await Promise.resolve();
 
-    expect(accordion.state.current.name).toBe('advanced');
+    expect(accordion.current.name).toBe('advanced');
     expect(onChange).toHaveBeenCalledWith(
       1,
       'advanced',
-      accordion.dom.headers[1],
-      accordion.dom.panels[1],
+      headers(accordion)[1],
+      panels(accordion)[1],
       accordion
     );
   });
@@ -124,7 +229,7 @@ describe('Accordion', () => {
         active: ['basic'],
         collapsible: true,
         multiple: true,
-        items: items(),
+        data: data(),
       })
     );
 
@@ -135,51 +240,63 @@ describe('Accordion', () => {
     expect(accordion.state.activeNames).toEqual(['advanced']);
   });
 
+  it('projects direct activeNames state changes through Motion', async () => {
+    accordion = mount(createAccordion({ active: 'basic', data: data() }));
+
+    accordion.setState({ activeNames: ['advanced'] });
+    await tick();
+
+    expect(panels(accordion)[0]?.style.height).toBe('0px');
+    expect(panels(accordion)[0]?.inert).toBe(true);
+    expect(panels(accordion)[1]?.style.height).toBe('');
+    expect(panels(accordion)[1]?.inert).toBe(false);
+  });
+
   it('toggles from the keyboard and removes mounted DOM on destroy', async () => {
     accordion = mount(
       createAccordion({
         active: 'basic',
         collapsible: true,
-        items: items(),
+        data: data(),
       })
     );
 
-    accordion.dom.headers[0]?.dispatchEvent(
+    headers(accordion)[0]?.dispatchEvent(
       new KeyboardEvent('keydown', { key: ' ', bubbles: true })
     );
     await Promise.resolve();
     expect(accordion.state.activeNames).toEqual([]);
 
-    const root = accordion.dom.root;
+    const root = accordion.element;
     accordion.destroy();
     accordion = null;
     expect(root?.parentNode).toBeNull();
     expect(app().children).toHaveLength(0);
   });
 
-  it('renders automatically when state.items is replaced or mutated', async () => {
+  it('renders automatically when state.data is replaced or mutated', async () => {
     accordion = mount(
       createAccordion({
         active: 'basic',
-        items: items(),
+        data: data(),
       })
     );
 
     flushSync(() => {
-      accordion!.state.items = [
+      accordion!.state.data = [
         { name: 'next', title: 'Next', content: 'Next content' },
       ];
     });
     await tick();
 
     expect(
-      accordion.dom.root?.querySelectorAll('[data-accordion-header]')
+      accordion.element?.querySelectorAll('[data-accordion-header]')
     ).toHaveLength(1);
-    expect(accordion.dom.headers[0]?.dataset.accordionHeader).toBe('next');
-    expect(accordion.state.current).toEqual({ index: null, name: null });
+    expect(headers(accordion)[0]?.dataset.accordionHeader).toBe('next');
+    expect(accordion.current).toEqual({ index: null, name: null });
 
     flushSync(() => {
-      accordion!.state.items.push({
+      accordion!.state.data.push({
         name: 'more',
         title: 'More',
         content: 'More content',
@@ -188,40 +305,43 @@ describe('Accordion', () => {
     await tick();
 
     expect(
-      accordion.dom.root?.querySelectorAll('[data-accordion-header]')
+      accordion.element?.querySelectorAll('[data-accordion-header]')
     ).toHaveLength(2);
-    expect(accordion.dom.root?.textContent).toContain('More content');
+    expect(accordion.element?.textContent).toContain('More content');
 
     await accordion.activate('more');
-    expect(accordion.state.current).toEqual({ index: 1, name: 'more' });
+    expect(accordion.current).toEqual({ index: 1, name: 'more' });
 
     accordion.setState({
-      items: [{ name: 'state', title: 'State', content: 'State content' }],
+      data: [{ name: 'state', title: 'State', content: 'State content' }],
     });
     await tick();
 
     expect(
-      accordion.dom.root?.querySelectorAll('[data-accordion-header]')
+      accordion.element?.querySelectorAll('[data-accordion-header]')
     ).toHaveLength(1);
-    expect(accordion.dom.headers[0]?.dataset.accordionHeader).toBe('state');
-    expect(accordion.state.current).toEqual({ index: null, name: null });
+    expect(headers(accordion)[0]?.dataset.accordionHeader).toBe('state');
+    expect(accordion.current).toEqual({ index: null, name: null });
   });
 
   it('rejects invalid props and requires build before activation', async () => {
-    expect(() => createAccordion({ items: [] })).toThrow(
+    expect(() => createAccordion({ data: [] })).toThrow(
       /expects a non-empty array/
     );
     expect(() =>
       createAccordion({
-        items: [
+        data: [
           { name: 'same', title: 'One', content: 'One content' },
           { name: 'same', title: 'Two', content: 'Two content' },
         ],
       })
     ).toThrow(/must be unique/);
+    expect(() =>
+      createAccordion({ direction: 'diagonal' as never, data: data() })
+    ).toThrow(/expects one of vertical, horizontal/);
 
     accordion = createAccordion({
-      items: items(),
+      data: data(),
     });
 
     await expect(accordion.activate('basic')).rejects.toThrow(
@@ -234,7 +354,7 @@ describe('Accordion', () => {
       createAccordion({
         active: ['basic'],
         multiple: true,
-        items: items(),
+        data: data(),
       })
     );
 
@@ -245,13 +365,13 @@ describe('Accordion', () => {
   it('rejects duplicate names during reactive item updates', () => {
     accordion = mount(
       createAccordion({
-        items: items(),
+        data: data(),
       })
     );
 
     expect(() =>
       accordion!.setState({
-        items: [
+        data: [
           { name: 'same', title: 'One', content: 'One content' },
           { name: 'same', title: 'Two', content: 'Two content' },
         ],

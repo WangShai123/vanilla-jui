@@ -70,7 +70,7 @@ describe('Toc', () => {
     const { container } = mount();
 
     toc = createToc({ target: '#content' }).build();
-    if (toc.dom.root) container.appendChild(toc.dom.root);
+    if (toc.element) container.appendChild(toc.element);
 
     expect(
       container.querySelector('[data-toc="root"]')?.classList.contains('j-toc')
@@ -99,7 +99,7 @@ describe('Toc', () => {
         levelPrefix: 'doc-level-',
       },
     }).build();
-    if (toc.dom.root) container.appendChild(toc.dom.root);
+    if (toc.element) container.appendChild(toc.element);
 
     const link = container.querySelector<HTMLElement>('[data-toc-index="1"]');
     expect(
@@ -120,7 +120,7 @@ describe('Toc', () => {
     mockHeadingTop(headings[2], 120);
 
     toc = createToc({ target, offset: 40 }).build();
-    if (toc.dom.root) container.appendChild(toc.dom.root);
+    if (toc.element) container.appendChild(toc.element);
 
     const links = container.querySelectorAll<HTMLElement>('[data-toc-index]');
     expect(toc.state?.current.index).toBe(1);
@@ -133,7 +133,7 @@ describe('Toc', () => {
     const pushState = vi.spyOn(window.history, 'pushState');
 
     toc = createToc({ target: '#content', offset: 24 }).build();
-    if (toc.dom.root) container.appendChild(toc.dom.root);
+    if (toc.element) container.appendChild(toc.element);
     const link = container.querySelector<HTMLElement>('[data-toc-index="1"]');
     if (!link) throw new Error('Missing Toc link.');
     link.appendChild(document.createElement('span'));

@@ -32,15 +32,6 @@
     word-break: break-all;
     cursor: pointer;
     pointer-events: auto;
-
-    opacity: 0;
-    transform: translateY(-100%);
-    transition: all 0.3s ease-in-out;
-  }
-
-  .j-toast[aria-live] {
-    opacity: 1;
-    transform: translateY(0);
   }
 
   .j-toast .el-icon {
@@ -58,20 +49,13 @@
     position: fixed;
     top: 45%;
     left: 50%;
-    transition: opacity 0.15s ease-in-out;
     z-index: var(--z-toast);
     width: fit-content;
     max-width: 240px;
     text-align: center;
     user-select: none;
     pointer-events: none;
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(0.9);
-  }
-
-  .j-toast-lite[aria-live] {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
+    transform: translate(-50%, -50%);
   }
 
   .j-toast.is-action {

@@ -67,6 +67,10 @@
   .j-form .form-buttons {
     display: flex;
     gap: var(--form-buttons-gap, var(--s2));
+    margin-top: 1rem;
+  }
+
+  .j-form.is-horizontal .form-buttons {
     margin: 0;
   }
 

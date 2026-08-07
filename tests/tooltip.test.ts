@@ -40,12 +40,12 @@ describe('Tooltip', () => {
       message: 'Helpful message',
     });
 
-    expect(tooltip.dom.root?.getAttribute('data-drop')).toBe('help');
+    expect(tooltip.element?.getAttribute('data-drop')).toBe('help');
     expect(
-      tooltip.dom.root?.querySelector('[data-tooltip="help"]')
+      tooltip.element?.querySelector('[data-tooltip="help"]')
     ).toBeTruthy();
     expect(
-      tooltip.dom.root?.querySelector('[data-tooltip-message]')?.textContent
+      tooltip.element?.querySelector('[data-tooltip-message]')?.textContent
     ).toBe('Helpful message');
   });
 
@@ -59,20 +59,20 @@ describe('Tooltip', () => {
       },
     });
 
-    expect(tooltip.dom.root?.classList.contains('j-drop')).toBe(true);
+    expect(tooltip.element?.classList.contains('j-drop')).toBe(true);
     expect(
-      tooltip.dom.root
+      tooltip.element
         ?.querySelector('[data-tooltip]')
         ?.classList.contains('qa-tooltip')
     ).toBe(true);
     expect(
-      tooltip.dom.root
+      tooltip.element
         ?.querySelector('[data-tooltip-message]')
         ?.classList.contains('qa-tooltip-message')
     ).toBe(true);
 
     tooltip.show(false);
-    expect(tooltip.dom.root?.getAttribute('aria-expanded')).toBe('true');
+    expect(tooltip.element?.getAttribute('aria-expanded')).toBe('true');
   });
 
   it('sets theme class only when theme is configured', () => {
@@ -82,7 +82,7 @@ describe('Tooltip', () => {
     });
 
     expect(
-      tooltip.dom.root
+      tooltip.element
         ?.querySelector('[data-tooltip]')
         ?.classList.contains('is-primary')
     ).toBe(false);
@@ -96,7 +96,7 @@ describe('Tooltip', () => {
     });
 
     expect(
-      tooltip.dom.root
+      tooltip.element
         ?.querySelector('[data-tooltip]')
         ?.classList.contains('is-primary')
     ).toBe(true);
@@ -114,7 +114,7 @@ describe('Tooltip', () => {
       },
     });
 
-    const container = tooltip.dom.root?.querySelector('[data-tooltip]');
+    const container = tooltip.element?.querySelector('[data-tooltip]');
 
     expect(container?.classList.contains('j-tooltip')).toBe(true);
     expect(container?.classList.contains('qa-error-theme')).toBe(true);
@@ -158,7 +158,7 @@ describe('Tooltip', () => {
       onShown,
     });
     tooltip.show(false);
-    const root = tooltip.dom.root;
+    const root = tooltip.element;
     expect(onShown).toHaveBeenCalled();
 
     tooltip.destroy();

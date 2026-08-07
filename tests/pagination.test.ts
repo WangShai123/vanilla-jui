@@ -23,8 +23,8 @@ function app(): HTMLElement {
 
 function mount(instance: PaginationInstance): PaginationInstance {
   instance.build();
-  if (!instance.dom.root) throw new Error('Pagination did not build a root.');
-  app().appendChild(instance.dom.root);
+  if (!instance.element) throw new Error('Pagination did not build a root.');
+  app().appendChild(instance.element);
   return instance;
 }
 
@@ -60,35 +60,41 @@ describe('Pagination', () => {
       count: { sibling: 1, boundary: 1 },
     });
 
-    expect(pagination.dom.root).toBeNull();
+    expect(pagination.element).toBeNull();
 
     pagination.build();
-    expect(app().contains(pagination.dom.root)).toBe(false);
-    if (!pagination.dom.root) throw new Error('Expected Pagination root.');
-    app().appendChild(pagination.dom.root);
+    expect(app().contains(pagination.element)).toBe(false);
+    if (!pagination.element) throw new Error('Expected Pagination root.');
+    app().appendChild(pagination.element);
 
-    expect(pagination.dom.root.classList.contains('j-pagination')).toBe(true);
-    expect(pagination.dom.root.getAttribute('data-pagination')).toBe('root');
-    expect(pagination.dom.list?.classList.contains('pagination')).toBe(true);
-    expect(pagination.dom.list?.hasAttribute('data-pagination-list')).toBe(
-      true
-    );
+    expect(pagination.element.classList.contains('j-pagination')).toBe(true);
+    expect(pagination.element.getAttribute('data-pagination')).toBe('root');
     expect(
-      pagination.dom.root.querySelector('[data-page-action="prev"]')
+      pagination.element
+        ?.querySelector('[data-pagination-list]')
+        ?.classList.contains('pagination')
+    ).toBe(true);
+    expect(
+      pagination.element
+        ?.querySelector('[data-pagination-list]')
+        ?.hasAttribute('data-pagination-list')
+    ).toBe(true);
+    expect(
+      pagination.element.querySelector('[data-page-action="prev"]')
     ).toBeTruthy();
     expect(
-      pagination.dom.root.querySelector('[data-pagination-more] svg')
+      pagination.element.querySelector('[data-pagination-more] svg')
     ).toBeTruthy();
     expect(
-      pagination.dom.root
+      pagination.element
         .querySelector('[data-pagination-more]')
         ?.hasAttribute('aria-hidden')
     ).toBe(false);
     expect(
-      pagination.dom.root.querySelector('[data-pagination-more] button')
+      pagination.element.querySelector('[data-pagination-more] button')
     ).toBeNull();
     expect(
-      pagination.dom.root.querySelector("[aria-current='page']")?.textContent
+      pagination.element.querySelector("[aria-current='page']")?.textContent
     ).toBe('1');
   });
 
@@ -111,18 +117,18 @@ describe('Pagination', () => {
       })
     );
 
-    expect(pagination.dom.root?.classList.contains('qa-pagination')).toBe(true);
-    expect(pagination.dom.root?.classList.contains('j-pagination')).toBe(false);
-    expect(pagination.dom.root?.querySelector('.pagination')).toBeNull();
+    expect(pagination.element?.classList.contains('qa-pagination')).toBe(true);
+    expect(pagination.element?.classList.contains('j-pagination')).toBe(false);
+    expect(pagination.element?.querySelector('.pagination')).toBeNull();
 
-    pagination.dom.root
+    pagination.element
       ?.querySelector<HTMLButtonElement>('[data-page-action="next"]')
       ?.click();
 
     expect(pagination.state.page.current).toBe(2);
     expect(onChange).toHaveBeenCalledWith(2, pagination);
     expect(
-      pagination.dom.root?.querySelector("[aria-current='page']")?.textContent
+      pagination.element?.querySelector("[aria-current='page']")?.textContent
     ).toBe('2');
   });
 
@@ -148,7 +154,7 @@ describe('Pagination', () => {
     expect(pagination.state.locked).toBe(true);
     expect(onChange).toHaveBeenCalledTimes(1);
     expect(
-      pagination.dom.root
+      pagination.element
         ?.querySelector('[data-page-action="next"]')
         ?.getAttribute('aria-disabled')
     ).toBe('true');
@@ -174,16 +180,16 @@ describe('Pagination', () => {
     pagination.setState({ total: 6 });
     await tick();
 
-    expect(pagination.state.pageCount).toBe(3);
+    expect(pagination.pageCount).toBe(3);
     expect(pagination.state.page.current).toBe(3);
     expect(
-      pagination.dom.root?.querySelector("[aria-current='page']")?.textContent
+      pagination.element?.querySelector("[aria-current='page']")?.textContent
     ).toBe('3');
 
     pagination.setState({ page: { ...pagination.state.page, size: 3 } });
     await tick();
 
-    expect(pagination.state.pageCount).toBe(2);
+    expect(pagination.pageCount).toBe(2);
     expect(pagination.state.page.current).toBe(2);
 
     pagination.state.count.sibling = 0;
@@ -191,7 +197,7 @@ describe('Pagination', () => {
     await tick();
 
     expect(
-      pagination.dom.root?.querySelectorAll('[data-pagination-item]')
+      pagination.element?.querySelectorAll('[data-pagination-item]')
     ).toHaveLength(2);
   });
 
@@ -203,7 +209,7 @@ describe('Pagination', () => {
       })
     );
 
-    expect(app().contains(pagination.dom.root)).toBe(true);
+    expect(app().contains(pagination.element)).toBe(true);
 
     pagination.destroy();
     pagination = null;

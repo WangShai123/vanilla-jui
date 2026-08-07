@@ -58,7 +58,7 @@ describe('Sticky', () => {
       gap: 5,
     }).build();
 
-    expect(sticky.dom.targets.map((item) => item.id)).toEqual(['b', 'c']);
+    expect(sticky.state.items.map((item) => item.key)).toEqual(['b', 'c']);
     expect(element('#b').style.position).toBe('sticky');
     expect(element('#b').style.top).toBe('10px');
     expect(element('#c').style.top).toBe('45px');
@@ -75,7 +75,7 @@ describe('Sticky', () => {
       gap: 0,
     }).build();
 
-    expect(sticky.dom.targets.map((item) => item.id)).toEqual(['a', 'b', 'c']);
+    expect(sticky.state.items.map((item) => item.key)).toEqual(['a', 'b', 'c']);
     expect(element('#d').style.position).toBe('');
   });
 
@@ -92,7 +92,7 @@ describe('Sticky', () => {
       onRefresh,
     }).build();
 
-    expect(sticky.dom.targets).toHaveLength(0);
+    expect(sticky.state.items).toHaveLength(0);
     expect(sticky.state?.items).toHaveLength(0);
     expect(onRefresh).not.toHaveBeenCalled();
   });

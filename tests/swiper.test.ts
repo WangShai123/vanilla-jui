@@ -40,11 +40,43 @@ function setWidth(element: HTMLElement, width = 320): void {
 
 function mount(instance: SwiperInstance): SwiperInstance {
   instance.build();
-  if (!instance.dom.root) throw new Error('Swiper did not build a root.');
-  app().appendChild(instance.dom.root);
-  setWidth(instance.dom.root);
+  if (!instance.element) throw new Error('Swiper did not build a root.');
+  app().appendChild(instance.element);
+  setWidth(instance.element);
   instance.refresh();
   return instance;
+}
+
+function wrapper(instance: SwiperInstance): HTMLElement | null {
+  return (
+    instance.element?.querySelector<HTMLElement>('[data-swiper-wrapper]') ||
+    null
+  );
+}
+
+function slides(instance: SwiperInstance): HTMLElement[] {
+  return Array.from(
+    instance.element?.querySelectorAll<HTMLElement>('[data-swiper-slide]') || []
+  );
+}
+
+function bullets(instance: SwiperInstance): HTMLButtonElement[] {
+  return Array.from(
+    instance.element?.querySelectorAll<HTMLButtonElement>(
+      '[data-swiper-bullet]'
+    ) || []
+  );
+}
+
+function navigation(
+  instance: SwiperInstance,
+  direction: 'prev' | 'next'
+): HTMLButtonElement | null {
+  return (
+    instance.element?.querySelector<HTMLButtonElement>(
+      `[data-action="${direction}"]`
+    ) || null
+  );
 }
 
 async function tick(): Promise<void> {
@@ -78,32 +110,52 @@ describe('Swiper', () => {
       autoplay: false,
     });
 
-    expect(swiper.dom.root).toBeNull();
+    expect(swiper.element).toBeNull();
 
     swiper.build();
-    expect(swiper.dom.root?.id).toBe('banner-swiper');
-    expect(swiper.dom.root?.classList.contains('j-swiper')).toBe(true);
-    expect(swiper.dom.root?.getAttribute('data-swiper')).toBe('root');
-    expect(app().contains(swiper.dom.root)).toBe(false);
+    expect(swiper.element?.id).toBe('banner-swiper');
+    expect(swiper.element?.classList.contains('j-swiper')).toBe(true);
+    expect(swiper.element?.getAttribute('data-swiper')).toBe('root');
+    expect(app().contains(swiper.element)).toBe(false);
 
-    if (!swiper.dom.root) throw new Error('Expected Swiper root.');
-    app().appendChild(swiper.dom.root);
-    setWidth(swiper.dom.root);
+    if (!swiper.element) throw new Error('Expected Swiper root.');
+    app().appendChild(swiper.element);
+    setWidth(swiper.element);
     swiper.refresh();
 
-    expect(swiper.dom.wrapper?.hasAttribute('data-swiper-wrapper')).toBe(true);
-    expect(swiper.dom.slides).toHaveLength(5);
+    expect(wrapper(swiper)?.hasAttribute('data-swiper-wrapper')).toBe(true);
+    expect(slides(swiper)).toHaveLength(5);
     expect(
-      swiper.dom.slides.every((slide) =>
-        slide.hasAttribute('data-swiper-slide')
-      )
+      slides(swiper).every((slide) => slide.hasAttribute('data-swiper-slide'))
     ).toBe(true);
-    expect(swiper.dom.pagination?.hasAttribute('data-swiper-pagination')).toBe(
+    expect(
+      swiper.element?.querySelector('[data-swiper-pagination]')
+    ).toBeTruthy();
+    expect(bullets(swiper)).toHaveLength(3);
+    expect(navigation(swiper, 'prev')?.dataset.action).toBe('prev');
+    expect(navigation(swiper, 'next')?.dataset.action).toBe('next');
+  });
+
+  it('loads the current and adjacent lazy images without empty src values', () => {
+    swiper = mount(
+      createSwiper({
+        autoplay: false,
+        data: [
+          { image: '/one.jpg', title: 'One' },
+          { image: '/two.jpg', title: 'Two' },
+          { image: '/three.jpg', title: 'Three' },
+        ],
+      })
+    );
+
+    const images = Array.from(
+      swiper.element?.querySelectorAll<HTMLImageElement>('img[data-lazy]') || []
+    );
+    expect(images).toHaveLength(5);
+    expect(images.filter((image) => image.hasAttribute('src'))).toHaveLength(3);
+    expect(images.every((image) => image.getAttribute('src') !== '')).toBe(
       true
     );
-    expect(swiper.dom.bullets).toHaveLength(3);
-    expect(swiper.dom.prevButton?.dataset.action).toBe('prev');
-    expect(swiper.dom.nextButton?.dataset.action).toBe('next');
   });
 
   it('binds an existing root by unique id', () => {
@@ -129,11 +181,10 @@ describe('Swiper', () => {
       navigation: false,
     }).build();
 
-    expect(swiper.dom.root).toBe(root);
-    expect(swiper.dom.createdRoot).toBe(false);
-    expect(swiper.dom.root?.getAttribute('data-swiper')).toBeNull();
-    expect(swiper.dom.slides).toHaveLength(2);
-    expect(swiper.dom.wrapper?.classList.contains('qa-track')).toBe(true);
+    expect(swiper.element).toBe(root);
+    expect(swiper.element?.getAttribute('data-swiper')).toBeNull();
+    expect(slides(swiper)).toHaveLength(2);
+    expect(wrapper(swiper)?.classList.contains('qa-track')).toBe(true);
 
     swiper.destroy();
     expect(document.getElementById('static-swiper')).toBe(root);
@@ -159,17 +210,17 @@ describe('Swiper', () => {
       })
     );
 
-    expect(swiper.dom.root?.classList.contains('qa-swiper')).toBe(true);
-    expect(swiper.dom.root?.classList.contains('j-swiper')).toBe(false);
-    expect(swiper.dom.root?.querySelector('.swiper-wrapper')).toBeNull();
+    expect(swiper.element?.classList.contains('qa-swiper')).toBe(true);
+    expect(swiper.element?.classList.contains('j-swiper')).toBe(false);
+    expect(swiper.element?.querySelector('.swiper-wrapper')).toBeNull();
 
-    swiper.dom.root
+    swiper.element
       ?.querySelector<HTMLButtonElement>('[data-action="next"]')
       ?.click();
 
     expect(swiper.state.index).toBe(1);
     expect(swiper.state.trackIndex).toBe(1);
-    expect(swiper.dom.bullets[1]?.classList.contains('is-active')).toBe(true);
+    expect(bullets(swiper)[1]?.classList.contains('is-active')).toBe(true);
   });
 
   it('keeps state-mode interactions available after manual mount', async () => {
@@ -184,14 +235,14 @@ describe('Swiper', () => {
     expect(swiper.state.animating).toBe(false);
     expect(swiper.state.index).toBe(0);
 
-    if (!swiper.dom.root) throw new Error('Expected Swiper root.');
-    app().appendChild(swiper.dom.root);
-    setWidth(swiper.dom.root);
+    if (!swiper.element) throw new Error('Expected Swiper root.');
+    app().appendChild(swiper.element);
+    setWidth(swiper.element);
     await flushMountRefresh();
 
     expect(swiper.state.width).toBe(320);
 
-    swiper.dom.nextButton?.click();
+    navigation(swiper, 'next')?.click();
 
     expect(swiper.state.index).toBe(1);
     expect(swiper.state.trackIndex).toBe(2);
@@ -203,14 +254,13 @@ describe('Swiper', () => {
       delay: 40,
     }).build();
 
-    expect(swiper.runtime.timer).toBeNull();
+    vi.advanceTimersByTime(80);
+    expect(swiper.state.index).toBe(0);
 
-    if (!swiper.dom.root) throw new Error('Expected Swiper root.');
-    app().appendChild(swiper.dom.root);
-    setWidth(swiper.dom.root);
+    if (!swiper.element) throw new Error('Expected Swiper root.');
+    app().appendChild(swiper.element);
+    setWidth(swiper.element);
     await flushMountRefresh();
-
-    expect(swiper.runtime.timer).toBeTruthy();
 
     vi.advanceTimersByTime(40);
 
@@ -235,10 +285,10 @@ describe('Swiper', () => {
     await tick();
 
     expect(swiper.realCount).toBe(1);
-    expect(swiper.dom.bullets).toHaveLength(1);
-    expect(swiper.dom.slides).toHaveLength(1);
+    expect(bullets(swiper)).toHaveLength(1);
+    expect(slides(swiper)).toHaveLength(1);
     expect(swiper.state.index).toBe(0);
-    expect(swiper.dom.root?.textContent).toContain('Only slide');
+    expect(swiper.element?.textContent).toContain('Only slide');
   });
 
   it('refreshes dynamic slides when state data is assigned directly', async () => {
@@ -255,8 +305,8 @@ describe('Swiper', () => {
     await tick();
 
     expect(swiper.realCount).toBe(2);
-    expect(swiper.dom.bullets).toHaveLength(2);
-    expect(swiper.dom.root?.textContent).toContain('Direct 2');
+    expect(bullets(swiper)).toHaveLength(2);
+    expect(swiper.element?.textContent).toContain('Direct 2');
   });
 
   it('clears autoplay timer before destroy finishes', () => {
@@ -269,12 +319,9 @@ describe('Swiper', () => {
 
     const nextSpy = vi.spyOn(swiper, 'next');
 
-    expect(swiper.runtime.timer).toBeTruthy();
-
     swiper.destroy();
 
     expect(swiper.runtime.destroyed).toBe(true);
-    expect(swiper.runtime.timer).toBeNull();
 
     expect(() => {
       vi.advanceTimersByTime(120);
@@ -290,7 +337,7 @@ describe('Swiper', () => {
     }).build();
 
     expect(swiper.props.loop).toBe(false);
-    expect(swiper.dom.root?.getAttribute('data-swiper')).toBe('root');
+    expect(swiper.element?.getAttribute('data-swiper')).toBe('root');
     expect(typeof swiper.refresh).toBe('function');
     expect(typeof swiper.next).toBe('function');
     expect(typeof swiper.prev).toBe('function');

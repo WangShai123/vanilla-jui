@@ -1,13 +1,15 @@
 import {
+  For,
   createDeepStore,
-  createRoot,
+  createEffect,
   flushSync,
   jsx,
-  onCleanup,
-  render,
 } from 'vanilla-signal';
 
-import Component, { type ComponentDOM } from '../core/Component.ts';
+import {
+  type FunctionalComponent,
+  defineComponent,
+} from '../core/component.ts';
 import { joinClasses } from '../utilities/class-name.ts';
 import {
   type RenderableContent,
@@ -25,10 +27,6 @@ import { createValidator } from '../validation/validator.ts';
 
 type FormValue = string | number | boolean;
 type FormOptionInput = FormValue | FormOption;
-type FormControlElement =
-  | HTMLInputElement
-  | HTMLSelectElement
-  | HTMLTextAreaElement;
 type FormStyle = string | Partial<CSSStyleDeclaration> | null;
 export type FormDataValue = FormDataEntryValue | FormDataEntryValue[];
 export type FormDataRecord = Record<string, FormDataValue>;
@@ -153,18 +151,13 @@ interface FormState extends ResolvedFormProps {
   data: FormDataRecord | null;
 }
 
-interface FormDOM extends ComponentDOM {
-  root: HTMLFormElement | null;
-  fields: Map<string, FormControlElement>;
-}
-
 interface FormCache {
   initial: ResolvedFormProps;
   fieldIds: Map<string | number, string>;
 }
 
 interface ValidatorInstance {
-  dom: { root: Element | null };
+  readonly element: Element | null;
   props: (FormValidatorConfig & { onSubmit: null }) | null;
   validate: () => boolean;
   reset: () => void;
@@ -352,230 +345,190 @@ function normalizeProps(input: FormProps): ResolvedFormProps {
   };
 }
 
-class Form extends Component<ResolvedFormProps, FormState, FormDOM> {
-  declare state: FormState;
-  validator: ValidatorInstance | null;
-  cache: FormCache;
+interface FormActions {
+  validate(): boolean;
+  reset(): Form;
+  collectData(): FormDataRecord;
+  requestSubmit(): Form;
+  setFields(fields: readonly FormField[]): Form;
+  resetFields(): Form;
+}
 
-  constructor(input: FormProps = {}) {
-    const props = normalizeProps(input);
-    super(props);
+export type Form = FunctionalComponent<
+  ResolvedFormProps,
+  FormState,
+  HTMLFormElement,
+  FormActions
+>;
 
-    this.dom.fields = new Map();
-    this.validator = null;
-    this.cleanup.view = null;
+function cloneResolvedProps(props: ResolvedFormProps): ResolvedFormProps {
+  return {
+    ...props,
+    fields: cloneFields(props.fields),
+    buttons: cloneButtons(props.buttons),
+    className: resolveClassNames(props.className),
+    validator: cloneValidator(props.validator),
+  };
+}
 
-    this.cache = {
-      initial: this.cloneProps(props),
-      fieldIds: new Map(),
-    };
+function autoComplete(type: string): string {
+  if (type === 'password') return 'current-password';
+  if (type === 'email') return 'email';
+  return 'on';
+}
 
-    this.state = createDeepStore({
-      ...this.cloneProps(props),
-      submitting: false,
-      data: null,
+function isSelected(
+  value: FormField['value'] | undefined,
+  optionValue: FormOption['value']
+): boolean {
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => stringifyFormValue(item))
+      .includes(stringifyFormValue(optionValue));
+  }
+  return value == optionValue;
+}
+
+function isChecked(
+  value: FormField['value'] | undefined,
+  optionValue: FormOption['value'],
+  checked: boolean | undefined
+): boolean {
+  if (checked !== undefined) return checked;
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => stringifyFormValue(item))
+      .includes(stringifyFormValue(optionValue));
+  }
+  if (
+    typeof value !== 'string' &&
+    typeof value !== 'boolean' &&
+    !(value instanceof File)
+  ) {
+    return false;
+  }
+  return (
+    value === true ||
+    stringifyFormValue(value) === stringifyFormValue(optionValue)
+  );
+}
+
+export function createForm(input: FormProps = {}): Form {
+  const props = normalizeProps(input);
+  const initial = cloneResolvedProps(props);
+  const state = createDeepStore({
+    ...cloneResolvedProps(props),
+    submitting: false,
+    data: null,
+  }) as FormState;
+  const cache: FormCache = { initial, fieldIds: new Map() };
+  const fieldKeys = new WeakMap<object, string>();
+  let validator: ValidatorInstance | null = null;
+  let form!: Form;
+
+  const fieldKey = (field: FormField): string => {
+    if (field.id) return `id:${field.id}`;
+    if (field.name) return `name:${field.name}`;
+    if (!fieldKeys.has(field)) fieldKeys.set(field, randomId());
+    return fieldKeys.get(field) as string;
+  };
+  const resolveFieldId = (field: FormField, index: number): string => {
+    if (field.id) return field.id;
+    const key = field.name || index;
+    if (!cache.fieldIds.has(key)) {
+      cache.fieldIds.set(key, `${state.id}_field_${index}`);
+    }
+    return cache.fieldIds.get(key) as string;
+  };
+  const syncValidator = (): void => {
+    const element = form.element;
+    if (!element) return;
+    const options = { ...state.validator, onSubmit: null };
+    if (validator?.element === element) {
+      validator.props = options;
+      return;
+    }
+    validator?.destroy();
+    validator = createValidator(element, options, false) as ValidatorInstance;
+  };
+  const validate = (): boolean => validator?.validate() ?? true;
+  const resetValidationState = (): void => {
+    const element = form.element;
+    if (!element) return;
+    for (const control of Array.from(element.elements)) {
+      control.classList.remove('is-valid', 'is-invalid');
+    }
+    for (const help of all<HTMLElement>(
+      '[data-form-help], [data-validator-help]',
+      element
+    )) {
+      if (help.dataset.validatorHelp || help.classList.contains('is-invalid')) {
+        help.remove();
+      }
+    }
+  };
+  const collectData = (): FormDataRecord => {
+    const data: FormDataRecord = {};
+    if (!form.element) return data;
+    for (const [key, value] of new FormData(form.element).entries()) {
+      if (Object.hasOwn(data, key)) {
+        data[key] = Array.isArray(data[key])
+          ? [...data[key], value]
+          : [data[key], value];
+      } else data[key] = value;
+    }
+    return data;
+  };
+  const handleSubmit = async (event: Event): Promise<void> => {
+    event.preventDefault();
+    if (state.submitting || !validate()) return;
+    const data = collectData();
+    flushSync(() => {
+      state.submitting = true;
+      state.data = data;
     });
-  }
+    try {
+      await Promise.resolve(state.onSubmit?.(data, form));
+    } finally {
+      if (!form.runtime.destroyed) {
+        flushSync(() => {
+          state.submitting = false;
+        });
+      }
+    }
+  };
 
-  get root(): HTMLFormElement | null {
-    return this.dom?.root || null;
-  }
-
-  set root(value: HTMLFormElement | null) {
-    this.dom.root = value;
-  }
-
-  build(): this {
-    if (this.runtime.destroyed)
-      throw new Error('Form.build: instance destroyed');
-    if (this.cleanup.view) return this;
-    this.init(this.props);
-
-    const host = document.createElement('div');
-    this.cleanup.view = createRoot((dispose) => {
-      const viewDispose = render(() => this.view(), host);
-      onCleanup(viewDispose);
-      return dispose;
-    });
-
-    return this;
-  }
-
-  view(): HTMLFormElement {
-    const className = this.state.className;
-    return jsx('form', {
-      className: () =>
-        joinClasses(
-          this.state.className.form,
-          this.state.vertical ? className.vertical : className.horizontal,
-          this.state.itemVertical
-            ? className.itemVertical
-            : className.itemHorizontal
-        ),
-      id: () => this.state.id,
-      style: () => this.state.style,
-      'data-form': 'root',
-      'data-form-layout': () =>
-        this.state.vertical ? 'vertical' : 'horizontal',
-      'data-form-item-layout': () =>
-        this.state.itemVertical ? 'vertical' : 'horizontal',
-      ref: (element: HTMLFormElement) => {
-        const changed = this.root !== element;
-        this.root = element;
-        setElementStyle(element, this.state.style);
-        if (changed || !this.validator) this.syncValidator();
-      },
-      onSubmit: (event: Event) => this.handleSubmit(event),
-      onReset: (event: Event) => this.handleReset(event),
-      children: () => [
-        ...this.state.fields.map((field, index) =>
-          this.fieldView(field, index)
-        ),
-        this.buttonsView(),
-      ],
-    });
-  }
-
-  fieldView(field: FormField, index: number): HTMLElement {
-    const id = this.resolveFieldId(field, index);
-    const hidden = field.type === 'hidden';
-    const className = this.state.className;
-
-    return jsx('div', {
-      className: className.item,
-      'data-form-item': field.name || String(index),
-      style: { display: hidden ? 'none' : '' },
-      children: [
-        this.labelView(field, id),
-        jsx('div', {
-          className: className.control,
-          'data-form-control': field.name || String(index),
-          children: [
-            this.controlView(field, id, index),
-            field.help
-              ? jsx('div', {
-                  className: 'help-block',
-                  'data-form-help': field.name || String(index),
-                  children: field.help,
-                })
-              : null,
-          ],
-        }),
-      ],
-    });
-  }
-
-  labelView(field: FormField, id: string): HTMLLabelElement | null {
-    if (field.label === false || field.label === undefined) return null;
-    const className = this.state.className;
-
-    return jsx('label', {
-      className: joinClasses(
-        className.label,
-        fieldIsRequired(field, this.state.validator?.rules)
-          ? className.required
-          : ''
-      ),
-      'data-form-label': field.name || id,
-      for: id,
-      children: field.label,
-    });
-  }
-
-  controlView(
+  const controlProps = <TExtra extends Record<string, unknown>>(
     field: FormField,
     id: string,
-    index: number
-  ): FormControlElement | HTMLElement | Node[] | null {
-    switch (field.type) {
-      case 'textarea':
-        return this.textareaView(field, id);
-      case 'select':
-        return this.selectView(field, id);
-      case 'radio':
-        return this.choiceGroupView(field, id, 'radio');
-      case 'checkbox':
-        return Array.isArray(field.options)
-          ? this.choiceGroupView(field, id, 'checkbox')
-          : this.inputView(field, id);
-      case 'switch':
-        return this.switchView(field, id);
-      case 'custom':
-        return normalizeRenderableContentNodes(field.content, {
-          form: this,
-          field,
-          index,
-        });
-      default:
-        return this.inputView(field, id);
-    }
-  }
+    extra: TExtra
+  ): TExtra & Record<string, unknown> => ({
+    ...extra,
+    name: field.name,
+    id,
+    placeholder: field.placeholder || '',
+    required: !!field.required,
+    disabled: !!field.disabled,
+    readonly: !!field.readonly,
+    'data-form-field': field.name || id,
+  });
 
-  inputView(field: FormField, id: string): HTMLInputElement {
-    const type = field.type || 'text';
-    const props = this.controlProps(field, id, {
-      type,
-      className: field.className || this.state.className.input,
-      autocomplete: field.autocomplete || this.autoComplete(type),
-      value: field.value ?? '',
-    });
-
-    return jsx('input', {
-      ...props,
-      checked: field.checked === undefined ? undefined : !!field.checked,
-    });
-  }
-
-  textareaView(field: FormField, id: string): HTMLTextAreaElement {
-    return jsx(
-      'textarea',
-      this.controlProps(field, id, {
-        className: field.className || this.state.className.textarea,
-        autocomplete: field.autocomplete,
-        value: field.value ?? '',
-      })
-    );
-  }
-
-  selectView(field: FormField, id: string): HTMLSelectElement {
-    const value = field.value;
-    return jsx(
-      'select',
-      this.controlProps(field, id, {
-        className: field.className || this.state.className.select,
-        autocomplete: field.autocomplete || 'off',
-        multiple: !!field.multiple,
-        children: (field.options || []).map((option) => {
-          const item = normalizeOption(option);
-          return jsx('option', {
-            value: item.value ?? '',
-            disabled: !!item.disabled,
-            selected: this.isSelected(value, item.value),
-            children: item.text ?? item.label ?? item.value ?? '',
-          });
-        }),
-      })
-    );
-  }
-
-  choiceGroupView(
+  const choiceGroupView = (
     field: FormField,
     id: string,
     type: 'checkbox' | 'radio'
-  ): HTMLElement {
+  ): HTMLElement => {
     const direction = field.vertical ? 'vertical' : 'horizontal';
-    const classNameConfig = this.state.className;
-    const className = joinClasses(
-      type === 'radio' ? classNameConfig.radio : classNameConfig.checkbox,
-      direction === 'vertical'
-        ? classNameConfig.choiceVertical
-        : classNameConfig.choiceHorizontal,
-      field.group ? classNameConfig.choiceGroup : '',
-      field.size ? `is-${field.size}` : ''
-    );
-
+    const names = state.className;
     return jsx('div', {
-      className,
+      className: joinClasses(
+        type === 'radio' ? names.radio : names.checkbox,
+        direction === 'vertical'
+          ? names.choiceVertical
+          : names.choiceHorizontal,
+        field.group ? names.choiceGroup : '',
+        field.size ? `is-${field.size}` : ''
+      ),
       'data-form-choice-group': field.name || id,
       'data-choice-type': type,
       'data-choice-layout': direction,
@@ -583,7 +536,7 @@ class Form extends Component<ResolvedFormProps, FormState, FormDOM> {
         const item = normalizeOption(option);
         const optionId = `${id}_${optionIndex}`;
         return jsx('label', {
-          className: type === 'radio' ? classNameConfig.radioLabel : '',
+          className: type === 'radio' ? names.radioLabel : '',
           'data-form-choice': field.name || id,
           for: optionId,
           children: [
@@ -594,302 +547,292 @@ class Form extends Component<ResolvedFormProps, FormState, FormDOM> {
               value: item.value ?? '',
               checked:
                 type === 'radio'
-                  ? this.isSelected(field.value, item.value)
-                  : this.isChecked(field.value, item.value, item.checked),
+                  ? isSelected(field.value, item.value)
+                  : isChecked(field.value, item.value, item.checked),
               disabled: !!item.disabled || !!field.disabled,
               required: !!field.required,
             }),
             jsx('span', {
-              className: type === 'radio' ? classNameConfig.radioText : '',
+              className: type === 'radio' ? names.radioText : '',
               'data-form-choice-text': '',
               children: item.text ?? item.label ?? item.value ?? '',
             }),
           ],
         });
       }),
-    });
-  }
+    }) as HTMLElement;
+  };
 
-  switchView(field: FormField, id: string): HTMLLabelElement {
-    const className = this.state.className;
-    return jsx('label', {
-      className: joinClasses(
-        className.switch,
-        field.variant ? `is-${field.variant}` : className.switchDefault,
-        field.size ? `is-${field.size}` : className.switchSizeMd
-      ),
-      'data-form-switch': field.name || id,
-      for: id,
-      children: [
-        jsx('input', {
-          type: 'checkbox',
-          id,
-          name: field.name,
-          value: field.value ?? '1',
-          checked: !!field.checked,
-          disabled: !!field.disabled,
-          required: !!field.required,
-        }),
-        jsx('span', {
-          className: className.switchSlider,
-          'data-form-switch-slider': '',
-        }),
-      ],
-    });
-  }
-
-  buttonsView(): HTMLElement | null {
-    if (!this.state.buttons.length) return null;
-    const className = this.state.className;
-
-    return jsx('div', {
-      className: className.buttons,
-      'data-form-buttons': '',
-      children: this.state.buttons.map((button) =>
-        jsx('button', {
-          type: button.type || 'button',
-          className: joinClasses(
-            className.button,
-            button.theme ? `is-${button.theme}` : '',
-            button.className || ''
-          ),
-          'data-action': button.action || button.type || 'button',
-          disabled: () => !!this.state.submitting || !!button.disabled,
-          children: button.text ?? button.label ?? '',
-        })
-      ),
-    });
-  }
-
-  controlProps<TExtra extends Record<string, unknown>>(
+  const controlView = (
     field: FormField,
     id: string,
-    extra: TExtra
-  ): TExtra & {
-    name: string | undefined;
-    id: string;
-    placeholder: string;
-    required: boolean;
-    disabled: boolean;
-    readonly: boolean;
-    'data-form-field': string;
-    ref: (element: FormControlElement) => void;
-  } {
-    return {
-      ...extra,
-      name: field.name,
-      id,
-      placeholder: field.placeholder || '',
-      required: !!field.required,
-      disabled: !!field.disabled,
-      readonly: !!field.readonly,
-      'data-form-field': field.name || id,
-      ref: (element) => {
-        if (field.name) this.dom.fields.set(field.name, element);
-      },
-    };
-  }
-
-  resolveFieldId(field: FormField, index: number): string {
-    if (field.id) return field.id;
-
-    const key = field.name || index;
-    if (!this.cache.fieldIds.has(key)) {
-      this.cache.fieldIds.set(key, `${this.state.id}_field_${index}`);
+    index: number
+  ): HTMLElement | Node[] | null => {
+    const names = state.className;
+    if (field.type === 'textarea') {
+      return jsx(
+        'textarea',
+        controlProps(field, id, {
+          className: field.className || names.textarea,
+          autocomplete: field.autocomplete,
+          value: field.value ?? '',
+        })
+      ) as HTMLTextAreaElement;
     }
-    return this.cache.fieldIds.get(key) || `${this.state.id}_field_${index}`;
-  }
-
-  syncValidator(): void {
-    if (!this.root) return;
-    const options = {
-      ...this.state.validator,
-      onSubmit: null,
-    };
-
-    if (this.validator?.dom.root === this.root) {
-      this.validator.props = options;
-      return;
+    if (field.type === 'select') {
+      return jsx(
+        'select',
+        controlProps(field, id, {
+          className: field.className || names.select,
+          autocomplete: field.autocomplete || 'off',
+          multiple: !!field.multiple,
+          children: (field.options || []).map((option) => {
+            const item = normalizeOption(option);
+            return jsx('option', {
+              value: item.value ?? '',
+              disabled: !!item.disabled,
+              selected: isSelected(field.value, item.value),
+              children: item.text ?? item.label ?? item.value ?? '',
+            });
+          }),
+        })
+      ) as HTMLSelectElement;
     }
+    if (field.type === 'radio') return choiceGroupView(field, id, 'radio');
+    if (field.type === 'checkbox' && Array.isArray(field.options)) {
+      return choiceGroupView(field, id, 'checkbox');
+    }
+    if (field.type === 'switch') {
+      return jsx('label', {
+        className: joinClasses(
+          names.switch,
+          field.variant ? `is-${field.variant}` : names.switchDefault,
+          field.size ? `is-${field.size}` : names.switchSizeMd
+        ),
+        'data-form-switch': field.name || id,
+        for: id,
+        children: [
+          jsx('input', {
+            type: 'checkbox',
+            id,
+            name: field.name,
+            value: field.value ?? '1',
+            checked: !!field.checked,
+            disabled: !!field.disabled,
+            required: !!field.required,
+          }),
+          jsx('span', {
+            className: names.switchSlider,
+            'data-form-switch-slider': '',
+          }),
+        ],
+      }) as HTMLLabelElement;
+    }
+    if (field.type === 'custom') {
+      return normalizeRenderableContentNodes(field.content, {
+        form,
+        field,
+        index,
+      });
+    }
+    const type = field.type || 'text';
+    return jsx('input', {
+      ...controlProps(field, id, {
+        type,
+        className: field.className || names.input,
+        autocomplete: field.autocomplete || autoComplete(type),
+        value: field.value ?? '',
+      }),
+      checked: field.checked === undefined ? undefined : !!field.checked,
+    }) as HTMLInputElement;
+  };
 
-    this.validator?.destroy();
-    this.validator = createValidator(
-      this.root,
-      options,
-      false
-    ) as ValidatorInstance;
-  }
+  const fieldView = (
+    fieldAccessor: () => FormField,
+    indexAccessor: () => number
+  ): HTMLElement => {
+    const field = fieldAccessor();
+    const index = indexAccessor();
+    const id = resolveFieldId(field, index);
+    const names = state.className;
+    return jsx('div', {
+      className: names.item,
+      'data-form-item': field.name || String(index),
+      style: { display: field.type === 'hidden' ? 'none' : '' },
+      children: [
+        field.label === false || field.label === undefined
+          ? null
+          : jsx('label', {
+              className: joinClasses(
+                names.label,
+                fieldIsRequired(field, state.validator.rules)
+                  ? names.required
+                  : ''
+              ),
+              'data-form-label': field.name || id,
+              for: id,
+              children: field.label,
+            }),
+        jsx('div', {
+          className: names.control,
+          'data-form-control': field.name || String(index),
+          children: [
+            controlView(field, id, index),
+            field.help
+              ? jsx('div', {
+                  className: 'help-block',
+                  'data-form-help': field.name || String(index),
+                  children: field.help,
+                })
+              : null,
+          ],
+        }),
+      ],
+    }) as HTMLElement;
+  };
 
-  validate(): boolean {
-    if (!this.validator) return true;
-    return this.validator.validate();
-  }
+  const buttonsView = (): HTMLElement =>
+    jsx('div', {
+      className: () => state.className.buttons,
+      'data-form-buttons': '',
+      hidden: () => state.buttons.length === 0,
+      children: For({
+        each: () => state.buttons,
+        key: (button: FormButton, index: number) =>
+          `${button.action || button.type || 'button'}:${index}`,
+        children: (buttonAccessor: () => FormButton) =>
+          jsx('button', {
+            type: () => buttonAccessor().type || 'button',
+            className: () => {
+              const button = buttonAccessor();
+              return joinClasses(
+                state.className.button,
+                button.theme ? `is-${button.theme}` : '',
+                button.className || ''
+              );
+            },
+            'data-action': () => {
+              const button = buttonAccessor();
+              return button.action || button.type || 'button';
+            },
+            disabled: () => state.submitting || !!buttonAccessor().disabled,
+            children: () => {
+              const button = buttonAccessor();
+              return button.text ?? button.label ?? '';
+            },
+          }),
+      }),
+    }) as HTMLElement;
 
-  reset(): this {
-    this.validator?.reset();
-    flushSync(() => {
-      this.state.data = null;
-    });
-    return this;
-  }
-
-  async handleSubmit(event: Event): Promise<void> {
-    event.preventDefault();
-    if (this.state.submitting) return;
-    if (!this.validate()) return;
-
-    const data = this.collectData();
-    flushSync(() => {
-      this.state.submitting = true;
-      this.state.data = data;
-    });
-
-    try {
-      await Promise.resolve(this.state.onSubmit?.(data, this));
-    } finally {
-      if (!this.runtime.destroyed) {
+  form = defineComponent<
+    ResolvedFormProps,
+    FormState,
+    HTMLFormElement,
+    FormActions
+  >({
+    name: 'Form',
+    props,
+    state,
+    actions: {
+      validate,
+      reset() {
+        validator?.reset();
         flushSync(() => {
-          this.state.submitting = false;
+          state.data = null;
         });
-      }
-    }
-  }
+        return form;
+      },
+      collectData,
+      requestSubmit() {
+        const element = form.element;
+        if (!element) return form;
+        if (typeof element.requestSubmit === 'function')
+          element.requestSubmit();
+        else
+          element.dispatchEvent(
+            new Event('submit', { bubbles: true, cancelable: true })
+          );
+        return form;
+      },
+      setFields(fields) {
+        validateParam('fields', fields, 'array', 'Form.setFields');
+        cache.fieldIds.clear();
+        flushSync(() => {
+          state.fields = cloneFields(fields);
+        });
+        return form;
+      },
+      resetFields() {
+        return form.setFields(initial.fields);
+      },
+    },
+    normalizeStatePatch(patch) {
+      return {
+        ...patch,
+        ...(Object.hasOwn(patch, 'fields')
+          ? { fields: cloneFields(patch.fields) }
+          : {}),
+        ...(Object.hasOwn(patch, 'buttons')
+          ? { buttons: cloneButtons(patch.buttons) }
+          : {}),
+        ...(Object.hasOwn(patch, 'className')
+          ? { className: resolveClassNames(patch.className) }
+          : {}),
+        ...(Object.hasOwn(patch, 'validator')
+          ? { validator: cloneValidator(patch.validator) }
+          : {}),
+      };
+    },
+    view: () => {
+      const element = jsx('form', {
+        className: () =>
+          joinClasses(
+            state.className.form,
+            state.vertical
+              ? state.className.vertical
+              : state.className.horizontal,
+            state.itemVertical
+              ? state.className.itemVertical
+              : state.className.itemHorizontal
+          ),
+        id: () => state.id,
+        'data-form': 'root',
+        'data-form-layout': () => (state.vertical ? 'vertical' : 'horizontal'),
+        'data-form-item-layout': () =>
+          state.itemVertical ? 'vertical' : 'horizontal',
+        onSubmit: (event: Event) => void handleSubmit(event),
+        onReset: (event: Event) => {
+          resetValidationState();
+          flushSync(() => {
+            state.data = null;
+          });
+          state.onReset?.(event, form);
+        },
+        children: [
+          For({
+            each: () => state.fields,
+            key: (field: FormField) => fieldKey(field),
+            children: fieldView,
+          }),
+          buttonsView(),
+        ],
+      }) as HTMLFormElement;
+      createEffect(() => setElementStyle(element, state.style));
+      createEffect(() => {
+        const validatorOptions = state.validator;
+        if (validatorOptions) syncValidator();
+      });
+      return element;
+    },
+    onBuild() {
+      syncValidator();
+    },
+    onDestroy() {
+      validator?.destroy();
+      validator = null;
+      cache.fieldIds.clear();
+    },
+  }) as Form;
 
-  handleReset(event: Event): void {
-    this.resetValidationState();
-    flushSync(() => {
-      this.state.data = null;
-    });
-    this.state.onReset?.(event, this);
-  }
-
-  resetValidationState(): void {
-    if (!this.root) return;
-    for (const element of Array.from(this.root.elements)) {
-      element.classList.remove('is-valid');
-      element.classList.remove('is-invalid');
-    }
-    for (const help of all<HTMLElement>(
-      '[data-form-help], [data-validator-help]',
-      this.root
-    )) {
-      if (help.dataset.validatorHelp || help.classList.contains('is-invalid')) {
-        help.remove();
-      }
-    }
-  }
-
-  collectData(): FormDataRecord {
-    if (!this.root) return {};
-    return this.collectFormData(this.root);
-  }
-
-  collectFormData(form: HTMLFormElement): FormDataRecord {
-    const data: FormDataRecord = {};
-    const formData = new FormData(form);
-
-    for (const [key, value] of formData.entries()) {
-      if (Object.hasOwn(data, key)) {
-        data[key] = Array.isArray(data[key])
-          ? [...data[key], value]
-          : [data[key], value];
-      } else {
-        data[key] = value;
-      }
-    }
-
-    return data;
-  }
-
-  requestSubmit(): this {
-    if (!this.root) return this;
-    if (typeof this.root.requestSubmit === 'function') {
-      this.root.requestSubmit();
-      return this;
-    }
-
-    const event = new Event('submit', { bubbles: true, cancelable: true });
-    this.root.dispatchEvent(event);
-    return this;
-  }
-
-  setFields(fields: readonly FormField[]): this {
-    validateParam('fields', fields, 'array', 'Form.setFields');
-    this.cache.fieldIds.clear();
-    flushSync(() => {
-      this.state.fields = cloneFields(fields);
-    });
-    return this;
-  }
-
-  resetFields(): this {
-    return this.setFields(this.cache.initial.fields);
-  }
-
-  cloneProps(props: ResolvedFormProps): ResolvedFormProps {
-    return {
-      ...props,
-      fields: cloneFields(props.fields),
-      buttons: cloneButtons(props.buttons),
-      className: resolveClassNames(props.className),
-      validator: cloneValidator(props.validator),
-    };
-  }
-
-  autoComplete(type: string): string {
-    switch (type) {
-      case 'password':
-        return 'current-password';
-      case 'email':
-        return 'email';
-      default:
-        return 'on';
-    }
-  }
-
-  isSelected(
-    value: FormField['value'] | undefined,
-    optionValue: FormOption['value']
-  ): boolean {
-    if (Array.isArray(value))
-      return value
-        .map((item) => stringifyFormValue(item))
-        .includes(stringifyFormValue(optionValue));
-    return value == optionValue;
-  }
-
-  isChecked(
-    value: FormField['value'] | undefined,
-    optionValue: FormOption['value'],
-    checked: boolean | undefined
-  ): boolean {
-    if (checked !== undefined) return !!checked;
-    if (Array.isArray(value))
-      return value
-        .map((item) => stringifyFormValue(item))
-        .includes(stringifyFormValue(optionValue));
-    if (
-      typeof value !== 'string' &&
-      typeof value !== 'boolean' &&
-      !(value instanceof File)
-    ) {
-      return false;
-    }
-    return (
-      value === true ||
-      stringifyFormValue(value) === stringifyFormValue(optionValue)
-    );
-  }
-
-  protected onDestroy(): void {
-    const cleanupView = this.cleanup.view;
-    if (typeof cleanupView === 'function') cleanupView();
-    this.cleanup.view = null;
-    this.validator?.destroy();
-    this.validator = null;
-  }
-}
-
-export function createForm(props: FormProps = {}): Form {
-  return new Form(props);
+  return form;
 }

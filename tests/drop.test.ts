@@ -43,16 +43,16 @@ describe('Drop', () => {
       content: '<b>Drop content</b>',
     });
 
-    expect(drop.dom.root?.classList.contains('j-drop')).toBe(true);
-    expect(drop.dom.root?.getAttribute('data-drop')).toBe('menu');
+    expect(drop.element?.classList.contains('j-drop')).toBe(true);
+    expect(drop.element?.getAttribute('data-drop')).toBe('menu');
     expect(
-      drop.dom.root?.querySelector('[data-drop-container="menu"]')
+      drop.element?.querySelector('[data-drop-container="menu"]')
     ).toBeTruthy();
 
     drop.show(false);
-    expect(document.body.contains(drop.dom.root)).toBe(true);
-    expect(drop.dom.root?.getAttribute('aria-expanded')).toBe('true');
-    expect(drop.dom.root?.querySelector('b')?.textContent).toBe('Drop content');
+    expect(document.body.contains(drop.element)).toBe(true);
+    expect(drop.element?.getAttribute('aria-expanded')).toBe('true');
+    expect(drop.element?.querySelector('b')?.textContent).toBe('Drop content');
   });
 
   it('allows className overrides without changing data selectors', () => {
@@ -67,10 +67,10 @@ describe('Drop', () => {
       },
     });
 
-    expect(drop.dom.root?.classList.contains('qa-drop')).toBe(true);
-    expect(drop.dom.root?.classList.contains('j-drop')).toBe(false);
+    expect(drop.element?.classList.contains('qa-drop')).toBe(true);
+    expect(drop.element?.classList.contains('j-drop')).toBe(false);
     expect(
-      drop.dom.root?.querySelector('[data-drop-container="custom"]')
+      drop.element?.querySelector('[data-drop-container="custom"]')
     ).toBeTruthy();
   });
 
@@ -121,7 +121,7 @@ describe('Drop', () => {
 
     drop = createDrop(button, { content: section });
 
-    expect(drop.dom.root?.firstElementChild).toBe(section);
-    expect(drop.dom.root?.querySelector('[data-custom-wrapper]')).toBe(section);
+    expect(drop.element?.firstElementChild).toBe(section);
+    expect(drop.element?.querySelector('[data-custom-wrapper]')).toBe(section);
   });
 });

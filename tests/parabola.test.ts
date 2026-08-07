@@ -82,7 +82,7 @@ describe('Parabola', () => {
     const parabola = createParabola({ from, to });
     instances.push(parabola);
 
-    expect(parabola.dom.root).toBe(
+    expect(parabola.element).toBe(
       document.querySelector('[data-parabola="root"]')
     );
     expect(balls()).toHaveLength(0);
@@ -99,7 +99,7 @@ describe('Parabola', () => {
     await expect(started).resolves.toBe(true);
 
     const [ball] = balls();
-    expect(ball?.parentElement).toBe(parabola.dom.root);
+    expect(ball?.parentElement).toBe(parabola.element);
     expect(ball?.classList.contains('parabola-ball')).toBe(true);
     expect(ball?.style.backgroundColor).toBe('var(--tone-solid)');
     expect(ball?.style.width).toBe('12px');
@@ -163,7 +163,7 @@ describe('Parabola', () => {
     await expect(started).resolves.toBe(false);
 
     expect(parabola.runtime.destroyed).toBe(false);
-    expect(parabola.dom.root).toBe(
+    expect(parabola.element).toBe(
       document.querySelector('[data-parabola="root"]')
     );
     expect(balls()).toHaveLength(0);
@@ -228,7 +228,7 @@ describe('Parabola', () => {
     raf(900);
 
     expect(parabola.runtime.destroyed).toBe(false);
-    expect(parabola.dom.root).toBe(
+    expect(parabola.element).toBe(
       document.querySelector('[data-parabola="root"]')
     );
     expect(balls()).toHaveLength(0);

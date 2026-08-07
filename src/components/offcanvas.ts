@@ -1,17 +1,25 @@
-import { createDeepStore, flushSync, jsx } from 'vanilla-signal';
+import {
+  createDeepStore,
+  createEffect,
+  flushSync,
+  jsx,
+  untrack,
+} from 'vanilla-signal';
 
-import Component, {
-  type ComponentDOM,
-  type ComponentRuntime,
-} from '../core/Component.ts';
+import {
+  type FunctionalComponent,
+  defineComponent,
+} from '../core/component.ts';
 import { createLoading } from '../primitives/loading.ts';
 import {
   type RenderableContent,
   normalizeContentNodes,
 } from '../utilities/dom.ts';
 import { randomId } from '../utilities/id.ts';
-import { createStateSync } from '../utilities/scheduler.ts';
-import { timer } from '../utilities/timer.ts';
+import { createEventManager } from '../utilities/events.ts';
+import { createMotionGroup, createTransition } from '../utilities/motion.ts';
+import { createPresence } from '../utilities/presence.ts';
+import { createElementRef } from '../utilities/refs.ts';
 import {
   type ResolveSchema,
   resolveProps,
@@ -73,14 +81,9 @@ interface ResolvedOffcanvasProps extends Record<string, unknown> {
 
 interface OffcanvasState extends Record<string, unknown> {
   content: OffcanvasContent;
+  resolvedContent: RenderableContent<Offcanvas>;
   visible: boolean;
   loading: boolean;
-}
-
-interface OffcanvasDOM extends ComponentDOM {
-  root: HTMLElement | null;
-  overlay: HTMLElement | null;
-  content: HTMLElement | null;
 }
 
 interface OffcanvasCache {
@@ -89,20 +92,22 @@ interface OffcanvasCache {
   updatedAt: number;
 }
 
-interface OffcanvasRuntime extends ComponentRuntime {
-  built: boolean;
+interface OffcanvasRuntimeExtras {
   cache: OffcanvasCache;
   contentLoadId: number;
-}
-
-interface OffcanvasCleanupExtras {
-  state?: (() => void) | null;
 }
 
 const DEFAULT_CLASS_NAMES: OffcanvasClassNames = {
   root: 'j-offcanvas',
   overlay: 'j-offcanvas-overlay',
   content: 'offcanvas-content',
+};
+
+const OFFCANVAS_HIDDEN_TRANSFORM: Record<OffcanvasDirection, string> = {
+  top: 'translateY(-100%)',
+  right: 'translateX(100%)',
+  bottom: 'translateY(100%)',
+  left: 'translateX(-100%)',
 };
 
 const OFFCANVAS_PROPS_SCHEMA = {
@@ -154,6 +159,9 @@ const OFFCANVAS_PROPS_SCHEMA = {
 
 const OFFCANVAS_STATE_SCHEMA = {
   content: OFFCANVAS_PROPS_SCHEMA.content,
+  resolvedContent: { type: 'renderable' },
+  visible: { type: 'boolean' },
+  loading: { type: 'boolean' },
 };
 
 function normalizeTtl(ttl: number): number {
@@ -182,381 +190,269 @@ function normalizeProps(input: OffcanvasProps): ResolvedOffcanvasProps {
   };
 }
 
-class OffcanvasComponent extends Component<
+interface OffcanvasActions {
+  show(): Promise<void>;
+  hide(): Promise<void>;
+}
+
+export type Offcanvas = FunctionalComponent<
   ResolvedOffcanvasProps,
   OffcanvasState,
-  OffcanvasDOM
-> {
-  declare runtime: OffcanvasRuntime;
-  declare state: OffcanvasState;
-  declare cleanup: Component['cleanup'] & OffcanvasCleanupExtras;
+  HTMLElement,
+  OffcanvasActions
+>;
 
-  constructor(input: OffcanvasProps = {}) {
-    const props = normalizeProps(input);
-    super(props);
-
-    this.dom.overlay = null;
-    this.dom.content = null;
-
-    this.cleanup.state = null;
-
-    this.runtime.built = false;
-    this.runtime.cache = {
-      content: null,
-      hasContent: false,
-      updatedAt: 0,
-    };
-    this.runtime.contentLoadId = 0;
-
-    this.state = createDeepStore({
-      content: props.content,
-      visible: false,
-      loading: false,
-    }) as OffcanvasState;
-  }
-
-  build(): this {
-    if (this.runtime.destroyed) {
-      throw new Error('Offcanvas.build: instance has been destroyed.');
-    }
-    if (this.runtime.built) return this;
-
-    try {
-      this.dom.root = this.buildRoot();
-      this.runtime.built = true;
-      this.bindState();
-    } catch (error) {
-      this.destroy();
-      throw error;
-    }
-
-    this.emit('init', this.props);
-    return this;
-  }
-
-  private assertBuilt(method: string): void {
-    if (this.runtime.destroyed) {
-      throw new Error(`Offcanvas.${method}: instance has been destroyed.`);
-    }
-    if (!this.runtime.built) {
-      throw new Error(`Offcanvas.${method}: call build() first.`);
-    }
-  }
-
-  private buildRoot(): HTMLElement {
-    if (this.props.overlay) {
-      this.dom.overlay = this.buildOverlay();
-    }
-
-    return this.buildPanel();
-  }
-
-  private buildOverlay(): HTMLElement {
-    const filterStyle = this.props.filter
-      ? { backdropFilter: 'blur(2px)' }
-      : {};
-    return jsx('div', {
-      className: this.props.className.overlay,
-      hidden: true,
-      'data-offcanvas-overlay': this.props.id,
-      style: {
-        ...filterStyle,
-      },
-    }) as HTMLElement;
-  }
-
-  private buildPanel(): HTMLElement {
-    const content = jsx('div', {
-      className: this.props.className.content,
-      'data-offcanvas-content': this.props.id,
-    }) as HTMLElement;
-    this.dom.content = content;
-
-    if (typeof this.state.content !== 'function') {
-      this.renderContent(this.state.content);
-    }
-
-    return jsx('div', {
-      className: this.props.className.root,
-      id: this.props.id,
-      role: 'dialog',
-      'aria-modal': this.props.overlay ? 'true' : 'false',
-      'aria-expanded': 'false',
-      'data-offcanvas': 'root',
-      'data-direction': this.props.direction,
-      'data-animate': this.props.animate,
-      children: content,
-    }) as HTMLElement;
-  }
-
-  private bindState(): void {
-    if (this.cleanup.state) return;
-
-    this.cleanup.state = createStateSync(
-      () => this.state.content,
-      (content) => this.syncContent(content)
-    );
-  }
-
-  private async syncContent(content: OffcanvasContent): Promise<void> {
-    if (!this.runtime.built) return;
-    validateParam(
-      'content',
-      content,
-      OFFCANVAS_STATE_SCHEMA.content,
-      'Offcanvas.state'
-    );
-    this.runtime.cache.hasContent = false;
-    this.runtime.cache.content = null;
-    this.runtime.cache.updatedAt = 0;
-
-    if (typeof content === 'function') {
-      if (this.state.visible) await this.loadContent();
-      else this.clearContent();
-      return;
-    }
-
-    this.runtime.contentLoadId += 1;
-    flushSync(() => {
-      this.state.loading = false;
-    });
-    this.renderContent(content);
-  }
-
-  private isCacheValid(): boolean {
-    if (!this.props.cache || !this.runtime.cache.hasContent) return false;
-
-    const ttl = normalizeTtl(this.props.ttl);
-    return !ttl || Date.now() - this.runtime.cache.updatedAt <= ttl;
-  }
-
-  private clearContent(): void {
-    if (this.dom.content) this.dom.content.textContent = '';
-  }
-
-  private renderContent(content: RenderableContent<Offcanvas>): void {
-    if (!this.dom.content) return;
-
-    this.clearContent();
-    this.dom.content.append(...normalizeContentNodes(content, this));
-  }
-
-  private async loadContent(): Promise<void> {
-    const { cache } = this.props;
-    const content = this.state.content;
-    if (typeof content !== 'function') {
-      this.runtime.contentLoadId += 1;
-      flushSync(() => {
-        this.state.loading = false;
-      });
-      return;
-    }
-
-    if (this.isCacheValid()) {
-      this.runtime.contentLoadId += 1;
-      this.renderContent(this.runtime.cache.content);
-      flushSync(() => {
-        this.state.loading = false;
-      });
-      return;
-    }
-
-    const loadId = ++this.runtime.contentLoadId;
-    flushSync(() => {
-      this.state.loading = true;
-    });
-
-    if (this.dom.content) {
-      this.clearContent();
-      this.dom.content.appendChild(createLoading());
-    }
-
-    try {
-      const result = await Promise.resolve(content(this));
-
-      if (this.runtime.destroyed || loadId !== this.runtime.contentLoadId) {
-        return;
-      }
-
-      if (cache) {
-        this.runtime.cache.content = result;
-        this.runtime.cache.hasContent = true;
-        this.runtime.cache.updatedAt = Date.now();
-      }
-      this.renderContent(result);
-    } finally {
-      if (!this.runtime.destroyed && loadId === this.runtime.contentLoadId) {
-        flushSync(() => {
-          this.state.loading = false;
-        });
-      }
-    }
-  }
-
-  private bindEvents(): void {
-    this.unbindEvents();
-    const { bgClose, escClose } = this.props;
-
-    if (this.dom.overlay && bgClose) {
-      this.cleanup.events.on('overlay', this.dom.overlay, 'click', () => {
-        void this.hide();
-      });
-    }
-    if (escClose) {
-      this.cleanup.events.on('esc', document, 'keydown', (event) => {
-        if (
-          event instanceof KeyboardEvent &&
-          event.key === 'Escape' &&
-          this.state.visible
-        ) {
-          void this.hide();
-        }
-      });
-    }
-    if (this.dom.root) {
-      this.cleanup.events.on('close', this.dom.root, 'click', (event) => {
-        if (!(event.target instanceof Element)) return;
-        const action = event.target.closest<HTMLElement>('[data-action]');
-        const name = action?.dataset.action;
-        if (name === 'close' || name === 'cancel') void this.hide();
-      });
-    }
-  }
-
-  private unbindEvents(): void {
-    this.cleanup.events.clear();
-  }
-
-  private showPanel(): void {
-    const { id } = this.props;
-    timer.cancel(`oc-hide-${id}`);
-
-    if (this.dom.overlay && !this.dom.overlay.isConnected) {
-      this.dom.overlay.hidden = false;
-      document.body.appendChild(this.dom.overlay);
-    }
-    if (this.dom.root && !this.dom.root.isConnected) {
-      document.body.appendChild(this.dom.root);
-    }
-    if (this.props.bodyOverflow) {
-      document.body.style.overflow = 'hidden';
-    }
-
-    timer.start(`oc-show-${id}`, 10, () => {
-      this.dom.root?.setAttribute('aria-expanded', 'true');
-    });
-  }
-
-  private hidePanel(): void {
-    const { id } = this.props;
-    timer.cancel(`oc-show-${id}`);
-    timer.cancel(`oc-shown-${id}`);
-
-    this.dom.root?.setAttribute('aria-expanded', 'false');
-
-    timer.start(`oc-hide-${id}`, 100, () => {
-      this.dom.overlay?.remove();
-      this.dom.root?.remove();
-      if (this.props.bodyOverflow) {
-        document.body.style.overflow = '';
-      }
-    });
-  }
-
-  async show(): Promise<void> {
-    this.assertBuilt('show');
-    if (this.state.visible) return;
-
-    const { onShow, onShown, id } = this.props;
-    if (onShow) await Promise.resolve(onShow(this));
-
-    this.showPanel();
-    this.bindEvents();
-
-    flushSync(() => {
-      this.state.visible = true;
-    });
-
-    await this.loadContent();
-
-    timer.start(`oc-shown-${id}`, 300, () => {
-      if (this.runtime.destroyed) return;
-      void onShown?.(this);
-    });
-  }
-
-  async hide(): Promise<void> {
-    this.assertBuilt('hide');
-    if (!this.state.visible) return;
-
-    const { onHide, onHidden } = this.props;
-    if (onHide) await Promise.resolve(onHide(this));
-
-    this.runtime.contentLoadId += 1;
-    flushSync(() => {
-      this.state.loading = false;
-    });
-
-    this.unbindEvents();
-    this.hidePanel();
-
-    flushSync(() => {
-      this.state.visible = false;
-    });
-
-    void onHidden?.(this);
-  }
-
-  protected onDestroy(): void {
-    const { id } = this.props;
-
-    timer.cancel(`oc-show-${id}`);
-    timer.cancel(`oc-hide-${id}`);
-    timer.cancel(`oc-shown-${id}`);
-
-    this.unbindEvents();
-    this.cleanup.state?.();
-    this.cleanup.state = null;
-
-    this.dom.root?.setAttribute('aria-expanded', 'false');
-    this.dom.overlay?.remove();
-    this.dom.root?.remove();
-    if (this.props.bodyOverflow) {
-      document.body.style.overflow = '';
-    }
-
-    this.runtime.built = false;
-  }
-
-  protected override validateStatePatch(patch: Partial<OffcanvasState>): void {
-    validateParam(
-      'state',
-      patch,
-      {
-        type: 'plainObject',
-      },
-      'Offcanvas.setState'
-    );
-
-    for (const key of Object.keys(patch)) {
-      if (!Object.hasOwn(OFFCANVAS_STATE_SCHEMA, key)) {
-        throw new Error(
-          `Offcanvas.setState: "${key}" is not a supported state key.`
-        );
-      }
-      const stateKey = key as keyof typeof OFFCANVAS_STATE_SCHEMA;
-      validateParam(
-        key,
-        patch[key as keyof OffcanvasState],
-        OFFCANVAS_STATE_SCHEMA[stateKey],
-        'Offcanvas.setState'
+function validateStatePatch(patch: Partial<OffcanvasState>): void {
+  validateParam('state', patch, { type: 'plainObject' }, 'Offcanvas.setState');
+  for (const key of Object.keys(patch)) {
+    if (!Object.hasOwn(OFFCANVAS_STATE_SCHEMA, key)) {
+      throw new Error(
+        `Offcanvas.setState: "${key}" is not a supported state key.`
       );
     }
+    const stateKey = key as keyof typeof OFFCANVAS_STATE_SCHEMA;
+    validateParam(
+      key,
+      patch[key as keyof OffcanvasState],
+      OFFCANVAS_STATE_SCHEMA[stateKey],
+      'Offcanvas.setState'
+    );
   }
 }
 
-export type Offcanvas = OffcanvasComponent;
-
 export function createOffcanvas(input: OffcanvasProps = {}): Offcanvas {
-  return new OffcanvasComponent(input);
+  const props = normalizeProps(input);
+  const state = createDeepStore({
+    content: props.content,
+    resolvedContent: typeof props.content === 'function' ? null : props.content,
+    visible: false,
+    loading: false,
+  }) as OffcanvasState;
+  const runtime: OffcanvasRuntimeExtras = {
+    cache: { content: null, hasContent: false, updatedAt: 0 },
+    contentLoadId: 0,
+  };
+  const events = createEventManager();
+  const overlayRef = createElementRef<HTMLElement>();
+  let offcanvas!: Offcanvas;
+
+  const panelMotion = createTransition(() => offcanvas.element, {
+    keyframes: [
+      { transform: OFFCANVAS_HIDDEN_TRANSFORM[props.direction] },
+      { transform: 'translate(0, 0)' },
+    ],
+    options: { duration: 300, easing: 'ease' },
+  });
+  const motion = createMotionGroup(
+    ...(props.animate === 'slide' ? [panelMotion] : []),
+    createTransition(() => overlayRef.current, {
+      keyframes: [{ opacity: 0 }, { opacity: 1 }],
+      options: { duration: 300, easing: 'ease' },
+    })
+  );
+
+  const presence = createPresence({
+    elements: () => [overlayRef.current, offcanvas.element],
+    mount: () => {
+      const overlay = overlayRef.current;
+      if (overlay && !overlay.isConnected) document.body.appendChild(overlay);
+      offcanvas.mount(document.body);
+      if (props.bodyOverflow) document.body.style.overflow = 'hidden';
+    },
+    activate: () => {
+      state.visible = true;
+    },
+    deactivate: () => {
+      state.visible = false;
+    },
+    motion,
+    unmount: () => {
+      overlayRef.current?.remove();
+      offcanvas.unmount();
+      if (props.bodyOverflow) document.body.style.overflow = '';
+    },
+  });
+
+  const clearCache = (): void => {
+    runtime.cache = { content: null, hasContent: false, updatedAt: 0 };
+  };
+
+  const isCacheValid = (): boolean => {
+    if (!props.cache || !runtime.cache.hasContent) return false;
+    const ttl = normalizeTtl(props.ttl);
+    return !ttl || Date.now() - runtime.cache.updatedAt <= ttl;
+  };
+
+  const loadContent = async (): Promise<void> => {
+    const content = state.content;
+    if (typeof content !== 'function') {
+      runtime.contentLoadId += 1;
+      flushSync(() => {
+        state.resolvedContent = content;
+        state.loading = false;
+      });
+      return;
+    }
+    if (isCacheValid()) {
+      runtime.contentLoadId += 1;
+      flushSync(() => {
+        state.resolvedContent = runtime.cache.content;
+        state.loading = false;
+      });
+      return;
+    }
+
+    const loadId = ++runtime.contentLoadId;
+    flushSync(() => {
+      state.loading = true;
+      state.resolvedContent = null;
+    });
+    try {
+      const result = await Promise.resolve(content(offcanvas));
+      if (offcanvas.runtime.destroyed || loadId !== runtime.contentLoadId)
+        return;
+      if (props.cache) {
+        runtime.cache = {
+          content: result,
+          hasContent: true,
+          updatedAt: Date.now(),
+        };
+      }
+      flushSync(() => {
+        state.resolvedContent = result;
+      });
+    } finally {
+      if (!offcanvas.runtime.destroyed && loadId === runtime.contentLoadId) {
+        flushSync(() => {
+          state.loading = false;
+        });
+      }
+    }
+  };
+
+  const actions: OffcanvasActions = {
+    async show() {
+      if (!offcanvas.runtime.built) {
+        throw new Error('Offcanvas.show: call build() first.');
+      }
+      if (state.visible) return;
+      await Promise.resolve(props.onShow?.(offcanvas));
+
+      const entering = presence.enter();
+      const loading = loadContent();
+      if ((await entering) && !offcanvas.runtime.destroyed) {
+        void props.onShown?.(offcanvas);
+      }
+      await loading;
+    },
+    async hide() {
+      if (!offcanvas.runtime.built) {
+        throw new Error('Offcanvas.hide: call build() first.');
+      }
+      if (!state.visible) return;
+      const onHideResult = props.onHide?.(offcanvas);
+      if (onHideResult) await onHideResult;
+
+      runtime.contentLoadId += 1;
+      flushSync(() => {
+        state.loading = false;
+      });
+      if (await presence.leave()) {
+        void props.onHidden?.(offcanvas);
+      }
+    },
+  };
+
+  offcanvas = defineComponent({
+    name: 'Offcanvas',
+    props,
+    state,
+    actions,
+    validateStatePatch,
+    view(context) {
+      const overlay = props.overlay
+        ? (jsx('div', {
+            ref: overlayRef.set,
+            className: props.className.overlay,
+            'data-offcanvas-overlay': props.id,
+            'aria-hidden': () => String(!state.visible),
+            style: props.filter ? { backdropFilter: 'blur(2px)' } : {},
+            onClick: () => {
+              if (props.bgClose) void offcanvas.hide();
+            },
+          }) as HTMLElement)
+        : null;
+      if (overlay) context.own(() => overlay.remove());
+
+      createEffect(() => {
+        const content = state.content;
+        validateParam(
+          'content',
+          content,
+          OFFCANVAS_STATE_SCHEMA.content,
+          'Offcanvas.state'
+        );
+        clearCache();
+        if (typeof content === 'function') {
+          state.resolvedContent = null;
+          if (untrack(() => state.visible)) void loadContent();
+        } else {
+          runtime.contentLoadId += 1;
+          state.resolvedContent = content;
+          state.loading = false;
+        }
+      });
+
+      return jsx('div', {
+        className: props.className.root,
+        id: props.id,
+        role: 'dialog',
+        'aria-modal': props.overlay ? 'true' : 'false',
+        'aria-expanded': () => String(state.visible),
+        'data-offcanvas': 'root',
+        'data-direction': props.direction,
+        'data-animate': props.animate,
+        onClick: (event: Event) => {
+          if (!(event.target instanceof Element)) return;
+          const action = event.target.closest<HTMLElement>('[data-action]');
+          if (
+            action?.dataset.action === 'close' ||
+            action?.dataset.action === 'cancel'
+          ) {
+            void offcanvas.hide();
+          }
+        },
+        children: jsx('div', {
+          className: props.className.content,
+          'data-offcanvas-content': props.id,
+          children: () =>
+            state.loading
+              ? createLoading()
+              : normalizeContentNodes(state.resolvedContent, offcanvas),
+        }),
+      }) as HTMLElement;
+    },
+    onBuild(context) {
+      if (props.escClose) {
+        events.on('esc', document, 'keydown', (event) => {
+          if (
+            event instanceof KeyboardEvent &&
+            event.key === 'Escape' &&
+            state.visible
+          ) {
+            void offcanvas.hide();
+          }
+        });
+      }
+      context.own(() => events.clear());
+    },
+    onDestroy() {
+      presence.cancel();
+      runtime.contentLoadId += 1;
+      overlayRef.current?.remove();
+      if (props.bodyOverflow) document.body.style.overflow = '';
+    },
+  });
+
+  return offcanvas;
 }

@@ -45,19 +45,8 @@ interface ResolvedParabolaProps extends Record<string, unknown> {
   onHidden: ((parabola: ParabolaInstance) => void) | null;
 }
 
-interface ParabolaDOM {
-  root: HTMLElement | null;
-  from: Element | null;
-  to: Element | null;
-  balls: Set<HTMLElement>;
-}
-
 interface ParabolaRuntime {
   destroyed: boolean;
-}
-
-interface ParabolaCache {
-  delays: Map<string, () => void>;
 }
 
 interface ParabolaPath {
@@ -67,10 +56,10 @@ interface ParabolaPath {
   endY: number;
 }
 
-interface ParabolaInstance {
-  props: ResolvedParabolaProps;
-  dom: ParabolaDOM;
-  runtime: ParabolaRuntime;
+export interface ParabolaInstance {
+  readonly props: ResolvedParabolaProps;
+  readonly element: HTMLElement | null;
+  readonly runtime: ParabolaRuntime;
   show(): Promise<boolean>;
   destroy(): void;
 }
@@ -135,39 +124,23 @@ function normalizeProps(input: ParabolaProps): ResolvedParabolaProps {
   };
 }
 
-class Parabola implements ParabolaInstance {
-  props: ResolvedParabolaProps;
-  dom: ParabolaDOM;
-  runtime: ParabolaRuntime;
-  cache: ParabolaCache;
+export function createParabola(input: ParabolaProps = {}): ParabolaInstance {
+  const props = normalizeProps(input);
+  const runtime: ParabolaRuntime = { destroyed: false };
+  const balls = new Set<HTMLElement>();
+  const delays = new Map<string, () => void>();
+  let root: HTMLElement | null = null;
+  let from = resolveElement(props.from);
+  let to = resolveElement(props.to);
+  let parabola!: ParabolaInstance;
 
-  constructor(props: ParabolaProps = {}) {
-    this.props = normalizeProps(props);
-    this.dom = {
-      root: null,
-      from: resolveElement(this.props.from),
-      to: resolveElement(this.props.to),
-      balls: new Set(),
-    };
-    this.runtime = {
-      destroyed: false,
-    };
-    this.cache = {
-      delays: new Map(),
-    };
-
-    this.createRoot();
-  }
-
-  private createRoot(): void {
-    if (this.runtime.destroyed) return;
-
-    if (this.dom.root) {
-      if (!this.dom.root.isConnected) document.body.appendChild(this.dom.root);
+  const createRoot = (): void => {
+    if (runtime.destroyed) return;
+    if (root) {
+      if (!root.isConnected) document.body.appendChild(root);
       return;
     }
-
-    this.dom.root = jsx('div', {
+    root = jsx('div', {
       'data-parabola': 'root',
       style: {
         position: 'fixed',
@@ -176,19 +149,28 @@ class Parabola implements ParabolaInstance {
         zIndex: '9999',
       },
     }) as HTMLElement;
-    document.body.appendChild(this.dom.root);
-  }
-
-  private createBall(path: ParabolaPath): HTMLElement | null {
-    if (this.runtime.destroyed) return null;
-
-    this.createRoot();
-    if (!this.dom.root) return null;
-
-    const { color, size } = this.props.ball;
+    document.body.appendChild(root);
+  };
+  const removeRootIfIdle = (): void => {
+    if (!runtime.destroyed || balls.size > 0) return;
+    root?.remove();
+    root = null;
+  };
+  const removeBall = (ball: HTMLElement, notify: boolean): void => {
+    if (!balls.has(ball)) return;
+    ball.remove();
+    balls.delete(ball);
+    if (notify) props.onHidden?.(parabola);
+    removeRootIfIdle();
+  };
+  const createBall = (path: ParabolaPath): HTMLElement | null => {
+    if (runtime.destroyed) return null;
+    createRoot();
+    if (!root) return null;
+    const { color, size } = props.ball;
 
     const ball = jsx('div', {
-      className: this.props.className.ball,
+      className: props.className.ball,
       'data-parabola': 'ball',
       style: {
         backgroundColor: color,
@@ -204,20 +186,13 @@ class Parabola implements ParabolaInstance {
         top: `${path.startY}px`,
       },
     }) as HTMLElement;
-    this.dom.root.appendChild(ball);
-    this.dom.balls.add(ball);
-
+    root.appendChild(ball);
+    balls.add(ball);
     return ball;
-  }
-
-  private resolveTargets(): void {
-    this.dom.from = resolveElement(this.props.from);
-    this.dom.to = resolveElement(this.props.to);
-  }
-
-  private calculatePath(): ParabolaPath | null {
-    const fromRect = this.dom.from?.getBoundingClientRect();
-    const toRect = this.dom.to?.getBoundingClientRect();
+  };
+  const calculatePath = (): ParabolaPath | null => {
+    const fromRect = from?.getBoundingClientRect();
+    const toRect = to?.getBoundingClientRect();
 
     if (!fromRect || !toRect) return null;
 
@@ -226,7 +201,7 @@ class Parabola implements ParabolaInstance {
 
     let startX: number;
     let startY: number;
-    switch (this.props.direction) {
+    switch (props.direction) {
       case 'top-left':
         startX = fL + fW * 0.2;
         startY = fT + fH * 0.2;
@@ -252,20 +227,15 @@ class Parabola implements ParabolaInstance {
     const endY = tT + tH / 2;
 
     return { startX, startY, endX, endY };
-  }
-
-  private easeOutCubic(t: number): number {
-    return 1 - (1 - t) ** 3;
-  }
-
-  private animate(
+  };
+  const animate = (
     ball: HTMLElement,
     startX: number,
     startY: number,
     endX: number,
     endY: number,
     duration = 800
-  ): void {
+  ): void => {
     if (!ball.isConnected) return;
 
     const startTime = performance.now();
@@ -278,7 +248,7 @@ class Parabola implements ParabolaInstance {
 
       const elapsed = currentTime - startTime;
       const progress = Math.min(elapsed / duration, 1);
-      const eased = this.easeOutCubic(progress);
+      const eased = 1 - (1 - progress) ** 3;
 
       const currentX = startX + deltaX * eased;
       const currentY =
@@ -294,95 +264,74 @@ class Parabola implements ParabolaInstance {
       if (progress < 1) {
         requestAnimationFrame(step);
       } else {
-        this.removeBall(ball, true);
+        removeBall(ball, true);
       }
     };
 
     requestAnimationFrame(step);
-  }
-
-  private startDelay(callback: () => void, onCancel: () => void): void {
+  };
+  const startDelay = (callback: () => void, onCancel: () => void): void => {
     const key = `parabola-show-${randomId()}`;
-    this.cache.delays.set(key, onCancel);
-
-    timer.start(key, this.props.showDelay, () => {
-      this.cache.delays.delete(key);
+    delays.set(key, onCancel);
+    timer.start(key, props.showDelay, () => {
+      delays.delete(key);
       callback();
     });
-  }
-
-  private cancelDelays(): void {
-    for (const [key, onCancel] of this.cache.delays) {
+  };
+  const cancelDelays = (): void => {
+    for (const [key, onCancel] of delays) {
       timer.cancel(key);
       onCancel();
     }
-    this.cache.delays.clear();
-  }
+    delays.clear();
+  };
 
-  private removeBall(ball: HTMLElement, notify: boolean): void {
-    if (!this.dom.balls.has(ball)) return;
+  parabola = {
+    props,
+    runtime,
+    get element() {
+      return root;
+    },
+    show() {
+      if (runtime.destroyed) return Promise.resolve(false);
+      return new Promise((resolve) => {
+        startDelay(
+          () => {
+            if (runtime.destroyed) {
+              resolve(false);
+              return;
+            }
+            from = resolveElement(props.from);
+            to = resolveElement(props.to);
+            const path = calculatePath();
+            if (!path) {
+              resolve(false);
+              return;
+            }
 
-    ball.remove();
-    this.dom.balls.delete(ball);
+            const ball = createBall(path);
+            if (!ball) {
+              resolve(false);
+              return;
+            }
 
-    if (notify) this.props.onHidden?.(this);
-    this.removeRootIfIdle();
-  }
-
-  private removeRootIfIdle(): void {
-    if (!this.runtime.destroyed || this.dom.balls.size > 0) return;
-
-    this.dom.root?.remove();
-    this.dom.root = null;
-  }
-
-  show(): Promise<boolean> {
-    if (this.runtime.destroyed) return Promise.resolve(false);
-
-    return new Promise((resolve) => {
-      this.startDelay(
-        () => {
-          if (this.runtime.destroyed) {
-            resolve(false);
-            return;
-          }
-
-          this.resolveTargets();
-
-          const path = this.calculatePath();
-          if (!path) {
-            resolve(false);
-            return;
-          }
-
-          const ball = this.createBall(path);
-          if (!ball) {
-            resolve(false);
-            return;
-          }
-
-          this.props.onShow?.(this);
-
-          this.animate(ball, path.startX, path.startY, path.endX, path.endY);
-          resolve(true);
-        },
-        () => resolve(false)
-      );
-    });
-  }
-
-  destroy(): void {
-    if (this.runtime.destroyed) return;
-
-    this.cancelDelays();
-
-    this.dom.from = null;
-    this.dom.to = null;
-    this.runtime.destroyed = true;
-    this.removeRootIfIdle();
-  }
-}
-
-export function createParabola(props: ParabolaProps = {}): ParabolaInstance {
-  return new Parabola(props);
+            props.onShow?.(parabola);
+            animate(ball, path.startX, path.startY, path.endX, path.endY);
+            resolve(true);
+          },
+          () => resolve(false)
+        );
+      });
+    },
+    destroy() {
+      if (runtime.destroyed) return;
+      cancelDelays();
+      from = null;
+      to = null;
+      runtime.destroyed = true;
+      removeRootIfIdle();
+    },
+  };
+  createRoot();
+  return parabola;
 }

@@ -1,7 +1,6 @@
-import { createWatch, untrack, unwrap } from 'vanilla-signal';
-
 interface QueueNode {
   queued: boolean;
+  enqueued: boolean;
   disposed: boolean;
   next: QueueNode | null;
   run: () => void;
@@ -12,12 +11,6 @@ interface ScheduledTask {
   flush: () => void;
   cancel: () => void;
   dispose: () => void;
-}
-
-interface StateSyncOptions {
-  deferInitial?: boolean;
-  flushInitial?: boolean;
-  flush?: 'microtask' | 'sync';
 }
 
 let head: QueueNode | null = null;
@@ -39,6 +32,7 @@ function requestFlush(): void {
 }
 
 function enqueue(node: QueueNode): void {
+  node.enqueued = true;
   if (tail) tail.next = node;
   else head = node;
   tail = node;
@@ -55,6 +49,7 @@ function flushQueue(): void {
   while (node) {
     const next = node.next;
     node.next = null;
+    node.enqueued = false;
 
     if (!node.disposed && node.queued) {
       node.queued = false;
@@ -68,6 +63,7 @@ function flushQueue(): void {
 export function createScheduledTask(run: () => void): ScheduledTask {
   const node: QueueNode = {
     queued: false,
+    enqueued: false,
     disposed: false,
     next: null,
     run,
@@ -77,7 +73,7 @@ export function createScheduledTask(run: () => void): ScheduledTask {
     schedule() {
       if (node.disposed || node.queued) return;
       node.queued = true;
-      enqueue(node);
+      if (!node.enqueued) enqueue(node);
     },
     flush() {
       if (node.disposed) return;
@@ -90,67 +86,6 @@ export function createScheduledTask(run: () => void): ScheduledTask {
     dispose() {
       node.disposed = true;
       node.queued = false;
-      node.next = null;
     },
-  };
-}
-
-export function getStoreVersion(value: unknown): number {
-  if (value && typeof value === 'object') {
-    const version = (value as { __version__?: unknown }).__version__;
-    return typeof version === 'number' ? version : 0;
-  }
-  return 0;
-}
-
-export function trackStoreVersion<T>(value: T): T {
-  getStoreVersion(value);
-  return value;
-}
-
-export function stateSnapshot<T>(value: T): T {
-  return unwrap(value) as T;
-}
-
-export function createStateSync<TSnapshot>(
-  read: () => TSnapshot,
-  sync: (snapshot: TSnapshot) => void | Promise<void>,
-  {
-    deferInitial = true,
-    flushInitial = false,
-    flush = 'microtask',
-  }: StateSyncOptions = {}
-): () => void {
-  let initialized = false;
-  let hasSnapshot = false;
-  let latestSnapshot: TSnapshot;
-
-  const task = createScheduledTask(() => {
-    if (!hasSnapshot) return;
-    hasSnapshot = false;
-    void untrack(() => sync(latestSnapshot));
-  });
-
-  const watcher = createWatch(
-    read,
-    (snapshot) => {
-      const isInitial = !initialized;
-      initialized = true;
-      latestSnapshot = snapshot as TSnapshot;
-      hasSnapshot = true;
-
-      if ((isInitial && flushInitial) || flush === 'sync') {
-        task.flush();
-        return;
-      }
-
-      task.schedule();
-    },
-    { defer: deferInitial }
-  );
-
-  return () => {
-    task.dispose();
-    watcher.dispose();
   };
 }

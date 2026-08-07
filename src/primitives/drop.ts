@@ -7,7 +7,7 @@ import {
   normalizeContentNodes,
   resolveElement,
 } from '../utilities/dom.ts';
-import { createEventManager, type IEventManager } from '../utilities/events.ts';
+import { createEventManager } from '../utilities/events.ts';
 import { randomId } from '../utilities/id.ts';
 import { type ResolveSchema, resolveProps } from '../utilities/types.ts';
 
@@ -68,21 +68,13 @@ interface DropTimer {
   hide: ReturnType<typeof setTimeout> | null;
 }
 
-interface DropCleanup {
-  events: IEventManager;
-}
-
-interface DropDom {
-  root: HTMLElement | null;
-}
-
-interface DropInstance {
-  target: Element | null;
-  props: Record<string, unknown> | null;
-  dom: DropDom;
-  isVisible: boolean;
-  delayShow: number;
-  delayHide: number;
+export interface DropInstance {
+  readonly target: Element | null;
+  readonly props: ResolvedDropProps;
+  readonly element: HTMLElement | null;
+  readonly isVisible: boolean;
+  readonly delayShow: number;
+  readonly delayHide: number;
   show(useDelay?: boolean): void;
   hide(useDelay?: boolean): void;
   toggle(): void;
@@ -188,166 +180,50 @@ function normalizeDelay(delay: number | DropDelay): Required<DropDelay> {
  *
  * 可用于菜单、提示、下拉面板等场景，支持点击或 hover 触发，并自动计算视口内位置。
  */
-class Drop implements DropInstance {
-  target: Element | null;
-  props: ResolvedDropProps | null;
-  dom: DropDom;
-  isVisible: boolean;
-  cleanup: DropCleanup | null;
-  delayShow: number;
-  delayHide: number;
-  private timer: DropTimer;
-  private hoverIntentData: HoverIntentData;
-  private lastX: number;
-  private lastY: number;
+export function createDrop(
+  reference: DOMReference,
+  input: DropProps = {}
+): DropInstance {
+  let target = resolveElement(reference);
+  const props = normalizeProps(input);
+  const events = createEventManager();
+  const delay = normalizeDelay(props.delay);
+  const timer: DropTimer = { show: null, hide: null };
+  const hoverIntentData: HoverIntentData = { x: 0, y: 0, lastMoveTime: 0 };
+  let lastX = 0;
+  let lastY = 0;
+  let visible = false;
+  let destroyed = false;
+  let drop!: DropInstance;
+  const wrapper =
+    isNode(props.content) && props.content.nodeType === Node.ELEMENT_NODE
+      ? props.content
+      : jsx('div', {
+          className: props.className.container,
+          'data-drop-container': props.name || props.id,
+          children: () => normalizeContentNodes(props.content, drop),
+        });
+  const root = jsx('div', {
+    className: props.className.root,
+    id: props.id,
+    'data-drop': props.name || randomId(),
+    'aria-hidden': 'true',
+    'aria-expanded': 'false',
+    children: wrapper,
+  }) as HTMLElement;
 
-  constructor(element: DOMReference, options: DropProps = {}) {
-    this.target = resolveElement(element);
-    this.props = normalizeProps(options);
-    this.dom = { root: null };
-    this.isVisible = false;
-    this.cleanup = null;
-    this.delayShow = 0;
-    this.delayHide = 0;
-    this.timer = { show: null, hide: null };
-    this.hoverIntentData = { x: 0, y: 0, lastMoveTime: 0 };
-    this.lastX = 0;
-    this.lastY = 0;
+  const cancelTimer = (key: keyof DropTimer): void => {
+    if (timer[key]) clearTimeout(timer[key]);
+    timer[key] = null;
+  };
+  const setPosition = (): void => {
+    if (!target) return;
+    const rect = target.getBoundingClientRect();
+    const { offset, position } = props;
 
-    this.init(this.props);
-  }
-
-  private init(props: ResolvedDropProps): void {
-    this.cleanup = {
-      events: createEventManager(),
-    };
-
-    const delay = normalizeDelay(props.delay);
-    this.delayShow = delay.show;
-    this.delayHide = delay.hide;
-
-    this.buildDrop(props);
-    this.bindEvents(props);
-  }
-
-  private buildDrop(props: ResolvedDropProps): void {
-    const { className, content, id, name } = props;
-    const wrapper =
-      isNode(content) && content.nodeType === Node.ELEMENT_NODE
-        ? content
-        : jsx('div', {
-            className: className.container,
-            'data-drop-container': name || id,
-            children: normalizeContentNodes(content, this),
-          });
-
-    this.dom.root = jsx('div', {
-      className: className.root,
-      id,
-      'data-drop': name || randomId(),
-      children: wrapper,
-    }) as HTMLElement;
-  }
-
-  private bindEvents(props: ResolvedDropProps): void {
-    const { mode, hoverIntent } = props;
-    this.unbindEvents();
-
-    if (!this.target || !this.cleanup) return;
-
-    if (mode === 'hover') {
-      if (hoverIntent) {
-        this.cleanup.events.on('target:enter', this.target, 'mouseenter', () =>
-          this.startHoverIntent()
-        );
-        this.cleanup.events.on('target:leave', this.target, 'mouseleave', () =>
-          this.cancelHoverIntent()
-        );
-      } else {
-        this.cleanup.events.on('target:enter', this.target, 'mouseenter', () =>
-          this.show()
-        );
-        this.cleanup.events.on('target:leave', this.target, 'mouseleave', () =>
-          this.hide()
-        );
-      }
-    } else {
-      this.cleanup.events.on('target:click', this.target, 'click', () =>
-        this.toggle()
-      );
-      this.cleanup.events.on('document:click', document, 'click', (event) =>
-        this.docClick(event)
-      );
-    }
-  }
-
-  private bindRootEvents(): void {
-    const { root } = this.dom;
-    if (!root || this.props?.mode !== 'hover' || !this.cleanup) return;
-    this.cleanup.events.on('root:enter', root, 'mouseenter', () => this.show());
-    this.cleanup.events.on('root:leave', root, 'mouseleave', () => this.hide());
-  }
-
-  private unbindRootEvents(): void {
-    this.cleanup?.events.off('root:enter');
-    this.cleanup?.events.off('root:leave');
-  }
-
-  private unbindEvents(): void {
-    this.cleanup?.events.clear();
-  }
-
-  private startHoverIntent(): void {
-    if (!this.cleanup) return;
-
-    this.cleanup.events.on(
-      'document:mousemove',
-      document,
-      'mousemove',
-      (event) => this.onMouseMove(event)
-    );
-
-    if (this.timer.show) clearTimeout(this.timer.show);
-    this.timer.show = setTimeout(() => {
-      const now = Date.now();
-      const dt = now - this.hoverIntentData.lastMoveTime;
-      const dx = Math.abs(this.hoverIntentData.x - this.lastX);
-      const dy = Math.abs(this.hoverIntentData.y - this.lastY);
-      const dist = dx + dy;
-      if (dist < 5 || dt > 100) {
-        this.show();
-        this.cleanup?.events.off('document:mousemove');
-      } else {
-        this.startHoverIntent();
-      }
-    }, this.delayShow);
-  }
-
-  private cancelHoverIntent(): void {
-    if (this.timer.show) clearTimeout(this.timer.show);
-    this.cleanup?.events.off('document:mousemove');
-    this.hide();
-  }
-
-  private onMouseMove(event: Event): void {
-    if (!(event instanceof MouseEvent)) return;
-    this.lastX = event.clientX;
-    this.lastY = event.clientY;
-    this.hoverIntentData.lastMoveTime = Date.now();
-    this.hoverIntentData.x = event.clientX;
-    this.hoverIntentData.y = event.clientY;
-  }
-
-  private setPosition(): void {
-    if (!this.target || !this.dom.root || !this.props) return;
-
-    const rect = this.target.getBoundingClientRect();
-    const drop = this.dom.root;
-    const { offset, position } = this.props;
-
-    drop.style.visibility = 'hidden';
-    drop.style.display = 'block';
-    const dropRect = drop.getBoundingClientRect();
+    root.style.visibility = 'hidden';
+    root.style.display = 'block';
+    const dropRect = root.getBoundingClientRect();
     let top = 0;
     let left = 0;
     let pos = position;
@@ -355,7 +231,7 @@ class Drop implements DropInstance {
     if (pos === 'auto') {
       const spaceBelow = window.innerHeight - rect.bottom;
       pos =
-        spaceBelow > dropRect.height + offset ? 'top-center' : 'bottom-center';
+        spaceBelow > dropRect.height + offset ? 'bottom-center' : 'top-center';
     }
 
     switch (pos) {
@@ -398,99 +274,119 @@ class Drop implements DropInstance {
     top = Math.max(8, Math.min(top, window.innerHeight - dropRect.height - 8));
     left = Math.max(8, Math.min(left, window.innerWidth - dropRect.width - 8));
 
-    drop.style.top = `${top + window.scrollY}px`;
-    drop.style.left = `${left + window.scrollX}px`;
-    drop.style.visibility = '';
-    drop.style.display = '';
-  }
-
-  private docClick(event: Event): void {
-    if (!(event.target instanceof Node)) return;
-    if (!this.dom.root || !this.target) return;
-    if (
-      !this.dom.root.contains(event.target) &&
-      !this.target.contains(event.target)
-    ) {
-      this.hide();
-    }
-  }
-
-  private exec(visible: boolean): void {
-    const { root } = this.dom;
-    if (!root || !this.props) return;
-
-    if (visible) {
+    root.style.top = `${top + window.scrollY}px`;
+    root.style.left = `${left + window.scrollX}px`;
+    root.style.visibility = '';
+    root.style.display = '';
+  };
+  const applyVisible = (next: boolean): void => {
+    if (destroyed || visible === next) return;
+    if (next) {
       if (!root.parentNode) document.body.appendChild(root);
-      this.bindRootEvents();
-      this.setPosition();
+      setPosition();
     } else {
-      this.unbindRootEvents();
       root.style.top = '';
       root.style.left = '';
       root.remove();
     }
-
-    root.setAttribute('aria-hidden', visible ? 'false' : 'true');
-    root.setAttribute('aria-expanded', visible ? 'true' : 'false');
-
-    this.isVisible = visible;
-  }
-
-  show(useDelay = true): void {
-    if (this.timer.hide) clearTimeout(this.timer.hide);
-    if (this.isVisible) return;
-
-    if (useDelay && this.delayShow > 0) {
-      if (this.timer.show) clearTimeout(this.timer.show);
-      this.timer.show = setTimeout(() => this.exec(true), this.delayShow);
-    } else {
-      this.exec(true);
+    root.setAttribute('aria-hidden', next ? 'false' : 'true');
+    root.setAttribute('aria-expanded', next ? 'true' : 'false');
+    visible = next;
+    void (next ? props.onShown?.(drop) : props.onHidden?.(drop));
+  };
+  const docClick = (event: Event): void => {
+    if (!(event.target instanceof Node)) return;
+    if (!target) return;
+    if (!root.contains(event.target) && !target.contains(event.target)) {
+      drop.hide();
     }
-
-    void this.props?.onShown?.(this);
-  }
-
-  hide(useDelay = true): void {
-    if (this.timer.show) clearTimeout(this.timer.show);
-    if (!this.isVisible) return;
-
-    if (useDelay && this.delayHide > 0) {
-      if (this.timer.hide) clearTimeout(this.timer.hide);
-      this.timer.hide = setTimeout(() => this.exec(false), this.delayHide);
+  };
+  const onMouseMove = (event: Event): void => {
+    if (!(event instanceof MouseEvent)) return;
+    lastX = event.clientX;
+    lastY = event.clientY;
+    hoverIntentData.lastMoveTime = Date.now();
+    hoverIntentData.x = event.clientX;
+    hoverIntentData.y = event.clientY;
+  };
+  const startHoverIntent = (): void => {
+    events.on('document:mousemove', document, 'mousemove', onMouseMove);
+    cancelTimer('show');
+    timer.show = setTimeout(() => {
+      const elapsed = Date.now() - hoverIntentData.lastMoveTime;
+      const distance =
+        Math.abs(hoverIntentData.x - lastX) +
+        Math.abs(hoverIntentData.y - lastY);
+      if (distance < 5 || elapsed > 100) {
+        drop.show(false);
+        events.off('document:mousemove');
+      } else startHoverIntent();
+    }, delay.show);
+  };
+  const bindEvents = (): void => {
+    if (!target) return;
+    if (props.mode === 'hover') {
+      events.on('target:enter', target, 'mouseenter', () => {
+        if (props.hoverIntent) startHoverIntent();
+        else drop.show();
+      });
+      events.on('target:leave', target, 'mouseleave', () => {
+        cancelTimer('show');
+        events.off('document:mousemove');
+        drop.hide();
+      });
+      events.on('root:enter', root, 'mouseenter', () => drop.show());
+      events.on('root:leave', root, 'mouseleave', () => drop.hide());
     } else {
-      this.exec(false);
+      events.on('target:click', target, 'click', () => drop.toggle());
+      events.on('document:click', document, 'click', docClick);
     }
+  };
 
-    void this.props?.onHidden?.(this);
-  }
-
-  toggle(): void {
-    if (this.isVisible) this.hide();
-    else this.show();
-  }
-
-  destroy(): void {
-    if (!this.props) return;
-
-    if (this.timer.show) clearTimeout(this.timer.show);
-    if (this.timer.hide) clearTimeout(this.timer.hide);
-
-    this.unbindEvents();
-    this.dom.root?.remove();
-
-    this.props = null;
-    this.dom.root = null;
-    this.target = null;
-    this.timer = { show: null, hide: null };
-    this.cleanup?.events.clear();
-    this.cleanup = null;
-    this.isVisible = false;
-  }
-}
-
-export function createDrop(
-  element: DOMReference,
-  props: DropProps = {}
-): DropInstance {
-  return new Drop(element, props);
+  drop = {
+    get target() {
+      return target;
+    },
+    props,
+    get element() {
+      return destroyed ? null : root;
+    },
+    get isVisible() {
+      return visible;
+    },
+    delayShow: delay.show,
+    delayHide: delay.hide,
+    show(useDelay = true) {
+      cancelTimer('hide');
+      if (visible || destroyed) return;
+      if (useDelay && delay.show > 0) {
+        cancelTimer('show');
+        timer.show = setTimeout(() => applyVisible(true), delay.show);
+      } else applyVisible(true);
+    },
+    hide(useDelay = true) {
+      cancelTimer('show');
+      if (!visible || destroyed) return;
+      if (useDelay && delay.hide > 0) {
+        cancelTimer('hide');
+        timer.hide = setTimeout(() => applyVisible(false), delay.hide);
+      } else applyVisible(false);
+    },
+    toggle() {
+      if (visible) drop.hide();
+      else drop.show();
+    },
+    destroy() {
+      if (destroyed) return;
+      destroyed = true;
+      cancelTimer('show');
+      cancelTimer('hide');
+      events.clear();
+      root.remove();
+      target = null;
+      visible = false;
+    },
+  };
+  bindEvents();
+  return drop;
 }

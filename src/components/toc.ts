@@ -1,11 +1,12 @@
-import { createDeepStore, jsx } from 'vanilla-signal';
+import { For, createDeepStore, flushSync, jsx } from 'vanilla-signal';
 
-import Component, {
-  type ComponentDOM,
-  type ComponentRuntime,
-} from '../core/Component.ts';
+import {
+  type FunctionalComponent,
+  defineComponent,
+} from '../core/component.ts';
 import { joinClasses } from '../utilities/class-name.ts';
 import { type DOMReference, all, requireContainer } from '../utilities/dom.ts';
+import { createEventManager } from '../utilities/events.ts';
 import { randomId } from '../utilities/id.ts';
 import { type ResolveSchema, resolveProps } from '../utilities/types.ts';
 
@@ -23,7 +24,6 @@ interface TocItem {
   id: string;
   text: string;
   level: number;
-  element: HTMLHeadingElement;
 }
 
 interface TocCurrent {
@@ -56,17 +56,9 @@ interface TocState extends Record<string, unknown> {
   current: TocCurrent;
 }
 
-interface TocDOM extends ComponentDOM {
-  root: HTMLElement | null;
-  target: Element | null;
-  list: HTMLElement | null;
-  headings: HTMLHeadingElement[];
-  links: HTMLAnchorElement[];
-}
-
-interface TocRuntime extends ComponentRuntime {
-  built: boolean;
+interface TocRuntimeExtras {
   ticking: boolean;
+  frameId: number;
 }
 
 interface TocScrollOptions {
@@ -74,12 +66,17 @@ interface TocScrollOptions {
   updateHash?: boolean;
 }
 
-type TocInstance = Component<ResolvedTocProps, TocState, TocDOM> & {
-  runtime: TocRuntime;
-  build(): TocInstance;
+interface TocActions {
   refresh(): TocInstance;
   activate(index: number): TocInstance;
-};
+}
+
+type TocInstance = FunctionalComponent<
+  ResolvedTocProps,
+  TocState,
+  HTMLElement,
+  TocActions
+>;
 
 const DEFAULT_CLASS_NAMES: TocClassNames = {
   toc: 'j-toc',
@@ -132,250 +129,156 @@ function normalizeHeading(element: HTMLHeadingElement, index: number): TocItem {
     id: element.id,
     text: element.textContent || '',
     level: resolveHeadingLevel(element),
-    element,
   };
 }
 
-/**
- * 页面目录组件。
- *
- * 扫描内容区域内的标题，生成锚点列表，并随页面滚动更新 active 状态。
- */
-class Toc extends Component<ResolvedTocProps, TocState, TocDOM> {
-  declare runtime: TocRuntime;
+export function createToc(props: TocProps = {}): TocInstance {
+  const settings = normalizeProps(props);
+  const state = createDeepStore({
+    items: [],
+    current: { index: -1, item: null },
+  }) as TocState;
+  const runtime: TocRuntimeExtras = { ticking: false, frameId: 0 };
+  const events = createEventManager();
+  let target: Element | null = null;
+  let headings: HTMLHeadingElement[] = [];
+  let toc: TocInstance;
 
-  /**
-   * 创建 Toc 实例。
-   * @param {object} [input={}] Toc 配置。
-   */
-  constructor(props: TocProps = {}) {
-    const settings = normalizeProps(props);
-    super(settings);
-
-    this.dom.target = null;
-    this.dom.list = null;
-    this.dom.headings = [];
-    this.dom.links = [];
-
-    this.runtime.built = false;
-    this.runtime.ticking = false;
-
-    this.state = createDeepStore({
-      items: [],
-      current: {
-        index: -1,
-        item: null,
-      },
+  const setActive = (index: number): void => {
+    if (index === state.current.index) return;
+    const current = state.items[index] || null;
+    flushSync(() => {
+      state.current = { index, item: current };
     });
-  }
+    settings.onChange?.(current, index, toc);
+  };
 
-  /**
-   * 构建 Toc DOM 和滚动监听。
-   * @returns {Toc} 当前实例。
-   */
-  build(): this {
-    if (this.runtime.destroyed)
-      throw new Error('Toc.build: instance destroyed');
-    if (this.runtime.built) return this;
-
-    this.init(this.props);
-    this.dom.target = requireContainer(this.props.target, 'Toc.target');
-    this.dom.list = jsx('div', {
-      className: this.props.className.list,
-      'data-toc-list': 'root',
-    }) as HTMLElement;
-    this.dom.root = jsx('nav', {
-      className: this.props.className.toc,
-      'data-toc': 'root',
-      children: this.dom.list,
-    }) as HTMLElement;
-
-    this.runtime.built = true;
-    this.refresh();
-    return this;
-  }
-
-  private bindEvents(): void {
-    if (!this.dom.list) return;
-    this.cleanup.events.on('scroll', window, 'scroll', () => this.onScroll(), {
-      passive: true,
-    });
-    this.cleanup.events.on('click', this.dom.list, 'click', (event) =>
-      this.onClick(event)
-    );
-  }
-
-  private onScroll(): void {
-    if (this.runtime.ticking) return;
-
-    requestAnimationFrame(() => {
-      this.updateActive();
-      this.runtime.ticking = false;
-    });
-    this.runtime.ticking = true;
-  }
-
-  private onClick(event: Event): void {
-    if (!(event.target instanceof Element) || !this.dom.list) return;
-    const link = event.target.closest<HTMLElement>('[data-toc-index]');
-    if (!link || !this.dom.list.contains(link)) return;
-
-    const index = Number(link.dataset.tocIndex);
-    const item = this.state?.items[index];
-    if (!item) return;
-
-    event.preventDefault();
-    this.scrollToItem(item, { activeIndex: index, updateHash: true });
-  }
-
-  private scrollToItem(
-    item: TocItem,
-    { activeIndex = -1, updateHash = false }: TocScrollOptions = {}
-  ): void {
-    const scrollY = window.scrollY || window.pageYOffset || 0;
-    const top = Math.max(
-      0,
-      item.element.getBoundingClientRect().top + scrollY - this.props.offset
-    );
-
-    window.scrollTo({
-      top,
-      behavior: 'smooth',
-    });
-
-    if (activeIndex >= 0) this.setActive(activeIndex);
-
-    if (updateHash && window.history?.pushState) {
-      window.history.pushState(null, '', `#${item.id}`);
-    }
-  }
-
-  private linkClassName(item: TocItem, active = false): string {
-    const classes = [
-      this.props.className.link,
-      `${this.props.className.levelPrefix}${item.level}`,
-    ];
-    if (active) classes.push(this.props.className.active);
-    return joinClasses(...classes);
-  }
-
-  private buildLink(item: TocItem, index: number): HTMLAnchorElement {
-    return jsx('a', {
-      className: this.linkClassName(item),
-      href: `#${item.id}`,
-      'data-toc-index': String(index),
-      'data-toc-target': item.id,
-      children: item.text,
-    }) as HTMLAnchorElement;
-  }
-
-  private updateActive(): void {
-    if (!this.runtime.built) return;
-
+  const updateActive = (): void => {
+    if (!toc.runtime.built) return;
     let index = -1;
-    const activeOffset = this.props.offset + ACTIVE_OFFSET_TOLERANCE;
-    for (let i = this.dom.headings.length - 1; i >= 0; i--) {
-      if (this.dom.headings[i].getBoundingClientRect().top <= activeOffset) {
-        index = i;
+    const activeOffset = settings.offset + ACTIVE_OFFSET_TOLERANCE;
+    for (let current = headings.length - 1; current >= 0; current--) {
+      if (headings[current].getBoundingClientRect().top <= activeOffset) {
+        index = current;
         break;
       }
     }
+    setActive(index);
+  };
 
-    this.setActive(index);
-  }
-
-  private setActive(index: number): void {
-    if (!this.state || index === this.state.current.index) return;
-
-    const current = this.state.items[index] || null;
-    this.setState({
-      current: { index, item: current },
+  const onScroll = (): void => {
+    if (runtime.ticking) return;
+    runtime.ticking = true;
+    runtime.frameId = requestAnimationFrame(() => {
+      runtime.ticking = false;
+      runtime.frameId = 0;
+      updateActive();
     });
+  };
 
-    const items = this.state.items;
-    this.dom.links.forEach((link, i) => {
-      const active = i === index;
-      link.dataset.active = active ? '1' : '0';
-      link.className = this.linkClassName(items[i], active);
-    });
-
-    if (typeof this.props.onChange === 'function') {
-      this.props.onChange(current, index, this);
-    }
-  }
-
-  /**
-   * 重新扫描标题并重建目录列表。
-   * @returns {Toc} 当前实例。
-   */
-  refresh(): this {
-    if (
-      this.runtime.destroyed ||
-      !this.runtime.built ||
-      !this.dom.target ||
-      !this.dom.list
-    ) {
-      return this;
-    }
-
-    this.cleanup.events.clear();
-
-    this.dom.headings = all<HTMLHeadingElement>(
-      this.props.headings,
-      this.dom.target
+  const scrollToItem = (
+    item: TocItem,
+    { activeIndex = -1, updateHash = false }: TocScrollOptions = {}
+  ): void => {
+    const heading = headings.find((element) => element.id === item.id);
+    if (!heading) return;
+    const scrollY = window.scrollY || window.pageYOffset || 0;
+    const top = Math.max(
+      0,
+      heading.getBoundingClientRect().top + scrollY - settings.offset
     );
-    const items = this.dom.headings.map(normalizeHeading);
-    this.dom.links = items.map((item, index) => this.buildLink(item, index));
-
-    this.dom.list.innerHTML = '';
-    for (const link of this.dom.links) this.dom.list.appendChild(link);
-
-    this.setState({
-      items,
-      current: { index: -1, item: null },
-    });
-
-    this.bindEvents();
-    this.updateActive();
-    return this;
-  }
-
-  /**
-   * 激活并滚动到指定目录项。
-   * @param {number} index 目录项索引。
-   * @returns {Toc} 当前实例。
-   */
-  activate(index: number): this {
-    if (!this.runtime.built || !this.state) return this;
-    if (
-      !Number.isInteger(index) ||
-      index < 0 ||
-      index >= this.dom.links.length
-    ) {
-      return this;
+    window.scrollTo({ top, behavior: 'smooth' });
+    if (activeIndex >= 0) setActive(activeIndex);
+    if (updateHash && window.history?.pushState) {
+      window.history.pushState(null, '', `#${item.id}`);
     }
+  };
 
-    this.scrollToItem(this.state.items[index]);
-    return this;
-  }
+  const refresh = (): TocInstance => {
+    if (toc.runtime.destroyed || !toc.runtime.built || !target) return toc;
+    headings = all<HTMLHeadingElement>(settings.headings, target);
+    const items = headings.map(normalizeHeading);
+    flushSync(() => {
+      state.items = items;
+      state.current = { index: -1, item: null };
+    });
+    updateActive();
+    return toc;
+  };
 
-  /**
-   * 销毁实例并清空渲染内容。
-   * @private
-   */
-  protected onDestroy(): void {
-    this.cleanup.events.clear();
-    this.dom.root?.remove();
+  const activate = (index: number): TocInstance => {
+    if (
+      toc.runtime.built &&
+      Number.isInteger(index) &&
+      index >= 0 &&
+      index < state.items.length
+    ) {
+      scrollToItem(state.items[index]);
+    }
+    return toc;
+  };
 
-    this.runtime.built = false;
-    this.runtime.ticking = false;
-    this.dom.target = null;
-    this.dom.list = null;
-    this.dom.headings = [];
-    this.dom.links = [];
-  }
-}
+  toc = defineComponent({
+    name: 'Toc',
+    props: settings,
+    state,
+    actions: { refresh, activate },
+    view: () =>
+      jsx('nav', {
+        className: settings.className.toc,
+        'data-toc': 'root',
+        children: jsx('div', {
+          className: settings.className.list,
+          'data-toc-list': 'root',
+          children: For({
+            each: () => state.items,
+            key: (item: TocItem) => item.id,
+            children: (
+              itemAccessor: () => TocItem,
+              indexAccessor: () => number
+            ) =>
+              jsx('a', {
+                className: () => {
+                  const item = itemAccessor();
+                  return joinClasses(
+                    settings.className.link,
+                    `${settings.className.levelPrefix}${item.level}`,
+                    state.current.index === indexAccessor()
+                      ? settings.className.active
+                      : ''
+                  );
+                },
+                href: () => `#${itemAccessor().id}`,
+                'data-toc-index': () => String(indexAccessor()),
+                'data-toc-target': () => itemAccessor().id,
+                'data-active': () =>
+                  state.current.index === indexAccessor() ? '1' : '0',
+                onClick: (event: Event) => {
+                  event.preventDefault();
+                  scrollToItem(itemAccessor(), {
+                    activeIndex: indexAccessor(),
+                    updateHash: true,
+                  });
+                },
+                children: () => itemAccessor().text,
+              }),
+          }),
+        }),
+      }) as HTMLElement,
+    onBuild(context) {
+      target = requireContainer(settings.target, 'Toc.target');
+      events.on('scroll', window, 'scroll', onScroll, { passive: true });
+      context.own(() => events.clear());
+      refresh();
+    },
+    onDestroy() {
+      if (runtime.frameId) cancelAnimationFrame(runtime.frameId);
+      runtime.frameId = 0;
+      runtime.ticking = false;
+      target = null;
+      headings = [];
+    },
+  });
 
-export function createToc(props: TocProps = {}): TocInstance {
-  return new Toc(props);
+  return toc;
 }

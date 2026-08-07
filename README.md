@@ -1,6 +1,8 @@
 # JUI Library
 
-A lightweight vanilla UI library for building user interfaces.
+A lightweight, reactive, and fully customizable vanilla JS UI library.
+
+[中文](README_zh.md)
 
 ## Features
 
@@ -27,12 +29,16 @@ UMD, GlobalName: `jui`
 ESM
 
 ```javascript
-import { Toast, Modal } from 'vanilla-jui';
+import { createToast, createModal } from 'vanilla-jui';
 import 'vanilla-jui/style.css';
 ```
 
 UMD, GlobalName: `jui`
 
 ```javascript
-const { Toast, Modal } = jui;
+const { createToast, createModal } = jui;
 ```
+
+## Documentation
+
+[Online Documentation](https://docs.jealer.com/vanilla-jui/)

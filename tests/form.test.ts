@@ -26,8 +26,8 @@ function submit(root: HTMLFormElement): void {
 }
 
 function mountForm(): void {
-  if (!form?.dom.root) throw new Error('Form root was not built.');
-  app().appendChild(form.dom.root);
+  if (!form?.element) throw new Error('Form root was not built.');
+  app().appendChild(form.element);
 }
 
 beforeEach(() => {
@@ -50,23 +50,23 @@ describe('Form', () => {
       ],
     });
 
-    expect(form.root).toBeNull();
+    expect(form.element).toBeNull();
     form.build();
-    expect(app().contains(form.root)).toBe(false);
+    expect(app().contains(form.element)).toBe(false);
     mountForm();
 
-    expect(form.root).toBeInstanceOf(HTMLFormElement);
-    expect(app().contains(form.root)).toBe(true);
-    expect(form.root?.classList.contains('j-form')).toBe(true);
-    expect(form.root?.classList.contains('is-vertical')).toBe(true);
-    expect(form.root?.dataset.form).toBe('root');
-    expect(form.root?.querySelectorAll('[data-form-item]')).toHaveLength(2);
+    expect(form.element).toBeInstanceOf(HTMLFormElement);
+    expect(app().contains(form.element)).toBe(true);
+    expect(form.element?.classList.contains('j-form')).toBe(true);
+    expect(form.element?.classList.contains('is-vertical')).toBe(true);
+    expect(form.element?.dataset.form).toBe('root');
+    expect(form.element?.querySelectorAll('[data-form-item]')).toHaveLength(2);
     expect(
-      form.root?.querySelector('[data-form-control="email"]')
+      form.element?.querySelector('[data-form-control="email"]')
     ).toBeTruthy();
-    expect(form.root?.querySelector('[data-form-help="bio"]')).toBeTruthy();
+    expect(form.element?.querySelector('[data-form-help="bio"]')).toBeTruthy();
     expect(
-      form.root?.querySelectorAll('[data-form-buttons] button')
+      form.element?.querySelectorAll('[data-form-buttons] button')
     ).toHaveLength(2);
   });
 
@@ -85,15 +85,17 @@ describe('Form', () => {
     }).build();
     mountForm();
 
-    expect(form.root?.classList.contains('profile-form')).toBe(true);
-    expect(form.root?.classList.contains('profile-stack')).toBe(true);
-    expect(form.root?.classList.contains('j-form')).toBe(false);
-    expect(form.root?.querySelector('.profile-field')).toBeTruthy();
-    expect(form.root?.querySelector('[data-form-item="name"]')).toBeTruthy();
-    expect(form.root?.querySelector('[data-form-control="name"]')).toBeTruthy();
-    expect(form.root?.querySelector('.help-block')).toBeTruthy();
-    expect(form.root?.querySelector('.profile-help')).toBeNull();
-    expect(form.root?.querySelector('[data-form-buttons]')).toBeTruthy();
+    expect(form.element?.classList.contains('profile-form')).toBe(true);
+    expect(form.element?.classList.contains('profile-stack')).toBe(true);
+    expect(form.element?.classList.contains('j-form')).toBe(false);
+    expect(form.element?.querySelector('.profile-field')).toBeTruthy();
+    expect(form.element?.querySelector('[data-form-item="name"]')).toBeTruthy();
+    expect(
+      form.element?.querySelector('[data-form-control="name"]')
+    ).toBeTruthy();
+    expect(form.element?.querySelector('.help-block')).toBeTruthy();
+    expect(form.element?.querySelector('.profile-help')).toBeNull();
+    expect(form.element?.querySelector('[data-form-buttons]')).toBeTruthy();
   });
 
   it('reactively updates fields and preserves stable data selectors', () => {
@@ -109,10 +111,10 @@ describe('Form', () => {
       { label: 'Bio', name: 'bio', type: 'textarea' },
     ]);
 
-    expect(form.root?.querySelectorAll('[data-form-item]')).toHaveLength(2);
-    expect(form.root?.querySelector('[data-form-field="bio"]')).toBeInstanceOf(
-      HTMLTextAreaElement
-    );
+    expect(form.element?.querySelectorAll('[data-form-item]')).toHaveLength(2);
+    expect(
+      form.element?.querySelector('[data-form-field="bio"]')
+    ).toBeInstanceOf(HTMLTextAreaElement);
   });
 
   it('collects submitted form data', async () => {
@@ -138,13 +140,13 @@ describe('Form', () => {
     }).build();
     mountForm();
 
-    const email = form.root?.elements.namedItem('email');
-    if (!(email instanceof HTMLInputElement) || !form.root) {
+    const email = form.element?.elements.namedItem('email');
+    if (!(email instanceof HTMLInputElement) || !form.element) {
       throw new Error('Email input was not rendered.');
     }
 
     email.value = 'demo@example.com';
-    submit(form.root);
+    submit(form.element);
     await Promise.resolve();
 
     expect(onSubmit).toHaveBeenCalledTimes(1);

@@ -11,6 +11,61 @@ import {
 
 import { Toast } from '../src/primitives/toast.ts';
 
+async function flushMotion(): Promise<void> {
+  for (let index = 0; index < 6; index += 1) await Promise.resolve();
+}
+
+function installControlledAnimations(): {
+  controls: Map<
+    HTMLElement,
+    { animation: Animation; setFinished: (value: Promise<void>) => void }
+  >;
+  restore: () => void;
+} {
+  const descriptor = Object.getOwnPropertyDescriptor(
+    HTMLElement.prototype,
+    'animate'
+  );
+  const controls = new Map<
+    HTMLElement,
+    { animation: Animation; setFinished: (value: Promise<void>) => void }
+  >();
+  Object.defineProperty(HTMLElement.prototype, 'animate', {
+    configurable: true,
+    value: function (this: HTMLElement): Animation {
+      let finished = Promise.resolve();
+      const animation = {
+        effect: { getComputedTiming: () => ({ endTime: 300 }) },
+        get finished() {
+          return finished;
+        },
+        currentTime: null,
+        playbackRate: 1,
+        pause: vi.fn(),
+        play: vi.fn(),
+        cancel: vi.fn(),
+      } as unknown as Animation;
+      controls.set(this, {
+        animation,
+        setFinished(value) {
+          finished = value;
+        },
+      });
+      return animation;
+    },
+  });
+  return {
+    controls,
+    restore() {
+      if (descriptor) {
+        Object.defineProperty(HTMLElement.prototype, 'animate', descriptor);
+      } else {
+        Reflect.deleteProperty(HTMLElement.prototype, 'animate');
+      }
+    },
+  };
+}
+
 beforeEach(() => {
   document.body.innerHTML = '';
   vi.useFakeTimers();
@@ -38,7 +93,7 @@ describe('Toast', () => {
     );
   });
 
-  it('allows className overrides without using class selectors internally', () => {
+  it('allows className overrides without using class selectors internally', async () => {
     const toast = Toast.success('Saved', 0, {
       className: {
         container: 'qa-toast-container',
@@ -58,8 +113,41 @@ describe('Toast', () => {
 
     Toast.hide(toast);
     expect(toast.getAttribute('aria-live')).toBe(null);
-    vi.advanceTimersByTime(300);
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
     expect(document.body.contains(toast)).toBe(false);
+  });
+
+  it('keeps a toast mounted until its leave Motion finishes', async () => {
+    const animations = installControlledAnimations();
+    try {
+      const toast = Toast.success('Animated', 0, {
+        className: { toast: 'qa-motion-toast' },
+      });
+      const control = animations.controls.get(toast);
+      if (!control) throw new Error('Expected Toast animation.');
+      expect(toast.classList.contains('qa-motion-toast')).toBe(true);
+      let finish!: () => void;
+      control.setFinished(
+        new Promise<void>((resolve) => {
+          finish = resolve;
+        })
+      );
+
+      Toast.hide(toast);
+      await Promise.resolve();
+
+      expect(toast.getAttribute('aria-hidden')).toBe('true');
+      expect(control.animation.playbackRate).toBe(-1);
+      expect(document.body.contains(toast)).toBe(true);
+
+      finish();
+      await flushMotion();
+      expect(document.body.contains(toast)).toBe(false);
+    } finally {
+      animations.restore();
+    }
   });
 
   it('keeps lite toast as a singleton through data markers', () => {

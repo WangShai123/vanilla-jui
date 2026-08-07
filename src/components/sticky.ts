@@ -1,9 +1,4 @@
-import { createDeepStore } from 'vanilla-signal';
-
-import Component, {
-  type ComponentDOM,
-  type ComponentRuntime,
-} from '../core/Component.ts';
+import { createDeepStore, flushSync } from 'vanilla-signal';
 import { type DOMReference, all, requireContainer } from '../utilities/dom.ts';
 import { type ResolveSchema, resolveProps } from '../utilities/types.ts';
 
@@ -30,18 +25,13 @@ interface ResolvedStickyProps extends Record<string, unknown> {
 }
 
 interface StickyStateItem {
-  element: HTMLElement;
+  key: string;
+  index: number;
   top: number;
 }
 
 interface StickyState extends Record<string, unknown> {
   items: StickyStateItem[];
-}
-
-interface StickyDOM extends ComponentDOM {
-  root: Element | null;
-  parent: Element | null;
-  targets: HTMLElement[];
 }
 
 interface StickyOriginalStyle {
@@ -51,24 +41,23 @@ interface StickyOriginalStyle {
   originalZIndex: string;
 }
 
-interface StickyRuntime extends ComponentRuntime {
+interface StickyRuntime {
   built: boolean;
+  destroyed: boolean;
 }
 
 interface StickyCache {
   originalStyles: StickyOriginalStyle[];
 }
 
-type StickyInstance = Component<
-  ResolvedStickyProps,
-  StickyState,
-  StickyDOM,
-  StickyCache
-> & {
-  runtime: StickyRuntime;
+interface StickyInstance {
+  readonly props: ResolvedStickyProps;
+  readonly state: StickyState;
+  readonly runtime: StickyRuntime;
   build(): StickyInstance;
   refresh(): StickyInstance;
-};
+  destroy(): void;
+}
 
 const STICKY_PROPS_SCHEMA = {
   target: { default: null },
@@ -154,144 +143,80 @@ function resolveTarget(
   return scopedElements;
 }
 
-/**
- * Sticky 吸附组件。
- *
- * 用于给一个或多个元素应用 `position: sticky`，并按顺序计算 `top`
- * 偏移，适合页面侧边栏中多个 widget 的堆叠吸附场景。
- */
-class Sticky extends Component<
-  ResolvedStickyProps,
-  StickyState,
-  StickyDOM,
-  StickyCache
-> {
-  declare runtime: StickyRuntime;
-  declare cache: StickyCache;
+export function createSticky(props: StickyProps = {}): StickyInstance {
+  const settings = normalizeProps(props);
+  const state = createDeepStore({ items: [] }) as StickyState;
+  const runtime: StickyRuntime = { built: false, destroyed: false };
+  const cache: StickyCache = { originalStyles: [] };
+  let parent: Element | null = null;
+  let targets: HTMLElement[] = [];
+  let sticky: StickyInstance;
 
-  /**
-   * 创建 Sticky 实例。
-   * @param {object} [props={}] Sticky 配置。
-   */
-  constructor(props: StickyProps = {}) {
-    const settings = normalizeProps(props);
-    super(settings);
+  const resolveOverflow = (elements: HTMLElement[]): HTMLElement[] => {
+    if (elements.length <= settings.max) return elements;
+    return settings.overflow === 'ignore' ? [] : elements.slice(-settings.max);
+  };
 
-    this.dom.parent = null;
-    this.dom.targets = [];
-    this.cache.originalStyles = [];
+  const restore = (): void => {
+    for (const item of cache.originalStyles) {
+      item.element.style.position = item.originalPosition;
+      item.element.style.top = item.originalTop;
+      item.element.style.zIndex = item.originalZIndex;
+    }
+  };
 
-    this.runtime.built = false;
+  const apply = (startTop = settings.top): number => {
+    let nextTop = startTop;
+    const items: StickyStateItem[] = [];
 
-    this.state = createDeepStore({
-      items: [],
+    targets.forEach((element, index) => {
+      element.style.position = 'sticky';
+      element.style.top = `${nextTop}px`;
+      items.push({ key: element.id || String(index), index, top: nextTop });
+      nextTop += element.offsetHeight + settings.gap;
     });
-  }
 
-  /**
-   * 构建 Sticky 行为并应用样式。
-   * @returns {Sticky} 当前实例。
-   */
-  build(): this {
-    if (this.runtime.destroyed)
-      throw new Error('Sticky.build: instance destroyed');
-    if (this.runtime.built) return this;
+    flushSync(() => {
+      state.items = items;
+    });
+    settings.onRefresh?.(sticky);
+    return nextTop;
+  };
 
-    this.init(this.props);
+  const build = (): StickyInstance => {
+    if (runtime.destroyed) throw new Error('Sticky.build: instance destroyed');
+    if (runtime.built) return sticky;
 
-    this.dom.parent = resolveParent(this.props.parent);
-    this.dom.targets = resolveTarget(this.props.target, this.dom.parent);
-    this.dom.targets = this.resolveOverflow(this.dom.targets);
+    parent = resolveParent(settings.parent);
+    targets = resolveOverflow(resolveTarget(settings.target, parent));
+    runtime.built = true;
+    if (targets.length === 0) return sticky;
 
-    this.runtime.built = true;
-
-    if (this.dom.targets.length === 0) return this;
-
-    this.captureOriginalStyles();
-    this.apply();
-    return this;
-  }
-
-  private captureOriginalStyles(): void {
-    this.cache.originalStyles = this.dom.targets.map((element) => ({
+    cache.originalStyles = targets.map((element) => ({
       element,
       originalPosition: element.style.position,
       originalTop: element.style.top,
       originalZIndex: element.style.zIndex,
     }));
-  }
+    apply();
+    return sticky;
+  };
 
-  private resolveOverflow(targets: HTMLElement[]): HTMLElement[] {
-    const { max, overflow } = this.props;
-    if (targets.length <= max) return targets;
+  const refresh = (): StickyInstance => {
+    if (!runtime.destroyed && runtime.built && targets.length > 0) apply();
+    return sticky;
+  };
 
-    return overflow === 'ignore' ? [] : targets.slice(-max);
-  }
+  const destroy = (): void => {
+    if (runtime.destroyed) return;
+    restore();
+    runtime.destroyed = true;
+    runtime.built = false;
+    cache.originalStyles = [];
+    targets = [];
+    parent = null;
+  };
 
-  private apply(startTop = this.props.top): number {
-    let nextTop = startTop;
-    const stateItems: StickyStateItem[] = [];
-
-    for (const element of this.dom.targets) {
-      element.style.position = 'sticky';
-      element.style.top = `${nextTop}px`;
-
-      stateItems.push({ element, top: nextTop });
-      nextTop += element.offsetHeight + this.props.gap;
-    }
-
-    this.setState({
-      items: stateItems,
-    });
-
-    if (typeof this.props.onRefresh === 'function') {
-      this.props.onRefresh(this);
-    }
-
-    return nextTop;
-  }
-
-  private restore(): void {
-    for (const item of this.cache.originalStyles) {
-      item.element.style.position = item.originalPosition;
-      item.element.style.top = item.originalTop;
-      item.element.style.zIndex = item.originalZIndex;
-    }
-  }
-
-  /**
-   * 重新计算当前实例内所有 sticky 元素的 top。
-   * @returns {Sticky} 当前实例。
-   */
-  refresh(): this {
-    if (
-      this.runtime.destroyed ||
-      !this.runtime.built ||
-      this.dom.targets.length === 0
-    ) {
-      return this;
-    }
-    this.apply();
-    return this;
-  }
-
-  destroy(): void {
-    if (this.runtime.destroyed) return;
-    this.restore();
-    super.destroy();
-  }
-
-  /**
-   * 销毁实例并恢复被管理元素的原始样式。
-   * @private
-   */
-  protected onDestroy(): void {
-    this.runtime.built = false;
-    this.cache.originalStyles = [];
-    this.dom.targets = [];
-  }
-}
-
-export function createSticky(props: StickyProps = {}): StickyInstance {
-  return new Sticky(props);
+  sticky = { props: settings, state, runtime, build, refresh, destroy };
+  return sticky;
 }

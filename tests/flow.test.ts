@@ -41,8 +41,8 @@ function app(): HTMLElement {
 
 function mount(instance: FlowInstance): FlowInstance {
   instance.build();
-  if (!instance.dom.root) throw new Error('Flow did not build a root.');
-  app().appendChild(instance.dom.root);
+  if (!instance.element) throw new Error('Flow did not build a root.');
+  app().appendChild(instance.element);
   return instance;
 }
 
@@ -68,41 +68,37 @@ describe('Flow', () => {
     });
     flow = instance;
 
-    expect(instance.dom.root).toBeNull();
+    expect(instance.element).toBeNull();
 
     instance.build();
-    expect(document.body.contains(instance.dom.root)).toBe(false);
-    if (!instance.dom.root) throw new Error('Expected Flow root.');
-    app().appendChild(instance.dom.root);
+    expect(document.body.contains(instance.element)).toBe(false);
+    if (!instance.element) throw new Error('Expected Flow root.');
+    app().appendChild(instance.element);
 
-    expect(instance.dom.root.classList.contains('j-flow')).toBe(true);
-    expect(instance.dom.root.getAttribute('data-flow')).toBe('root');
+    expect(instance.element.classList.contains('j-flow')).toBe(true);
+    expect(instance.element.getAttribute('data-flow')).toBe('root');
     expect(
-      Array.from(instance.dom.root.children).map((child) => child.className)
+      Array.from(instance.element.children).map((child) => child.className)
     ).toEqual(['flow-header', 'flow-body', 'flow-footer']);
     expect(
-      instance.dom.root.querySelector(':scope > .flow-header > .flow-steps')
+      instance.element.querySelector(':scope > .flow-header > .flow-steps')
     ).toBeTruthy();
-    expect(instance.dom.root.querySelector('.flow-title')).toBeNull();
-    expect(instance.dom.root.querySelector('.flow-description')).toBeNull();
-    expect(instance.dom.root.querySelectorAll('[data-flow-step]')).toHaveLength(
+    expect(instance.element.querySelector('.flow-title')).toBeNull();
+    expect(instance.element.querySelector('.flow-description')).toBeNull();
+    expect(instance.element.querySelectorAll('[data-flow-step]')).toHaveLength(
       3
     );
     expect(
-      instance.dom.root
+      instance.element
         .querySelector('[data-flow-step="account"]')
         ?.classList.contains('is-active')
     ).toBe(true);
+    expect(instance.element.querySelector('[data-action="back"]')).toBeTruthy();
+    expect(instance.element.querySelector('[data-action="next"]')).toBeTruthy();
     expect(
-      instance.dom.root.querySelector('[data-action="back"]')
+      instance.element.querySelector('[data-action="reset"]')
     ).toBeTruthy();
-    expect(
-      instance.dom.root.querySelector('[data-action="next"]')
-    ).toBeTruthy();
-    expect(
-      instance.dom.root.querySelector('[data-action="reset"]')
-    ).toBeTruthy();
-    expect(instance.dom.root.textContent).toContain('Account content');
+    expect(instance.element.textContent).toContain('Account content');
   });
 
   it('runs headless transitions and caches step payloads', async () => {
@@ -115,7 +111,7 @@ describe('Flow', () => {
     }).build();
     flow = instance;
 
-    expect(instance.dom.root).toBeNull();
+    expect(instance.element).toBeNull();
     expect(instance.snapshot().currentId).toBe('account');
 
     await instance.next({ email: 'demo@example.com' });
@@ -173,11 +169,11 @@ describe('Flow', () => {
     );
     flow = instance;
 
-    const next = instance.dom.root?.querySelector<HTMLButtonElement>(
+    const next = instance.element?.querySelector<HTMLButtonElement>(
       '[data-action="next"]'
     );
-    expect(instance.dom.root?.classList.contains('wizard')).toBe(true);
-    expect(instance.dom.root?.classList.contains('j-flow')).toBe(false);
+    expect(instance.element?.classList.contains('wizard')).toBe(true);
+    expect(instance.element?.classList.contains('j-flow')).toBe(false);
     expect(next?.classList.contains('wizard-next')).toBe(true);
     expect(next?.classList.contains('is-primary')).toBe(false);
 

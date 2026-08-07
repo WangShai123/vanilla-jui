@@ -13,12 +13,48 @@ import { createModal, type Modal } from '../src/components/modal.ts';
 
 let modal: Modal | null = null;
 
-function flushHide(): void {
-  vi.advanceTimersByTime(310);
+async function flushPresence(): Promise<void> {
+  await Promise.resolve();
+  await Promise.resolve();
+  await Promise.resolve();
 }
 
 function setInvalidState(patch: Record<string, unknown>): void {
   modal?.setState(patch as never);
+}
+
+function dialog(instance: Modal): HTMLElement | null {
+  return (
+    instance.element?.querySelector<HTMLElement>('[data-modal-dialog]') || null
+  );
+}
+
+function body(instance: Modal): HTMLElement | null {
+  return (
+    instance.element?.querySelector<HTMLElement>('[data-modal-body]') || null
+  );
+}
+
+function pendingAnimation(): {
+  animation: Animation;
+  resolve: () => void;
+} {
+  let resolve!: () => void;
+  const finished = new Promise<void>((done) => {
+    resolve = done;
+  });
+  return {
+    animation: {
+      effect: { getComputedTiming: () => ({ endTime: 350 }) },
+      finished,
+      currentTime: null,
+      playbackRate: 1,
+      pause: vi.fn(),
+      play: vi.fn(),
+      cancel: vi.fn(),
+    } as unknown as Animation,
+    resolve,
+  };
 }
 
 beforeEach(() => {
@@ -43,21 +79,21 @@ describe('Modal', () => {
       content: ['Count: ', 1, false, null],
     }).build();
 
-    expect(modal.dom.root?.classList.contains('j-popup-layout')).toBe(true);
-    expect(modal.dom.modal?.classList.contains('j-modal')).toBe(true);
-    expect(modal.dom.root?.getAttribute('data-modal')).toBe('root');
-    expect(modal.dom.root?.getAttribute('aria-modal')).toBe('true');
-    expect(modal.dom.root?.getAttribute('aria-labelledby')).toBe(
+    expect(modal.element?.classList.contains('j-popup-layout')).toBe(true);
+    expect(dialog(modal)?.classList.contains('j-modal')).toBe(true);
+    expect(modal.element?.getAttribute('data-modal')).toBe('root');
+    expect(modal.element?.getAttribute('aria-modal')).toBe('true');
+    expect(modal.element?.getAttribute('aria-labelledby')).toBe(
       'default-modal_title'
     );
     expect(
-      modal.dom.root?.querySelector('[data-modal-dialog="default-modal"]')
-    ).toBe(modal.dom.modal);
+      modal.element?.querySelector('[data-modal-dialog="default-modal"]')
+    ).toBe(dialog(modal));
 
     modal.show();
-    expect(document.body.contains(modal.dom.root)).toBe(true);
+    expect(document.body.contains(modal.element)).toBe(true);
     expect(modal.state.visible).toBe(true);
-    expect(modal.dom.body?.textContent).toBe('Count: 1');
+    expect(body(modal)?.textContent).toBe('Count: 1');
   });
 
   it('allows className overrides without changing data selectors', () => {
@@ -73,15 +109,15 @@ describe('Modal', () => {
       },
     }).build();
 
-    expect(modal.dom.root?.classList.contains('qa-modal-layout')).toBe(true);
-    expect(modal.dom.root?.classList.contains('j-popup-layout')).toBe(false);
-    expect(modal.dom.modal?.classList.contains('qa-modal')).toBe(true);
+    expect(modal.element?.classList.contains('qa-modal-layout')).toBe(true);
+    expect(modal.element?.classList.contains('j-popup-layout')).toBe(false);
+    expect(dialog(modal)?.classList.contains('qa-modal')).toBe(true);
     expect(
-      modal.dom.root?.querySelector('[data-modal-dialog="custom-modal"]')
-    ).toBe(modal.dom.modal);
+      modal.element?.querySelector('[data-modal-dialog="custom-modal"]')
+    ).toBe(dialog(modal));
 
     modal.show();
-    const confirm = modal.dom.modal?.querySelector<HTMLElement>(
+    const confirm = dialog(modal)?.querySelector<HTMLElement>(
       '[data-action="confirm"]'
     );
     expect(confirm?.classList.contains('qa-confirm')).toBe(true);
@@ -98,15 +134,37 @@ describe('Modal', () => {
     modal.state.visible = true;
     await Promise.resolve();
 
-    expect(document.body.contains(modal.dom.root)).toBe(true);
-    expect(modal.dom.root?.classList.contains('is-top')).toBe(true);
+    expect(document.body.contains(modal.element)).toBe(true);
+    expect(modal.element?.classList.contains('is-top')).toBe(true);
 
     modal.state.visible = false;
     await Promise.resolve();
 
     expect(modal.state.visible).toBe(false);
-    flushHide();
-    expect(document.body.contains(modal.dom.root)).toBe(false);
+    await flushPresence();
+    expect(document.body.contains(modal.element)).toBe(false);
+  });
+
+  it('keeps the dialog mounted until its leave transition finishes', async () => {
+    modal = createModal({ content: 'Animated content' }).build();
+    const panel = dialog(modal);
+    if (!panel) throw new Error('Expected modal dialog.');
+    const motion = pendingAnimation();
+    Object.defineProperty(panel, 'animate', {
+      configurable: true,
+      value: () => motion.animation,
+    });
+
+    modal.show();
+    modal.hide();
+
+    expect(panel?.getAttribute('aria-hidden')).toBe('true');
+    expect(motion.animation.playbackRate).toBe(-1);
+    expect(document.body.contains(modal.element)).toBe(true);
+
+    motion.resolve();
+    await flushPresence();
+    expect(document.body.contains(modal.element)).toBe(false);
   });
 
   it('handles confirm, cancel, Escape and background close by data actions', async () => {
@@ -122,7 +180,7 @@ describe('Modal', () => {
     }).build();
 
     modal.show();
-    modal.dom.modal
+    dialog(modal)
       ?.querySelector<HTMLElement>('[data-action="confirm"]')
       ?.click();
     await Promise.resolve();
@@ -130,23 +188,21 @@ describe('Modal', () => {
     expect(modal.state.visible).toBe(true);
 
     modal.hide();
-    flushHide();
+    await flushPresence();
     modal.show();
-    modal.dom.modal
-      ?.querySelector<HTMLElement>('[data-testid="inner"]')
-      ?.click();
+    dialog(modal)?.querySelector<HTMLElement>('[data-testid="inner"]')?.click();
     await Promise.resolve();
     expect(onCancel).toHaveBeenCalledTimes(1);
     expect(modal.state.visible).toBe(false);
 
-    flushHide();
+    await flushPresence();
     modal.show();
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
     expect(modal.state.visible).toBe(false);
 
-    flushHide();
+    await flushPresence();
     modal.show();
-    modal.dom.root?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    modal.element?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     expect(modal.state.visible).toBe(false);
   });
 
@@ -161,7 +217,9 @@ describe('Modal', () => {
     expect(modal.state.mode).toBe('form');
     modal.show();
 
-    const input = modal.dom.form?.root?.elements.namedItem('name');
+    const input = modal.element
+      ?.querySelector<HTMLFormElement>('form')
+      ?.elements.namedItem('name');
     if (!(input instanceof HTMLInputElement)) {
       throw new Error('Expected name input.');
     }
@@ -193,10 +251,10 @@ describe('Modal', () => {
     expect(modal.state.fields).toHaveLength(1);
 
     modal.show();
-    expect(modal.dom.form).toBeNull();
-    expect(modal.dom.body?.textContent).toBe('Plain body');
+    expect(modal.element?.querySelector('form')).toBeNull();
+    expect(body(modal)?.textContent).toBe('Plain body');
 
-    modal.dom.modal
+    dialog(modal)
       ?.querySelector<HTMLElement>('[data-action="confirm"]')
       ?.click();
     await Promise.resolve();
@@ -214,22 +272,22 @@ describe('Modal', () => {
     }).build();
 
     modal.show();
-    expect(modal.dom.form).toBeTruthy();
+    expect(modal.element?.querySelector('form')).toBeTruthy();
 
     modal.setState({ content: 'Next content' });
     await Promise.resolve();
     expect(modal.state.mode).toBe('form');
-    expect(modal.dom.form).toBeTruthy();
-    expect(modal.dom.body?.textContent).not.toContain('Next content');
+    expect(modal.element?.querySelector('form')).toBeTruthy();
+    expect(body(modal)?.textContent).not.toContain('Next content');
 
     modal.setState({ mode: 'content' });
     await Promise.resolve();
-    expect(modal.dom.form).toBeNull();
-    expect(modal.dom.body?.textContent).toBe('Next content');
+    expect(modal.element?.querySelector('form')).toBeNull();
+    expect(body(modal)?.textContent).toBe('Next content');
 
     modal.state.mode = 'form';
     await Promise.resolve();
-    expect(modal.dom.form).toBeTruthy();
+    expect(modal.element?.querySelector('form')).toBeTruthy();
   });
 
   it('updates and resets reactive state while rejecting static props', () => {
@@ -270,10 +328,10 @@ describe('Modal', () => {
       content: 'Manual build',
     });
 
-    expect(modal.dom.root).toBeNull();
+    expect(modal.element).toBeNull();
     expect(() => modal?.show()).toThrow(/build\(\) must be called/);
 
     modal.build().show();
-    expect(document.body.contains(modal.dom.root)).toBe(true);
+    expect(document.body.contains(modal.element)).toBe(true);
   });
 });

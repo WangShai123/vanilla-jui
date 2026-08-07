@@ -1,6 +1,8 @@
 # JUI 库
 
-一个基于原生 JavaScript 的轻量级用户 UI 插件库。
+一个基于原生 JavaScript 的轻量级、响应式、可完全自定义样式的用户 UI 库。
+
+[English](README.md)
 
 ## 特点
 
@@ -27,12 +29,16 @@ UMD, 全局变量名: `jui`
 ESM
 
 ```javascript
-import { Toast, Modal } from 'vanilla-jui';
+import { createToast, createModal } from 'vanilla-jui';
 import 'vanilla-jui/style.css';
 ```
 
 UMD, 全局变量名: `jui`
 
 ```javascript
-const { Toast, Modal } = jui;
+const { createToast, createModal } = jui;
 ```
+
+## 文档
+
+[在线文档](https://docs.jealer.com/vanilla-jui/)

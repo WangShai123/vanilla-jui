@@ -30,8 +30,8 @@ function app(): HTMLElement {
 
 function mount(instance: MenuInstance): MenuInstance {
   instance.build();
-  if (!instance.dom.root) throw new Error('Menu did not build a root.');
-  app().appendChild(instance.dom.root);
+  if (!instance.element) throw new Error('Menu did not build a root.');
+  app().appendChild(instance.element);
   return instance;
 }
 
@@ -54,22 +54,20 @@ describe('Menu', () => {
   it('builds detached DOM with default classes and stable data markers', () => {
     menu = createMenu({ data: data() });
 
-    expect(menu.dom.root).toBeNull();
+    expect(menu.element).toBeNull();
 
     menu.build();
-    expect(app().contains(menu.dom.root)).toBe(false);
-    if (!menu.dom.root) throw new Error('Expected Menu root.');
-    app().appendChild(menu.dom.root);
+    expect(app().contains(menu.element)).toBe(false);
+    if (!menu.element) throw new Error('Expected Menu root.');
+    app().appendChild(menu.element);
 
-    expect(menu.dom.root.classList.contains('j-menu')).toBe(true);
-    expect(menu.dom.root.getAttribute('data-menu')).toBe('root');
-    expect(menu.dom.root.hasAttribute('data-menu-type')).toBe(false);
-    expect(menu.dom.root.querySelector('[data-menu-list="root"]')).toBeTruthy();
-    expect(menu.dom.root.querySelectorAll('[data-menu-item]')).toHaveLength(4);
-    expect(
-      menu.dom.root.querySelector('[data-menu-has-children]')
-    ).toBeTruthy();
-    expect(menu.dom.root.querySelector('[data-menu-list="sub"]')).toBeTruthy();
+    expect(menu.element.classList.contains('j-menu')).toBe(true);
+    expect(menu.element.getAttribute('data-menu')).toBe('root');
+    expect(menu.element.hasAttribute('data-menu-type')).toBe(false);
+    expect(menu.element.querySelector('[data-menu-list="root"]')).toBeTruthy();
+    expect(menu.element.querySelectorAll('[data-menu-item]')).toHaveLength(4);
+    expect(menu.element.querySelector('[data-menu-has-children]')).toBeTruthy();
+    expect(menu.element.querySelector('[data-menu-list="sub"]')).toBeTruthy();
   });
 
   it('uses data markers for mobile submenu interaction when className is customized', () => {
@@ -90,12 +88,12 @@ describe('Menu', () => {
       })
     );
 
-    expect(menu.dom.root?.classList.contains('qa-menu')).toBe(true);
-    expect(menu.dom.root?.getAttribute('data-menu-type')).toBe('mobile');
-    expect(menu.dom.root?.classList.contains('j-menu')).toBe(false);
-    expect(menu.dom.root?.querySelector('.menu-item')).toBeNull();
+    expect(menu.element?.classList.contains('qa-menu')).toBe(true);
+    expect(menu.element?.getAttribute('data-menu-type')).toBe('mobile');
+    expect(menu.element?.classList.contains('j-menu')).toBe(false);
+    expect(menu.element?.querySelector('.menu-item')).toBeNull();
 
-    const parent = menu.dom.root?.querySelector<HTMLElement>(
+    const parent = menu.element?.querySelector<HTMLElement>(
       '[data-menu-has-children]'
     );
     parent?.querySelector<HTMLElement>('[data-menu-link]')?.click();
@@ -122,7 +120,7 @@ describe('Menu', () => {
       })
     );
 
-    const parent = menu.dom.root?.querySelector<HTMLElement>(
+    const parent = menu.element?.querySelector<HTMLElement>(
       '[data-menu-has-children]'
     );
     parent?.click();
@@ -139,7 +137,7 @@ describe('Menu', () => {
       })
     );
 
-    const parent = menu.dom.root?.querySelector<HTMLElement>(
+    const parent = menu.element?.querySelector<HTMLElement>(
       '[data-menu-has-children]'
     );
     parent?.querySelector<HTMLElement>('[data-menu-link]')?.click();
@@ -162,20 +160,20 @@ describe('Menu', () => {
     menu.setState({ data: [{ id: 'new', title: 'New', url: '#new' }] });
     await tick();
 
-    expect(menu.dom.root?.querySelectorAll('[data-menu-item]')).toHaveLength(1);
-    expect(menu.dom.root?.textContent).toBe('New');
+    expect(menu.element?.querySelectorAll('[data-menu-item]')).toHaveLength(1);
+    expect(menu.element?.textContent).toBe('New');
 
     menu.state.data = [];
     await tick();
 
-    expect(menu.dom.root?.querySelectorAll('[data-menu-item]')).toHaveLength(0);
+    expect(menu.element?.querySelectorAll('[data-menu-item]')).toHaveLength(0);
   });
 
   it('keeps type fixed from props and uses configured mobile back text', () => {
     menu = mount(
       createMenu({ type: 'mobile', data: data(), backText: '返回' })
     );
-    const parent = menu.dom.root?.querySelector<HTMLElement>(
+    const parent = menu.element?.querySelector<HTMLElement>(
       '[data-menu-has-children]'
     );
     parent?.querySelector<HTMLElement>('[data-menu-link]')?.click();
@@ -188,7 +186,7 @@ describe('Menu', () => {
   it('does not enable mobile or bottom interactions without a matching type', () => {
     menu = mount(createMenu({ data: data() }));
 
-    const parent = menu.dom.root?.querySelector<HTMLElement>(
+    const parent = menu.element?.querySelector<HTMLElement>(
       '[data-menu-has-children]'
     );
     parent?.querySelector<HTMLElement>('[data-menu-link]')?.click();
@@ -203,10 +201,10 @@ describe('Menu', () => {
   it('accepts custom type as a data marker without built-in interactions', () => {
     menu = mount(createMenu({ type: 'flyout', data: data() }));
 
-    expect(menu.dom.root?.classList.contains('j-menu')).toBe(true);
-    expect(menu.dom.root?.getAttribute('data-menu-type')).toBe('flyout');
+    expect(menu.element?.classList.contains('j-menu')).toBe(true);
+    expect(menu.element?.getAttribute('data-menu-type')).toBe('flyout');
 
-    const parent = menu.dom.root?.querySelector<HTMLElement>(
+    const parent = menu.element?.querySelector<HTMLElement>(
       '[data-menu-has-children]'
     );
     parent?.querySelector<HTMLElement>('[data-menu-link]')?.click();
@@ -232,23 +230,23 @@ describe('Menu', () => {
     );
 
     expect(
-      menu.dom.root?.querySelector('[data-menu-item="empty"] > span')
+      menu.element?.querySelector('[data-menu-item="empty"] > span')
     ).toBeTruthy();
     expect(
-      menu.dom.root?.querySelector('[data-menu-item="missing"] > span')
+      menu.element?.querySelector('[data-menu-item="missing"] > span')
     ).toBeTruthy();
     expect(
-      menu.dom.root
+      menu.element
         ?.querySelector<HTMLAnchorElement>('[data-menu-item="link"] > a')
         ?.getAttribute('href')
     ).toBe('#link');
     expect(
-      menu.dom.root
+      menu.element
         ?.querySelector<HTMLAnchorElement>('[data-menu-item="parent"] > a')
         ?.getAttribute('href')
     ).toBe('');
     expect(
-      menu.dom.root?.querySelector('[data-menu-item="parent"] > span')
+      menu.element?.querySelector('[data-menu-item="parent"] > span')
     ).toBeNull();
   });
 
@@ -275,13 +273,13 @@ describe('Menu', () => {
 
     menu = mount(createMenu({ type: 'mobile', data: extendedItems }));
 
-    expect(menu.dom.root?.querySelectorAll('[data-menu-item]')).toHaveLength(2);
-    expect(menu.dom.root?.textContent).toContain('Extended');
+    expect(menu.element?.querySelectorAll('[data-menu-item]')).toHaveLength(2);
+    expect(menu.element?.textContent).toContain('Extended');
     expect(
-      menu.dom.root?.querySelector('[data-menu-item="extended"]')?.className
+      menu.element?.querySelector('[data-menu-item="extended"]')?.className
     ).toContain('is-current');
     expect(
-      menu.dom.root?.querySelector('[data-menu-item="extended"]')?.className
+      menu.element?.querySelector('[data-menu-item="extended"]')?.className
     ).toContain('custom-link');
     expect(menu.state.data[0]?.a).toBe('custom data');
 
@@ -290,7 +288,7 @@ describe('Menu', () => {
     });
     await tick();
 
-    expect(menu.dom.root?.querySelectorAll('[data-menu-item]')).toHaveLength(1);
+    expect(menu.element?.querySelectorAll('[data-menu-item]')).toHaveLength(1);
     expect(menu.state.data[0]?.a).toBe(true);
   });
 
@@ -331,16 +329,15 @@ describe('Menu', () => {
 
     menu = mount(createMenu({ type: 'mobile', data: wordpressItems }));
 
-    expect(menu.dom.root?.querySelectorAll('[data-menu-item]')).toHaveLength(3);
-    expect(menu.dom.root?.textContent).toContain('首页');
-    expect(menu.dom.root?.textContent).toContain('人话');
+    expect(menu.element?.querySelectorAll('[data-menu-item]')).toHaveLength(3);
+    expect(menu.element?.textContent).toContain('首页');
+    expect(menu.element?.textContent).toContain('人话');
     expect(
-      menu.dom.root?.querySelector('[data-menu-item="254"]')?.className
+      menu.element?.querySelector('[data-menu-item="254"]')?.className
     ).toContain('current-menu-item');
     expect(
-      menu.dom.root?.querySelector<HTMLAnchorElement>(
-        '[data-menu-item="254"] a'
-      )?.target
+      menu.element?.querySelector<HTMLAnchorElement>('[data-menu-item="254"] a')
+        ?.target
     ).toBe('_blank');
     expect(menu.state.data[1]?.menu_item_parent).toBeNull();
   });
@@ -348,7 +345,7 @@ describe('Menu', () => {
   it('removes mounted DOM on destroy', () => {
     menu = mount(createMenu({ type: 'mobile', data: data() }));
 
-    expect(app().contains(menu.dom.root)).toBe(true);
+    expect(app().contains(menu.element)).toBe(true);
 
     menu.destroy();
     menu = null;

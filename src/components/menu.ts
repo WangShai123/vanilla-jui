@@ -1,20 +1,15 @@
-import { createDeepStore, jsx } from 'vanilla-signal';
+import { For, createDeepStore, flushSync, jsx } from 'vanilla-signal';
 import { t } from 'vanilla-signal-i18n';
 
-import Component, {
-  type ComponentDOM,
-  type ComponentRuntime,
-} from '../core/Component.ts';
+import {
+  type FunctionalComponent,
+  defineComponent,
+} from '../core/component.ts';
 import locales from '../locales/index.ts';
 import { icon } from '../primitives/icons.ts';
 import { joinClasses } from '../utilities/class-name.ts';
-import { all } from '../utilities/dom.ts';
+import { createEventManager } from '../utilities/events.ts';
 import { randomId } from '../utilities/id.ts';
-import {
-  createStateSync,
-  stateSnapshot,
-  trackStoreVersion,
-} from '../utilities/scheduler.ts';
 import {
   type ResolveSchema,
   resolveProps,
@@ -66,23 +61,7 @@ interface ResolvedMenuProps extends Record<string, unknown> {
 
 interface MenuState extends Record<string, unknown> {
   data: MenuItem[];
-}
-
-interface MenuDOM extends ComponentDOM {
-  root: HTMLElement | null;
-  list: HTMLElement | null;
-}
-
-interface MenuRuntime extends ComponentRuntime {
-  built: boolean;
-}
-
-interface MenuCleanupExtras {
-  state?: (() => void) | null;
-}
-
-interface MenuSnapshot {
-  data: unknown;
+  activeKeys: string[];
 }
 
 const DEFAULT_CLASS_NAMES: MenuClassNames = {
@@ -142,6 +121,7 @@ const MENU_PROPS_SCHEMA = {
 
 const MENU_STATE_SCHEMA = {
   data: MENU_DATA_RULE,
+  activeKeys: { type: 'array', items: 'string' },
 };
 
 function normalizeProps(input: MenuProps = {}): ResolvedMenuProps {
@@ -211,320 +191,213 @@ function cloneMenuData(data: unknown): MenuItem[] {
   });
 }
 
-function findDirectMenuLink(menuItem: HTMLElement): HTMLElement | null {
-  return (
-    all<HTMLElement>('[data-menu-link]', menuItem).find(
-      (link) => link.parentElement === menuItem
-    ) || null
-  );
-}
+export type Menu = FunctionalComponent<
+  ResolvedMenuProps,
+  MenuState,
+  HTMLElement
+>;
 
-function findDirectSubMenu(menuItem: HTMLElement): HTMLElement | null {
-  return (
-    all<HTMLElement>('[data-menu-list="sub"]', menuItem).find(
-      (list) => list.parentElement === menuItem
-    ) || null
-  );
-}
+export function createMenu(input: MenuProps = {}): Menu {
+  const props = normalizeProps(input);
+  const state = createDeepStore({
+    data: cloneMenuData(props.data),
+    activeKeys: [],
+  }) as MenuState;
+  const generatedKeys = new WeakMap<object, string>();
+  const events = createEventManager();
+  let menu: Menu;
 
-function findDirectBackItem(subMenu: HTMLElement): HTMLElement | null {
-  return (
-    all<HTMLElement>('[data-menu-back]', subMenu).find(
-      (item) => item.parentElement === subMenu
-    ) || null
-  );
-}
+  const itemKey = (item: MenuItem): string => {
+    if (item.id != null) return String(item.id);
+    if (!generatedKeys.has(item)) generatedKeys.set(item, randomId());
+    return generatedKeys.get(item) as string;
+  };
+  const isActive = (key: string): boolean => state.activeKeys.includes(key);
+  const open = (key: string): void => {
+    flushSync(() => {
+      state.activeKeys =
+        props.type === 'bottom'
+          ? [key]
+          : state.activeKeys.includes(key)
+            ? state.activeKeys
+            : [...state.activeKeys, key];
+    });
+  };
+  const close = (key: string): void => {
+    flushSync(() => {
+      state.activeKeys = state.activeKeys.filter((item) => item !== key);
+    });
+  };
+  const toggle = (key: string): void => {
+    flushSync(() => {
+      state.activeKeys = isActive(key) ? [] : [key];
+    });
+  };
 
-class MenuComponent extends Component<ResolvedMenuProps, MenuState, MenuDOM> {
-  declare runtime: MenuRuntime;
-  declare state: MenuState;
-  declare cleanup: Component['cleanup'] & MenuCleanupExtras;
-
-  constructor(input: MenuProps = {}) {
-    const props = normalizeProps(input);
-    super(props);
-
-    this.dom.list = null;
-    this.cleanup.state = null;
-    this.runtime.built = false;
-
-    this.state = createDeepStore({
-      data: cloneMenuData(props.data),
-    }) as MenuState;
-  }
-
-  build(): this {
-    if (this.runtime.destroyed) {
-      throw new Error('Menu.build: instance has been destroyed.');
-    }
-    if (this.runtime.built) return this;
-
-    this.validateData(this.state.data);
-    this.dom.root = jsx('nav', {
-      className: this.props.className.root,
-      'data-menu': 'root',
-      ...(this.props.type !== undefined && {
-        'data-menu-type': this.props.type,
-      }),
-      children: jsx('ul', {
-        className: this.props.className.list,
-        id: this.props.id,
-        'data-menu-list': 'root',
-      }),
-    }) as HTMLElement;
-    this.dom.list = this.dom.root.querySelector('[data-menu-list="root"]');
-    this.runtime.built = true;
-    this.bindState();
-    this.bindEvents();
-    this.emit('init', this.props);
-    return this;
-  }
-
-  private bindState(): void {
-    if (this.cleanup.state) return;
-
-    this.cleanup.state = createStateSync(
-      () => ({
-        data: trackStoreVersion(this.state.data),
-      }),
-      (snapshot) => this.renderSnapshot(snapshot),
-      { deferInitial: false, flushInitial: true }
-    );
-  }
-
-  private renderSnapshot(snapshot: MenuSnapshot): void {
-    if (!this.runtime.built || !this.dom.root || !this.dom.list) return;
-    this.validateData(snapshot.data);
-    const data = cloneMenuData(stateSnapshot(snapshot.data));
-
-    this.dom.list.textContent = '';
-    this.dom.list.append(...data.map((item) => this.buildItem(item)));
-  }
-
-  private buildItem(item: MenuItem): HTMLElement {
-    const { className } = this.props;
-    const childrenItems = item.children || [];
-    const hasChildren = childrenItems.length > 0;
-    const classes = [className.item];
-
-    if (hasChildren) classes.push(className.hasChildren);
-    classes.push(...normalizeItemClasses(item.classes));
-
-    const url = itemUrl(item.url);
-    const shouldRenderSpan = !hasChildren && !url;
-    const title = shouldRenderSpan
-      ? (jsx('span', {
-          className: className.link,
-          'data-menu-link': '',
-          children: item.title,
-        }) as HTMLElement)
-      : (jsx('a', {
-          className: className.link,
-          href: url,
-          ...(item.target && { target: item.target }),
-          'data-menu-link': '',
-          children: item.title,
-        }) as HTMLElement);
-
-    const children: Node[] = [title];
-
-    if (hasChildren) {
-      children.push(
-        jsx('ul', {
-          className: className.subMenu,
-          'data-menu-list': 'sub',
-          children: childrenItems.map((child) => this.buildItem(child)),
-        }) as HTMLElement
-      );
-    }
-
-    return jsx('li', {
-      className: joinClasses(...classes),
-      id: itemId(item.id),
-      'data-menu-item': item.id == null ? '' : String(item.id),
-      ...(hasChildren && { 'data-menu-has-children': '' }),
-      children,
-    }) as HTMLElement;
-  }
-
-  private bindEvents(): void {
-    this.unbindEvents();
-    const root = this.dom.root;
-    if (!root) return;
-
-    if (this.props.type === 'mobile') {
-      this.cleanup.events.on('mobile', root, 'click', (event) => {
-        const target = event.target;
-        if (!(target instanceof Element)) return;
-
-        const backItem = target.closest<HTMLElement>('[data-menu-back]');
-        if (backItem && root.contains(backItem)) {
-          event.preventDefault();
-          this.handleBack(backItem);
-          return;
-        }
-
-        const menuItem = target.closest<HTMLElement>(
-          '[data-menu-has-children]'
-        );
-        if (!menuItem || !root.contains(menuItem)) return;
-
-        const subMenu = findDirectSubMenu(menuItem);
-        if (subMenu?.contains(target)) return;
-
-        const directLink = findDirectMenuLink(menuItem);
-        if (
-          target === menuItem ||
-          (directLink && (target === directLink || directLink.contains(target)))
-        ) {
-          event.preventDefault();
-          this.handleMenuClick(menuItem);
-        }
-      });
-    }
-
-    if (this.props.type === 'bottom') {
-      this.cleanup.events.on('bottom', document, 'click', (event) => {
-        const target = event.target;
-        if (!(target instanceof Element) || !root.isConnected) return;
-
-        const submenuLink = target.closest(
-          '[data-menu-list="sub"] [data-menu-link]'
-        );
-        if (submenuLink && root.contains(submenuLink)) return;
-
-        const firstLevelMenuItem = target.closest<HTMLElement>(
-          '[data-menu-list="root"] > [data-menu-has-children]'
-        );
-
-        if (firstLevelMenuItem && root.contains(firstLevelMenuItem)) {
-          event.preventDefault();
-          this.toggleActive(firstLevelMenuItem);
-        } else {
-          this.clearActive();
-        }
-      });
-    }
-  }
-
-  private unbindEvents(): void {
-    this.cleanup.events.clear();
-  }
-
-  private handleMenuClick(menuItem: HTMLElement): void {
-    menuItem.classList.add(this.props.className.active);
-
-    const subMenu = findDirectSubMenu(menuItem);
-    if (!subMenu) return;
-
-    const existingBack = findDirectBackItem(subMenu);
-    if (existingBack) return;
-
-    const { className } = this.props;
-    const backButton = jsx('li', {
-      className: className.backItem,
+  const backView = (key: string): HTMLElement =>
+    jsx('li', {
+      className: props.className.backItem,
       'data-menu-back': '',
       children: jsx('a', {
-        className: className.link,
+        className: props.className.link,
         href: '',
         'data-menu-link': '',
+        onClick: (event: Event) => {
+          event.preventDefault();
+          close(key);
+        },
         children: [
           jsx('span', {
-            className: className.backIcon,
+            className: props.className.backIcon,
             children: icon('arrow-left'),
           }),
           jsx('span', {
-            className: className.text,
-            children: this.props.backText,
+            className: props.className.text,
+            children: props.backText,
           }),
         ],
       }),
     }) as HTMLElement;
 
-    subMenu.insertBefore(backButton, subMenu.firstChild);
-  }
+  const listView = (
+    items: () => MenuItem[],
+    root = false,
+    parentKey?: string
+  ): HTMLElement =>
+    jsx('ul', {
+      className: root ? props.className.list : props.className.subMenu,
+      ...(root ? { id: props.id } : {}),
+      'data-menu-list': root ? 'root' : 'sub',
+      children: [
+        For({
+          each: () =>
+            props.type === 'mobile' && parentKey && isActive(parentKey)
+              ? [parentKey]
+              : [],
+          key: (key: string) => key,
+          children: (key: () => string) => backView(key()),
+        }),
+        For({
+          each: items,
+          key: (item: MenuItem) => itemKey(item),
+          children: (itemAccessor: () => MenuItem) => {
+            const key = itemKey(itemAccessor());
+            return jsx('li', {
+              className: () => {
+                const item = itemAccessor();
+                return joinClasses(
+                  props.className.item,
+                  item.children?.length ? props.className.hasChildren : '',
+                  ...normalizeItemClasses(item.classes),
+                  isActive(key) ? props.className.active : ''
+                );
+              },
+              id: () =>
+                itemAccessor().id == null
+                  ? `menu-item-${key}`
+                  : itemId(itemAccessor().id),
+              'data-menu-item': () =>
+                itemAccessor().id == null ? '' : String(itemAccessor().id),
+              'data-menu-has-children': () =>
+                itemAccessor().children?.length ? '' : null,
+              onClick: (event: Event) => {
+                if (
+                  props.type === 'mobile' &&
+                  event.target === event.currentTarget &&
+                  itemAccessor().children?.length
+                ) {
+                  open(key);
+                }
+              },
+              children: [
+                () => {
+                  const item = itemAccessor();
+                  const hasChildren = !!item.children?.length;
+                  const url = itemUrl(item.url);
+                  if (!hasChildren && !url) {
+                    return jsx('span', {
+                      className: props.className.link,
+                      'data-menu-link': '',
+                      children: item.title,
+                    });
+                  }
+                  return jsx('a', {
+                    className: props.className.link,
+                    href: url,
+                    target: item.target,
+                    'data-menu-link': '',
+                    onClick: (event: Event) => {
+                      if (!hasChildren) return;
+                      if (props.type === 'mobile' || props.type === 'bottom') {
+                        event.preventDefault();
+                        if (props.type === 'bottom') toggle(key);
+                        else open(key);
+                      }
+                    },
+                    children: item.title,
+                  });
+                },
+                () => {
+                  const children = itemAccessor().children;
+                  if (!children?.length) return null;
+                  return listView(
+                    () => itemAccessor().children || [],
+                    false,
+                    key
+                  );
+                },
+              ],
+            });
+          },
+        }),
+      ],
+    }) as HTMLElement;
 
-  private handleBack(target: Element): void {
-    const backItem = target.closest<HTMLElement>('[data-menu-back]');
-    if (!backItem) return;
+  menu = defineComponent({
+    name: 'Menu',
+    props,
+    state,
+    normalizeStatePatch(patch) {
+      const next = { ...patch };
+      if (Object.hasOwn(next, 'data')) next.data = cloneMenuData(next.data);
+      return next;
+    },
+    validateStatePatch(patch) {
+      for (const key of Object.keys(patch)) {
+        if (!Object.hasOwn(MENU_STATE_SCHEMA, key)) {
+          throw new Error(`Menu.setState: "${key}" is not supported.`);
+        }
+        const stateKey = key as keyof typeof MENU_STATE_SCHEMA;
+        validateParam(
+          key,
+          patch[key as keyof MenuState],
+          MENU_STATE_SCHEMA[stateKey],
+          'Menu.setState'
+        );
+      }
+    },
+    view: () => {
+      validateParam('data', state.data, MENU_DATA_RULE, 'Menu');
+      return jsx('nav', {
+        className: props.className.root,
+        'data-menu': 'root',
+        'data-menu-type': props.type,
+        children: listView(() => state.data, true),
+      }) as HTMLElement;
+    },
+    onBuild(context) {
+      if (props.type !== 'bottom') return;
+      events.on('outside', document, 'click', (event) => {
+        const target = event.target;
+        if (!(target instanceof Node) || context.element?.contains(target))
+          return;
+        flushSync(() => {
+          state.activeKeys = [];
+        });
+      });
+      context.own(() => events.clear());
+    },
+  });
 
-    const subMenu = backItem.parentElement;
-    const parentMenuItem = subMenu?.parentElement;
-
-    if (parentMenuItem?.hasAttribute('data-menu-has-children')) {
-      parentMenuItem.classList.remove(this.props.className.active);
-    }
-
-    backItem.remove();
-  }
-
-  private toggleActive(menuItem: HTMLElement): void {
-    const isActive = menuItem.classList.contains(this.props.className.active);
-    this.clearActive();
-    if (!isActive) menuItem.classList.add(this.props.className.active);
-  }
-
-  private clearActive(): void {
-    if (!this.dom.root) return;
-    all<HTMLElement>('[data-menu-item]', this.dom.root).forEach((item) => {
-      item.classList.remove(this.props.className.active);
-    });
-  }
-
-  private validateData(data: unknown): void {
-    validateParam('data', data, MENU_DATA_RULE, 'Menu');
-  }
-
-  private assertStatePatchKey(key: string): void {
-    if (!Object.hasOwn(MENU_STATE_SCHEMA, key)) {
-      throw new Error(`Menu.setState: "${key}" is not a supported state key.`);
-    }
-  }
-
-  protected override normalizeStatePatch(
-    patch: Partial<MenuState>
-  ): Partial<MenuState> {
-    const nextPatch = { ...patch };
-    if (Object.hasOwn(nextPatch, 'data')) {
-      nextPatch.data = cloneMenuData(nextPatch.data);
-    }
-    return nextPatch;
-  }
-
-  protected override validateStatePatch(patch: Partial<MenuState>): void {
-    validateParam(
-      'state',
-      patch,
-      {
-        type: 'plainObject',
-      },
-      'Menu.setState'
-    );
-
-    for (const key of Object.keys(patch)) {
-      this.assertStatePatchKey(key);
-      const stateKey = key as keyof typeof MENU_STATE_SCHEMA;
-      validateParam(
-        key,
-        patch[key as keyof MenuState],
-        MENU_STATE_SCHEMA[stateKey],
-        'Menu.setState'
-      );
-    }
-  }
-
-  protected onDestroy(): void {
-    this.unbindEvents();
-    this.cleanup.state?.();
-    this.cleanup.state = null;
-    this.dom.root?.remove();
-    this.dom.list = null;
-    this.runtime.built = false;
-  }
-}
-
-export type Menu = MenuComponent;
-
-export function createMenu(input: MenuProps = {}): Menu {
-  return new MenuComponent(input);
+  return menu;
 }

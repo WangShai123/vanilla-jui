@@ -23,13 +23,9 @@ interface DropDelay {
   hide?: number;
 }
 
-interface TooltipDom {
-  root: HTMLElement | null;
-}
-
-interface TooltipInstance {
-  dom: TooltipDom;
-  drop: DropInstance | null;
+export interface TooltipInstance {
+  readonly element: HTMLElement | null;
+  readonly drop: DropInstance | null;
   show(useDelay?: boolean): void;
   hide(useDelay?: boolean): void;
   toggle(): void;
@@ -183,66 +179,55 @@ function normalizeProps(input: TooltipProps): ResolvedTooltipProps {
  *
  * 基于 Drop 实现，提供更轻量的文本提示封装。
  */
-class Tooltip implements TooltipInstance {
-  dom: TooltipDom;
-  drop: DropInstance | null;
-  props: ResolvedTooltipProps | null;
-
-  constructor(element: DOMReference, props: TooltipProps = {}) {
-    const settings = normalizeProps(props);
-    this.props = settings;
-    this.drop = createDrop(element, {
-      name: settings.name,
-      mode: settings.mode,
-      position: settings.position,
-      offset: settings.offset,
-      id: settings.id,
-      delay: settings.delay,
-      hoverIntent: settings.hoverIntent,
-      onShown: settings.onShown,
-      onHidden: settings.onHidden,
-      content: this.buildContent(settings),
-    });
-    this.dom = this.drop.dom;
-  }
-
-  private buildContent(settings: ResolvedTooltipProps): HTMLElement {
-    return jsx('div', {
-      className: joinClasses(
-        settings.className.container,
-        settings.theme && settings.className.ui[settings.theme]
-      ),
-      'data-tooltip': settings.name || settings.id || '',
-      children: jsx('div', {
-        className: settings.className.message,
-        'data-tooltip-message': '',
-        children: settings.message,
-      }),
-    }) as HTMLElement;
-  }
-
-  show(useDelay = true): void {
-    this.drop?.show(useDelay);
-  }
-
-  hide(useDelay = true): void {
-    this.drop?.hide(useDelay);
-  }
-
-  toggle(): void {
-    this.drop?.toggle();
-  }
-
-  destroy(): void {
-    this.drop?.destroy();
-    this.drop = null;
-    this.props = null;
-  }
-}
-
 export function createTooltip(
   element: DOMReference,
-  props: TooltipProps = {}
+  input: TooltipProps = {}
 ): TooltipInstance {
-  return new Tooltip(element, props);
+  const props = normalizeProps(input);
+  const content = jsx('div', {
+    className: joinClasses(
+      props.className.container,
+      props.theme && props.className.ui[props.theme]
+    ),
+    'data-tooltip': props.name || props.id || '',
+    children: jsx('div', {
+      className: props.className.message,
+      'data-tooltip-message': '',
+      children: props.message,
+    }),
+  }) as HTMLElement;
+  let drop: DropInstance | null = createDrop(element, {
+    name: props.name,
+    mode: props.mode,
+    position: props.position,
+    offset: props.offset,
+    id: props.id,
+    delay: props.delay,
+    hoverIntent: props.hoverIntent,
+    onShown: props.onShown,
+    onHidden: props.onHidden,
+    content,
+  });
+  const tooltip: TooltipInstance = {
+    get element() {
+      return drop?.element || null;
+    },
+    get drop() {
+      return drop;
+    },
+    show(useDelay = true) {
+      drop?.show(useDelay);
+    },
+    hide(useDelay = true) {
+      drop?.hide(useDelay);
+    },
+    toggle() {
+      drop?.toggle();
+    },
+    destroy() {
+      drop?.destroy();
+      drop = null;
+    },
+  };
+  return tooltip;
 }

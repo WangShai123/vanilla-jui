@@ -241,26 +241,38 @@ declare const restUrl: string;
  */
 declare function postJson<T = unknown>(url: string, body: unknown, options?: Omit<RequestInit, 'method' | 'body'>): Promise<T>;
 //#endregion
+//#region src/utilities/motion.d.ts
+type TransitionTarget = () => Element | null | undefined;
+interface TransitionDefinition {
+  keyframes: Keyframe[] | PropertyIndexedKeyframes;
+  options?: KeyframeAnimationOptions;
+  respectReducedMotion?: boolean;
+}
+interface MotionController {
+  enter: (signal?: AbortSignal) => Promise<void>;
+  leave: (signal?: AbortSignal) => Promise<void>;
+  cancel: () => void;
+}
+interface CollapseTransitionDefinition {
+  axis?: 'vertical' | 'horizontal';
+  options?: KeyframeAnimationOptions;
+  fade?: boolean;
+  respectReducedMotion?: boolean;
+}
+interface CollapseMotionController extends MotionController {
+  setExpanded: (expanded: boolean) => void;
+}
+declare function createMotionGroup(...motions: readonly MotionController[]): MotionController;
+declare function createTransition(target: TransitionTarget, definition: TransitionDefinition): MotionController;
+declare function createCollapseTransition(target: () => HTMLElement | null | undefined, definition?: CollapseTransitionDefinition): CollapseMotionController;
+//#endregion
 //#region src/utilities/object.d.ts
 declare function isPlainObject(obj: unknown): boolean;
 //#endregion
 //#region src/utilities/timer.d.ts
-/**
- * 定时器管理器
- */
 declare const timer: {
-  timers: Record<string, ReturnType<typeof setTimeout>>;
-  /**
-   * 注册并开始一个定时器
-   * @param {string} key - 定时器的唯一标识
-   * @param {number} duration - 延迟执行的时间（毫秒）
-   * @param {function} callback - 延迟执行的回调函数
-   */
+  timers: Record<string, number>;
   start(key: string, duration: number, callback: () => void): void;
-  /**
-   * 明确注销一个定时器
-   * @param {string} key - 需要取消的定时器唯一标识
-   */
   cancel(key: string): void;
 };
 //#endregion
@@ -323,16 +335,71 @@ interface ScheduledTask {
   cancel: () => void;
   dispose: () => void;
 }
+declare function createScheduledTask(run: () => void): ScheduledTask;
+//#endregion
+//#region src/utilities/state.d.ts
 interface StateSyncOptions {
   deferInitial?: boolean;
   flushInitial?: boolean;
   flush?: 'microtask' | 'sync';
 }
-declare function createScheduledTask(run: () => void): ScheduledTask;
 declare function getStoreVersion(value: unknown): number;
 declare function trackStoreVersion<T>(value: T): T;
 declare function stateSnapshot<T>(value: T): T;
+/**
+ * Bridges reactive state to an expensive imperative effect. Declarative view
+ * bindings should depend on state directly instead of using this helper.
+ */
 declare function createStateSync<TSnapshot>(read: () => TSnapshot, sync: (snapshot: TSnapshot) => void | Promise<void>, { deferInitial, flushInitial, flush }?: StateSyncOptions): () => void;
+//#endregion
+//#region src/utilities/refs.d.ts
+interface ElementRef<TElement extends Element> {
+  readonly current: TElement | null;
+  set: (element: TElement) => void;
+  clear: () => void;
+}
+declare function createElementRef<TElement extends Element>(): ElementRef<TElement>;
+interface KeyedElementRefs<TKey, TElement extends Element> {
+  readonly elements: ReadonlyMap<TKey, TElement>;
+  get: (key: TKey) => TElement | undefined;
+  bind: (key: TKey) => (element: TElement) => void;
+  clear: () => void;
+}
+declare function createKeyedElementRefs<TKey, TElement extends Element>(): KeyedElementRefs<TKey, TElement>;
+//#endregion
+//#region src/utilities/view.d.ts
+interface OwnedView<TElement extends Element> {
+  element: TElement;
+  dispose: () => void;
+}
+interface OwnedViewOptions {
+  removeOnDispose?: boolean;
+}
+/**
+ * Creates one stable view inside a vanilla-signal owner.
+ * Reactive accessors declared by the factory retain the owner, while the
+ * factory itself is not turned into a replaceable dynamic region.
+ */
+declare function createOwnedView<TElement extends Element>(factory: () => TElement, options?: OwnedViewOptions): OwnedView<TElement>;
+//#endregion
+//#region src/utilities/presence.d.ts
+type PresencePhase = 'hidden' | 'entering' | 'visible' | 'leaving';
+interface PresenceOptions {
+  elements: () => readonly (Element | null | undefined)[];
+  mount: () => void;
+  activate: () => void;
+  deactivate: () => void;
+  unmount: () => void;
+  motion?: MotionController;
+}
+interface PresenceController {
+  readonly phase: PresencePhase;
+  enter: () => Promise<boolean>;
+  leave: () => Promise<boolean>;
+  cancel: () => void;
+}
+declare function waitForMotion(elements: readonly Element[], signal?: AbortSignal): Promise<void>;
+declare function createPresence(options: PresenceOptions): PresenceController;
 //#endregion
 //#region src/primitives/icons.d.ts
 type IconPathMap = Record<string, string>;
@@ -410,45 +477,57 @@ interface DropProps extends Record<string, unknown> {
   mode?: DropMode$1;
   position?: DropPosition$1;
   offset?: number;
-  content?: RenderableContent<DropInstance$1>;
+  content?: RenderableContent<DropInstance>;
   className?: DropClassNameConfig;
   id?: string | null;
   delay?: number | DropDelay$1;
   hoverIntent?: boolean;
-  onShown?: ((drop: DropInstance$1) => void | Promise<void>) | null;
-  onHidden?: ((drop: DropInstance$1) => void | Promise<void>) | null;
+  onShown?: ((drop: DropInstance) => void | Promise<void>) | null;
+  onHidden?: ((drop: DropInstance) => void | Promise<void>) | null;
 }
-interface DropDom {
-  root: HTMLElement | null;
+interface ResolvedDropProps extends Record<string, unknown> {
+  name: string | null;
+  mode: DropMode$1;
+  position: DropPosition$1;
+  offset: number;
+  content: RenderableContent<DropInstance>;
+  className: DropClassNames;
+  id: string;
+  delay: number | DropDelay$1;
+  hoverIntent: boolean;
+  onShown: NonNullable<DropProps['onShown']> | null;
+  onHidden: NonNullable<DropProps['onHidden']> | null;
 }
-interface DropInstance$1 {
-  target: Element | null;
-  props: Record<string, unknown> | null;
-  dom: DropDom;
-  isVisible: boolean;
-  delayShow: number;
-  delayHide: number;
+interface DropInstance {
+  readonly target: Element | null;
+  readonly props: ResolvedDropProps;
+  readonly element: HTMLElement | null;
+  readonly isVisible: boolean;
+  readonly delayShow: number;
+  readonly delayHide: number;
   show(useDelay?: boolean): void;
   hide(useDelay?: boolean): void;
   toggle(): void;
   destroy(): void;
 }
-declare function createDrop(element: DOMReference, props?: DropProps): DropInstance$1;
+/**
+ * 通用浮层组件。
+ *
+ * 可用于菜单、提示、下拉面板等场景，支持点击或 hover 触发，并自动计算视口内位置。
+ */
+declare function createDrop(reference: DOMReference, input?: DropProps): DropInstance;
 //#endregion
 //#region src/primitives/tooltip.d.ts
-type DropInstance = ReturnType<typeof createDrop>;
+type DropInstance$1 = ReturnType<typeof createDrop>;
 type DropMode = 'hover' | 'click';
 type DropPosition = 'auto' | 'top-left' | 'top-center' | 'top-right' | 'bottom-left' | 'bottom-center' | 'bottom-right' | 'left' | 'right';
 interface DropDelay {
   show?: number;
   hide?: number;
 }
-interface TooltipDom {
-  root: HTMLElement | null;
-}
 interface TooltipInstance {
-  dom: TooltipDom;
-  drop: DropInstance | null;
+  readonly element: HTMLElement | null;
+  readonly drop: DropInstance$1 | null;
   show(useDelay?: boolean): void;
   hide(useDelay?: boolean): void;
   toggle(): void;
@@ -481,10 +560,15 @@ interface TooltipProps extends Record<string, unknown> {
   id?: string | null;
   delay?: number | DropDelay;
   hoverIntent?: boolean;
-  onShown?: ((drop: DropInstance) => void | Promise<void>) | null;
-  onHidden?: ((drop: DropInstance) => void | Promise<void>) | null;
+  onShown?: ((drop: DropInstance$1) => void | Promise<void>) | null;
+  onHidden?: ((drop: DropInstance$1) => void | Promise<void>) | null;
 }
-declare function createTooltip(element: DOMReference, props?: TooltipProps): TooltipInstance;
+/**
+ * Tooltip 提示组件。
+ *
+ * 基于 Drop 实现，提供更轻量的文本提示封装。
+ */
+declare function createTooltip(element: DOMReference, input?: TooltipProps): TooltipInstance;
 //#endregion
 //#region src/primitives/toast.d.ts
 type ToastType = 'info' | 'success' | 'warning' | 'error' | 'primary';
@@ -517,32 +601,27 @@ interface ToastActionProps extends ToastOptions {
   onAction?: () => void | Promise<void>;
   onClose?: () => void | Promise<void>;
 }
-/**
- * Toast 消息提示工具。
- *
- * 以静态方法方式使用，支持多类型堆叠消息和单实例轻提示。
- */
-declare class Toast {
-  static timers: Set<string>;
-  static disposers: Map<HTMLElement, () => void>;
-  private static classNames;
-  private static options;
-  static configure(options?: ToastOptions): ToastOptions;
-  private static resolveClassNames;
-  static show(message?: string, duration?: number, type?: ToastType, options?: ToastOptions): HTMLElement;
-  static success(message?: string, duration?: number, options?: ToastOptions): HTMLElement;
-  static info(message?: string, duration?: number, options?: ToastOptions): HTMLElement;
-  static primary(message?: string, duration?: number, options?: ToastOptions): HTMLElement;
-  static warning(message?: string, duration?: number, options?: ToastOptions): HTMLElement;
-  static error(message?: string, duration?: number, options?: ToastOptions): HTMLElement;
-  static hide(toast: HTMLElement | null | undefined): void;
-  static lite(message?: string, duration?: number, options?: ToastOptions): HTMLElement;
-  static action(message?: string, props?: ToastActionProps): HTMLElement;
-  private static getOrCreateContainer;
-  private static setTimer;
-  static clearAll(): void;
-  static destroyAll(): void;
-}
+declare function hide(toast: HTMLElement | null | undefined): void;
+declare function show(message?: string, duration?: number, type?: ToastType, options?: ToastOptions): HTMLElement;
+declare function lite(message?: string, duration?: number, options?: ToastOptions): HTMLElement;
+declare function action(message?: string, props?: ToastActionProps): HTMLElement;
+declare function clearAll(): void;
+declare const Toast: {
+  timers: Set<string>;
+  disposers: Map<HTMLElement, () => void>;
+  configure(options?: ToastOptions): ToastOptions;
+  show: typeof show;
+  success: (message?: string, duration?: number, options?: ToastOptions) => HTMLElement;
+  info: (message?: string, duration?: number, options?: ToastOptions) => HTMLElement;
+  primary: (message?: string, duration?: number, options?: ToastOptions) => HTMLElement;
+  warning: (message?: string, duration?: number, options?: ToastOptions) => HTMLElement;
+  error: (message?: string, duration?: number, options?: ToastOptions) => HTMLElement;
+  hide: typeof hide;
+  lite: typeof lite;
+  action: typeof action;
+  clearAll: typeof clearAll;
+  destroyAll: typeof clearAll;
+};
 //#endregion
 //#region src/primitives/theme.d.ts
 type ThemeConfigKey = 'mode' | 'theme' | 'radius' | 'shadow' | 'font';
@@ -621,29 +700,23 @@ interface ResolvedParabolaProps extends Record<string, unknown> {
   onShow: ((parabola: ParabolaInstance) => void) | null;
   onHidden: ((parabola: ParabolaInstance) => void) | null;
 }
-interface ParabolaDOM {
-  root: HTMLElement | null;
-  from: Element | null;
-  to: Element | null;
-  balls: Set<HTMLElement>;
-}
 interface ParabolaRuntime {
   destroyed: boolean;
 }
 interface ParabolaInstance {
-  props: ResolvedParabolaProps;
-  dom: ParabolaDOM;
-  runtime: ParabolaRuntime;
+  readonly props: ResolvedParabolaProps;
+  readonly element: HTMLElement | null;
+  readonly runtime: ParabolaRuntime;
   show(): Promise<boolean>;
   destroy(): void;
 }
-declare function createParabola(props?: ParabolaProps): ParabolaInstance;
+declare function createParabola(input?: ParabolaProps): ParabolaInstance;
 //#endregion
 //#region src/validation/validator.d.ts
 type ValidatorElement = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
 type ValidatorMessageMap = Record<string, Partial<Record<string, string>>>;
 type ValidatorCustomResult = boolean | string;
-type ValidatorCustomRule = (element: ValidatorElement, validator: ValidatorInstance$1) => ValidatorCustomResult;
+type ValidatorCustomRule = (element: ValidatorElement, validator: ValidatorInstance) => ValidatorCustomResult;
 interface ValidatorRule extends Record<string, unknown> {
   required?: boolean;
   minLength?: number;
@@ -668,15 +741,12 @@ interface ValidatorRule extends Record<string, unknown> {
 interface ValidatorProps extends Record<string, unknown> {
   rules?: Record<string, ValidatorRule>;
   messages?: ValidatorMessageMap;
-  onSubmit?: ((validator: ValidatorInstance$1) => void) | null;
+  onSubmit?: ((validator: ValidatorInstance) => void) | null;
 }
 interface ResolvedValidatorProps extends Record<string, unknown> {
   rules: Record<string, ValidatorRule>;
   messages: ValidatorMessageMap;
-  onSubmit: ((validator: ValidatorInstance$1) => void) | null;
-}
-interface ValidatorDOM {
-  root: HTMLFormElement | null;
+  onSubmit: ((validator: ValidatorInstance) => void) | null;
 }
 interface ValidatorRuntime {
   valid: boolean;
@@ -686,162 +756,77 @@ interface ValidatorRuntime {
 interface ResetOptions {
   native?: boolean;
 }
-interface ValidatorInstance$1 {
-  dom: ValidatorDOM;
+interface ValidatorInstance {
+  readonly element: HTMLFormElement | null;
   props: ResolvedValidatorProps | null;
   runtime: ValidatorRuntime;
   validate(): boolean;
   reset(options?: ResetOptions): void;
   destroy(): void;
 }
-declare function createValidator(element: DOMReference, props?: ValidatorProps, bindEvents?: boolean): ValidatorInstance$1;
+declare function createValidator(element: DOMReference, props?: ValidatorProps, bindEvents?: boolean): ValidatorInstance;
 //#endregion
-//#region src/core/Component.d.ts
+//#region src/core/component.d.ts
 type ComponentProps = Record<string, unknown>;
 type ComponentState = Record<string, unknown>;
-interface ComponentDOM {
-  root: Element | null;
-  [key: string]: unknown;
-}
-interface ComponentRuntime {
-  destroyed: boolean;
-}
-type ComponentCache = unknown;
-interface ComponentReCreateOptions {
-  force?: boolean;
-}
-type ComponentLifecycleEvent = 'init' | 'beforeReCreate' | 'afterReCreate' | 'destroy';
-type ComponentEventName = string;
-type ComponentListener = (...args: unknown[]) => void;
-type ComponentListeners = Record<ComponentLifecycleEvent, ComponentListener[]> & Record<string, ComponentListener[] | undefined>;
 type ComponentCleanup = void | (() => void) | {
   destroy: () => void;
 };
 type ComponentPluginOptions = Record<string, unknown> | undefined;
-type ComponentPlugin<TComponent = Component> = ((instance: TComponent, options?: ComponentPluginOptions) => ComponentCleanup) | {
-  install: (instance: TComponent, options?: ComponentPluginOptions) => ComponentCleanup;
-};
-interface ComponentCleanupRegistry {
-  events: ReturnType<typeof createEventManager>;
-  plugins: Map<ComponentPlugin<unknown>, ComponentCleanup>;
-  [key: string]: unknown;
+interface ComponentRuntime {
+  built: boolean;
+  mounted: boolean;
+  destroyed: boolean;
 }
-/**
- * 轻量级组件基类，集成 vanilla-signal 响应式状态和插件系统
- * 为所有 UI 组件提供统一的状态管理、生命周期钩子和插件支持
- */
-declare class Component<TProps extends ComponentProps = ComponentProps, TState extends ComponentState = ComponentState, TDOM extends ComponentDOM = ComponentDOM, TCache = ComponentCache> {
-  /** 全局插件注册表，所有新创建的组件实例会自动安装这些插件 */
-  static globalPlugins: Map<string, ComponentPlugin<Component<ComponentProps, ComponentState, ComponentDOM, unknown>>>;
-  /** 组件属性配置对象 */
-  props: TProps;
-  /** DOM 引用容器，存储根元素及其他 DOM 节点引用 */
-  dom: TDOM;
-  /** 实例缓存容器，存储组件运行时派生数据 */
-  cache: TCache;
-  /** 已安装的插件映射表 */
-  plugins: Map<ComponentPlugin<unknown>, ComponentCleanup>;
-  /** 资源清理管理器，包含事件监听器和插件的清理函数 */
-  cleanup: ComponentCleanupRegistry;
-  /** 内部事件监听器注册表，用于生命周期和自定义事件 */
-  protected _listeners: ComponentListeners;
-  /** 响应式状态存储，使用 vanilla-signal 的深层响应式 store */
-  state: TState | null;
-  /** 运行时状态标记 */
-  runtime: ComponentRuntime;
-  /**
-   * @param {Object} props - 组件初始属性配置
-   */
-  constructor(props?: TProps);
-  /**
-   * 安装实例插件
-   * 插件可以是函数形式 plugin(instance, options) 或对象形式 { install(instance, options) }
-   * 插件应返回清理函数或清理对象，在组件销毁时自动执行
-   * @param {Function|Object} plugin - 插件函数或包含 install 方法的插件对象
-   * @param {Object} [options] - 插件配置选项
-   * @returns {Component} 返回当前实例，支持链式调用
-   */
-  use(plugin: ComponentPlugin<this> | null | undefined, options?: ComponentPluginOptions): this;
-  /**
-   * 注册事件监听器
-   * 用于监听组件生命周期事件（init、beforeReCreate、afterReCreate、destroy）或自定义事件
-   * @param {string} event - 事件名称
-   * @param {Function} callback - 事件回调函数
-   * @returns {Component} 返回当前实例，支持链式调用
-   */
-  on(event: ComponentEventName, callback: ComponentListener): this;
-  /**
-   * 移除事件监听器
-   * @param {string} event - 事件名称
-   * @param {Function} callback - 要移除的回调函数引用
-   * @returns {Component} 返回当前实例，支持链式调用
-   */
-  off(event: ComponentEventName, callback: ComponentListener): this;
-  /**
-   * 安装全局插件到当前实例
-   * 遍历全局插件注册表并依次安装
-   * @private
-   */
-  installGlobalPlugins(): void;
-  /**
-   * 注册全局插件
-   * 所有之后创建的组件实例都会自动安装此插件
-   * @static
-   * @param {string} name - 插件名称标识
-   * @param {Function|Object} plugin - 插件函数或插件对象
-   */
-  static useGlobal(name: string | null | undefined, plugin: ComponentPlugin<Component> | null | undefined): void;
-  /**
-   * 触发指定事件，执行所有注册的监听器
-   * @param {string} event - 事件名称
-   * @param {...*} args - 传递给监听器的参数
-   * @returns {Component} 返回当前实例，支持链式调用
-   */
-  emit(event: ComponentEventName, ...args: unknown[]): this;
-  /**
-   * 初始化组件
-   * 合并传入的属性，调用 onInit 钩子（如果存在），并触发 init 事件
-   * @param {Object} [props={}] - 初始化属性配置
-   * @returns {Component} 返回当前实例，支持链式调用
-   * @throws {Error} 如果组件已被销毁则抛出异常
-   */
-  init(props?: Partial<TProps> | null | undefined): this;
-  /**
-   * 批量更新响应式状态
-   * 支持两种调用方式：setState(key, value) 或 setState({ key1: value1, key2: value2 })
-   * 使用 flushSync 确保状态更新的同步性和批量处理
-   * @param {string|Object} keyOrPatch - 状态键名或包含多个键值对的补丁对象
-   * @param {*} [value] - 当第一个参数为字符串时的状态值
-   * @returns {Component} 返回当前实例，支持链式调用
-   * @throws {Error} 如果组件已被销毁或参数格式不正确则抛出异常
-   */
+type ComponentLifecycleEvent = 'build' | 'mount' | 'unmount' | 'destroy';
+type ComponentListener = (...args: unknown[]) => void;
+interface ComponentController<TProps extends ComponentProps = ComponentProps, TState extends ComponentState = ComponentState, TElement extends Element = HTMLElement> {
+  readonly props: TProps;
+  readonly state: TState;
+  readonly runtime: ComponentRuntime;
+  readonly element: TElement | null;
+  build(): this;
+  mount(container: Element | DocumentFragment): this;
+  unmount(): this;
   setState(patch?: Partial<TState> | null): this;
   setState<TKey extends keyof TState>(key: TKey, value: TState[TKey]): this;
-  /**
-   * 根据新的 props 重新创建组件实例并触发生命周期
-   * 合并新的属性配置，触发 beforeReCreate 和 afterReCreate 事件
-   * 子类可以重写 onReCreate 方法实现自定义重建前逻辑
-   * @param {Object} [propsPatch={}] - 要合并的属性补丁对象
-   * @param {Object} [options] - 更新选项
-   * @param {boolean} [options.force=false] - 是否强制更新（由子类处理）
-   * @returns {Component} 返回新创建的实例
-   * @throws {Error} 如果组件已被销毁则抛出异常
-   */
-  reCreate(propsPatch?: Partial<TProps> | null | undefined, { force }?: ComponentReCreateOptions): this;
-  protected createInstance(props: TProps): this;
-  /**
-   * 销毁组件实例
-   * 执行 onDestroy 钩子，触发 destroy 事件，清理所有插件和资源
-   * 这是组件生命周期的最后一步，销毁后实例不可再使用
-   */
+  own(cleanup: ComponentCleanup): this;
+  use(plugin: ComponentPlugin<this> | null | undefined, options?: ComponentPluginOptions): this;
+  on(event: string, listener: ComponentListener): this;
+  off(event: string, listener: ComponentListener): this;
+  emit(event: string, ...args: unknown[]): this;
   destroy(): void;
-  protected onInit?(props: TProps): void;
-  protected onReCreate?(propsPatch: Partial<TProps> | null | undefined, options: Required<ComponentReCreateOptions>): void;
-  protected normalizeStatePatch(patch: Partial<TState>): Partial<TState>;
-  protected validateStatePatch(patch: Partial<TState>): void;
-  protected afterSetState(_patch: Partial<TState>): void;
-  protected onDestroy?(): void;
 }
+type ComponentPlugin<TComponent = ComponentController> = ((component: TComponent, options?: ComponentPluginOptions) => ComponentCleanup) | {
+  install: (component: TComponent, options?: ComponentPluginOptions) => ComponentCleanup;
+};
+interface ComponentContext<TProps extends ComponentProps, TState extends ComponentState, TElement extends Element> {
+  readonly props: TProps;
+  readonly state: TState;
+  readonly runtime: ComponentRuntime;
+  readonly element: TElement | null;
+  own: (cleanup: ComponentCleanup) => void;
+  assertActive: (operation: string) => void;
+  emit: (event: string, ...args: unknown[]) => void;
+}
+interface ComponentDefinition<TProps extends ComponentProps, TState extends ComponentState, TElement extends Element, TActions extends object> {
+  name: string;
+  ownsElement?: boolean;
+  props: TProps;
+  state: TState;
+  view: (context: ComponentContext<TProps, TState, TElement>) => TElement;
+  actions?: TActions;
+  normalizeStatePatch?: (patch: Partial<TState>) => Partial<TState>;
+  validateStatePatch?: (patch: Partial<TState>, state: TState) => void;
+  onBuild?: (context: ComponentContext<TProps, TState, TElement>) => void;
+  onMount?: (context: ComponentContext<TProps, TState, TElement>) => void;
+  onUnmount?: (context: ComponentContext<TProps, TState, TElement>) => void;
+  onDestroy?: (context: ComponentContext<TProps, TState, TElement>) => void;
+}
+type FunctionalComponent<TProps extends ComponentProps, TState extends ComponentState, TElement extends Element, TActions extends object = object> = ComponentController<TProps, TState, TElement> & TActions;
+declare function useComponentPlugin(name: string, plugin: ComponentPlugin | null | undefined): void;
+declare function removeComponentPlugin(name: string): void;
+declare function defineComponent<TProps extends ComponentProps, TState extends ComponentState, TElement extends Element, TActions extends object = object>(definition: ComponentDefinition<TProps, TState, TElement, TActions>): FunctionalComponent<TProps, TState, TElement, TActions>;
 //#endregion
 //#region src/components/toc.d.ts
 interface TocClassNames {
@@ -856,7 +841,6 @@ interface TocItem {
   id: string;
   text: string;
   level: number;
-  element: HTMLHeadingElement;
 }
 interface TocCurrent {
   index: number;
@@ -880,23 +864,11 @@ interface TocState extends Record<string, unknown> {
   items: TocItem[];
   current: TocCurrent;
 }
-interface TocDOM extends ComponentDOM {
-  root: HTMLElement | null;
-  target: Element | null;
-  list: HTMLElement | null;
-  headings: HTMLHeadingElement[];
-  links: HTMLAnchorElement[];
-}
-interface TocRuntime extends ComponentRuntime {
-  built: boolean;
-  ticking: boolean;
-}
-type TocInstance = Component<ResolvedTocProps, TocState, TocDOM> & {
-  runtime: TocRuntime;
-  build(): TocInstance;
+interface TocActions {
   refresh(): TocInstance;
   activate(index: number): TocInstance;
-};
+}
+type TocInstance = FunctionalComponent<ResolvedTocProps, TocState, HTMLElement, TocActions>;
 declare function createToc(props?: TocProps): TocInstance;
 //#endregion
 //#region src/components/sticky.d.ts
@@ -920,38 +892,30 @@ interface ResolvedStickyProps extends Record<string, unknown> {
   onRefresh: ((sticky: StickyInstance) => void) | null;
 }
 interface StickyStateItem {
-  element: HTMLElement;
+  key: string;
+  index: number;
   top: number;
 }
 interface StickyState extends Record<string, unknown> {
   items: StickyStateItem[];
 }
-interface StickyDOM extends ComponentDOM {
-  root: Element | null;
-  parent: Element | null;
-  targets: HTMLElement[];
-}
-interface StickyOriginalStyle {
-  element: HTMLElement;
-  originalPosition: string;
-  originalTop: string;
-  originalZIndex: string;
-}
-interface StickyRuntime extends ComponentRuntime {
+interface StickyRuntime {
   built: boolean;
+  destroyed: boolean;
 }
-interface StickyCache {
-  originalStyles: StickyOriginalStyle[];
-}
-type StickyInstance = Component<ResolvedStickyProps, StickyState, StickyDOM, StickyCache> & {
-  runtime: StickyRuntime;
+interface StickyInstance {
+  readonly props: ResolvedStickyProps;
+  readonly state: StickyState;
+  readonly runtime: StickyRuntime;
   build(): StickyInstance;
   refresh(): StickyInstance;
-};
+  destroy(): void;
+}
 declare function createSticky(props?: StickyProps): StickyInstance;
 //#endregion
 //#region src/components/accordion.d.ts
 type AccordionActive = number | string | Array<number | string> | null;
+type AccordionDirection = 'vertical' | 'horizontal';
 interface AccordionClassNames {
   root: string;
   header: string;
@@ -971,8 +935,9 @@ interface AccordionProps extends Record<string, unknown> {
   active?: AccordionActive;
   collapsible?: boolean;
   multiple?: boolean;
+  direction?: AccordionDirection;
   className?: AccordionClassNameConfig;
-  items: AccordionItem[];
+  data: AccordionItem[];
   onChange?: ((index: number, name: string, header: HTMLElement, panel: HTMLElement, accordion: AccordionInstance) => void | Promise<void>) | null;
 }
 interface ResolvedAccordionProps extends Record<string, unknown> {
@@ -980,8 +945,9 @@ interface ResolvedAccordionProps extends Record<string, unknown> {
   active: AccordionActive;
   collapsible: boolean;
   multiple: boolean;
+  direction: AccordionDirection;
   className: AccordionClassNames;
-  items: AccordionItem[];
+  data: AccordionItem[];
   onChange: NonNullable<AccordionProps['onChange']> | null;
 }
 interface AccordionCurrent {
@@ -989,17 +955,8 @@ interface AccordionCurrent {
   name: string | null;
 }
 interface AccordionState extends Record<string, unknown> {
-  items: AccordionItem[];
+  data: AccordionItem[];
   activeNames: string[];
-  current: AccordionCurrent;
-}
-interface AccordionDOM extends ComponentDOM {
-  root: HTMLElement | null;
-  headers: HTMLElement[];
-  panels: HTMLElement[];
-}
-interface AccordionRuntime extends ComponentRuntime {
-  built: boolean;
 }
 interface AccordionContentContext {
   accordion: AccordionInstance;
@@ -1008,20 +965,19 @@ interface AccordionContentContext {
   type: 'title' | 'content';
   active: boolean;
 }
-type AccordionInstance = Component<ResolvedAccordionProps, AccordionState, AccordionDOM> & {
-  runtime: AccordionRuntime;
-  state: AccordionState;
-  build(): AccordionInstance;
+type AccordionInstance = FunctionalComponent<ResolvedAccordionProps, AccordionState, HTMLElement, AccordionActions> & {
+  readonly current: AccordionCurrent;
+};
+interface AccordionActions {
   isActive(name: string): boolean;
   getIndex(value: number | string | undefined | null): number;
   activate(value: number | string | undefined): Promise<void>;
-};
+}
 declare function createAccordion(props: AccordionProps): AccordionInstance;
 //#endregion
 //#region src/components/form.d.ts
 type FormValue = string | number | boolean;
 type FormOptionInput = FormValue | FormOption;
-type FormControlElement = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
 type FormStyle = string | Partial<CSSStyleDeclaration> | null;
 type FormDataValue = FormDataEntryValue | FormDataEntryValue[];
 type FormDataRecord = Record<string, FormDataValue>;
@@ -1127,77 +1083,21 @@ interface FormState extends ResolvedFormProps {
   submitting: boolean;
   data: FormDataRecord | null;
 }
-interface FormDOM extends ComponentDOM {
-  root: HTMLFormElement | null;
-  fields: Map<string, FormControlElement>;
-}
-interface FormCache {
-  initial: ResolvedFormProps;
-  fieldIds: Map<string | number, string>;
-}
-interface ValidatorInstance {
-  dom: {
-    root: Element | null;
-  };
-  props: (FormValidatorConfig & {
-    onSubmit: null;
-  }) | null;
-  validate: () => boolean;
-  reset: () => void;
-  destroy: () => void;
-}
 interface FormControlContext {
   form: Form;
   field: FormField;
   index: number;
 }
-declare class Form extends Component<ResolvedFormProps, FormState, FormDOM> {
-  state: FormState;
-  validator: ValidatorInstance | null;
-  cache: FormCache;
-  constructor(input?: FormProps);
-  get root(): HTMLFormElement | null;
-  set root(value: HTMLFormElement | null);
-  build(): this;
-  view(): HTMLFormElement;
-  fieldView(field: FormField, index: number): HTMLElement;
-  labelView(field: FormField, id: string): HTMLLabelElement | null;
-  controlView(field: FormField, id: string, index: number): FormControlElement | HTMLElement | Node[] | null;
-  inputView(field: FormField, id: string): HTMLInputElement;
-  textareaView(field: FormField, id: string): HTMLTextAreaElement;
-  selectView(field: FormField, id: string): HTMLSelectElement;
-  choiceGroupView(field: FormField, id: string, type: 'checkbox' | 'radio'): HTMLElement;
-  switchView(field: FormField, id: string): HTMLLabelElement;
-  buttonsView(): HTMLElement | null;
-  controlProps<TExtra extends Record<string, unknown>>(field: FormField, id: string, extra: TExtra): TExtra & {
-    name: string | undefined;
-    id: string;
-    placeholder: string;
-    required: boolean;
-    disabled: boolean;
-    readonly: boolean;
-    'data-form-field': string;
-    ref: (element: FormControlElement) => void;
-  };
-  resolveFieldId(field: FormField, index: number): string;
-  syncValidator(): void;
+interface FormActions {
   validate(): boolean;
-  reset(): this;
-  handleSubmit(event: Event): Promise<void>;
-  handleReset(event: Event): void;
-  resetValidationState(): void;
+  reset(): Form;
   collectData(): FormDataRecord;
-  collectFormData(form: HTMLFormElement): FormDataRecord;
-  requestSubmit(): this;
-  setFields(fields: readonly FormField[]): this;
-  resetFields(): this;
-  cloneProps(props: ResolvedFormProps): ResolvedFormProps;
-  autoComplete(type: string): string;
-  isSelected(value: FormField['value'] | undefined, optionValue: FormOption['value']): boolean;
-  isChecked(value: FormField['value'] | undefined, optionValue: FormOption['value'], checked: boolean | undefined): boolean;
-  protected onDestroy(): void;
+  requestSubmit(): Form;
+  setFields(fields: readonly FormField[]): Form;
+  resetFields(): Form;
 }
-declare function createForm(props?: FormProps): Form;
+type Form = FunctionalComponent<ResolvedFormProps, FormState, HTMLFormElement, FormActions>;
+declare function createForm(input?: FormProps): Form;
 //#endregion
 //#region src/components/flow.d.ts
 type FlowData = Record<string, unknown>;
@@ -1207,6 +1107,7 @@ type FlowBusyStrategy = 'ignore' | 'throw';
 type FlowDirection = string;
 type FlowSlotName = 'renderHeader' | 'renderBody' | 'renderFooter';
 type FlowCleanup = () => void;
+type FlowTarget = string | number;
 type FlowStepResult = string | {
   id: string;
   data?: FlowPayload;
@@ -1263,6 +1164,25 @@ interface FlowSnapshot {
   busyAction: FlowAction | null;
   error: unknown;
 }
+interface FlowState extends Record<string, unknown> {
+  id: string;
+  currentId: string;
+  currentIndex: number;
+  previousId: string | null;
+  previousIndex: number | null;
+  direction: FlowDirection | null;
+  history: string[];
+  data: FlowData;
+  stepData: Record<string, FlowData>;
+  loading: boolean;
+  error: unknown;
+  busyAction: FlowAction | null;
+  version: number;
+}
+interface FlowGoToOptions {
+  direction?: FlowDirection;
+  internal?: boolean;
+}
 interface FlowContext {
   flow: Flow;
   step: FlowStep;
@@ -1306,7 +1226,6 @@ type FlowErrorHook = (error: unknown, snapshot: FlowSnapshot, flow: Flow, previo
 type FlowBusyHook = (action: FlowAction, snapshot: FlowSnapshot, flow: Flow) => void;
 type FlowSlot = false | null | ((context: FlowRenderContext) => RenderableContent<FlowRenderContext>);
 type FlowSubscriber = (snapshot: FlowSnapshot, flow: Flow, previous: FlowSnapshot | null) => void;
-type FlowTarget = string | number;
 interface FlowText {
   back: string;
   next: string;
@@ -1362,207 +1281,48 @@ interface ResolvedFlowProps extends Record<string, unknown> {
   onError: FlowErrorHook | null;
   onBusy: FlowBusyHook | null;
 }
-interface FlowState extends Record<string, unknown> {
-  id: string;
-  currentId: string;
-  currentIndex: number;
-  previousId: string | null;
-  previousIndex: number | null;
-  direction: FlowDirection | null;
-  history: string[];
-  data: FlowData;
-  stepData: Record<string, FlowData>;
-  loading: boolean;
-  error: unknown;
-  busyAction: FlowAction | null;
-  version: number;
-}
-interface FlowDOM {
-  root: HTMLElement | null;
-  header: HTMLElement | null;
-  body: HTMLElement | null;
-  footer: HTMLElement | null;
-}
 interface FlowRuntime {
   built: boolean;
+  mounted: boolean;
   destroyed: boolean;
   activeAction: FlowAction | null;
   actionController: AbortController | null;
 }
-interface FlowGoToOptions {
-  direction?: FlowDirection;
-  internal?: boolean;
-}
-interface FlowRunActionOptions {
-  internal?: boolean;
-}
-/**
- * Headless 流程控制器，带可选默认 UI。
- *
- * 适合在 Modal、Offcanvas、页面表单或任意业务组件中复用 next/back/goTo、步骤缓存和生命周期。
- */
-declare class Flow {
-  props: ResolvedFlowProps;
-  steps: FlowStep[];
-  state: FlowState;
-  dom: FlowDOM;
-  runtime: FlowRuntime;
-  private stepMap;
-  private initialStepId;
-  private initialData;
-  private subscribers;
-  private renderDispose;
-  private cleanupTasks;
-  /**
-   * 创建 Flow 实例。
-   * @param {FlowProps} [props={}] Flow 配置。
-   */
-  constructor(props?: FlowProps);
-  /**
-   * 当前步骤。
-   * @returns {FlowStep}
-   */
-  get currentStep(): FlowStep;
-  /**
-   * 当前步骤数据。
-   * @returns {object}
-   */
-  get currentData(): FlowData;
-  /**
-   * 是否可以返回上一步。
-   * @returns {boolean}
-   */
-  get canBack(): boolean;
-  /**
-   * 是否可以前进。
-   * @returns {boolean}
-   */
-  get canNext(): boolean;
-  /**
-   * 是否处于最后一步。
-   * @returns {boolean}
-   */
-  get isLast(): boolean;
-  /**
-   * 订阅状态变化。
-   * @param {Function} handler 订阅函数。
-   * @returns {Function} 取消订阅函数。
-   */
+interface FlowActions {
   subscribe(handler: FlowSubscriber): FlowCleanup;
-  /**
-   * 获取不可变快照。
-   * @returns {object}
-   */
   snapshot(): FlowSnapshot;
-  /**
-   * 构建默认 Flow UI。
-   * @returns {Flow}
-   */
-  build(): this;
-  private teardownView;
-  /**
-   * 前进一步。
-   * @param {object|null} [payload=null] 当前步骤需要缓存的数据。
-   * @returns {Promise<object>} 切换后的快照。
-   */
   next(payload?: FlowPayload): Promise<FlowSnapshot | null>;
-  /**
-   * 返回上一步。
-   * @param {object|null} [payload=null] 当前步骤需要缓存的数据。
-   * @returns {Promise<object>} 切换后的快照。
-   */
   back(payload?: FlowPayload): Promise<FlowSnapshot | null>;
-  /**
-   * 跳转到指定步骤。
-   * @param {string|number} target 目标步骤 id 或索引。
-   * @param {object|null} [payload=null] 当前步骤需要缓存的数据。
-   * @param {{direction?:string, internal?:boolean}} [options={}] 跳转选项。
-   * @returns {Promise<object>} 切换后的快照。
-   */
   goTo(target: FlowTarget, payload?: FlowPayload, options?: FlowGoToOptions): Promise<FlowSnapshot | null>;
-  /**
-   * 合并全局数据。
-   * @param {object} data 数据补丁。
-   * @returns {Flow}
-   */
-  setData(data: FlowPayload): this;
-  /**
-   * 合并指定步骤缓存数据。
-   * @param {string} stepId 步骤 id。
-   * @param {object|null} data 数据补丁。
-   * @returns {Flow}
-   */
+  setData(data: FlowPayload): Flow;
   setStepData(stepId: string, data: FlowPayload, options?: {
     silent?: boolean;
-  }): this;
-  /**
-   * 获取指定步骤缓存数据。
-   * @param {string} stepId 步骤 id。
-   * @returns {object}
-   */
+  }): Flow;
   getStepData(stepId: string): FlowData;
-  /**
-   * 重置流程。
-   * @returns {Flow}
-   */
-  reset(): this;
-  /**
-   * 完成流程。
-   * @param {object|null} [payload=null] 最后一步需要缓存的数据。
-   * @returns {Promise<object>} 当前快照。
-   */
-  finish(payload?: FlowPayload, options?: FlowRunActionOptions): Promise<FlowSnapshot | null>;
-  /**
-   * 销毁 Flow 实例。
-   * @returns {void}
-   */
-  destroy(): void;
-  private resolveInitialStepId;
-  private validateSteps;
-  private resolveStepIndex;
-  private createInitialStepData;
-  private runMoveHook;
-  private transitionTo;
-  private assertCanLeave;
-  private assertCanEnter;
-  private createContext;
-  private runAction;
-  private handleBusy;
-  private abortActiveAction;
-  private callHook;
-  private createAbortError;
-  private setLoading;
-  private handleError;
-  private emitChange;
-  private replaceObject;
-  private captureState;
-  private restoreState;
-  private addCleanup;
-  private assertActive;
-  private publicStep;
-  private buildRoot;
-  private mountView;
-  private view;
-  private renderSlot;
-  private createRenderContext;
-  private headerView;
-  private stepsView;
-  private bodyView;
-  private footerView;
-  private contentView;
-  private stepClass;
+  reset(): Flow;
+  finish(payload?: FlowPayload): Promise<FlowSnapshot | null>;
 }
-/**
- * 创建 Flow 实例。
- * @param {FlowProps} props Flow 配置。
- * @returns {Flow}
- */
-declare function createFlow(props?: FlowProps): Flow;
+interface Flow extends FlowActions {
+  readonly props: ResolvedFlowProps;
+  readonly steps: FlowStep[];
+  readonly state: FlowState;
+  readonly runtime: FlowRuntime;
+  readonly element: HTMLElement | null;
+  readonly currentStep: FlowStep;
+  readonly currentData: FlowData;
+  readonly canBack: boolean;
+  readonly canNext: boolean;
+  readonly isLast: boolean;
+  build(): this;
+  mount(container: Element | DocumentFragment): this;
+  unmount(): this;
+  destroy(): void;
+}
+declare function createFlow(input?: FlowProps): Flow;
 //#endregion
 //#region src/components/modal.d.ts
 type ModalTextInput = Partial<ModalText> & Record<string, unknown>;
 type ModalContent = RenderableContent<Modal>;
-type FormInstance = ReturnType<typeof createForm>;
 type ModalMode = 'content' | 'form';
 interface ModalClassNames {
   layout: string;
@@ -1638,82 +1398,13 @@ interface ModalState extends Record<string, unknown> {
   data: FormDataRecord | null;
   extraData: FormDataRecord | null;
 }
-interface ModalDOM extends ComponentDOM {
-  root: HTMLElement | null;
-  modal: HTMLElement | null;
-  header: HTMLElement | null;
-  body: HTMLElement | null;
-  footer: HTMLElement | null;
-  form: FormInstance | null;
-  formContainer: HTMLElement | null;
-}
-interface ModalRuntime extends ComponentRuntime {
-  scrollLocked: boolean;
-  visibleApplied: boolean;
-}
-interface ModalCache {
-  initial: ResolvedModalProps | null;
-  fieldIds: Map<string, string> | null;
-  previousActiveElement: HTMLElement | null;
-  formId: string;
-}
-interface ModalCleanupExtras {
-  visibility?: (() => void) | null;
-  view?: (() => void) | null;
-  hideTimer?: ReturnType<typeof setTimeout> | null;
-}
-type ModalStatePatch = Partial<ModalState>;
-declare class ModalComponent extends Component<ResolvedModalProps, ModalState, ModalDOM, ModalCache> {
-  runtime: ModalRuntime;
-  state: ModalState;
-  cleanup: Component['cleanup'] & ModalCleanupExtras;
-  constructor(input?: ModalProps);
-  protected onInit(): void;
-  build(): this;
-  mountView(): void;
-  headerView(): () => (Node | null)[] | null;
-  footerView(): () => (Node | null)[] | null;
-  bodyView(): RenderableContent<Modal>;
-  formView(): HTMLElement;
-  mountForm(container: HTMLElement | null): void;
-  createFormProps(): FormProps;
-  destroyForm(): void;
-  contentView(content: ModalContent): Node[];
-  bindReactiveLoading(): void;
-  isBusy(): boolean;
-  bindReactiveVisibility(): void;
-  applyVisibility(visible: boolean): void;
-  showFromState(): void;
-  hideFromState(): void;
-  bindEvents(root: Element | null): void;
-  bindOverlayCloseEvent(root: Element | null): void;
-  bindDocumentKeyEvent(): void;
-  bindInsideEvent(): void;
-  clearEvents(): void;
+interface ModalActions {
+  show(): Modal;
+  hide(): Modal;
+  reset(): Modal;
   requestSubmit(): void;
-  handleFormSubmit(formData: FormDataRecord): Promise<void>;
-  handleConfirm(): Promise<void>;
-  handleCancel(): Promise<void>;
-  handleSubmit(data: FormDataRecord): Promise<void>;
-  trapFocus(event: KeyboardEvent): void;
-  focusFirst(): void;
-  lockScroll(): void;
-  unlockScroll(): void;
-  cancelHideTimer(): void;
-  resetAnimationStyles(): void;
-  finishHide(onHidden: ResolvedModalProps['onHidden']): void;
-  restoreFocus(): void;
-  assertActive(method: string): void;
-  protected normalizeStatePatch(patch: ModalStatePatch): ModalStatePatch;
-  protected validateStatePatch(patch: ModalStatePatch): void;
-  protected afterSetState(patch: ModalStatePatch): void;
-  show(): this;
-  hide(): this;
-  reset(): this;
-  protected onDestroy(): void;
-  destroy(): this;
 }
-type Modal = ModalComponent;
+type Modal = FunctionalComponent<ResolvedModalProps, ModalState, HTMLElement, ModalActions>;
 declare function createModal(input?: ModalProps): Modal;
 //#endregion
 //#region src/components/swiper.d.ts
@@ -1750,6 +1441,7 @@ interface SwiperDataItem extends Record<string, unknown> {
 interface NormalizedSwiperDataItem extends SwiperDataItem {
   blank: boolean;
   index: number;
+  key: string;
 }
 interface SwiperSlideContext {
   swiper: Swiper;
@@ -1798,121 +1490,22 @@ interface SwiperState extends Record<string, unknown> {
   animating: boolean;
   width: number;
 }
-interface SwiperDOM extends ComponentDOM {
-  root: HTMLElement | null;
-  createdRoot: boolean;
-  wrapper: HTMLElement | null;
-  slides: HTMLElement[];
-  pagination: HTMLElement | null;
-  prevButton: HTMLButtonElement | null;
-  nextButton: HTMLButtonElement | null;
-  bullets: HTMLButtonElement[];
-  createdPagination: boolean;
-  createdPrevButton: boolean;
-  createdNextButton: boolean;
-}
-interface SwipeLog {
-  x: number;
-  y: number;
-  time: number;
-}
-interface SwiperRuntime extends ComponentRuntime {
-  built: boolean;
-  logs: SwipeLog[];
-  startTarget: EventTarget | null;
-  touching: boolean;
-  scrolling: boolean;
-  swiping: boolean;
-  clickPrevented: boolean;
-  timer: ReturnType<typeof setInterval> | null;
-  mountRefreshId: number | null;
-  imageCleanups: Set<() => void>;
-  realCount: number;
-}
-interface SwiperCleanupExtras {
-  bindings?: (() => void) | null;
-  navBindings?: (() => void) | null;
-  data?: (() => void) | null;
-}
-/**
- * 轻量轮播组件，继承 Component。
- *
- * 支持链接 slide、图片 lazyload、分页、导航、loop 和桌面/移动端拖拽滑动。
- * 使用 vanilla-signal 响应式管理 pagination 和 navigation 状态。
- */
-declare class SwiperComponent extends Component<ResolvedSwiperProps, SwiperState, SwiperDOM> {
-  props: ResolvedSwiperProps;
-  state: SwiperState;
-  dom: SwiperDOM;
-  runtime: SwiperRuntime;
-  cleanup: Component['cleanup'] & SwiperCleanupExtras;
-  /**
-   * 创建轮播实例。
-   * @param {object} [props={}] Swiper 配置。
-   */
-  constructor(props?: SwiperProps);
-  /**
-   * 构建 Swiper DOM。
-   * @returns {Swiper} 当前实例。
-   */
-  build(): this;
-  set index(v: unknown);
-  set trackIndex(v: unknown);
-  set transform(v: unknown);
-  set animating(v: unknown);
-  set width(v: unknown);
-  get realCount(): number;
-  get realIndex(): number;
-  private assertBuilt;
-  private createDataView;
-  private bindStateData;
-  private syncStateData;
-  private normalizeData;
-  private createDataSlide;
-  protected onInit(): void;
-  protected onDestroy(): void;
-  private updateSize;
-  refresh(): this;
-  private hasLayout;
-  private syncLayout;
-  private queueMountRefresh;
-  private cancelMountRefresh;
-  private refreshSlides;
-  private initLoop;
-  private setupStyles;
-  private reInitView;
-  private clearPagination;
-  private clearNavigation;
-  private bindEvents;
-  private onStart;
-  private onMove;
-  private onEnd;
-  private resetDrag;
-  private onTransitionEnd;
-  private pushLog;
-  private getDuration;
-  private getOffset;
-  toRealIndex(index?: number): number;
-  trackIndexForRealIndex(index: number): number;
-  private setTrackIndex;
+interface SwiperActions {
+  refresh(): Swiper;
   slideTo(index: number): void;
-  slideToTrack(idx: number): void;
+  slideToTrack(index: number): void;
   next(): void;
   prev(): void;
-  private render;
-  private loadImages;
-  private clearImageCleanups;
-  private initPagination;
-  private initNavigation;
-  private ensureNavigation;
   play(): void;
   pause(): void;
   resume(): void;
   restartAutoplay(): void;
-  protected normalizeStatePatch(patch: Partial<SwiperState>): Partial<SwiperState>;
-  protected validateStatePatch(patch: Partial<SwiperState>): void;
 }
-type Swiper = SwiperComponent;
+type SwiperBase = FunctionalComponent<ResolvedSwiperProps, SwiperState, HTMLElement, SwiperActions>;
+type Swiper = SwiperBase & {
+  readonly realCount: number;
+  readonly realIndex: number;
+};
 declare function createSwiper(input?: SwiperProps): Swiper;
 //#endregion
 //#region src/components/tabs.d.ts
@@ -1971,91 +1564,23 @@ interface TabsState extends Record<string, unknown> {
   active: TabsValue;
   disabled: TabsDisabled;
   direction: TabsDirection;
-  current: {
-    index: number;
-    name: string | null;
-  };
-  isVertical: boolean;
   draggable: boolean;
   loading: boolean;
 }
-interface TabsDOM extends ComponentDOM {
-  root: HTMLElement | null;
-  tabs: HTMLElement[];
-  panels: HTMLElement[];
+interface TabsCurrent {
+  index: number;
+  name: string | null;
 }
-interface TabsPanelCacheEntry {
-  content: RenderableContent<TabsPanelContext>;
-  updatedAt: number;
+interface TabsActions {
+  activate(value: TabsValue): Promise<void>;
+  refresh(): Tabs;
 }
-interface TabsRuntime extends ComponentRuntime {
-  built: boolean;
-  cache: {
-    panels: Map<string, TabsPanelCacheEntry>;
-  };
-  panelLoadId: number;
-}
-/**
- * 标签页组件，继承 Component。
- *
- * DOM 创建一次，通过 createEffect 细粒度更新 class/ARIA。
- */
-declare class TabsComponent extends Component<ResolvedTabsProps, TabsState, TabsDOM> {
-  runtime: TabsRuntime;
-  state: TabsState;
-  private bindingsDispose;
-  private stateDispose;
-  private isDragging;
-  private raf;
-  private resizeRaf;
-  private velocity;
-  /**
-   * @param {object} [input={}] 标签页配置。
-   */
-  constructor(input?: TabsProps);
-  protected onInit(props: ResolvedTabsProps): void;
-  private buildRoot;
-  private renderItems;
-  private bindState;
-  private syncStateView;
-  private get disabledState();
-  private isDisabledName;
-  private syncCurrent;
-  private getPanelKey;
-  private getCachedPanel;
-  private setCachedPanel;
-  private renderPanelContent;
-  private loadPanel;
-  get activeIndex(): number;
-  get disabledNames(): string[];
-  private bindEvents;
-  private unbindEvents;
-  private assertActive;
-  private getIndex;
-  private activateInternal;
-  /**
-   * 激活指定标签。
-   * @param {number|string} val 标签索引或名称。
-   */
-  activate(val: TabsValue): Promise<void>;
-  /**
-   * 构建 Tabs DOM。
-   */
-  build(): this;
-  refresh(): this;
-  private get dragContainer();
-  private get dragInner();
-  private initDrag;
-  private bindDragEvents;
-  private startInertiaScroll;
-  private removeDragEvents;
-  private refreshDrag;
-  protected onDestroy(): void;
-  private validateData;
-  protected normalizeStatePatch(patch: Partial<TabsState>): Partial<TabsState>;
-  protected validateStatePatch(patch: Partial<TabsState>): void;
-}
-type Tabs = TabsComponent;
+type TabsBase = FunctionalComponent<ResolvedTabsProps, TabsState, HTMLElement, TabsActions>;
+type Tabs = TabsBase & {
+  readonly current: TabsCurrent;
+  readonly activeIndex: number;
+  readonly disabledNames: string[];
+};
 declare function createTabs(input?: TabsProps): Tabs;
 //#endregion
 //#region src/components/offcanvas.d.ts
@@ -2106,53 +1631,15 @@ interface ResolvedOffcanvasProps extends Record<string, unknown> {
 }
 interface OffcanvasState extends Record<string, unknown> {
   content: OffcanvasContent;
+  resolvedContent: RenderableContent<Offcanvas>;
   visible: boolean;
   loading: boolean;
 }
-interface OffcanvasDOM extends ComponentDOM {
-  root: HTMLElement | null;
-  overlay: HTMLElement | null;
-  content: HTMLElement | null;
-}
-interface OffcanvasCache {
-  content: RenderableContent<Offcanvas>;
-  hasContent: boolean;
-  updatedAt: number;
-}
-interface OffcanvasRuntime extends ComponentRuntime {
-  built: boolean;
-  cache: OffcanvasCache;
-  contentLoadId: number;
-}
-interface OffcanvasCleanupExtras {
-  state?: (() => void) | null;
-}
-declare class OffcanvasComponent extends Component<ResolvedOffcanvasProps, OffcanvasState, OffcanvasDOM> {
-  runtime: OffcanvasRuntime;
-  state: OffcanvasState;
-  cleanup: Component['cleanup'] & OffcanvasCleanupExtras;
-  constructor(input?: OffcanvasProps);
-  build(): this;
-  private assertBuilt;
-  private buildRoot;
-  private buildOverlay;
-  private buildPanel;
-  private bindState;
-  private syncContent;
-  private isCacheValid;
-  private clearContent;
-  private renderContent;
-  private loadContent;
-  private bindEvents;
-  private unbindEvents;
-  private showPanel;
-  private hidePanel;
+interface OffcanvasActions {
   show(): Promise<void>;
   hide(): Promise<void>;
-  protected onDestroy(): void;
-  protected validateStatePatch(patch: Partial<OffcanvasState>): void;
 }
-type Offcanvas = OffcanvasComponent;
+type Offcanvas = FunctionalComponent<ResolvedOffcanvasProps, OffcanvasState, HTMLElement, OffcanvasActions>;
 declare function createOffcanvas(input?: OffcanvasProps): Offcanvas;
 //#endregion
 //#region src/components/pagination.d.ts
@@ -2194,46 +1681,14 @@ interface PaginationState extends Record<string, unknown> {
   total: number;
   page: PaginationPage;
   count: PaginationCount;
-  pageCount: number;
   locked: boolean;
 }
-interface PaginationDOM extends ComponentDOM {
-  root: HTMLElement | null;
-  list: HTMLElement | null;
+interface PaginationActions {
+  go(page: number): Pagination;
 }
-interface PaginationRuntime extends ComponentRuntime {
-  built: boolean;
-  itemsKey: string;
-  changeId: number;
-}
-interface PaginationCleanupExtras {
-  state?: (() => void) | null;
-}
-declare class PaginationComponent extends Component<ResolvedPaginationProps, PaginationState, PaginationDOM> {
-  runtime: PaginationRuntime;
-  state: PaginationState;
-  cleanup: Component['cleanup'] & PaginationCleanupExtras;
-  constructor(input?: PaginationProps);
-  build(): this;
-  go(page: number): this;
-  private bindState;
-  private syncState;
-  private renderItems;
-  private getPageItems;
-  private isLocked;
-  private isPrevDisabled;
-  private isNextDisabled;
-  private buildControlItem;
-  private buildPageItem;
-  private bindEvents;
-  private unbindEvents;
-  private unlock;
-  private assertActive;
-  protected normalizeStatePatch(patch: Partial<PaginationState>): Partial<PaginationState>;
-  protected validateStatePatch(patch: Partial<PaginationState>): void;
-  protected onDestroy(): void;
-}
-type Pagination = PaginationComponent;
+type Pagination = FunctionalComponent<ResolvedPaginationProps, PaginationState, HTMLElement, PaginationActions> & {
+  readonly pageCount: number;
+};
 declare function createPagination(input?: PaginationProps): Pagination;
 //#endregion
 //#region src/components/menu.d.ts
@@ -2276,39 +1731,9 @@ interface ResolvedMenuProps extends Record<string, unknown> {
 }
 interface MenuState extends Record<string, unknown> {
   data: MenuItem[];
+  activeKeys: string[];
 }
-interface MenuDOM extends ComponentDOM {
-  root: HTMLElement | null;
-  list: HTMLElement | null;
-}
-interface MenuRuntime extends ComponentRuntime {
-  built: boolean;
-}
-interface MenuCleanupExtras {
-  state?: (() => void) | null;
-}
-declare class MenuComponent extends Component<ResolvedMenuProps, MenuState, MenuDOM> {
-  runtime: MenuRuntime;
-  state: MenuState;
-  cleanup: Component['cleanup'] & MenuCleanupExtras;
-  constructor(input?: MenuProps);
-  build(): this;
-  private bindState;
-  private renderSnapshot;
-  private buildItem;
-  private bindEvents;
-  private unbindEvents;
-  private handleMenuClick;
-  private handleBack;
-  private toggleActive;
-  private clearActive;
-  private validateData;
-  private assertStatePatchKey;
-  protected normalizeStatePatch(patch: Partial<MenuState>): Partial<MenuState>;
-  protected validateStatePatch(patch: Partial<MenuState>): void;
-  protected onDestroy(): void;
-}
-type Menu = MenuComponent;
+type Menu = FunctionalComponent<ResolvedMenuProps, MenuState, HTMLElement>;
 declare function createMenu(input?: MenuProps): Menu;
 //#endregion
-export { CleanupFunction, Component, ContainerExpect, DOMReference, type DebounceSettings, type DebouncedFunc, FlowAction, FlowBusyHook, FlowBusyStrategy, FlowChangeHook, FlowClassNameConfig, FlowClassNames, FlowCleanup, FlowContext, FlowData, FlowDirection, FlowErrorHook, FlowFinishHook, FlowGuardHook, FlowLifecycleHook, FlowMoveHook, FlowPayload, FlowProps, FlowRenderContext, FlowSlot, FlowSlotName, FlowSnapshot, FlowState, FlowStep, FlowStepResult, FlowSubscriber, FlowTarget, FlowText, FormButton, FormClassNameConfig, FormClassNames, FormDataRecord, FormDataValue, FormField, FormOption, FormProps, FormValidatorConfig, IEventManager, IconAttributeValue, IconName, IconPathMap, IconProps, LazyRenderCallback, LazyRenderOptions, LazyRenderTarget, Menu, MenuClassNameConfig, MenuClassNames, MenuItem, MenuItemId, MenuProps, MenuType, Modal, ModalClassNameConfig, ModalClassNames, ModalMode, ModalProps, ModalText, NormalizeContext, Offcanvas, OffcanvasAnimate, OffcanvasClassNameConfig, OffcanvasClassNames, OffcanvasContent, OffcanvasDirection, OffcanvasProps, Pagination, PaginationClassNameConfig, PaginationClassNames, PaginationCount, PaginationPage, PaginationProps, ParamRule, ParamRuleInput, PopupProps, PublicFlowStep, QueryContext, RenderableContent, RequireContainerResult, ResolveContainerResult, ResolveSchema, ResolvedProps, Swiper, SwiperClassNameConfig, SwiperClassNames, SwiperDataItem, SwiperProps, SwiperSlideContext, TabItem, TabPanel, TabTitleContext, Tabs, TabsClassNameConfig, TabsClassNames, TabsDirection, TabsDisabled, TabsPanelContext, TabsProps, TabsValue, ThemeClassNameConfig, ThemeClassNames, ThemeConfigKey, ThemeInstance, ThemeOptions, ThemePanelGroup, ThemeResolvedOptions, type ThrottleSettings, Toast, ToastActionProps, ToastClassNameConfig, ToastClassNames, ToastOptions, ToastType, ValidateCondition, addIcons, all, copy, createAccordion, createDrop, createEventManager, createFlow, createForm, createLoading, createMenu, createModal, createOffcanvas, createPagination, createParabola, createPopup, createScheduledTask, createStateSync, createSticky, createSwiper, createTabs, createTheme, createToc, createTooltip, createValidator, debounce, getRegistedIconPath, getStoreVersion, getType, icon, iconHtml, iconMarkup, isDomElementValue, isDomNodeValue, isElement, isHtmlElementValue, isMobile, isNilValue, isNode, isPlainObject, isRenderableContent, isRenderablePrimitive, isRenderableValue, lazyRender, listen, normalizeContentNodes, normalizeRenderableContentNodes, postJson, q, randomId, requireContainer, resolveContainer, resolveElement, resolveNode, resolveNodeList, resolveProps, restUrl, stateSnapshot, throttle, timer, trackStoreVersion, uuid, validateParam };
+export { CleanupFunction, CollapseMotionController, CollapseTransitionDefinition, ComponentCleanup, ComponentContext, ComponentController, ComponentDefinition, ComponentLifecycleEvent, ComponentListener, ComponentPlugin, ComponentPluginOptions, ComponentProps, ComponentRuntime, ComponentState, ContainerExpect, DOMReference, type DebounceSettings, type DebouncedFunc, DropInstance, ElementRef, Flow, FlowAction, FlowBusyHook, FlowBusyStrategy, FlowChangeHook, FlowClassNameConfig, FlowClassNames, FlowCleanup, FlowContext, FlowData, FlowDirection, FlowErrorHook, FlowFinishHook, FlowGoToOptions, FlowGuardHook, FlowLifecycleHook, FlowMoveHook, FlowPayload, FlowProps, FlowRenderContext, FlowSlot, FlowSlotName, FlowSnapshot, FlowState, FlowStep, FlowStepResult, FlowSubscriber, FlowTarget, FlowText, Form, FormButton, FormClassNameConfig, FormClassNames, FormDataRecord, FormDataValue, FormField, FormOption, FormProps, FormValidatorConfig, FunctionalComponent, IEventManager, IconAttributeValue, IconName, IconPathMap, IconProps, KeyedElementRefs, LazyRenderCallback, LazyRenderOptions, LazyRenderTarget, Menu, MenuClassNameConfig, MenuClassNames, MenuItem, MenuItemId, MenuProps, MenuType, Modal, ModalClassNameConfig, ModalClassNames, ModalMode, ModalProps, ModalText, MotionController, NormalizeContext, Offcanvas, OffcanvasAnimate, OffcanvasClassNameConfig, OffcanvasClassNames, OffcanvasContent, OffcanvasDirection, OffcanvasProps, OwnedView, OwnedViewOptions, Pagination, PaginationClassNameConfig, PaginationClassNames, PaginationCount, PaginationPage, PaginationProps, ParabolaInstance, ParamRule, ParamRuleInput, PopupProps, PresenceController, PresenceOptions, PresencePhase, PublicFlowStep, QueryContext, RenderableContent, RequireContainerResult, ResolveContainerResult, ResolveSchema, ResolvedProps, StateSyncOptions, Swiper, SwiperClassNameConfig, SwiperClassNames, SwiperDataItem, SwiperProps, SwiperSlideContext, TabItem, TabPanel, TabTitleContext, Tabs, TabsClassNameConfig, TabsClassNames, TabsDirection, TabsDisabled, TabsPanelContext, TabsProps, TabsValue, ThemeClassNameConfig, ThemeClassNames, ThemeConfigKey, ThemeInstance, ThemeOptions, ThemePanelGroup, ThemeResolvedOptions, type ThrottleSettings, Toast, ToastActionProps, ToastClassNameConfig, ToastClassNames, ToastOptions, ToastType, TooltipInstance, TransitionDefinition, TransitionTarget, ValidateCondition, ValidatorInstance, addIcons, all, copy, createAccordion, createCollapseTransition, createDrop, createElementRef, createEventManager, createFlow, createForm, createKeyedElementRefs, createLoading, createMenu, createModal, createMotionGroup, createOffcanvas, createOwnedView, createPagination, createParabola, createPopup, createPresence, createScheduledTask, createStateSync, createSticky, createSwiper, createTabs, createTheme, createToc, createTooltip, createTransition, createValidator, debounce, defineComponent, getRegistedIconPath, getStoreVersion, getType, icon, iconHtml, iconMarkup, isDomElementValue, isDomNodeValue, isElement, isHtmlElementValue, isMobile, isNilValue, isNode, isPlainObject, isRenderableContent, isRenderablePrimitive, isRenderableValue, lazyRender, listen, normalizeContentNodes, normalizeRenderableContentNodes, postJson, q, randomId, removeComponentPlugin, requireContainer, resolveContainer, resolveElement, resolveNode, resolveNodeList, resolveProps, restUrl, stateSnapshot, throttle, timer, trackStoreVersion, useComponentPlugin, uuid, validateParam, waitForMotion };

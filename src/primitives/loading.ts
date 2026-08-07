@@ -7,6 +7,18 @@ import { icon } from './icons.ts';
  * @returns {HTMLElement}
  */
 export function createLoading(): HTMLDivElement {
+  const i = icon('loader', { width: 24 });
+  requestAnimationFrame(() => {
+    if (typeof i.animate !== 'function') return;
+    i.animate(
+      [{ transform: 'rotate(0deg)' }, { transform: 'rotate(360deg)' }],
+      {
+        duration: 1000,
+        iterations: Infinity,
+        easing: 'linear',
+      }
+    );
+  });
   return jsx('div', {
     'aria-live': 'polite',
     style: {
@@ -16,8 +28,9 @@ export function createLoading(): HTMLDivElement {
       position: 'absolute',
       width: '100%',
       height: '100%',
+      borderRadius: 'inherit',
       backdropFilter: 'blur(4px)',
     },
-    children: icon('loader', { width: 24, className: 'animate-spin' }),
+    children: i,
   });
 }

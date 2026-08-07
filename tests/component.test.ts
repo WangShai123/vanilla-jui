@@ -1,58 +1,58 @@
-import { describe, expect, it } from 'vite-plus/test';
+// @vitest-environment jsdom
 
-import Component from '../src/core/Component.ts';
+import { createDeepStore, jsx } from 'vanilla-signal';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
-interface ProbeProps extends Record<string, unknown> {
-  id: string;
-  label?: string;
-}
+import { defineComponent } from '../src/core/component.ts';
 
-interface ProbeState extends Record<string, unknown> {
-  count: number;
-}
+describe('defineComponent', () => {
+  it('owns one stable view through build, mount, state updates and destroy', () => {
+    const state = createDeepStore({ count: 0 });
+    const onDestroy = vi.fn();
+    const component = defineComponent({
+      name: 'Probe',
+      props: { id: 'probe' },
+      state,
+      view: () =>
+        jsx('div', {
+          id: 'probe',
+          children: () => String(state.count),
+        }) as HTMLElement,
+      onDestroy,
+    });
 
-class ProbeComponent extends Component<ProbeProps, ProbeState> {
-  static events: string[] = [];
+    expect(component.element).toBeNull();
+    component.build();
+    const root = component.element;
+    expect(root?.textContent).toBe('0');
 
-  override emit(event: string, ...args: unknown[]): this {
-    ProbeComponent.events.push(event);
-    return super.emit(event, ...args);
-  }
+    component.mount(document.body);
+    component.setState('count', 1);
+    expect(component.element).toBe(root);
+    expect(root?.parentNode).toBe(document.body);
+    expect(root?.textContent).toBe('1');
 
-  protected override onReCreate(
-    propsPatch: Partial<ProbeProps> | null | undefined,
-    options: { force: boolean }
-  ): void {
-    ProbeComponent.events.push(
-      `onReCreate:${String(propsPatch?.label)}:${String(options.force)}`
-    );
-  }
-}
-
-describe('Component', () => {
-  it('reCreate creates a new instance and destroys the previous instance', () => {
-    ProbeComponent.events = [];
-    const component = new ProbeComponent({ id: 'first', label: 'Initial' });
-
-    const next = component.reCreate({ label: 'Next' }, { force: true });
-
-    expect(next).toBeInstanceOf(ProbeComponent);
-    expect(next).not.toBe(component);
-    expect(next.props).toEqual({ id: 'first', label: 'Next' });
+    component.unmount();
+    expect(root?.isConnected).toBe(false);
+    component.destroy();
     expect(component.runtime.destroyed).toBe(true);
-    expect(component.state).toBeNull();
-    expect(next.runtime.destroyed).toBe(false);
-    expect(ProbeComponent.events).toEqual([
-      'beforeReCreate',
-      'onReCreate:Next:true',
-      'destroy',
-      'afterReCreate',
-    ]);
+    expect(component.element).toBeNull();
+    expect(onDestroy).toHaveBeenCalledTimes(1);
   });
 
-  it('does not expose update as the reCreate alias', () => {
-    const component = new ProbeComponent({ id: 'strict' });
+  it('does not remove a bound element the component does not own', () => {
+    const root = document.createElement('section');
+    document.body.appendChild(root);
+    const component = defineComponent({
+      name: 'BoundProbe',
+      ownsElement: false,
+      props: {},
+      state: createDeepStore({ active: false }),
+      view: () => root,
+    }).build();
 
-    expect('update' in component).toBe(false);
+    component.destroy();
+    expect(document.body.contains(root)).toBe(true);
+    root.remove();
   });
 });
