@@ -8,7 +8,7 @@ A lightweight, reactive, and fully customizable vanilla JS UI library.
 
 - Lightweight
 - Reactive data management
-- Customizable UI: Supports `tailwindcss` or hand-written styles to fully customize component styles, without using the default `style.css`.
+- Customizable UI: Supports `tailwindcss` or custom css styles to fully customize component UI, without using the default `style.css`.
 
 ## Installation
 
