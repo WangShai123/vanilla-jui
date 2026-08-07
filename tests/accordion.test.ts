@@ -36,6 +36,11 @@ function mount(instance: AccordionInstance): AccordionInstance {
   return instance;
 }
 
+async function tick(): Promise<void> {
+  await Promise.resolve();
+  await Promise.resolve();
+}
+
 beforeEach(() => {
   document.body.innerHTML = '<div id="app"></div>';
 });
@@ -165,6 +170,7 @@ describe('Accordion', () => {
         { name: 'next', title: 'Next', content: 'Next content' },
       ];
     });
+    await tick();
 
     expect(
       accordion.dom.root?.querySelectorAll('[data-accordion-header]')
@@ -179,6 +185,7 @@ describe('Accordion', () => {
         content: 'More content',
       });
     });
+    await tick();
 
     expect(
       accordion.dom.root?.querySelectorAll('[data-accordion-header]')
@@ -191,6 +198,7 @@ describe('Accordion', () => {
     accordion.setState({
       items: [{ name: 'state', title: 'State', content: 'State content' }],
     });
+    await tick();
 
     expect(
       accordion.dom.root?.querySelectorAll('[data-accordion-header]')

@@ -11,6 +11,7 @@ export * from './utilities/object.ts';
 export * from './utilities/timer.ts';
 export * from './utilities/types.ts';
 export * from './utilities/function.ts';
+export * from './utilities/scheduler.ts';
 
 // UI primitives
 export * from './primitives/icons.ts';

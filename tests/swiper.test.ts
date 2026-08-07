@@ -52,6 +52,11 @@ async function tick(): Promise<void> {
   await Promise.resolve();
 }
 
+async function flushMountRefresh(): Promise<void> {
+  vi.advanceTimersByTime(16);
+  await tick();
+}
+
 beforeEach(() => {
   document.body.innerHTML = '<div id="app"></div>';
   vi.useFakeTimers();
@@ -165,6 +170,52 @@ describe('Swiper', () => {
     expect(swiper.state.index).toBe(1);
     expect(swiper.state.trackIndex).toBe(1);
     expect(swiper.dom.bullets[1]?.classList.contains('is-active')).toBe(true);
+  });
+
+  it('keeps state-mode interactions available after manual mount', async () => {
+    swiper = createSwiper({
+      data: SLIDES,
+      autoplay: false,
+    }).build();
+
+    swiper.next();
+
+    expect(swiper.state.width).toBe(0);
+    expect(swiper.state.animating).toBe(false);
+    expect(swiper.state.index).toBe(0);
+
+    if (!swiper.dom.root) throw new Error('Expected Swiper root.');
+    app().appendChild(swiper.dom.root);
+    setWidth(swiper.dom.root);
+    await flushMountRefresh();
+
+    expect(swiper.state.width).toBe(320);
+
+    swiper.dom.nextButton?.click();
+
+    expect(swiper.state.index).toBe(1);
+    expect(swiper.state.trackIndex).toBe(2);
+  });
+
+  it('starts state-mode autoplay only after layout is available', async () => {
+    swiper = createSwiper({
+      data: SLIDES,
+      delay: 40,
+    }).build();
+
+    expect(swiper.runtime.timer).toBeNull();
+
+    if (!swiper.dom.root) throw new Error('Expected Swiper root.');
+    app().appendChild(swiper.dom.root);
+    setWidth(swiper.dom.root);
+    await flushMountRefresh();
+
+    expect(swiper.runtime.timer).toBeTruthy();
+
+    vi.advanceTimersByTime(40);
+
+    expect(swiper.state.index).toBe(1);
+    expect(swiper.state.trackIndex).toBe(2);
   });
 
   it('refreshes dynamic slides when state data changes through setState', async () => {

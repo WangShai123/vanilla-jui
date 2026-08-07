@@ -1,11 +1,4 @@
-import {
-  createDeepStore,
-  createEffect,
-  createRoot,
-  flushSync,
-  jsx,
-  untrack,
-} from 'vanilla-signal';
+import { createDeepStore, flushSync, jsx } from 'vanilla-signal';
 
 import Component, {
   type ComponentDOM,
@@ -17,6 +10,7 @@ import {
   normalizeContentNodes,
 } from '../utilities/dom.ts';
 import { randomId } from '../utilities/id.ts';
+import { createStateSync } from '../utilities/scheduler.ts';
 import { timer } from '../utilities/timer.ts';
 import {
   type ResolveSchema,
@@ -298,18 +292,10 @@ class OffcanvasComponent extends Component<
   private bindState(): void {
     if (this.cleanup.state) return;
 
-    this.cleanup.state = createRoot((dispose) => {
-      let initialized = false;
-      createEffect(() => {
-        const content = this.state.content;
-        if (!initialized) {
-          initialized = true;
-          return;
-        }
-        void untrack(() => this.syncContent(content));
-      });
-      return dispose;
-    });
+    this.cleanup.state = createStateSync(
+      () => this.state.content,
+      (content) => this.syncContent(content)
+    );
   }
 
   private async syncContent(content: OffcanvasContent): Promise<void> {

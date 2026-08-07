@@ -1,11 +1,9 @@
 import {
   bindAttr,
   createDeepStore,
-  createEffect,
   createRoot,
   flushSync,
   jsx,
-  untrack,
 } from 'vanilla-signal';
 
 import Component, {
@@ -19,6 +17,11 @@ import {
   q,
 } from '../utilities/dom.ts';
 import { randomId } from '../utilities/id.ts';
+import {
+  createStateSync,
+  getStoreVersion,
+  stateSnapshot,
+} from '../utilities/scheduler.ts';
 import {
   type ResolveSchema,
   resolveProps,
@@ -334,7 +337,7 @@ class TabsComponent extends Component<ResolvedTabsProps, TabsState, TabsDOM> {
     }) as HTMLElement;
   }
 
-  private renderItems(): void {
+  private renderItems(data: TabItem[] = this.state.data): void {
     if (!this.dom.root) return;
     const tabList = q<HTMLElement>('[data-tabs-list]', this.dom.root);
     const panelWrapper = q<HTMLElement>(
@@ -352,7 +355,7 @@ class TabsComponent extends Component<ResolvedTabsProps, TabsState, TabsDOM> {
     const tabFragment = document.createDocumentFragment();
     const panelFragment = document.createDocumentFragment();
 
-    this.state.data.forEach((item, index) => {
+    data.forEach((item, index) => {
       const name = item.name || randomId();
 
       const tab = jsx('div', {
@@ -410,78 +413,84 @@ class TabsComponent extends Component<ResolvedTabsProps, TabsState, TabsDOM> {
   private bindState(): void {
     if (this.stateDispose) return;
 
-    this.stateDispose = createRoot((dispose) => {
-      let initialized = false;
-      let previousData = this.state.data;
-      let previousDirection = this.state.direction;
-      let previousActive = this.state.active;
-      createEffect(() => {
+    let previousData = this.state.data;
+    let previousDataVersion = getStoreVersion(previousData);
+    let previousDirection = this.state.direction;
+    let previousActive = this.state.active;
+
+    this.stateDispose = createStateSync(
+      () => {
         const data = this.state.data;
+        const dataVersion = getStoreVersion(data);
         const direction = this.state.direction;
         const disabled = this.state.disabled;
         const active = this.state.active;
-        if (!initialized) {
-          initialized = true;
-          return;
-        }
+        const snapshot = {
+          data,
+          direction,
+          disabled,
+          active,
+          dataChanged:
+            data !== previousData || dataVersion !== previousDataVersion,
+          directionChanged: direction !== previousDirection,
+          activeChanged: active !== previousActive,
+        };
 
-        const dataChanged = data !== previousData;
-        const directionChanged = direction !== previousDirection;
-        const activeChanged = active !== previousActive;
         previousData = data;
+        previousDataVersion = dataVersion;
         previousDirection = direction;
         previousActive = active;
 
-        void untrack(() =>
-          this.syncStateView({ dataChanged, directionChanged, activeChanged })
-        );
-        void disabled;
-      });
-      return dispose;
-    });
+        return snapshot;
+      },
+      (snapshot) => this.syncStateView(snapshot)
+    );
   }
 
   private async syncStateView({
+    data,
+    direction,
+    disabled,
+    active,
     dataChanged,
     directionChanged,
     activeChanged,
   }: {
+    data: TabItem[];
+    direction: TabsDirection;
+    disabled: TabsDisabled;
+    active: TabsValue;
     dataChanged: boolean;
     directionChanged: boolean;
     activeChanged: boolean;
   }): Promise<void> {
     if (!this.runtime.built || !this.dom.root) return;
-    this.validateData(this.state.data);
+    const dataSnapshot = cloneTabItems(stateSnapshot(data));
+    this.validateData(dataSnapshot);
     validateParam(
       'direction',
-      this.state.direction,
+      direction,
       TABS_STATE_SCHEMA.direction,
       'Tabs.state'
     );
     validateParam(
       'disabled',
-      this.state.disabled,
+      disabled,
       TABS_STATE_SCHEMA.disabled,
       'Tabs.state'
     );
-    validateParam(
-      'active',
-      this.state.active,
-      TABS_STATE_SCHEMA.active,
-      'Tabs.state'
-    );
+    validateParam('active', active, TABS_STATE_SCHEMA.active, 'Tabs.state');
 
     if (directionChanged) {
-      this.dom.root.setAttribute('data-tabs-direction', this.state.direction);
+      this.dom.root.setAttribute('data-tabs-direction', direction);
       flushSync(() => {
-        this.state.isVertical =
-          this.state.direction === 'left' || this.state.direction === 'right';
+        this.state.isVertical = direction === 'left' || direction === 'right';
       });
     }
 
     if (dataChanged) {
       this.runtime.cache.panels.clear();
-      this.renderItems();
+      this.renderItems(dataSnapshot);
       this.bindEvents();
       flushSync(() => {
         this.syncCurrent(-1);
@@ -489,7 +498,7 @@ class TabsComponent extends Component<ResolvedTabsProps, TabsState, TabsDOM> {
     }
 
     if (dataChanged || activeChanged) {
-      await this.activateInternal(this.state.active, activeChanged);
+      await this.activateInternal(active, activeChanged);
     }
 
     this.refreshDrag();

@@ -1,10 +1,4 @@
-import {
-  createDeepStore,
-  createEffect,
-  createRoot,
-  jsx,
-  untrack,
-} from 'vanilla-signal';
+import { createDeepStore, jsx } from 'vanilla-signal';
 import { t } from 'vanilla-signal-i18n';
 
 import Component, {
@@ -16,6 +10,11 @@ import { icon } from '../primitives/icons.ts';
 import { joinClasses } from '../utilities/class-name.ts';
 import { all } from '../utilities/dom.ts';
 import { randomId } from '../utilities/id.ts';
+import {
+  createStateSync,
+  stateSnapshot,
+  trackStoreVersion,
+} from '../utilities/scheduler.ts';
 import {
   type ResolveSchema,
   resolveProps,
@@ -284,21 +283,19 @@ class MenuComponent extends Component<ResolvedMenuProps, MenuState, MenuDOM> {
   private bindState(): void {
     if (this.cleanup.state) return;
 
-    this.cleanup.state = createRoot((dispose) => {
-      createEffect(() => {
-        const snapshot = {
-          data: this.state.data,
-        };
-        untrack(() => this.renderSnapshot(snapshot));
-      });
-      return dispose;
-    });
+    this.cleanup.state = createStateSync(
+      () => ({
+        data: trackStoreVersion(this.state.data),
+      }),
+      (snapshot) => this.renderSnapshot(snapshot),
+      { deferInitial: false, flushInitial: true }
+    );
   }
 
   private renderSnapshot(snapshot: MenuSnapshot): void {
     if (!this.runtime.built || !this.dom.root || !this.dom.list) return;
     this.validateData(snapshot.data);
-    const data = cloneMenuData(snapshot.data);
+    const data = cloneMenuData(stateSnapshot(snapshot.data));
 
     this.dom.list.textContent = '';
     this.dom.list.append(...data.map((item) => this.buildItem(item)));

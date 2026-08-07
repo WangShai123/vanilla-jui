@@ -625,7 +625,7 @@ class Form extends Component<ResolvedFormProps, FormState, FormDOM> {
           type: 'checkbox',
           id,
           name: field.name,
-          value: field.value ?? 'on',
+          value: field.value ?? '1',
           checked: !!field.checked,
           disabled: !!field.disabled,
           required: !!field.required,

@@ -316,6 +316,24 @@ type ResolvedProps<TSchema extends object> = LooseRecord & { [Key in keyof TSche
 declare function validateParam<TInput extends LooseRecord = LooseRecord>(name: string, value: unknown, rule?: ParamRuleInput<TInput>, namespace?: string): unknown;
 declare function resolveProps<TInput extends LooseRecord, TSchema extends ResolveSchema<TInput>>(input?: TInput | null | undefined, schema?: TSchema, namespace?: string): TInput & ResolvedProps<TSchema>;
 //#endregion
+//#region src/utilities/scheduler.d.ts
+interface ScheduledTask {
+  schedule: () => void;
+  flush: () => void;
+  cancel: () => void;
+  dispose: () => void;
+}
+interface StateSyncOptions {
+  deferInitial?: boolean;
+  flushInitial?: boolean;
+  flush?: 'microtask' | 'sync';
+}
+declare function createScheduledTask(run: () => void): ScheduledTask;
+declare function getStoreVersion(value: unknown): number;
+declare function trackStoreVersion<T>(value: T): T;
+declare function stateSnapshot<T>(value: T): T;
+declare function createStateSync<TSnapshot>(read: () => TSnapshot, sync: (snapshot: TSnapshot) => void | Promise<void>, { deferInitial, flushInitial, flush }?: StateSyncOptions): () => void;
+//#endregion
 //#region src/primitives/icons.d.ts
 type IconPathMap = Record<string, string>;
 type IconName = string;
@@ -1807,6 +1825,7 @@ interface SwiperRuntime extends ComponentRuntime {
   swiping: boolean;
   clickPrevented: boolean;
   timer: ReturnType<typeof setInterval> | null;
+  mountRefreshId: number | null;
   imageCleanups: Set<() => void>;
   realCount: number;
 }
@@ -1854,6 +1873,10 @@ declare class SwiperComponent extends Component<ResolvedSwiperProps, SwiperState
   protected onDestroy(): void;
   private updateSize;
   refresh(): this;
+  private hasLayout;
+  private syncLayout;
+  private queueMountRefresh;
+  private cancelMountRefresh;
   private refreshSlides;
   private initLoop;
   private setupStyles;
@@ -2288,4 +2311,4 @@ declare class MenuComponent extends Component<ResolvedMenuProps, MenuState, Menu
 type Menu = MenuComponent;
 declare function createMenu(input?: MenuProps): Menu;
 //#endregion
-export { CleanupFunction, Component, ContainerExpect, DOMReference, type DebounceSettings, type DebouncedFunc, FlowAction, FlowBusyHook, FlowBusyStrategy, FlowChangeHook, FlowClassNameConfig, FlowClassNames, FlowCleanup, FlowContext, FlowData, FlowDirection, FlowErrorHook, FlowFinishHook, FlowGuardHook, FlowLifecycleHook, FlowMoveHook, FlowPayload, FlowProps, FlowRenderContext, FlowSlot, FlowSlotName, FlowSnapshot, FlowState, FlowStep, FlowStepResult, FlowSubscriber, FlowTarget, FlowText, FormButton, FormClassNameConfig, FormClassNames, FormDataRecord, FormDataValue, FormField, FormOption, FormProps, FormValidatorConfig, IEventManager, IconAttributeValue, IconName, IconPathMap, IconProps, LazyRenderCallback, LazyRenderOptions, LazyRenderTarget, Menu, MenuClassNameConfig, MenuClassNames, MenuItem, MenuItemId, MenuProps, MenuType, Modal, ModalClassNameConfig, ModalClassNames, ModalMode, ModalProps, ModalText, NormalizeContext, Offcanvas, OffcanvasAnimate, OffcanvasClassNameConfig, OffcanvasClassNames, OffcanvasContent, OffcanvasDirection, OffcanvasProps, Pagination, PaginationClassNameConfig, PaginationClassNames, PaginationCount, PaginationPage, PaginationProps, ParamRule, ParamRuleInput, PopupProps, PublicFlowStep, QueryContext, RenderableContent, RequireContainerResult, ResolveContainerResult, ResolveSchema, ResolvedProps, Swiper, SwiperClassNameConfig, SwiperClassNames, SwiperDataItem, SwiperProps, SwiperSlideContext, TabItem, TabPanel, TabTitleContext, Tabs, TabsClassNameConfig, TabsClassNames, TabsDirection, TabsDisabled, TabsPanelContext, TabsProps, TabsValue, ThemeClassNameConfig, ThemeClassNames, ThemeConfigKey, ThemeInstance, ThemeOptions, ThemePanelGroup, ThemeResolvedOptions, type ThrottleSettings, Toast, ToastActionProps, ToastClassNameConfig, ToastClassNames, ToastOptions, ToastType, ValidateCondition, addIcons, all, copy, createAccordion, createDrop, createEventManager, createFlow, createForm, createLoading, createMenu, createModal, createOffcanvas, createPagination, createParabola, createPopup, createSticky, createSwiper, createTabs, createTheme, createToc, createTooltip, createValidator, debounce, getRegistedIconPath, getType, icon, iconHtml, iconMarkup, isDomElementValue, isDomNodeValue, isElement, isHtmlElementValue, isMobile, isNilValue, isNode, isPlainObject, isRenderableContent, isRenderablePrimitive, isRenderableValue, lazyRender, listen, normalizeContentNodes, normalizeRenderableContentNodes, postJson, q, randomId, requireContainer, resolveContainer, resolveElement, resolveNode, resolveNodeList, resolveProps, restUrl, throttle, timer, uuid, validateParam };
+export { CleanupFunction, Component, ContainerExpect, DOMReference, type DebounceSettings, type DebouncedFunc, FlowAction, FlowBusyHook, FlowBusyStrategy, FlowChangeHook, FlowClassNameConfig, FlowClassNames, FlowCleanup, FlowContext, FlowData, FlowDirection, FlowErrorHook, FlowFinishHook, FlowGuardHook, FlowLifecycleHook, FlowMoveHook, FlowPayload, FlowProps, FlowRenderContext, FlowSlot, FlowSlotName, FlowSnapshot, FlowState, FlowStep, FlowStepResult, FlowSubscriber, FlowTarget, FlowText, FormButton, FormClassNameConfig, FormClassNames, FormDataRecord, FormDataValue, FormField, FormOption, FormProps, FormValidatorConfig, IEventManager, IconAttributeValue, IconName, IconPathMap, IconProps, LazyRenderCallback, LazyRenderOptions, LazyRenderTarget, Menu, MenuClassNameConfig, MenuClassNames, MenuItem, MenuItemId, MenuProps, MenuType, Modal, ModalClassNameConfig, ModalClassNames, ModalMode, ModalProps, ModalText, NormalizeContext, Offcanvas, OffcanvasAnimate, OffcanvasClassNameConfig, OffcanvasClassNames, OffcanvasContent, OffcanvasDirection, OffcanvasProps, Pagination, PaginationClassNameConfig, PaginationClassNames, PaginationCount, PaginationPage, PaginationProps, ParamRule, ParamRuleInput, PopupProps, PublicFlowStep, QueryContext, RenderableContent, RequireContainerResult, ResolveContainerResult, ResolveSchema, ResolvedProps, Swiper, SwiperClassNameConfig, SwiperClassNames, SwiperDataItem, SwiperProps, SwiperSlideContext, TabItem, TabPanel, TabTitleContext, Tabs, TabsClassNameConfig, TabsClassNames, TabsDirection, TabsDisabled, TabsPanelContext, TabsProps, TabsValue, ThemeClassNameConfig, ThemeClassNames, ThemeConfigKey, ThemeInstance, ThemeOptions, ThemePanelGroup, ThemeResolvedOptions, type ThrottleSettings, Toast, ToastActionProps, ToastClassNameConfig, ToastClassNames, ToastOptions, ToastType, ValidateCondition, addIcons, all, copy, createAccordion, createDrop, createEventManager, createFlow, createForm, createLoading, createMenu, createModal, createOffcanvas, createPagination, createParabola, createPopup, createScheduledTask, createStateSync, createSticky, createSwiper, createTabs, createTheme, createToc, createTooltip, createValidator, debounce, getRegistedIconPath, getStoreVersion, getType, icon, iconHtml, iconMarkup, isDomElementValue, isDomNodeValue, isElement, isHtmlElementValue, isMobile, isNilValue, isNode, isPlainObject, isRenderableContent, isRenderablePrimitive, isRenderableValue, lazyRender, listen, normalizeContentNodes, normalizeRenderableContentNodes, postJson, q, randomId, requireContainer, resolveContainer, resolveElement, resolveNode, resolveNodeList, resolveProps, restUrl, stateSnapshot, throttle, timer, trackStoreVersion, uuid, validateParam };

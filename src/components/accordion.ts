@@ -1,11 +1,9 @@
 import {
   bindAttr,
   createDeepStore,
-  createEffect,
   createRoot,
   flushSync,
   jsx,
-  untrack,
 } from 'vanilla-signal';
 
 import Component, {
@@ -18,6 +16,11 @@ import {
   normalizeContentNodes,
 } from '../utilities/dom.ts';
 import { randomId } from '../utilities/id.ts';
+import {
+  createStateSync,
+  stateSnapshot,
+  trackStoreVersion,
+} from '../utilities/scheduler.ts';
 import {
   type ResolveSchema,
   resolveProps,
@@ -329,28 +332,27 @@ class Accordion extends Component<
 
   private bindItems(): void {
     this.itemsDispose?.();
-    this.itemsDispose = createRoot((dispose) => {
-      createEffect(() => {
-        const sourceItems = this.state.items;
-        const items = normalizeItems(sourceItems);
+    this.syncItems(this.state.items);
+    this.itemsDispose = createStateSync(
+      () => trackStoreVersion(this.state.items),
+      (items) => this.syncItems(items)
+    );
+  }
 
-        untrack(() => {
-          if (needsItemsSync(sourceItems, items)) {
-            this.state.items = items;
-          }
+  private syncItems(sourceItems: AccordionItem[]): void {
+    const items = normalizeItems(stateSnapshot(sourceItems));
 
-          const activeNames = reconcileActiveNames(
-            this.state.activeNames,
-            items,
-            this.props.multiple
-          );
-          this.buildItems(items, activeNames);
-          this.syncActiveNames(activeNames, items);
-        });
-      });
+    if (needsItemsSync(sourceItems, items)) {
+      this.state.items = items;
+    }
 
-      return dispose;
-    });
+    const activeNames = reconcileActiveNames(
+      this.state.activeNames,
+      items,
+      this.props.multiple
+    );
+    this.buildItems(items, activeNames);
+    this.syncActiveNames(activeNames, items);
   }
 
   private buildItems(items: AccordionItem[], activeNames: string[]): void {

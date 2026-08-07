@@ -1,11 +1,4 @@
-import {
-  createDeepStore,
-  createEffect,
-  createRoot,
-  flushSync,
-  jsx,
-  untrack,
-} from 'vanilla-signal';
+import { createDeepStore, flushSync, jsx } from 'vanilla-signal';
 
 import Component, {
   type ComponentDOM,
@@ -13,6 +6,7 @@ import Component, {
 } from '../core/Component.ts';
 import { icon } from '../primitives/icons.ts';
 import { isPlainObject } from '../utilities/object.ts';
+import { createStateSync } from '../utilities/scheduler.ts';
 import {
   type ResolveSchema,
   resolveProps,
@@ -400,20 +394,19 @@ class PaginationComponent extends Component<
   private bindState(): void {
     if (this.cleanup.state) return;
 
-    this.cleanup.state = createRoot((dispose) => {
-      createEffect(() => {
-        const snapshot: PaginationSnapshot = {
+    this.cleanup.state = createStateSync(
+      () =>
+        ({
           total: this.state.total,
           size: this.state.page.size,
           current: this.state.page.current,
           sibling: this.state.count.sibling,
           boundary: this.state.count.boundary,
           locked: this.state.locked,
-        };
-        untrack(() => this.syncState(snapshot));
-      });
-      return dispose;
-    });
+        }) as PaginationSnapshot,
+      (snapshot) => this.syncState(snapshot),
+      { deferInitial: false, flushInitial: true, flush: 'sync' }
+    );
   }
 
   private syncState(snapshot: PaginationSnapshot): void {

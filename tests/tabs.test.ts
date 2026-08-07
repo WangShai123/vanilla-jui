@@ -37,6 +37,11 @@ function mount(instance: TabsInstance): TabsInstance {
   return instance;
 }
 
+async function tick(): Promise<void> {
+  await Promise.resolve();
+  await Promise.resolve();
+}
+
 beforeEach(() => {
   document.body.innerHTML = '<div id="app"></div>';
 });
@@ -176,18 +181,18 @@ describe('Tabs', () => {
       ...tabs.state.data,
       { name: 'more', title: 'More', panel: 'More panel' },
     ];
-    await Promise.resolve();
+    await tick();
     expect(tabs.dom.root?.querySelector('[data-tabs-tab="more"]')).toBeTruthy();
 
     tabs.state.data = tabs.state.data.filter((item) => item.name !== 'usage');
-    await Promise.resolve();
+    await tick();
     expect(tabs.dom.root?.querySelector('[data-tabs-tab="usage"]')).toBeNull();
 
     tabs.setState({
       active: 'new',
       data: [{ name: 'new', title: 'New', panel: 'New panel' }],
     });
-    await Promise.resolve();
+    await tick();
 
     expect(tabs.dom.root?.querySelectorAll('[data-tabs-tab]')).toHaveLength(1);
     expect(tabs.state.current.name).toBe('new');
