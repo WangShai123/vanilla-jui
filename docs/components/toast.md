@@ -2,7 +2,7 @@
 
 Toast 是静态消息提示工具，源码位于 `src/components/toast.ts`。它不需要实例化，直接通过静态方法展示消息。
 
-Toast 的 `duration` 表示消息停留时间，不是动画时长。入场和离场由公共 presence 协调器和 Web Animations Motion 处理；离场完成后才删除节点。动画不依赖默认 className 或 `style.css`。机制说明见 [Presence 与 Motion](../utilities/presence.md)。
+Toast 的 `duration` 表示消息停留时间，不是动画时长。入场和离场由公共 presence 协调器和 Web Animations Motion 处理；离场完成后才删除节点。动画不依赖默认 className 或 `style.css`。机制说明见 [Presence 与 Motion](../core/presence.md)。
 
 ## 导入
 

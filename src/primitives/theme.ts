@@ -130,12 +130,14 @@ function createThemeStorage(): Storage {
   return createStorage({
     driver: 'cookie',
     codec: 'json',
+    namespace: '',
+    keySeparator: '',
     driverOptions: {
       path: '/',
       sameSite: 'Lax',
       secure: typeof location !== 'undefined' && location.protocol === 'https:',
     },
-    ttl: 864e5,
+    ttl: 864e5 * 7, // 7 days
   });
 }
 

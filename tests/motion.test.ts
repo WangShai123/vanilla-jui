@@ -6,7 +6,7 @@ import {
   createCollapseTransition,
   createMotionGroup,
   createTransition,
-} from '../src/utilities/motion.ts';
+} from '../src/core/motion.ts';
 
 function controlledAnimation(): {
   animation: Animation;

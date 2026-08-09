@@ -1,6 +1,8 @@
 # Drop
 
-Drop 是通用浮层 UI 原语，源码位于 `src/primitives/drop.ts`。它不继承 Component，只通过工厂函数创建实例。支持点击或 hover 触发，自动计算视口内位置。DOM 在 `show()` 时懒挂载到 `document.body`，`hide()` 时移除。
+Drop 是通用浮层行为控制器，源码位于 `src/primitives/drop.ts`。它通过 `createDrop(reference, props)` 创建实例，围绕一个已有触发元素工作，负责点击或 hover 触发、显示延迟、视口内定位、外部点击关闭和资源清理。
+
+Drop 的根节点在实例创建时生成，但只在 `show()` 时挂载到 `document.body`，`hide()` 时从文档移除。实例没有 `build()` / `mount()` 生命周期；业务侧通过 `show()`、`hide()`、`toggle()` 和 `destroy()` 控制它。
 
 ## 导入
 
@@ -15,14 +17,14 @@ import 'vanilla-jui/style.css';
 const drop = createDrop(button, {
   mode: 'click',
   position: 'bottom-left',
-  content: '<strong>Drop content</strong>',
+  content: 'Drop content',
 });
 
 drop.show();
 drop.hide();
 ```
 
-`content` 支持字符串、DOM 节点、节点数组、函数和 `null`。传入 Element 节点时会直接作为内容 wrapper 使用。
+`reference` 可以是选择器或 DOM 节点，会在创建时解析为触发元素。`content` 支持字符串、DOM 节点、节点数组、函数和 `null`。字符串始终按文本渲染，不解析 HTML。传入 Element 节点时会直接作为浮层内容 wrapper 使用；其它内容会放入默认 `.drop-container` 容器。
 
 ## Hover 模式
 
@@ -73,12 +75,14 @@ createDrop(button, { position: 'right', content: '...' });
 
 ## 实例属性
 
-| 属性        | 说明           |
-| ----------- | -------------- |
-| `props`     | 归一化后的配置 |
-| `dom.root`  | 浮层 DOM 节点  |
-| `target`    | 触发元素       |
-| `isVisible` | 当前是否可见   |
+| 属性        | 说明                                |
+| ----------- | ----------------------------------- |
+| `props`     | 归一化后的配置                      |
+| `element`   | 浮层根节点；`destroy()` 后为 `null` |
+| `target`    | 触发元素；`destroy()` 后为 `null`   |
+| `isVisible` | 当前是否可见                        |
+| `delayShow` | 归一化后的展示延迟，单位毫秒        |
+| `delayHide` | 归一化后的隐藏延迟，单位毫秒        |
 
 ## 实例方法
 
@@ -90,3 +94,5 @@ createDrop(button, { position: 'right', content: '...' });
 | `destroy()`      | 销毁实例，解绑事件并移除 DOM |
 
 `show(false)` / `hide(false)` 可跳过延迟立即执行。
+
+`destroy()` 会清理 show/hide timer、触发元素事件、document 事件、mousemove hover-intent 监听，并移除浮层节点。销毁后 `element` 和 `target` 都返回 `null`，后续 `show()` / `hide()` 不再产生效果。

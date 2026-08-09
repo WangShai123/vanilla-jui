@@ -14,7 +14,6 @@ import { joinClasses } from '../utilities/class-name.ts';
 import {
   type RenderableContent,
   all,
-  normalizeRenderableContentNodes,
 } from '../utilities/dom.ts';
 import { randomId } from '../utilities/id.ts';
 import { isPlainObject } from '../utilities/object.ts';
@@ -567,7 +566,7 @@ export function createForm(input: FormProps = {}): Form {
     field: FormField,
     id: string,
     index: number
-  ): HTMLElement | Node[] | null => {
+  ): RenderableContent<FormControlContext> => {
     const names = state.className;
     if (field.type === 'textarea') {
       return jsx(
@@ -629,11 +628,9 @@ export function createForm(input: FormProps = {}): Form {
       }) as HTMLLabelElement;
     }
     if (field.type === 'custom') {
-      return normalizeRenderableContentNodes(field.content, {
-        form,
-        field,
-        index,
-      });
+      return typeof field.content === 'function'
+        ? field.content({ form, field, index })
+        : field.content;
     }
     const type = field.type || 'text';
     return jsx('input', {

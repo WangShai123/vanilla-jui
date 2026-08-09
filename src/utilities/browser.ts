@@ -1,3 +1,7 @@
+import { t } from 'vanilla-signal-i18n';
+import { Toast } from '../primitives/toast';
+import locales from '../locales';
+
 declare global {
   interface Navigator {
     userAgentData?: {
@@ -102,4 +106,38 @@ function fallbackCopy(text: string): boolean {
       textarea.parentNode.removeChild(textarea);
     }
   }
+}
+
+export type SupportES2022 = boolean;
+export function isModernBrowser(): SupportES2022 {
+  try {
+    // Object.hasOwn()
+    if (typeof Object.hasOwn !== 'function') return false;
+    // Array.prototype.at()
+    if (typeof [].at !== 'function') return false;
+
+    // new Function('class Test { #x = 1; getX() { return this.#x; } }');
+    // new Function('const re = /a/d; return re.hasIndices;');
+    // const err = new Error('test', { cause: 'reason' });
+    // if (err.cause !== 'reason') return false;
+
+    return true;
+  } catch {
+    return false;
+  }
+}
+export function checkModernBrowser(): SupportES2022 {
+  if (!isModernBrowser()) {
+    Toast.action(t('wn', locales), {
+      type: 'error',
+      onAction: () => {
+        window.open('https://www.google.cn/chrome/fallback/', '_blank');
+      },
+      className: {
+        actionBtn: 'j-button is-sm is-danger',
+      },
+    });
+    return false;
+  }
+  return true;
 }

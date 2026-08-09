@@ -7,16 +7,16 @@ export * from './utilities/id.ts';
 export * from './utilities/dom.ts';
 export * from './utilities/events.ts';
 export * from './utilities/http.ts';
-export * from './utilities/motion.ts';
+export * from './core/motion.ts';
 export * from './utilities/object.ts';
 export * from './utilities/timer.ts';
 export * from './utilities/types.ts';
 export * from './utilities/function.ts';
-export * from './utilities/scheduler.ts';
+export * from './core/scheduler.ts';
 export * from './utilities/state.ts';
 export * from './utilities/refs.ts';
-export * from './utilities/view.ts';
-export * from './utilities/presence.ts';
+export * from './core/view.ts';
+export * from './core/presence.ts';
 
 // UI primitives
 export * from './primitives/icons.ts';

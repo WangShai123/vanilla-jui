@@ -158,4 +158,4 @@ const panel = createOffcanvas({
 
 两者通过公共 presence 协调器管理 DOM 生命周期。`show()` 在挂载后正向播放面板和遮罩 Motion；`hide()` 反向播放同一组 Animation，全部完成后再卸载。动画不依赖默认 className 或 `style.css`。
 
-机制说明和自定义组件接入方式见 [Presence 与 Motion](../utilities/presence.md)。
+机制说明和自定义组件接入方式见 [Presence 与 Motion](../core/presence.md)。

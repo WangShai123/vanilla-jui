@@ -8,6 +8,7 @@ import {
   it,
   vi,
 } from 'vite-plus/test';
+import { jsx } from 'vanilla-signal';
 
 import { createModal, type Modal } from '../src/components/modal.ts';
 
@@ -171,8 +172,13 @@ describe('Modal', () => {
     const onConfirm = vi.fn();
     const onCancel = vi.fn();
     modal = createModal({
-      content:
-        '<button data-action="close"><span data-testid="inner">x</span></button>',
+      content: jsx('button', {
+        'data-action': 'close',
+        children: jsx('span', {
+          'data-testid': 'inner',
+          children: 'x',
+        }),
+      }),
       escClose: true,
       bgClose: true,
       onConfirm,

@@ -1,54 +1,54 @@
 # Menu
 
-Menu 是轻量菜单组件，支持常规桌面菜单、移动端侧边菜单和底部菜单。组件根据 `data` 创建 DOM，通过 data 标记绑定交互，并支持通过响应式 `state.data` 更新渲染。
+Menu 是轻量菜单组件，支持常规桌面菜单、移动端侧边菜单和底部菜单。组件根据 `data` 创建 DOM，通过 data 标记绑定交互，并支持通过响应式 `state.data` 更新菜单项视图。
 
 ```js
-import { createMenu } from "vanilla-jui";
-import "vanilla-jui/style.css";
+import { createMenu } from 'vanilla-jui';
+import 'vanilla-jui/style.css';
 ```
 
 ## 基础用法
 
-组件需要显式 `build()`，然后由用户手动挂载 `dom.root`。
+组件需要显式 `build()`，然后由用户手动挂载 `menu.element`，或调用 `menu.mount(container)`。
 
 ```js
 const menu = createMenu({
-  type: "mobile",
+  type: 'mobile',
   data: [
-    { id: "home", title: "Home", url: "#home" },
+    { id: 'home', title: 'Home', url: '#home' },
     {
-      id: "docs",
-      title: "Docs",
-      children: [{ id: "api", title: "API", url: "#api" }],
+      id: 'docs',
+      title: 'Docs',
+      children: [{ id: 'api', title: 'API', url: '#api' }],
     },
   ],
 }).build();
 
-document.querySelector("#demo").appendChild(menu.element);
+document.querySelector('#demo').appendChild(menu.element);
 ```
 
 ## State 更新
 
-菜单数据通过 `state.data` 管理。更新 `state.data` 后，菜单会自动重新渲染：
+菜单数据通过 `state.data` 管理。更新 `state.data` 后，根节点保持稳定，菜单项由 keyed `For` 按 item key 更新：
 
 ```js
 menu.setState({
-  data: [{ id: "new", title: "New", url: "#new" }],
+  data: [{ id: 'new', title: 'New', url: '#new' }],
 });
 
 menu.state.data = [
-  { id: "home", title: "Home", url: "#home" },
-  { id: "about", title: "About", url: "#about" },
+  { id: 'home', title: 'Home', url: '#home' },
+  { id: 'about', title: 'About', url: '#about' },
 ];
 ```
 
 ## 菜单类型
 
-| type       | 行为                                                                             |
-| ---------- | -------------------------------------------------------------------------------- |
-| `undefined` | 常规桌面菜单，只渲染 DOM，不启用移动端或底部菜单交互                             |
-| `mobile`   | 点击含子菜单的项展开下级，自动注入带 `arrow-left` 图标的返回项                   |
-| `bottom`   | 点击第一层含子菜单的项切换激活状态，点击其他区域收起；子菜单链接允许正常跳转     |
+| type        | 行为                                                                         |
+| ----------- | ---------------------------------------------------------------------------- |
+| `undefined` | 常规桌面菜单，只渲染 DOM，不启用移动端或底部菜单交互                         |
+| `mobile`    | 点击含子菜单的项展开下级，自动注入带 `arrow-left` 图标的返回项               |
+| `bottom`    | 点击第一层含子菜单的项切换激活状态，点击其他区域收起；子菜单链接允许正常跳转 |
 
 `type` 是实例化配置，默认值为 `undefined`，只验证为 `string` 或 `undefined`，不做枚举限制。组件只在传入 `type` 时写入 `data-menu-type`；样式应通过 `[data-menu-type="..."]` 扩展，不需要依赖根节点类型类名。
 
@@ -98,19 +98,20 @@ menu.state.data = [
 
 ## Props
 
-| 字段        | 类型                 | 默认值       | 说明                                      |
-| ----------- | -------------------- | ------------ | ----------------------------------------- |
-| `type`      | `string \| undefined` | `undefined`  | 菜单类型，实例化后固定                    |
-| `id`        | `string \| null`     | 自动生成     | 根列表 `<ul>` 节点 id                     |
-| `data`      | `MenuItem[]`         | `[]`         | 初始菜单数据                              |
-| `backText`  | `string`             | `"Back"`     | 移动端子菜单返回项文案                    |
-| `className` | `object`             | 默认类名对象 | 覆盖根、列表、菜单项、链接、子菜单等类名  |
+| 字段        | 类型                  | 默认值       | 说明                                     |
+| ----------- | --------------------- | ------------ | ---------------------------------------- |
+| `type`      | `string \| undefined` | `undefined`  | 菜单类型，实例化后固定                   |
+| `id`        | `string \| null`      | 自动生成     | 根列表 `<ul>` 节点 id                    |
+| `data`      | `MenuItem[]`          | `[]`         | 初始菜单数据                             |
+| `backText`  | `string`              | `"Back"`     | 移动端子菜单返回项文案                   |
+| `className` | `object`              | 默认类名对象 | 覆盖根、列表、菜单项、链接、子菜单等类名 |
 
 ## State
 
-| 字段          | 类型         | 说明                       |
-| ------------- | ------------ | -------------------------- |
-| `state.data`  | `MenuItem[]` | 当前菜单数据，更新后重渲染 |
+| 字段               | 类型         | 说明                                  |
+| ------------------ | ------------ | ------------------------------------- |
+| `state.data`       | `MenuItem[]` | 当前菜单数据，更新后由 keyed 列表更新 |
+| `state.activeKeys` | `string[]`   | 当前展开或激活的菜单项 key            |
 
 ## className
 
@@ -131,10 +132,12 @@ menu.state.data = [
 
 ## Methods
 
-| 方法                | 说明                         |
-| ------------------- | ---------------------------- |
-| `build()`           | 创建离线 DOM                 |
-| `setState({ ... })` | 更新菜单状态并自动重渲染     |
-| `destroy()`         | 销毁实例，释放事件和 DOM     |
+| 方法                | 说明                     |
+| ------------------- | ------------------------ |
+| `build()`           | 创建离线 DOM             |
+| `mount(container)`  | 构建并挂载根节点         |
+| `unmount()`         | 移除根节点，保留 state   |
+| `setState({ ... })` | 更新菜单状态             |
+| `destroy()`         | 销毁实例，释放事件和 DOM |
 
-`destroy()` 会移除已经挂载的 `dom.root`。
+`destroy()` 会移除已经挂载的 `element`，并释放 bottom 模式的 document 点击监听。

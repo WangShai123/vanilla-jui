@@ -64,7 +64,7 @@
     "@types/lodash-es": "^4.17.12",
     "lodash-es": "^4.18.1",
     "vanilla-create-storage": "latest",
-    "vanilla-signal": "latest",
+    "vanilla-signal": "^1.1.4",
     "vanilla-signal-i18n": "latest"
   },
   "devDependencies": {

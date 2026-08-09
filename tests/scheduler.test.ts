@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vite-plus/test';
 
-import { createScheduledTask } from '../src/utilities/scheduler.ts';
+import { createScheduledTask } from '../src/core/scheduler.ts';
 
 async function flushMicrotasks(): Promise<void> {
   await Promise.resolve();

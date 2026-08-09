@@ -2,6 +2,7 @@ import {
   For,
   createDeepStore,
   createEffect,
+  createSignal,
   flushSync,
   jsx,
   onCleanup,
@@ -11,16 +12,14 @@ import {
   type FunctionalComponent,
   defineComponent,
 } from '../core/component.ts';
+import { createLoading } from '../primitives/loading.ts';
 import { icon } from '../primitives/icons.ts';
-import {
-  type RenderableContent,
-  normalizeContentNodes,
-} from '../utilities/dom.ts';
+import { type RenderableContent } from '../utilities/dom.ts';
 import { randomId } from '../utilities/id.ts';
 import {
   type CollapseMotionController,
   createCollapseTransition,
-} from '../utilities/motion.ts';
+} from '../core/motion.ts';
 import { createKeyedElementRefs } from '../utilities/refs.ts';
 import {
   type ResolveSchema,
@@ -30,6 +29,11 @@ import {
 
 type AccordionActive = number | string | Array<number | string> | null;
 type AccordionDirection = 'vertical' | 'horizontal';
+type AccordionContent =
+  | RenderableContent<AccordionContentContext>
+  | ((
+      context: AccordionContentContext
+    ) => Promise<RenderableContent<AccordionContentContext>>);
 
 interface AccordionClassNames {
   root: string;
@@ -45,7 +49,9 @@ type AccordionClassNameConfig = Partial<AccordionClassNames>;
 interface AccordionItem extends Record<string, unknown> {
   name?: string;
   title: RenderableContent<AccordionContentContext>;
-  content: RenderableContent<AccordionContentContext>;
+  content: AccordionContent;
+  cache?: boolean;
+  ttl?: number;
 }
 
 interface AccordionProps extends Record<string, unknown> {
@@ -86,6 +92,7 @@ interface AccordionCurrent {
 interface AccordionState extends Record<string, unknown> {
   data: AccordionItem[];
   activeNames: string[];
+  loading: boolean;
 }
 
 interface AccordionContentContext {
@@ -94,6 +101,11 @@ interface AccordionContentContext {
   index: number;
   type: 'title' | 'content';
   active: boolean;
+}
+
+interface AccordionContentCacheEntry {
+  content: RenderableContent<AccordionContentContext>;
+  updatedAt: number;
 }
 
 type AccordionInstance = FunctionalComponent<
@@ -126,6 +138,8 @@ const ACCORDION_ITEM_RULE = {
     name: ['string', 'null', 'undefined'],
     title: 'renderable',
     content: 'renderable',
+    cache: ['boolean', 'undefined'],
+    ttl: ['number', 'undefined'],
   },
 };
 
@@ -201,6 +215,21 @@ function normalizeProps(props: AccordionProps): ResolvedAccordionProps {
   };
 }
 
+function normalizeAccordionItem(
+  item: AccordionItem,
+  index: number,
+  validate = true
+): AccordionItem {
+  if (validate)
+    validateParam(String(index), item, ACCORDION_ITEM_RULE, 'Accordion.data');
+  const source = item as AccordionItem;
+  const name = typeof source.name === 'string' ? source.name.trim() : '';
+  return {
+    ...source,
+    name: name || randomId(),
+  };
+}
+
 function normalizeData(data: unknown, validate = true): AccordionItem[] {
   if (validate) {
     validateParam('data', data, ACCORDION_DATA_RULE, 'Accordion');
@@ -208,20 +237,14 @@ function normalizeData(data: unknown, validate = true): AccordionItem[] {
 
   const names = new Set<string>();
 
-  return (data as unknown[]).map((item) => {
-    const source = item as AccordionItem;
-    const name = typeof source.name === 'string' ? source.name.trim() : '';
-    if (name) {
-      if (names.has(name)) {
-        throw new Error(`Accordion: item name "${name}" must be unique.`);
-      }
-      names.add(name);
+  return (data as unknown[]).map((item, index) => {
+    const next = normalizeAccordionItem(item as AccordionItem, index, false);
+    const name = next.name as string;
+    if (names.has(name)) {
+      throw new Error(`Accordion: item name "${name}" must be unique.`);
     }
-
-    return {
-      ...source,
-      name: name || randomId(),
-    };
+    names.add(name);
+    return next;
   });
 }
 
@@ -272,6 +295,10 @@ function createCurrentState(
   return index >= 0 ? { index, name } : { index: null, name: null };
 }
 
+function normalizeTtl(ttl: unknown): number {
+  return typeof ttl === 'number' && ttl > 0 ? ttl : 0;
+}
+
 export function createAccordion(props: AccordionProps): AccordionInstance {
   const resolvedProps = normalizeProps(props);
   const activeNames = resolveActiveItemNames(
@@ -282,13 +309,19 @@ export function createAccordion(props: AccordionProps): AccordionInstance {
   const state = createDeepStore({
     data: resolvedProps.data,
     activeNames,
+    loading: false,
   }) as AccordionState;
   const generatedNames = new WeakMap<object, string>();
   const headers = createKeyedElementRefs<string, HTMLElement>();
   const panels = createKeyedElementRefs<string, HTMLElement>();
   const panelMotions = new Map<string, CollapseMotionController>();
+  const contentCache = new Map<string, AccordionContentCacheEntry>();
+  const contentLoaders = new Map<string, () => Promise<void>>();
   let motionActiveNames = new Set(activeNames);
   let motionPromise = Promise.resolve();
+  let contentLoadId = 0;
+  let loadingCount = 0;
+  let loading = false;
   let accordion: AccordionInstance;
 
   const itemName = (item: AccordionItem): string => {
@@ -297,7 +330,6 @@ export function createAccordion(props: AccordionProps): AccordionInstance {
     if (!generatedNames.has(item)) generatedNames.set(item, randomId());
     return generatedNames.get(item) as string;
   };
-
   const current = (): AccordionCurrent => {
     const data = state.data.map((item) => ({
       ...item,
@@ -310,6 +342,26 @@ export function createAccordion(props: AccordionProps): AccordionInstance {
   };
 
   const isActive = (name: string): boolean => state.activeNames.includes(name);
+
+  const beginLoading = (): void => {
+    loadingCount += 1;
+    if (!loading && !accordion.runtime.destroyed) {
+      loading = true;
+      flushSync(() => {
+        state.loading = true;
+      });
+    }
+  };
+
+  const endLoading = (): void => {
+    loadingCount = Math.max(0, loadingCount - 1);
+    if (loadingCount === 0 && loading && !accordion.runtime.destroyed) {
+      loading = false;
+      flushSync(() => {
+        state.loading = false;
+      });
+    }
+  };
 
   const getIndex = (value: number | string | undefined | null): number => {
     if (typeof value === 'number') return value;
@@ -357,6 +409,14 @@ export function createAccordion(props: AccordionProps): AccordionInstance {
         if (panelMotions.get(name) !== motion) return;
         motion.cancel();
         panelMotions.delete(name);
+        motionActiveNames.delete(name);
+        if (state.activeNames.includes(name)) {
+          flushSync(() => {
+            state.activeNames = state.activeNames.filter(
+              (activeName) => activeName !== name
+            );
+          });
+        }
       });
     };
 
@@ -400,31 +460,135 @@ export function createAccordion(props: AccordionProps): AccordionInstance {
       state.activeNames = next;
     });
     const transitioned = transitionPanels(next);
+    const loaded = next.includes(name)
+      ? contentLoaders.get(name)?.() || Promise.resolve()
+      : Promise.resolve();
 
     const header = headers.get(name);
     const panel = panels.get(name);
     const changed =
       resolvedProps.onChange && header && panel
-        ? Promise.resolve(
-            resolvedProps.onChange(index, name, header, panel, accordion)
+        ? loaded.then(() =>
+            resolvedProps.onChange?.(index, name, header, panel, accordion)
           )
         : Promise.resolve();
     await Promise.all([transitioned, changed]);
   };
 
-  const contentView = (
+  const contentContext = (
     item: AccordionItem,
     index: number,
     type: 'title' | 'content'
-  ): Node[] => {
+  ): AccordionContentContext => {
     const name = itemName(item);
-    return normalizeContentNodes(type === 'title' ? item.title : item.content, {
+    return {
       accordion,
       item,
       index,
       type,
       active: isActive(name),
+    };
+  };
+
+  const titleView = (
+    content: RenderableContent<AccordionContentContext>,
+    item: AccordionItem,
+    index: number
+  ): RenderableContent<AccordionContentContext> => {
+    if (typeof content !== 'function') return content;
+    return content(contentContext(item, index, 'title'));
+  };
+
+  const createContentRenderer = (
+    itemAccessor: () => AccordionItem,
+    indexAccessor: () => number,
+    name: string
+  ) => {
+    const initial = itemAccessor().content;
+    const [content, setContent] = createSignal<
+      RenderableContent<AccordionContentContext>
+    >(typeof initial === 'function' ? null : initial);
+    const [loading, setLoading] = createSignal(false);
+    let source: AccordionContent = initial;
+    let localLoadId = 0;
+    let pending: Promise<void> | null = null;
+
+    const context = (): AccordionContentContext =>
+      contentContext(itemAccessor(), indexAccessor(), 'content');
+
+    const load = async (): Promise<void> => {
+      const current = itemAccessor();
+      const source = current.content;
+      if (typeof source !== 'function') {
+        setContent(source);
+        return;
+      }
+      const cached = current.cache ? contentCache.get(name) : null;
+      const ttlValue = normalizeTtl(current.ttl);
+      if (cached && (!ttlValue || Date.now() - cached.updatedAt <= ttlValue)) {
+        setContent(cached.content);
+        return;
+      }
+      if (pending) return pending;
+      const request = ++localLoadId;
+      contentLoadId += 1;
+      const activeLoad = contentLoadId;
+      setLoading(true);
+      beginLoading();
+      const task = Promise.resolve()
+        .then(() =>
+          (source as (context: AccordionContentContext) => unknown)(context())
+        )
+        .then((result) => {
+          if (request !== localLoadId || accordion.runtime.destroyed) return;
+          if (itemAccessor().cache) {
+            contentCache.set(name, {
+              content: result as RenderableContent<AccordionContentContext>,
+              updatedAt: Date.now(),
+            });
+          }
+          setContent(result as RenderableContent<AccordionContentContext>);
+        })
+        .finally(() => {
+          if (request === localLoadId && !accordion.runtime.destroyed) {
+            setLoading(false);
+          }
+          if (activeLoad <= contentLoadId) endLoading();
+          if (pending === task) pending = null;
+        });
+      pending = task;
+      return task;
+    };
+    contentLoaders.set(name, load);
+    onCleanup(() => {
+      localLoadId += 1;
+      contentCache.delete(name);
+      contentLoaders.delete(name);
+      pending = null;
     });
+
+    createEffect(() => {
+      const nextContent = itemAccessor().content;
+      if (nextContent !== source) {
+        source = nextContent;
+        localLoadId += 1;
+        pending = null;
+        contentCache.delete(name);
+        setContent(typeof nextContent === 'function' ? null : nextContent);
+      }
+      if (isActive(name)) void load();
+    });
+
+    return {
+      loading,
+      isAsync: () => typeof itemAccessor().content === 'function',
+      render: (): RenderableContent<AccordionContentContext> => {
+        if (loading()) return createLoading('flex-start', 'flex-start');
+        const value = content();
+        if (typeof value === 'function') return value(context());
+        return value;
+      },
+    };
   };
 
   const itemView = (
@@ -432,6 +596,7 @@ export function createAccordion(props: AccordionProps): AccordionInstance {
     indexAccessor: () => number
   ): Node[] => {
     const name = itemName(itemAccessor());
+    const content = createContentRenderer(itemAccessor, indexAccessor, name);
     const headerId = `${resolvedProps.id}_header_${name}`;
     const panelId = `${resolvedProps.id}_panel_${name}`;
     const handleKeyDown = (event: KeyboardEvent): void => {
@@ -457,8 +622,10 @@ export function createAccordion(props: AccordionProps): AccordionInstance {
             className: resolvedProps.className.title,
             'data-accordion-title': name,
             role: 'heading',
-            children: () =>
-              contentView(itemAccessor(), indexAccessor(), 'title'),
+            children: () => {
+              const item = itemAccessor();
+              return titleView(item.title, item, indexAccessor());
+            },
           }),
           jsx('span', {
             className: resolvedProps.className.arrow,
@@ -475,23 +642,33 @@ export function createAccordion(props: AccordionProps): AccordionInstance {
         role: 'region',
         'aria-labelledby': headerId,
         'aria-hidden': () => (isActive(name) ? 'false' : 'true'),
+        'aria-live': () => (content.isAsync() ? 'polite' : null),
+        'aria-busy': () => String(content.loading()),
         'data-state': () => (isActive(name) ? 'open' : 'closed'),
         ref: bindPanel(name),
         children: jsx('div', {
           className: resolvedProps.className.content,
           'data-accordion-content': name,
-          children: () =>
-            contentView(itemAccessor(), indexAccessor(), 'content'),
+          children: content.render,
         }),
       }),
     ];
   };
 
-  accordion = defineComponent({
+  accordion = defineComponent<
+    ResolvedAccordionProps,
+    AccordionState,
+    HTMLElement,
+    AccordionActions
+  >({
     name: 'Accordion',
     props: resolvedProps,
     state,
-    actions: { isActive, getIndex, activate },
+    actions: {
+      isActive,
+      getIndex,
+      activate,
+    },
     normalizeStatePatch(patch) {
       return {
         ...patch,
@@ -522,6 +699,11 @@ export function createAccordion(props: AccordionProps): AccordionInstance {
       return root;
     },
     onDestroy() {
+      contentLoadId += 1;
+      loadingCount = 0;
+      loading = false;
+      contentCache.clear();
+      contentLoaders.clear();
       for (const motion of panelMotions.values()) motion.cancel();
       panelMotions.clear();
       headers.clear();

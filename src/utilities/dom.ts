@@ -105,52 +105,6 @@ function flattenNodeArray(
 }
 
 /**
- * 将可渲染内容归一化为 DOM 节点数组。
- *
- * 支持的输入类型：
- * - **Node/Element**: 包装为单元素数组
- * - **string**: 按 HTML 片段解析为节点数组
- * - **number/boolean**: 转换为文本节点
- * - **Array**: 递归扁平化处理
- * - **Function**: 调用后递归处理返回值
- * - **null/undefined/false/true**: 返回空数组
- *
- * @param {RenderableContent<TContext>} content 可渲染内容。
- * @param {TContext} [context] 传递给函数类型内容的上下文。
- * @returns {Node[]} 归一化后的节点数组。
- */
-export function normalizeContentNodes<TContext = unknown>(
-  content: RenderableContent<TContext>,
-  context?: TContext
-): Node[] {
-  if (typeof content === 'function') {
-    return normalizeContentNodes(content(context as TContext), context);
-  }
-
-  const value = content;
-
-  if (value == null || value === false || value === true) return [];
-
-  if (Array.isArray(value)) {
-    return value.flatMap((item) => normalizeContentNodes(item, context));
-  }
-
-  if (isNode(value)) return [value];
-
-  if (typeof value === 'string') {
-    const template = document.createElement('template');
-    template.innerHTML = value;
-    return Array.from(template.content.childNodes);
-  }
-
-  return [
-    document.createTextNode(
-      String(value as string | number | boolean | bigint | symbol)
-    ),
-  ];
-}
-
-/**
  * 将 DOM 引用解析为节点列表。
  *
  * 支持的输入类型：
@@ -297,14 +251,6 @@ export function isRenderableContent(
   value: unknown
 ): value is RenderableContent {
   return isRenderableValue(value);
-}
-
-export function normalizeRenderableContentNodes<TContext>(
-  content: unknown,
-  context: TContext
-): Node[] | null {
-  if (!isRenderableContent(content)) return null;
-  return normalizeContentNodes(content, context);
 }
 
 /**

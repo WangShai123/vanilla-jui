@@ -15,8 +15,7 @@ import 'vanilla-jui/style.css';
 const popup = createPopup({
   position: 'center',
   component: 'modal',
-  labelledby: 'dialog-title',
-  content: ['<div id="dialog-title">Title</div>', '<div>Popup content</div>'],
+  content: 'Popup content',
 });
 
 document.body.appendChild(popup);
@@ -58,7 +57,7 @@ const popup = createPopup({
 
 ## content
 
-`content` 使用项目通用的 `RenderableContent` 规则，支持字符串、数字、布尔值、DOM 节点、节点数组、函数和空值。
+`content` 使用项目通用的 `RenderableContent` 规则，支持字符串、数字、布尔值、DOM 节点、节点数组、函数和空值。字符串始终按文本渲染，不解析 HTML。
 
 ```js
 const popup = createPopup({

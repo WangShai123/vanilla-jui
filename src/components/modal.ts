@@ -20,13 +20,12 @@ import { joinClasses } from '../utilities/class-name.ts';
 import {
   all,
   q,
-  normalizeContentNodes,
   type RenderableContent,
 } from '../utilities/dom.ts';
 import { randomId } from '../utilities/id.ts';
-import { createTransition } from '../utilities/motion.ts';
+import { createTransition } from '../core/motion.ts';
 import { isPlainObject } from '../utilities/object.ts';
-import { createPresence } from '../utilities/presence.ts';
+import { createPresence } from '../core/presence.ts';
 import {
   type ResolveSchema,
   resolveProps,
@@ -671,7 +670,9 @@ export function createModal(input: ModalProps = {}): Modal {
             children: () => {
               if (state.mode === 'form') return ensureForm().element;
               destroyForm();
-              return normalizeContentNodes(state.content, modal);
+              return typeof state.content === 'function'
+                ? state.content(modal)
+                : state.content;
             },
           }),
           jsx('div', {

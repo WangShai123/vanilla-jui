@@ -3,8 +3,6 @@ import { jsx } from 'vanilla-signal';
 import {
   type DOMReference,
   type RenderableContent,
-  isNode,
-  normalizeContentNodes,
   resolveElement,
 } from '../utilities/dom.ts';
 import { createEventManager } from '../utilities/events.ts';
@@ -195,14 +193,12 @@ export function createDrop(
   let visible = false;
   let destroyed = false;
   let drop!: DropInstance;
-  const wrapper =
-    isNode(props.content) && props.content.nodeType === Node.ELEMENT_NODE
-      ? props.content
-      : jsx('div', {
-          className: props.className.container,
-          'data-drop-container': props.name || props.id,
-          children: () => normalizeContentNodes(props.content, drop),
-        });
+  const wrapper = jsx('div', {
+    className: props.className.container,
+    'data-drop-container': props.name || props.id,
+    children: () =>
+      typeof props.content === 'function' ? props.content(drop) : props.content,
+  });
   const root = jsx('div', {
     className: props.className.root,
     id: props.id,

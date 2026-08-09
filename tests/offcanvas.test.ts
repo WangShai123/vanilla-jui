@@ -8,6 +8,7 @@ import {
   it,
   vi,
 } from 'vite-plus/test';
+import { jsx } from 'vanilla-signal';
 
 import { createOffcanvas } from '../src/components/offcanvas.ts';
 
@@ -102,7 +103,15 @@ describe('Offcanvas', () => {
     offcanvas = createOffcanvas({
       id: 'default-offcanvas',
       direction: 'right',
-      content: '<button data-action="close">Close</button><p>Panel</p>',
+      content: [
+        jsx('button', {
+          'data-action': 'close',
+          children: 'Close',
+        }),
+        jsx('p', {
+          children: 'Panel',
+        }),
+      ],
     });
 
     expect(offcanvas.element).toBeNull();
@@ -260,8 +269,13 @@ describe('Offcanvas', () => {
     offcanvas = mount(
       createOffcanvas({
         id: 'close-offcanvas',
-        content:
-          '<button data-action="close"><span data-testid="inner">Close</span></button>',
+        content: jsx('button', {
+          'data-action': 'close',
+          children: jsx('span', {
+            'data-testid': 'inner',
+            children: 'Close',
+          }),
+        }),
       })
     );
 

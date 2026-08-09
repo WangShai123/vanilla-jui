@@ -1,6 +1,6 @@
 import { createWatch, untrack, unwrap } from 'vanilla-signal';
 
-import { createScheduledTask } from './scheduler.ts';
+import { createScheduledTask } from '../core/scheduler.ts';
 
 export interface StateSyncOptions {
   deferInitial?: boolean;

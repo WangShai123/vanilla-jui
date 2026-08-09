@@ -1,7 +1,7 @@
 import { flushSync } from 'vanilla-signal';
 
 import { isPlainObject } from '../utilities/object.ts';
-import { createOwnedView } from '../utilities/view.ts';
+import { createOwnedView } from './view.ts';
 
 export type ComponentProps = Record<string, unknown>;
 export type ComponentState = Record<string, unknown>;

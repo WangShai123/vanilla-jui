@@ -8,6 +8,7 @@ import {
   it,
   vi,
 } from 'vite-plus/test';
+import { jsx } from 'vanilla-signal';
 
 import { createDrop } from '../src/primitives/drop.ts';
 
@@ -40,7 +41,9 @@ describe('Drop', () => {
     drop = createDrop(button, {
       id: 'default-drop',
       name: 'menu',
-      content: '<b>Drop content</b>',
+      content: jsx('b', {
+        children: 'Drop content',
+      }),
     });
 
     expect(drop.element?.classList.contains('j-drop')).toBe(true);
@@ -113,7 +116,7 @@ describe('Drop', () => {
     expect(drop.isVisible).toBe(false);
   });
 
-  it('uses element content directly as wrapper', () => {
+  it('keeps element content inside the stable container', () => {
     const button = target();
     const section = document.createElement('section');
     section.dataset.customWrapper = 'true';
@@ -121,7 +124,9 @@ describe('Drop', () => {
 
     drop = createDrop(button, { content: section });
 
-    expect(drop.element?.firstElementChild).toBe(section);
+    expect(
+      drop.element?.firstElementChild?.getAttribute('data-drop-container')
+    ).toBeTruthy();
     expect(drop.element?.querySelector('[data-custom-wrapper]')).toBe(section);
   });
 });

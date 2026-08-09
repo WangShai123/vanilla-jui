@@ -77,6 +77,8 @@ state 可以包含：
 - 条件内容使用 `Show` 或直接的局部动态 child。
 - 数组内容使用 `For`/`bindList`，并提供业务稳定 key。
 - 不把裸动态 accessor 放进静态 children 数组；当前 JSX 归一化数组时会立即求值。动态数组区域使用 `For`，动态区域内部再返回条件节点。
+- 组件内容不接受 HTML 字符串。字符串始终按文本渲染；需要 DOM 结构时传 JSX、`Node`、`DocumentFragment`、数组，或函数返回这些值。
+- 组件 view 不得在内容渲染路径中隐式解析字符串、写入 `innerHTML`，或通过通用归一化工具把字符串扩展为 HTML 节点。
 - 事件处理器只调用 action 或公共方法，不直接维护视图。
 - 不使用 `render(() => view(), host)` 创建组件根节点；这会把整个 view 变成可替换动态区域。
 
@@ -118,6 +120,21 @@ DOM 操作统一分为以下几类：
 | 动画与 presence             | Motion API + state binding + `createPresence` |
 
 前六类属于通用视图层。后四类是不可避免的命令式 DOM effect，必须集中在语义明确的方法或工具中，并具备清理函数。
+
+### RenderableContent 安全边界
+
+`RenderableContent` 遵循 `vanilla-signal` children 语义，不扩展 HTML 字符串语义：
+
+- `string`、`number` 和 `boolean` 作为文本值处理。
+- `Node`、`Element`、`DocumentFragment`、数组和函数返回值可以作为结构化内容。
+- HTML 字符串不是组件内容类型，组件不得为了“方便”自动解析。
+
+原因有两点：
+
+1. 这与 `vanilla-signal` 的数据驱动 children 模型一致，避免重新创建节点数组导致隐藏 DOM 更新。
+2. 隐式 HTML 解析会引入 XSS 风险，破坏组件内容输入的安全边界。
+
+如果未来确实需要渲染富文本，应设计独立、显式、可审计的安全 API，并明确净化策略；不能复用普通组件内容参数承载 HTML 字符串。
 
 ## 函数式组件运行时
 

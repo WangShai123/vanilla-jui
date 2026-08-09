@@ -18,21 +18,25 @@ const motion = createTransition(() => panel, {
 const presence = createPresence({
   elements: () => [panel],
   mount: () => document.body.append(panel),
-  activate: () => { state.visible = true; },
-  deactivate: () => { state.visible = false; },
+  activate: () => {
+    state.visible = true;
+  },
+  deactivate: () => {
+    state.visible = false;
+  },
   unmount: () => panel.remove(),
   motion,
 });
 ```
 
-| 选项 | 职责 |
-| --- | --- |
-| `elements()` | 返回参与 CSS motion 检测的已构建根节点 |
-| `mount()` | 把节点放入文档 |
-| `activate()` | 同步提交可见状态 |
-| `deactivate()` | 同步提交隐藏状态 |
-| `unmount()` | 离场完成后移除节点 |
-| `motion` | 可选 MotionController；存在时不检测 CSS motion |
+| 选项           | 职责                                           |
+| -------------- | ---------------------------------------------- |
+| `elements()`   | 返回参与 CSS motion 检测的已构建根节点         |
+| `mount()`      | 把节点放入文档                                 |
+| `activate()`   | 同步提交可见状态                               |
+| `deactivate()` | 同步提交隐藏状态                               |
+| `unmount()`    | 离场完成后移除节点                             |
+| `motion`       | 可选 MotionController；存在时不检测 CSS motion |
 
 执行顺序：
 
@@ -46,12 +50,12 @@ leave: flushSync(deactivate) -> await motion -> unmount -> hidden
 
 返回的 controller：
 
-| 成员 | 说明 |
-| --- | --- |
-| `phase` | `hidden | entering | visible | leaving` |
-| `enter()` | 完成有效入场返回 `true`；已可见或被新操作取代返回 `false` |
-| `leave()` | 完成有效离场返回 `true`；已隐藏或被新操作取代返回 `false` |
-| `cancel()` | 使待处理操作失效，取消 motion，并把 phase 重置为 hidden |
+| 成员       | 说明                                                      |
+| ---------- | --------------------------------------------------------- |
+| `phase`    | `hidden                                                   | entering | visible | leaving` |
+| `enter()`  | 完成有效入场返回 `true`；已可见或被新操作取代返回 `false` |
+| `leave()`  | 完成有效离场返回 `true`；已隐藏或被新操作取代返回 `false` |
+| `cancel()` | 使待处理操作失效，取消 motion，并把 phase 重置为 hidden   |
 
 同一方向正在执行时返回同一个 Promise。相反方向会中止旧等待并增加操作版本，因此旧
 任务不会在重新打开后误卸载节点。`cancel()` 本身不调用 `unmount()`；组件 destroy

@@ -1,6 +1,6 @@
 # Theme
 
-Theme 是主题管理 UI 原语，源码位于 `src/primitives/theme.ts`。它不继承 Component，只通过工厂函数创建实例。Theme 负责主题配置实例化、主题面板交互，并通过 `vanilla-create-storage` 的 cookie adapter 持久化配置。
+Theme 是主题配置和主题面板控制器，源码位于 `src/primitives/theme.ts`。它通过 `createTheme(options)` 创建实例，使用 `createDeepStore` 保存归一化后的配置，使用 cookie storage 持久化 `mode/theme/radius/shadow/font`，并通过 document 级事件代理处理主题面板点击。
 
 实例初始化和 `setConfig()` 不会修改 `document.documentElement` 类名。需要首屏避免闪烁时，由用户根据存储配置在后端渲染 html class，或在 `<head>` 中写入一段内联脚本。面板按钮点击属于显式交互，会同步更新当前点击项对应的 html class 并写入配置。
 
@@ -23,6 +23,8 @@ const themePanel = theme.createPanel();
 
 document.body.appendChild(themePanel);
 ```
+
+`createPanel()` 每次调用都会返回一个新的面板 DOM，并为该面板创建响应式 active 绑定。调用 `destroy()` 会释放这些绑定、解绑 document 点击事件并关闭 storage。
 
 ## Head 脚本
 
@@ -69,11 +71,44 @@ document.body.appendChild(themePanel);
 
 ## 方法
 
-| 方法                                       | 说明                   |
-| ------------------------------------------ | ---------------------- |
-| `setConfig(config)`                        | 更新配置并写入 cookie  |
-| `createPanel(containerClass, panelConfig)` | 创建主题面板 DOM       |
-| `destroy()`                                | 解绑全局事件并移除实例 |
+| 方法                                       | 说明                                             |
+| ------------------------------------------ | ------------------------------------------------ |
+| `createPanel(containerClass, panelConfig)` | 创建主题面板 DOM，并绑定 active 状态             |
+| `setConfig(config)`                        | 更新实例配置并写入 cookie；不会主动改 html class |
+| `destroy()`                                | 解绑全局事件、释放面板绑定并关闭 storage         |
+
+## 配置
+
+| 字段        | 类型     | 默认值       | 说明                      |
+| ----------- | -------- | ------------ | ------------------------- |
+| `mode`      | `string` | `'dark'`     | `light`、`dark` 或 `auto` |
+| `theme`     | `string` | `'indigo'`   | 主题色名称                |
+| `radius`    | `string` | `'sm'`       | 圆角级别                  |
+| `shadow`    | `string` | `'sm'`       | 阴影级别                  |
+| `font`      | `string` | `'sm'`       | 字号级别                  |
+| `key`       | `string` | `'ui-theme'` | cookie storage key        |
+| `className` | `object` | 默认类名     | 覆盖主题面板结构类名      |
+
+`theme.props` 是响应式配置对象。面板按钮的 active class 和 `aria-selected` 会读取它；`setConfig()` 也会更新它并写入 cookie。
+
+## 面板配置
+
+`createPanel(containerClass, panelConfig)` 的第二个参数可以替换默认分组：
+
+```js
+theme.createPanel(null, [
+  {
+    title: 'Mode',
+    type: 'mode',
+    buttons: [
+      ['light', 'Light'],
+      ['dark', 'Dark'],
+    ],
+  },
+]);
+```
+
+`type` 只能是 `mode`、`theme`、`radius`、`shadow` 或 `font`。按钮点击会根据 `type` 写入对应配置：`mode` 会替换 html 上的 `light/dark`，其它类型会替换 `j-theme-*`、`j-radius-*`、`j-shadow-*` 或 `j-font-*` 前缀类。
 
 ## className
 
@@ -94,3 +129,9 @@ document.body.appendChild(themePanel);
 | `buttonText` | `button-text`         | 按钮文本   |
 
 面板内部交互使用 `data-theme-group`、`data-theme-button` 和 `data-theme-value`，不依赖默认 CSS 类。
+
+## 实例属性
+
+| 属性    | 说明               |
+| ------- | ------------------ |
+| `props` | 响应式主题配置对象 |

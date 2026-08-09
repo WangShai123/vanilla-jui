@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { flushSync } from 'vanilla-signal';
+import { flushSync, jsx } from 'vanilla-signal';
 import {
   afterEach,
   beforeEach,
@@ -78,6 +78,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  vi.useRealTimers();
   accordion?.destroy();
   accordion = null;
   document.body.innerHTML = '';
@@ -252,6 +253,72 @@ describe('Accordion', () => {
     expect(panels(accordion)[1]?.inert).toBe(false);
   });
 
+  it('loads async content and caches it', async () => {
+    const load = vi.fn(async () => 'Async content');
+
+    accordion = mount(
+      createAccordion({
+        active: 'basic',
+        data: [
+          { name: 'basic', title: 'Basic', content: 'Basic content' },
+          { name: 'async', title: 'Async', content: load, cache: true },
+        ],
+      })
+    );
+
+    await accordion.activate('async');
+    await tick();
+
+    expect(load).toHaveBeenCalledTimes(1);
+    expect(panels(accordion)[1]?.textContent).toContain('Async content');
+    expect(panels(accordion)[1]?.getAttribute('aria-live')).toBe('polite');
+    expect(panels(accordion)[1]?.getAttribute('aria-busy')).toBe('false');
+    expect(accordion.state.loading).toBe(false);
+
+    await accordion.activate('basic');
+    await accordion.activate('async');
+    expect(load).toHaveBeenCalledTimes(1);
+  });
+
+  it('uses milliseconds for async content cache ttl', async () => {
+    vi.useFakeTimers();
+    const load = vi.fn(async () => `Async content ${load.mock.calls.length}`);
+
+    accordion = mount(
+      createAccordion({
+        active: 'basic',
+        data: [
+          { name: 'basic', title: 'Basic', content: 'Basic content' },
+          {
+            name: 'async',
+            title: 'Async',
+            content: load,
+            cache: true,
+            ttl: 1000,
+          },
+        ],
+      })
+    );
+
+    await accordion.activate('async');
+    await tick();
+    expect(load).toHaveBeenCalledTimes(1);
+    expect(panels(accordion)[1]?.textContent).toContain('Async content 1');
+
+    await accordion.activate('basic');
+    vi.advanceTimersByTime(999);
+    await accordion.activate('async');
+    await tick();
+    expect(load).toHaveBeenCalledTimes(1);
+
+    await accordion.activate('basic');
+    vi.advanceTimersByTime(2);
+    await accordion.activate('async');
+    await tick();
+    expect(load).toHaveBeenCalledTimes(2);
+    expect(panels(accordion)[1]?.textContent).toContain('Async content 2');
+  });
+
   it('toggles from the keyboard and removes mounted DOM on destroy', async () => {
     accordion = mount(
       createAccordion({
@@ -274,7 +341,7 @@ describe('Accordion', () => {
     expect(app().children).toHaveLength(0);
   });
 
-  it('renders automatically when state.data is replaced or mutated', async () => {
+  it('renders automatically when state.data is replaced and items are inserted', async () => {
     accordion = mount(
       createAccordion({
         active: 'basic',
@@ -295,12 +362,10 @@ describe('Accordion', () => {
     expect(headers(accordion)[0]?.dataset.accordionHeader).toBe('next');
     expect(accordion.current).toEqual({ index: null, name: null });
 
-    flushSync(() => {
-      accordion!.state.data.push({
-        name: 'more',
-        title: 'More',
-        content: 'More content',
-      });
+    accordion.state.data.push({
+      name: 'more',
+      title: 'More',
+      content: 'More content',
     });
     await tick();
 
@@ -322,6 +387,213 @@ describe('Accordion', () => {
     ).toHaveLength(1);
     expect(headers(accordion)[0]?.dataset.accordionHeader).toBe('state');
     expect(accordion.current).toEqual({ index: null, name: null });
+  });
+
+  it('updates keyed data through state without recreating stable nodes', async () => {
+    accordion = mount(
+      createAccordion({
+        active: 'basic',
+        data: data(),
+      })
+    );
+
+    const basicHeader = accordion.element?.querySelector<HTMLElement>(
+      '[data-accordion-header="basic"]'
+    );
+    const advancedPanel = accordion.element?.querySelector<HTMLElement>(
+      '[data-accordion-panel="advanced"]'
+    );
+    const advancedHeader = accordion.element?.querySelector<HTMLElement>(
+      '[data-accordion-header="advanced"]'
+    );
+
+    accordion.state.data.splice(1, 0, {
+      name: 'more',
+      title: 'More',
+      content: 'More content',
+    });
+    await tick();
+
+    expect(
+      accordion.element?.querySelector('[data-accordion-header="more"]')
+    ).toBeTruthy();
+    expect(
+      accordion.element?.querySelector('[data-accordion-header="basic"]')
+    ).toBe(basicHeader);
+    expect(
+      accordion.element?.querySelector('[data-accordion-panel="advanced"]')
+    ).toBe(advancedPanel);
+
+    const basic = accordion.state.data.find((item) => item.name === 'basic');
+    const advanced = accordion.state.data.find(
+      (item) => item.name === 'advanced'
+    );
+    if (!basic || !advanced) throw new Error('Missing Accordion test data.');
+    basic.title = 'Start';
+    advanced.content = 'Advanced updated';
+    await tick();
+
+    expect(
+      accordion.element?.querySelector('[data-accordion-header="basic"]')
+    ).toBe(basicHeader);
+    expect(basicHeader?.textContent).toContain('Start');
+    expect(
+      accordion.element?.querySelector('[data-accordion-panel="advanced"]')
+    ).toBe(advancedPanel);
+    expect(advancedPanel?.textContent).toContain('Advanced updated');
+
+    const advancedIndex = accordion.state.data.findIndex(
+      (item) => item.name === 'advanced'
+    );
+    const [advancedItem] = accordion.state.data.splice(advancedIndex, 1);
+    accordion.state.data.splice(0, 0, advancedItem);
+    await tick();
+    expect(headers(accordion)[0]).toBe(advancedHeader);
+
+    accordion.state.data = accordion.state.data.filter(
+      (item) => item.name !== 'basic'
+    );
+    await tick();
+    expect(
+      accordion.element?.querySelector('[data-accordion-header="basic"]')
+    ).toBeNull();
+    expect(
+      accordion.element?.querySelector('[data-accordion-panel="basic"]')
+    ).toBeNull();
+
+    accordion.state.data = [
+      {
+        name: 'advanced',
+        title: 'Advanced final',
+        content: 'Advanced final content',
+      },
+      { name: 'more', title: 'More', content: 'More content' },
+    ];
+    await tick();
+
+    expect(
+      accordion.element?.querySelector('[data-accordion-header="advanced"]')
+    ).toBe(advancedHeader);
+    expect(
+      accordion.element?.querySelector('[data-accordion-panel="advanced"]')
+    ).toBe(advancedPanel);
+  });
+
+  it('inserts keyed data without moving unchanged top-level nodes', async () => {
+    accordion = mount(
+      createAccordion({
+        active: 'basic',
+        data: data(),
+      })
+    );
+
+    if (!accordion.element) throw new Error('Missing Accordion root.');
+    const mutations: MutationRecord[] = [];
+    const observer = new MutationObserver((records) => {
+      mutations.push(...records);
+    });
+    observer.observe(accordion.element, { childList: true });
+
+    accordion.state.data.splice(1, 0, {
+      name: 'more',
+      title: 'More',
+      content: 'More content',
+    });
+    await tick();
+    observer.disconnect();
+
+    const added = mutations.flatMap((record) => Array.from(record.addedNodes));
+    const removed = mutations.flatMap((record) =>
+      Array.from(record.removedNodes)
+    );
+    const addedHeaders = added.filter(
+      (node): node is HTMLElement =>
+        node instanceof HTMLElement &&
+        node.hasAttribute('data-accordion-header')
+    );
+    const addedPanels = added.filter(
+      (node): node is HTMLElement =>
+        node instanceof HTMLElement && node.hasAttribute('data-accordion-panel')
+    );
+
+    expect(removed).toHaveLength(0);
+    expect(addedHeaders).toHaveLength(1);
+    expect(addedHeaders[0]?.dataset.accordionHeader).toBe('more');
+    expect(addedPanels).toHaveLength(1);
+    expect(addedPanels[0]?.dataset.accordionPanel).toBe('more');
+  });
+
+  it('inserts keyed data without refreshing unchanged item content', async () => {
+    const profileTitle = vi.fn(() =>
+      jsx('strong', { children: 'Profile title' })
+    );
+    const profileContent = vi.fn(() =>
+      jsx('p', { children: 'Profile content' })
+    );
+
+    accordion = mount(
+      createAccordion({
+        active: 'profile',
+        data: [
+          { name: 'overview', title: 'Overview', content: 'Overview content' },
+          {
+            name: 'profile',
+            title: profileTitle,
+            content: profileContent,
+          },
+          { name: 'settings', title: 'Settings', content: 'Settings content' },
+        ],
+      })
+    );
+    await tick();
+
+    expect(profileTitle).toHaveBeenCalledTimes(1);
+    expect(profileContent).toHaveBeenCalledTimes(1);
+
+    const stableNodes = [
+      accordion.element?.querySelector<HTMLElement>(
+        '[data-accordion-header="overview"]'
+      ),
+      accordion.element?.querySelector<HTMLElement>(
+        '[data-accordion-header="profile"]'
+      ),
+      accordion.element?.querySelector<HTMLElement>(
+        '[data-accordion-header="settings"]'
+      ),
+      accordion.element?.querySelector<HTMLElement>(
+        '[data-accordion-panel="overview"]'
+      ),
+      accordion.element?.querySelector<HTMLElement>(
+        '[data-accordion-panel="profile"]'
+      ),
+      accordion.element?.querySelector<HTMLElement>(
+        '[data-accordion-panel="settings"]'
+      ),
+    ].filter((node): node is HTMLElement => !!node);
+    const mutations: MutationRecord[] = [];
+    const observer = new MutationObserver((records) => {
+      mutations.push(...records);
+    });
+    for (const node of stableNodes) {
+      observer.observe(node, {
+        attributes: true,
+        childList: true,
+        characterData: true,
+        subtree: true,
+      });
+    }
+
+    accordion.state.data.push({
+      name: 'more',
+      title: 'More',
+      content: 'More content',
+    });
+    await tick();
+    observer.disconnect();
+
+    expect(profileTitle).toHaveBeenCalledTimes(1);
+    expect(profileContent).toHaveBeenCalledTimes(1);
+    expect(mutations).toHaveLength(0);
   });
 
   it('rejects invalid props and requires build before activation', async () => {

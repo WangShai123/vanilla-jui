@@ -7,8 +7,6 @@ import {
   isNode,
   isRenderableContent,
   lazyRender,
-  normalizeContentNodes,
-  normalizeRenderableContentNodes,
   q,
   requireContainer,
   resolveContainer,
@@ -18,7 +16,7 @@ import {
 } from 'vanilla-jui';
 ```
 
-## 内容判定与归一化
+## 内容判定
 
 `RenderableContent<TContext>` 支持：
 
@@ -28,34 +26,9 @@ import {
 - 上述值的递归只读数组
 - `(context) => RenderableContent<TContext>`
 
-`isRenderableContent(value)` 只做原子判定，不创建 DOM。当前规则接受任意数组和任意
-函数，数组元素与函数返回值会在归一化阶段递归处理。
-
-`normalizeContentNodes(content, context?)` 返回 `Node[]`：
-
-| 输入 | 结果 |
-| --- | --- |
-| `Node` | 单节点数组 |
-| 字符串 | 通过 `template.innerHTML` 解析的节点数组 |
-| number | 文本节点 |
-| `true` / `false` / nullish | 空数组 |
-| 数组 | 递归展开 |
-| 函数 | 传入 context 后递归归一化返回值 |
-
-```ts
-const nodes = normalizeContentNodes(
-  ({ name }: { name: string }) => ['<strong>Hello</strong> ', name],
-  { name: 'JUI' }
-);
-container.append(...nodes);
-```
-
-字符串按 HTML 解析，不执行转义。只应传入可信模板；用户输入应先转义或直接创建文本
-节点。
-
-`normalizeRenderableContentNodes(content, context)` 先调用
-`isRenderableContent`。输入不合法返回 `null`，合法输入返回 `Node[]`，用于同时需要
-运行时边界检查和节点转换的调用点。
+`isRenderableContent(value)` 只做类别判定，不创建 DOM，也不解析字符串。组件内容渲染
+遵循 `vanilla-signal` children 语义：字符串按文本处理；结构化内容应传 JSX、`Node`、
+`DocumentFragment`、数组，或函数返回这些值。
 
 ## DOM 类型谓词
 

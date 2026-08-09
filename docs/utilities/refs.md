@@ -29,7 +29,9 @@ const rows = createKeyedElementRefs<string, HTMLElement>();
 jsx('div', { ref: rows.bind(item.id) });
 rows.get(item.id)?.scrollIntoView();
 rows.elements; // ReadonlyMap
+rows.delete(item.id);
 rows.clear();
 ```
 
-同一个 key 后绑定的节点会覆盖旧节点；旧 scope 清理时不会误删新节点。
+同一个 key 后绑定的节点会覆盖旧节点；旧 scope 清理时不会误删新节点。`delete(key)`
+用于 keyed collection 删除数据项时同步清理不再需要的元素引用。

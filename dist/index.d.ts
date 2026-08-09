@@ -81,22 +81,6 @@ declare function isNode(value: unknown): value is Node;
  */
 declare function isElement(value: unknown): value is Element;
 /**
- * 将可渲染内容归一化为 DOM 节点数组。
- *
- * 支持的输入类型：
- * - **Node/Element**: 包装为单元素数组
- * - **string**: 按 HTML 片段解析为节点数组
- * - **number/boolean**: 转换为文本节点
- * - **Array**: 递归扁平化处理
- * - **Function**: 调用后递归处理返回值
- * - **null/undefined/false/true**: 返回空数组
- *
- * @param {RenderableContent<TContext>} content 可渲染内容。
- * @param {TContext} [context] 传递给函数类型内容的上下文。
- * @returns {Node[]} 归一化后的节点数组。
- */
-declare function normalizeContentNodes<TContext = unknown>(content: RenderableContent<TContext>, context?: TContext): Node[];
-/**
  * 将 DOM 引用解析为节点列表。
  *
  * 支持的输入类型：
@@ -160,7 +144,6 @@ declare function requireContainer<TExpect extends ContainerExpect = 'element'>(c
  * @returns {boolean}
  */
 declare function isRenderableContent(value: unknown): value is RenderableContent;
-declare function normalizeRenderableContentNodes<TContext>(content: unknown, context: TContext): Node[] | null;
 /**
  * 根据 CSS 选择器获取第一个匹配的元素。
  * @param {string} selector CSS 选择器。
@@ -241,7 +224,7 @@ declare const restUrl: string;
  */
 declare function postJson<T = unknown>(url: string, body: unknown, options?: Omit<RequestInit, 'method' | 'body'>): Promise<T>;
 //#endregion
-//#region src/utilities/motion.d.ts
+//#region src/core/motion.d.ts
 type TransitionTarget = () => Element | null | undefined;
 interface TransitionDefinition {
   keyframes: Keyframe[] | PropertyIndexedKeyframes;
@@ -328,7 +311,7 @@ type ResolvedProps<TSchema extends object> = LooseRecord & { [Key in keyof TSche
 declare function validateParam<TInput extends LooseRecord = LooseRecord>(name: string, value: unknown, rule?: ParamRuleInput<TInput>, namespace?: string): unknown;
 declare function resolveProps<TInput extends LooseRecord, TSchema extends ResolveSchema<TInput>>(input?: TInput | null | undefined, schema?: TSchema, namespace?: string): TInput & ResolvedProps<TSchema>;
 //#endregion
-//#region src/utilities/scheduler.d.ts
+//#region src/core/scheduler.d.ts
 interface ScheduledTask {
   schedule: () => void;
   flush: () => void;
@@ -363,11 +346,12 @@ interface KeyedElementRefs<TKey, TElement extends Element> {
   readonly elements: ReadonlyMap<TKey, TElement>;
   get: (key: TKey) => TElement | undefined;
   bind: (key: TKey) => (element: TElement) => void;
+  delete: (key: TKey) => void;
   clear: () => void;
 }
 declare function createKeyedElementRefs<TKey, TElement extends Element>(): KeyedElementRefs<TKey, TElement>;
 //#endregion
-//#region src/utilities/view.d.ts
+//#region src/core/view.d.ts
 interface OwnedView<TElement extends Element> {
   element: TElement;
   dispose: () => void;
@@ -382,7 +366,7 @@ interface OwnedViewOptions {
  */
 declare function createOwnedView<TElement extends Element>(factory: () => TElement, options?: OwnedViewOptions): OwnedView<TElement>;
 //#endregion
-//#region src/utilities/presence.d.ts
+//#region src/core/presence.d.ts
 type PresencePhase = 'hidden' | 'entering' | 'visible' | 'leaving';
 interface PresenceOptions {
   elements: () => readonly (Element | null | undefined)[];
@@ -443,12 +427,13 @@ declare function getRegistedIconPath(): IconPathMap;
 declare function addIcons(svgPathObjects: IconPathMap): void;
 //#endregion
 //#region src/primitives/loading.d.ts
+type flexPosition = 'center' | 'flex-start' | 'flex-end';
 /**
  * 创建通用加载状态节点
  * 定位 absolute 撑满父元素 居中 背景模糊滤镜
  * @returns {HTMLElement}
  */
-declare function createLoading(): HTMLDivElement;
+declare function createLoading(xDirection?: flexPosition, yDirection?: flexPosition): HTMLDivElement;
 //#endregion
 //#region src/primitives/popup.d.ts
 interface PopupProps extends Record<string, unknown> {
@@ -916,6 +901,7 @@ declare function createSticky(props?: StickyProps): StickyInstance;
 //#region src/components/accordion.d.ts
 type AccordionActive = number | string | Array<number | string> | null;
 type AccordionDirection = 'vertical' | 'horizontal';
+type AccordionContent = RenderableContent<AccordionContentContext> | ((context: AccordionContentContext) => Promise<RenderableContent<AccordionContentContext>>);
 interface AccordionClassNames {
   root: string;
   header: string;
@@ -928,7 +914,9 @@ type AccordionClassNameConfig = Partial<AccordionClassNames>;
 interface AccordionItem extends Record<string, unknown> {
   name?: string;
   title: RenderableContent<AccordionContentContext>;
-  content: RenderableContent<AccordionContentContext>;
+  content: AccordionContent;
+  cache?: boolean;
+  ttl?: number;
 }
 interface AccordionProps extends Record<string, unknown> {
   id?: string | null;
@@ -957,6 +945,7 @@ interface AccordionCurrent {
 interface AccordionState extends Record<string, unknown> {
   data: AccordionItem[];
   activeNames: string[];
+  loading: boolean;
 }
 interface AccordionContentContext {
   accordion: AccordionInstance;
@@ -1529,15 +1518,11 @@ interface TabsPanelContext {
   index: number;
   name: string | number;
 }
-interface TabTitleContext {
-  tabs: Tabs;
-  item: TabItem;
-}
-type TabPanel = RenderableContent<TabsPanelContext> | ((context: TabsPanelContext) => RenderableContent<TabsPanelContext>) | ((context: TabsPanelContext) => Promise<RenderableContent<TabsPanelContext>>);
+type TabContent = RenderableContent<TabsPanelContext> | ((context: TabsPanelContext) => RenderableContent<TabsPanelContext>) | ((context: TabsPanelContext) => Promise<RenderableContent<TabsPanelContext>>);
 interface TabItem extends Record<string, unknown> {
   name?: string;
-  title: RenderableContent<TabTitleContext>;
-  panel: TabPanel;
+  title: Exclude<RenderableContent, (...args: never[]) => unknown>;
+  content: TabContent;
   cache?: boolean;
   ttl?: number;
 }
@@ -1563,8 +1548,8 @@ interface TabsState extends Record<string, unknown> {
   data: TabItem[];
   active: TabsValue;
   disabled: TabsDisabled;
-  direction: TabsDirection;
   draggable: boolean;
+  dragging: boolean;
   loading: boolean;
 }
 interface TabsCurrent {
@@ -1573,7 +1558,6 @@ interface TabsCurrent {
 }
 interface TabsActions {
   activate(value: TabsValue): Promise<void>;
-  refresh(): Tabs;
 }
 type TabsBase = FunctionalComponent<ResolvedTabsProps, TabsState, HTMLElement, TabsActions>;
 type Tabs = TabsBase & {
@@ -1736,4 +1720,4 @@ interface MenuState extends Record<string, unknown> {
 type Menu = FunctionalComponent<ResolvedMenuProps, MenuState, HTMLElement>;
 declare function createMenu(input?: MenuProps): Menu;
 //#endregion
-export { CleanupFunction, CollapseMotionController, CollapseTransitionDefinition, ComponentCleanup, ComponentContext, ComponentController, ComponentDefinition, ComponentLifecycleEvent, ComponentListener, ComponentPlugin, ComponentPluginOptions, ComponentProps, ComponentRuntime, ComponentState, ContainerExpect, DOMReference, type DebounceSettings, type DebouncedFunc, DropInstance, ElementRef, Flow, FlowAction, FlowBusyHook, FlowBusyStrategy, FlowChangeHook, FlowClassNameConfig, FlowClassNames, FlowCleanup, FlowContext, FlowData, FlowDirection, FlowErrorHook, FlowFinishHook, FlowGoToOptions, FlowGuardHook, FlowLifecycleHook, FlowMoveHook, FlowPayload, FlowProps, FlowRenderContext, FlowSlot, FlowSlotName, FlowSnapshot, FlowState, FlowStep, FlowStepResult, FlowSubscriber, FlowTarget, FlowText, Form, FormButton, FormClassNameConfig, FormClassNames, FormDataRecord, FormDataValue, FormField, FormOption, FormProps, FormValidatorConfig, FunctionalComponent, IEventManager, IconAttributeValue, IconName, IconPathMap, IconProps, KeyedElementRefs, LazyRenderCallback, LazyRenderOptions, LazyRenderTarget, Menu, MenuClassNameConfig, MenuClassNames, MenuItem, MenuItemId, MenuProps, MenuType, Modal, ModalClassNameConfig, ModalClassNames, ModalMode, ModalProps, ModalText, MotionController, NormalizeContext, Offcanvas, OffcanvasAnimate, OffcanvasClassNameConfig, OffcanvasClassNames, OffcanvasContent, OffcanvasDirection, OffcanvasProps, OwnedView, OwnedViewOptions, Pagination, PaginationClassNameConfig, PaginationClassNames, PaginationCount, PaginationPage, PaginationProps, ParabolaInstance, ParamRule, ParamRuleInput, PopupProps, PresenceController, PresenceOptions, PresencePhase, PublicFlowStep, QueryContext, RenderableContent, RequireContainerResult, ResolveContainerResult, ResolveSchema, ResolvedProps, StateSyncOptions, Swiper, SwiperClassNameConfig, SwiperClassNames, SwiperDataItem, SwiperProps, SwiperSlideContext, TabItem, TabPanel, TabTitleContext, Tabs, TabsClassNameConfig, TabsClassNames, TabsDirection, TabsDisabled, TabsPanelContext, TabsProps, TabsValue, ThemeClassNameConfig, ThemeClassNames, ThemeConfigKey, ThemeInstance, ThemeOptions, ThemePanelGroup, ThemeResolvedOptions, type ThrottleSettings, Toast, ToastActionProps, ToastClassNameConfig, ToastClassNames, ToastOptions, ToastType, TooltipInstance, TransitionDefinition, TransitionTarget, ValidateCondition, ValidatorInstance, addIcons, all, copy, createAccordion, createCollapseTransition, createDrop, createElementRef, createEventManager, createFlow, createForm, createKeyedElementRefs, createLoading, createMenu, createModal, createMotionGroup, createOffcanvas, createOwnedView, createPagination, createParabola, createPopup, createPresence, createScheduledTask, createStateSync, createSticky, createSwiper, createTabs, createTheme, createToc, createTooltip, createTransition, createValidator, debounce, defineComponent, getRegistedIconPath, getStoreVersion, getType, icon, iconHtml, iconMarkup, isDomElementValue, isDomNodeValue, isElement, isHtmlElementValue, isMobile, isNilValue, isNode, isPlainObject, isRenderableContent, isRenderablePrimitive, isRenderableValue, lazyRender, listen, normalizeContentNodes, normalizeRenderableContentNodes, postJson, q, randomId, removeComponentPlugin, requireContainer, resolveContainer, resolveElement, resolveNode, resolveNodeList, resolveProps, restUrl, stateSnapshot, throttle, timer, trackStoreVersion, useComponentPlugin, uuid, validateParam, waitForMotion };
+export { CleanupFunction, CollapseMotionController, CollapseTransitionDefinition, ComponentCleanup, ComponentContext, ComponentController, ComponentDefinition, ComponentLifecycleEvent, ComponentListener, ComponentPlugin, ComponentPluginOptions, ComponentProps, ComponentRuntime, ComponentState, ContainerExpect, DOMReference, type DebounceSettings, type DebouncedFunc, DropInstance, ElementRef, Flow, FlowAction, FlowBusyHook, FlowBusyStrategy, FlowChangeHook, FlowClassNameConfig, FlowClassNames, FlowCleanup, FlowContext, FlowData, FlowDirection, FlowErrorHook, FlowFinishHook, FlowGoToOptions, FlowGuardHook, FlowLifecycleHook, FlowMoveHook, FlowPayload, FlowProps, FlowRenderContext, FlowSlot, FlowSlotName, FlowSnapshot, FlowState, FlowStep, FlowStepResult, FlowSubscriber, FlowTarget, FlowText, Form, FormButton, FormClassNameConfig, FormClassNames, FormDataRecord, FormDataValue, FormField, FormOption, FormProps, FormValidatorConfig, FunctionalComponent, IEventManager, IconAttributeValue, IconName, IconPathMap, IconProps, KeyedElementRefs, LazyRenderCallback, LazyRenderOptions, LazyRenderTarget, Menu, MenuClassNameConfig, MenuClassNames, MenuItem, MenuItemId, MenuProps, MenuType, Modal, ModalClassNameConfig, ModalClassNames, ModalMode, ModalProps, ModalText, MotionController, NormalizeContext, Offcanvas, OffcanvasAnimate, OffcanvasClassNameConfig, OffcanvasClassNames, OffcanvasContent, OffcanvasDirection, OffcanvasProps, OwnedView, OwnedViewOptions, Pagination, PaginationClassNameConfig, PaginationClassNames, PaginationCount, PaginationPage, PaginationProps, ParabolaInstance, ParamRule, ParamRuleInput, PopupProps, PresenceController, PresenceOptions, PresencePhase, PublicFlowStep, QueryContext, RenderableContent, RequireContainerResult, ResolveContainerResult, ResolveSchema, ResolvedProps, StateSyncOptions, Swiper, SwiperClassNameConfig, SwiperClassNames, SwiperDataItem, SwiperProps, SwiperSlideContext, TabContent, TabItem, Tabs, TabsClassNameConfig, TabsClassNames, TabsDirection, TabsDisabled, TabsPanelContext, TabsProps, TabsValue, ThemeClassNameConfig, ThemeClassNames, ThemeConfigKey, ThemeInstance, ThemeOptions, ThemePanelGroup, ThemeResolvedOptions, type ThrottleSettings, Toast, ToastActionProps, ToastClassNameConfig, ToastClassNames, ToastOptions, ToastType, TooltipInstance, TransitionDefinition, TransitionTarget, ValidateCondition, ValidatorInstance, addIcons, all, copy, createAccordion, createCollapseTransition, createDrop, createElementRef, createEventManager, createFlow, createForm, createKeyedElementRefs, createLoading, createMenu, createModal, createMotionGroup, createOffcanvas, createOwnedView, createPagination, createParabola, createPopup, createPresence, createScheduledTask, createStateSync, createSticky, createSwiper, createTabs, createTheme, createToc, createTooltip, createTransition, createValidator, debounce, defineComponent, flexPosition, getRegistedIconPath, getStoreVersion, getType, icon, iconHtml, iconMarkup, isDomElementValue, isDomNodeValue, isElement, isHtmlElementValue, isMobile, isNilValue, isNode, isPlainObject, isRenderableContent, isRenderablePrimitive, isRenderableValue, lazyRender, listen, postJson, q, randomId, removeComponentPlugin, requireContainer, resolveContainer, resolveElement, resolveNode, resolveNodeList, resolveProps, restUrl, stateSnapshot, throttle, timer, trackStoreVersion, useComponentPlugin, uuid, validateParam, waitForMotion };

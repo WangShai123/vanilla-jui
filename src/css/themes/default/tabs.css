@@ -4,11 +4,9 @@
     --tab-list-item-margin: 0;
     --tab-list-font-weight: var(--font-medium);
     --tab-wrap-border: 1px solid var(--ui-border-subtle);
-    --tab-panel-padding: var(--s2) var(--s3);
-    --tab-panel-margin: 0;
-    --tab-panel-item-margin: 0;
-    --tab-panel-item-min-height: 1.25em;
-    --tab-panel-item-content-margin: 0;
+    --panel-list-padding: var(--s2) var(--s3);
+    --panel-list-margin: 0;
+    --panel-list-item-margin: 0;
   }
 
   .j-tabs[data-tabs-direction='top'] .tab-wrap {

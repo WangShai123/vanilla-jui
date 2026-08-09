@@ -25,8 +25,8 @@ import {
 | `isRenderablePrimitive` | string、number、boolean |
 | `isRenderableValue` | nullish、renderable primitive、函数、数组或 Node |
 
-`isRenderableValue` 只判定内容类别，不把值转换成节点。转换由 DOM utility 的
-`normalizeContentNodes()` 负责。
+`isRenderableValue` 只判定内容类别，不把值转换成节点，也不解析 HTML 字符串。组件
+内容渲染遵循 `vanilla-signal` children 语义。
 
 `getType(value)` 在 `typeof` 上增加 `null`、`array`、`HTMLElement` 和 `Node`：
 

@@ -2,7 +2,7 @@
 
 Sticky 是用于侧边栏 widget 的吸附组件，源码位于 `src/components/sticky.ts`。
 
-它会给一个或多个目标元素设置 `position: sticky`，并按照元素顺序自动累加 `top` 偏移，避免多个 widget 在滚动吸附时重叠。组件继承 `Component`，使用 `props`、`dom`、`runtime`、`state` 的实例结构，并在 `destroy()` 时恢复目标元素原始的内联样式。
+它是围绕已有 DOM 工作的行为控制器，会给一个或多个目标元素设置 `position: sticky`，并按照元素顺序自动累加 `top` 偏移，避免多个 widget 在滚动吸附时重叠。实例使用 `props`、`runtime` 和 `state` 描述配置、生命周期和计算结果，并在 `destroy()` 时恢复目标元素原始的内联样式。
 
 ## 导入
 
@@ -110,7 +110,7 @@ createSticky({
 | ------- | -------- | ---- | --------------- |
 | `props` | `object` | 否   | Sticky 配置对象 |
 
-构造函数只归一化配置并初始化实例结构，不解析 DOM、不应用样式。调用 `build()` 后才会解析 `parent` / `target` 并启动 sticky 行为。
+工厂函数只归一化配置并初始化实例结构，不解析 DOM、不应用样式。调用 `build()` 后才会解析 `parent` / `target` 并启动 sticky 行为。
 
 ### Props
 
@@ -129,32 +129,26 @@ createSticky({
 | 属性      | 类型        | 说明               |
 | --------- | ----------- | ------------------ |
 | `props`   | `object`    | 归一化后的配置对象 |
-| `dom`     | `object`    | DOM 引用集合       |
 | `state`   | `DeepStore` | 响应式状态         |
 | `runtime` | `object`    | 运行时状态         |
 
-### `dom`
-
-| 属性          | 类型              | 说明                       |
-| ------------- | ----------------- | -------------------------- |
-| `dom.parent`  | `Element \| null` | 第一个解析到的 parent      |
-| `dom.targets` | `Element[]`       | 当前实例管理的 sticky 目标 |
+Sticky 的 parent、targets 和原始 style 快照保存在闭包内，不作为公开 DOM map 暴露。
 
 ### `state`
 
-| 属性          | 类型                                       | 说明                         |
-| ------------- | ------------------------------------------ | ---------------------------- |
-| `state.items` | `Array<{ element: Element, top: number }>` | 当前实例内每个目标的计算结果 |
+| 属性          | 类型                                                 | 说明                         |
+| ------------- | ---------------------------------------------------- | ---------------------------- |
+| `state.items` | `Array<{ key: string, index: number, top: number }>` | 当前实例内每个目标的计算结果 |
 
 ### `runtime`
 
-`runtime` 属于内部运行时状态，不作为公开 API 依赖。常见字段包括 `destroyed` 和 `built`。
+`runtime` 包含 `built` 和 `destroyed`。
 
 ## 实例方法
 
 ### `build()`
 
-解析 `parent` / `target`，应用 sticky 样式并写入 `dom.targets`、`state.items`。
+解析 `parent` / `target`，应用 sticky 样式并写入 `state.items`。
 
 ```js
 sticky.build();
@@ -191,4 +185,4 @@ sticky.destroy();
 | 参数   | 无     |
 | 返回值 | `void` |
 
-继承自 `Component` 的 `on()`、`off()`、`emit()`、`use()` 也可使用。
+Sticky 不创建根节点，也不提供 `mount()`、`setState()`、`on()`、`off()`、`emit()` 或 `use()`；运行时变化通过 `refresh()` 重新计算。

@@ -3,7 +3,7 @@
 import { describe, expect, it, vi } from 'vite-plus/test';
 import { createSignal, jsx } from 'vanilla-signal';
 
-import { createPresence, waitForMotion } from '../src/utilities/presence.ts';
+import { createPresence, waitForMotion } from '../src/core/presence.ts';
 
 function deferred(): { promise: Promise<void>; resolve: () => void } {
   let resolve!: () => void;

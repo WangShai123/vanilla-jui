@@ -1,6 +1,8 @@
 # Tooltip
 
-Tooltip 基于 Drop 实现，源码位于 `src/primitives/tooltip.ts`。它不继承 Component，只通过工厂函数创建实例。Tooltip 只负责把文本包装成标准 Tooltip UI，定位和触发交给 Drop。
+Tooltip 是文本提示控制器，源码位于 `src/primitives/tooltip.ts`。它通过 `createTooltip(element, props)` 创建实例，把 `message` 包装为标准 Tooltip 内容，再交给 Drop 负责触发、定位、延迟和销毁。
+
+Tooltip 自身不创建额外生命周期。实例方法会转发到底层 Drop；`tooltip.element` 始终指向当前 Drop 根节点，`destroy()` 后为 `null`。
 
 ## 导入
 
@@ -24,18 +26,20 @@ tooltip.hide();
 
 ## 参数
 
-| 参数          | 类型                 | 默认值    | 说明                       |
-| ------------- | -------------------- | --------- | -------------------------- |
-| `message`     | `string`             | —         | 提示文案，不能为空         |
-| `mode`        | `'click' \| 'hover'` | `'hover'` | 触发方式                   |
-| `position`    | `string`             | `'auto'`  | 浮层位置，取值与 Drop 一致 |
-| `offset`      | `number`             | `8`       | 与目标元素间距             |
-| `theme`       | `string \| false`    | `false`   | 主题色，见下方说明         |
-| `delay`       | `number \| object`   | `100`     | 展示/隐藏延迟（毫秒）      |
-| `hoverIntent` | `boolean`            | `true`    | hover 模式下启用意图判断   |
-| `name`        | `string \| null`     | `null`    | 提示名称，写入 `data-drop` |
-| `id`          | `string \| null`     | `null`    | 浮层 id，不传时自动生成    |
-| `className`   | `object`             | 见下表    | 覆盖 Tooltip 内容类名      |
+| 参数          | 类型                                         | 默认值    | 说明                           |
+| ------------- | -------------------------------------------- | --------- | ------------------------------ |
+| `message`     | `string`                                     | `''`      | 提示文案，会 trim，不能为空    |
+| `mode`        | `'click' \| 'hover'`                         | `'hover'` | 触发方式                       |
+| `position`    | Drop position                                | `'auto'`  | 浮层位置，取值与 Drop 一致     |
+| `offset`      | `number`                                     | `8`       | 与目标元素间距                 |
+| `theme`       | `false \| 'reverse' \| 'primary' \| ...`     | `false`   | 主题色，见下方说明             |
+| `delay`       | `number \| { show?: number, hide?: number }` | `100`     | 展示/隐藏延迟，单位毫秒        |
+| `hoverIntent` | `boolean`                                    | `true`    | hover 模式下启用意图判断       |
+| `name`        | `string \| null`                             | `null`    | 提示名称，传给 Drop 和内容节点 |
+| `id`          | `string \| null`                             | `null`    | 浮层 id，传给 Drop             |
+| `className`   | `object`                                     | 见下表    | 覆盖 Tooltip 内容类名          |
+| `onShown`     | `Function \| null`                           | `null`    | Drop 展示后回调                |
+| `onHidden`    | `Function \| null`                           | `null`    | Drop 隐藏后回调                |
 
 ## className
 
@@ -55,7 +59,7 @@ tooltip.hide();
 | `warning` | `is-warning` | 警告主题类名 |
 | `error`   | `is-error`   | 错误主题类名 |
 
-Tooltip 内容节点使用 `data-tooltip` 和 `data-tooltip-message`；底层浮层定位、触发和根节点类名由 Drop 负责。
+Tooltip 内容节点使用 `data-tooltip` 和 `data-tooltip-message`；底层浮层根节点、定位、触发和关闭行为由 Drop 负责。
 
 ## theme
 
@@ -76,9 +80,14 @@ createTooltip(button, {
 <div class="j-tooltip is-error">...</div>
 ```
 
-## 实例方法
+## 实例属性
 
-实例根节点统一通过 `tooltip.element` 访问。
+| 属性      | 说明                              |
+| --------- | --------------------------------- |
+| `element` | 底层 Drop 根节点；销毁后为 `null` |
+| `drop`    | 底层 Drop 实例；销毁后为 `null`   |
+
+## 实例方法
 
 | 方法             | 说明                     |
 | ---------------- | ------------------------ |

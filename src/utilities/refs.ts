@@ -28,6 +28,7 @@ export interface KeyedElementRefs<TKey, TElement extends Element> {
   readonly elements: ReadonlyMap<TKey, TElement>;
   get: (key: TKey) => TElement | undefined;
   bind: (key: TKey) => (element: TElement) => void;
+  delete: (key: TKey) => void;
   clear: () => void;
 }
 
@@ -49,6 +50,9 @@ export function createKeyedElementRefs<
           if (elements.get(key) === element) elements.delete(key);
         });
       };
+    },
+    delete(key) {
+      elements.delete(key);
     },
     clear() {
       elements.clear();

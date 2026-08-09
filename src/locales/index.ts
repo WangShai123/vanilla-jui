@@ -5,6 +5,7 @@ export default {
     sm: 'Small',
     md: 'Medium',
     lg: 'Large',
+    wn: 'Your browser is outdated and may pose security risks. Please upgrade your browser to access this site.',
   },
   zh: {
     b: '返回',
@@ -40,5 +41,7 @@ export default {
     Auto: '自动',
     Close: '关闭',
     Confirm: '确认',
+    Upgrade: '升级',
+    wn: '您的浏览器版本过低，存在安全风险。请升级浏览器后再访问本站。',
   },
 };

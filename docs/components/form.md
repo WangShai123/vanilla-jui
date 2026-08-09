@@ -1,6 +1,6 @@
 # Form
 
-Form 继承 `Component`，用于按字段配置渲染表单，并内置 `Validator` 验证模块与提交数据收集。源码位于 `src/components/form.ts`。
+Form 是基于 `defineComponent()` 的表单组件，用于按字段配置渲染表单，并内置 `Validator` 验证模块与提交数据收集。源码位于 `src/components/form.ts`。
 
 ## 导入
 
@@ -61,11 +61,11 @@ form.build();
 document.querySelector('#user-form').appendChild(form.element);
 ```
 
-`createForm(props)` 只创建实例并初始化状态，不会立即创建 DOM。调用 `build()` 后只会构建 `.j-form` 根节点，不会自动挂载。用户需要手动把 `form.element` 添加到业务容器。
+`createForm(props)` 只创建实例并初始化状态，不会立即创建 DOM。调用 `build()` 后只会构建 `.j-form` 根节点，不会自动挂载。用户可以手动把 `form.element` 添加到业务容器，也可以调用 `form.mount(container)`。
 
 ## 手动挂载
 
-Form 不提供 `container` 参数，也不支持自动挂载。
+Form 不提供 `container` 参数，也不会在创建或 build 时自动挂载。
 
 ```js
 const form = createForm({
@@ -132,16 +132,19 @@ const form = createForm({
 
 ## 实例方法
 
-| 方法                | 说明                                     |
-| ------------------- | ---------------------------------------- |
-| `validate()`        | 执行内置 Validator 校验，返回是否通过    |
-| `collectData()`     | 返回当前 `FormData` 汇总后的普通对象     |
-| `build()`           | 构建 DOM；只生成 root，不自动挂载        |
-| `requestSubmit()`   | 触发表单提交                             |
-| `reset()`           | 重置校验状态和提交数据                   |
-| `setFields(fields)` | 更新响应式 `state.fields` 并重渲染字段   |
-| `resetFields()`     | 恢复初始化字段                           |
-| `destroy()`         | 销毁实例，释放 Validator、渲染和事件资源 |
+| 方法                | 说明                                             |
+| ------------------- | ------------------------------------------------ |
+| `validate()`        | 执行内置 Validator 校验，返回是否通过            |
+| `collectData()`     | 返回当前 `FormData` 汇总后的普通对象             |
+| `build()`           | 构建 DOM；只生成 root，不自动挂载                |
+| `mount(container)`  | 构建并挂载根节点                                 |
+| `unmount()`         | 移除根节点，保留 state 和 view owner             |
+| `requestSubmit()`   | 触发表单提交                                     |
+| `reset()`           | 重置校验状态和提交数据                           |
+| `setFields(fields)` | 更新响应式 `state.fields`，由 keyed 列表更新字段 |
+| `resetFields()`     | 恢复初始化字段                                   |
+| `setState(patch)`   | 更新响应式状态字段                               |
+| `destroy()`         | 销毁实例，释放 Validator、渲染和事件资源         |
 
 `setFields()` 用于字段数据变化后的响应式更新。需要改变创建期配置时，创建新实例并显式销毁旧实例。
 
@@ -167,4 +170,4 @@ document.querySelector('#demo').appendChild(form.element);
 
 - Form 只负责通用表单 DOM、校验和数据收集，复杂业务交互放在 `onSubmit` 或外层组件中。
 - 校验规则复用 `Validator` 验证模块的规则与消息格式。
-- `build()` 不接收容器参数；销毁时会释放实例资源，并清理 `dom.root`。
+- `build()` 不接收容器参数；销毁时会释放实例资源，并移除组件创建的 `element`。

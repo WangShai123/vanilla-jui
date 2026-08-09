@@ -7,11 +7,8 @@ import { joinClasses } from '../utilities/class-name.ts';
 import { q } from '../utilities/dom.ts';
 import { listen } from '../utilities/events.ts';
 import { randomId } from '../utilities/id.ts';
-import { createTransition } from '../utilities/motion.ts';
-import {
-  createPresence,
-  type PresenceController,
-} from '../utilities/presence.ts';
+import { createTransition } from '../core/motion.ts';
+import { createPresence, type PresenceController } from '../core/presence.ts';
 import { timer } from '../utilities/timer.ts';
 import { validateParam } from '../utilities/types.ts';
 
@@ -42,6 +39,7 @@ export interface ToastOptions {
 }
 
 export interface ToastActionProps extends ToastOptions {
+  type?: ToastType;
   text?: {
     close?: string;
     action?: string;
@@ -166,12 +164,12 @@ function mountToast(
     elements: () => [element],
     mount,
     activate: () => {
-      element.removeAttribute('aria-hidden');
+      element.removeAttribute('data-unmount');
       element.setAttribute('aria-live', live);
     },
     deactivate: () => {
       element.removeAttribute('aria-live');
-      element.setAttribute('aria-hidden', 'true');
+      element.setAttribute('data-unmount', 'true');
     },
     motion,
     unmount: () => removeToastElement(element),
@@ -184,7 +182,7 @@ function mountToast(
 
 function hide(toast: HTMLElement | null | undefined): void {
   if (!toast) return;
-  if (toast.getAttribute('aria-hidden') === 'true') return;
+  if (toast.getAttribute('data-unmount') === 'true') return;
   disposers.get(toast)?.();
   disposers.delete(toast);
   const id = toast.dataset.toast || randomId();
@@ -274,7 +272,7 @@ function action(message = '', props: ToastActionProps = {}): HTMLElement {
   const names = resolveClassNames(props);
   const id = randomId();
   const element = jsx('div', {
-    className: names.action,
+    className: joinClasses(names.action, names[props.type || 'info']),
     'data-toast': id,
     'data-toast-action': '',
     children: [

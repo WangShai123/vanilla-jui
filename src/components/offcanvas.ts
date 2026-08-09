@@ -11,14 +11,11 @@ import {
   defineComponent,
 } from '../core/component.ts';
 import { createLoading } from '../primitives/loading.ts';
-import {
-  type RenderableContent,
-  normalizeContentNodes,
-} from '../utilities/dom.ts';
+import { type RenderableContent } from '../utilities/dom.ts';
 import { randomId } from '../utilities/id.ts';
 import { createEventManager } from '../utilities/events.ts';
-import { createMotionGroup, createTransition } from '../utilities/motion.ts';
-import { createPresence } from '../utilities/presence.ts';
+import { createMotionGroup, createTransition } from '../core/motion.ts';
+import { createPresence } from '../core/presence.ts';
 import { createElementRef } from '../utilities/refs.ts';
 import {
   type ResolveSchema,
@@ -428,7 +425,9 @@ export function createOffcanvas(input: OffcanvasProps = {}): Offcanvas {
           children: () =>
             state.loading
               ? createLoading()
-              : normalizeContentNodes(state.resolvedContent, offcanvas),
+              : typeof state.resolvedContent === 'function'
+                ? state.resolvedContent(offcanvas)
+                : state.resolvedContent,
         }),
       }) as HTMLElement;
     },

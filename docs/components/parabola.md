@@ -1,6 +1,6 @@
 # Parabola
 
-Parabola 是抛物线动画 UI 原语，源码位于 `src/primitives/parabola.ts`。它不继承 `Component`，只通过工厂函数创建实例。内部使用 `requestAnimationFrame` 驱动小球从起点元素飞向终点元素，适合加入购物车、收藏飞入等高频触发的业务动效。
+Parabola 是抛物线动画 UI 原语，源码位于 `src/primitives/parabola.ts`。它通过 `createParabola(props)` 创建实例，内部使用 `requestAnimationFrame` 驱动小球从起点元素飞向终点元素，适合加入购物车、收藏飞入等高频触发的业务动效。
 
 创建实例时只会创建一个实例根节点。每次调用 `show()` 都会生产一个新的小球并启动一轮独立动画；动画结束后只移除本轮小球，不会销毁实例，也不会影响其他正在飞行的小球。
 
@@ -76,15 +76,12 @@ await parabola.show();
 | 属性                | 说明                                  |
 | ------------------- | ------------------------------------- |
 | `props`             | 归一化后的配置                        |
-| `dom.root`          | 实例根节点，销毁且小球清空后为 `null` |
-| `dom.from`          | 起点元素，销毁后为 `null`             |
-| `dom.to`            | 终点元素，销毁后为 `null`             |
-| `dom.balls`         | 当前仍在动画中的小球集合              |
+| `element`           | 实例根节点，销毁且小球清空后为 `null` |
 | `runtime.destroyed` | 实例是否已销毁                        |
 
 `runtime.destroyed` 只表示实例已经被手动销毁，不表示单次动画已经结束。单次动画结束后只移除对应小球，实例仍可继续生产新的小球。
 
-`cache` 用于保存内部延迟启动定时器，不作为公开 API 依赖。
+起点、终点、当前小球集合和延迟启动定时器保存在实例闭包内，不作为公开 DOM map 暴露。
 
 ## 定时器
 

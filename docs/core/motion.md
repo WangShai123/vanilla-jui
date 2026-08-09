@@ -23,11 +23,11 @@ const panelMotion = createTransition(() => panelRef.current, {
 });
 ```
 
-| definition 字段 | 类型 | 说明 |
-| --- | --- | --- |
-| `keyframes` | `Keyframe[] | PropertyIndexedKeyframes` | 隐藏端到可见端 |
-| `options` | `KeyframeAnimationOptions` | Web Animations 参数 |
-| `respectReducedMotion` | `boolean` | 默认 `true`；reduce 时清零 duration/delay/endDelay |
+| definition 字段        | 类型                       | 说明                                               |
+| ---------------------- | -------------------------- | -------------------------------------------------- |
+| `keyframes`            | `Keyframe[]                | PropertyIndexedKeyframes`                          | 隐藏端到可见端 |
+| `options`              | `KeyframeAnimationOptions` | Web Animations 参数                                |
+| `respectReducedMotion` | `boolean`                  | 默认 `true`；reduce 时清零 duration/delay/endDelay |
 
 target 是延迟 getter，允许在元素 build 前创建 motion。内部 Animation 默认
 `fill: 'both'`，在同一 Element 上复用；target 指向新元素时会取消旧 Animation 并
@@ -35,11 +35,11 @@ target 是延迟 getter，允许在元素 build 前创建 motion。内部 Animat
 
 返回的 `MotionController`：
 
-| 方法 | 行为 |
-| --- | --- |
-| `enter(signal?)` | 从当前进度正向播放到可见端 |
-| `leave(signal?)` | 从当前进度反向播放到隐藏端 |
-| `cancel()` | 取消 Animation 并释放元素引用 |
+| 方法             | 行为                          |
+| ---------------- | ----------------------------- |
+| `enter(signal?)` | 从当前进度正向播放到可见端    |
+| `leave(signal?)` | 从当前进度反向播放到隐藏端    |
+| `cancel()`       | 取消 Animation 并释放元素引用 |
 
 `enter()`/`leave()` 返回 `Promise<void>`。播放失败或 Animation 被反向/取消时 Promise
 仍正常完成。AbortSignal 结束本次等待，但不销毁 Animation；Presence 可据此让旧操作
@@ -78,12 +78,12 @@ await vertical.leave();
 vertical.cancel();
 ```
 
-| definition 字段 | 默认值 | 说明 |
-| --- | --- | --- |
-| `axis` | `'vertical'` | vertical 管理 height；horizontal 管理 width |
-| `fade` | `true` | 是否同时插值 opacity |
-| `options` | duration 250、easing ease | Web Animations 参数 |
-| `respectReducedMotion` | `true` | 是否遵循 reduced-motion |
+| definition 字段        | 默认值                    | 说明                                        |
+| ---------------------- | ------------------------- | ------------------------------------------- |
+| `axis`                 | `'vertical'`              | vertical 管理 height；horizontal 管理 width |
+| `fade`                 | `true`                    | 是否同时插值 opacity                        |
+| `options`              | duration 250、easing ease | Web Animations 参数                         |
+| `respectReducedMotion` | `true`                    | 是否遵循 reduced-motion                     |
 
 vertical 使用 `scrollHeight` 和实际 bounding height，horizontal 使用 `scrollWidth` 和
 实际 bounding width。动画期间设置 `overflow:hidden`；展开完成后恢复调用方原始 inline

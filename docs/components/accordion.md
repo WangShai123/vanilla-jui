@@ -23,13 +23,17 @@ const accordion = createAccordion({
     {
       name: 'usage',
       title: 'Usage',
-      content: '<strong>Usage</strong> content',
+      content: 'Usage content',
     },
   ],
 });
 
 const container = document.querySelector('#demo');
-if (container) accordion.build().mount(container);
+if (container) accordion.mount(container);
+
+// 或者显式构建后由上层手动插入
+accordion.build();
+document.querySelector('#demo')?.appendChild(accordion.element);
 ```
 
 `createAccordion(props)` 只创建 controller 并校验初始配置。`build()` 创建稳定 DOM、绑定响应式视图和事件，但不会自动挂载；可以继续调用 `mount(container)`，也可以由上层手动插入 `accordion.element`。
@@ -68,14 +72,14 @@ const horizontal = createAccordion({
 });
 ```
 
-| direction | 根布局 | panel 动画尺寸 |
-| --- | --- | --- |
-| `vertical` | `flex-direction: column` | height / scrollHeight |
-| `horizontal` | `flex-direction: row` | width / scrollWidth |
+| direction    | 根布局                   | panel 动画尺寸        |
+| ------------ | ------------------------ | --------------------- |
+| `vertical`   | `flex-direction: column` | height / scrollHeight |
+| `horizontal` | `flex-direction: row`    | width / scrollWidth   |
 
 ## 内容
 
-`title` 和 `content` 支持字符串、DOM 节点、节点数组、数字、布尔值、`null`、`undefined` 或返回这些值的函数。字符串会按 HTML 片段解析。
+`title` 支持字符串、DOM 节点、节点数组、数字、布尔值、`null`、`undefined` 或返回这些值的同步函数。`content` 使用与 Tabs `content` 字段一致的加载语义：普通值会直接渲染，函数型内容只在面板激活时执行，可以返回内容或 Promise。字符串始终按文本渲染，不解析 HTML。
 
 ```js
 const dynamic = createAccordion({
@@ -83,31 +87,58 @@ const dynamic = createAccordion({
     {
       name: 'profile',
       title: ({ index }) => `Panel ${index + 1}`,
-      content: ({ item }) => `<p>${item.name}</p>`,
+      content: ({ item }) => `Panel name: ${item.name}`,
     },
   ],
 });
 dynamic.build();
 ```
 
-## 响应式条目
-
-`data` 会写入 `accordion.state.data`。`build()` 后，替换或变异 `state.data` 会自动重建面板 DOM，不需要调用额外的刷新方法。
+函数型 `content` 会收到 `{ accordion, item, index, type, active }`。异步加载期间当前
+panel 渲染 loading，panel 设置 `aria-live="polite"` 和 `aria-busy`，并同步
+`accordion.state.loading`。`cache: true` 时会缓存函数型 `content` 的结果；`ttl` 为
+缓存有效时间，单位毫秒，`0` 或省略表示不过期。
 
 ```js
-accordion.state.data = [
-  { name: 'basic', title: 'Basic', content: 'Basic content' },
-  { name: 'advanced', title: 'Advanced', content: 'Advanced content' },
-];
+const asyncAccordion = createAccordion({
+  data: [
+    {
+      name: 'profile',
+      title: 'Profile',
+      content: async ({ item }) => `Loaded ${item.name}`,
+      cache: true,
+      ttl: 30_000,
+    },
+  ],
+});
+```
 
+## 响应式条目
+
+`data` 会写入 `accordion.state.data`。`build()` 后，局部更新直接表达为响应式状态变化：
+
+```js
 accordion.state.data.push({
   name: 'faq',
   title: 'FAQ',
   content: 'FAQ content',
 });
+
+const faq = accordion.state.data.find((item) => item.name === 'faq');
+if (faq) faq.title = 'FAQ updated';
+
+accordion.state.data = accordion.state.data.filter(
+  (item) => item.name !== 'faq'
+);
 ```
 
-组件会按 `name` 关联状态、DOM ref 和 Motion controller；`current` 会忽略已不存在的名称。`name` 可以省略或留空，此时组件会自动生成唯一值；如果业务代码传入固定 `name`，同一组 `data` 内必须保持唯一，否则组件会抛出错误。
+整组替换直接赋值或使用 `setState({ data })`。组件会按 `name` 关联状态、DOM ref 和
+Motion controller；`name` 不变的面板会保留节点身份。插入新项只会新增对应 header 和
+panel，不会移动或刷新无关项内容。删除项时，对应 DOM ref 和 Motion controller 会随
+keyed item owner 清理。
+
+`name` 可以省略或留空，此时组件会自动生成唯一值；如果业务代码传入固定 `name`，同
+一组 `data` 内必须保持唯一，否则组件会抛出错误。
 
 ## 展开与收起动画
 
@@ -127,14 +158,15 @@ Animations API 执行 `height: 0 -> scrollHeight` 或
 
 ## 实例属性
 
-| 属性                | 说明                                   |
-| ------------------- | -------------------------------------- |
-| `props`             | 归一化后的创建期配置                   |
-| `state.data`       | 响应式面板数据，变更后自动重建面板 DOM |
-| `state.activeNames` | 当前展开的面板名称列表                 |
-| `current`           | 当前主面板，包含 `index` 和 `name`     |
-| `element`           | `build()` 后生成的稳定根节点           |
-| `runtime`           | `built`、`mounted`、`destroyed` 状态   |
+| 属性                | 说明                                    |
+| ------------------- | --------------------------------------- |
+| `props`             | 归一化后的创建期配置                    |
+| `state.data`        | 响应式面板数据，变更后由 keyed 列表更新 |
+| `state.activeNames` | 当前展开的面板名称列表                  |
+| `state.loading`     | 当前是否存在异步 content 正在加载       |
+| `current`           | 当前主面板，包含 `index` 和 `name`      |
+| `element`           | `build()` 后生成的稳定根节点            |
+| `runtime`           | `built`、`mounted`、`destroyed` 状态    |
 
 ## 实例方法
 
@@ -148,28 +180,28 @@ Animations API 执行 `height: 0 -> scrollHeight` 或
 
 公共 controller 方法还包括 `setState()`、`own()`、`on()`、`off()`、`emit()` 和 `use()`。
 
-Accordion 不提供 `setItems()`。条目变化直接写 `state.data`，例如 `accordion.state.data = nextItems` 或 `accordion.setState({ data: nextItems })`。
-
 ## 参数
 
-| 参数          | 类型                                | 默认值  | 说明                      |
-| ------------- | ----------------------------------- | ------- | ------------------------- |
-| `data`       | `AccordionItem[]`                   | 必填    | 初始非空面板配置列表      |
-| `id`          | `string \| null`                    | `null`  | 根节点 id；为空时自动生成 |
-| `active`      | `number \| string \| Array \| null` | `0`     | 初始激活项                |
-| `collapsible` | `boolean`                           | `false` | 允许关闭当前已激活项      |
-| `multiple`    | `boolean`                           | `false` | 允许同时展开多个面板      |
-| `direction`   | `'vertical' \| 'horizontal'`        | `vertical` | 布局与展开动画方向     |
-| `className`   | `object`                            | 见下表  | 覆盖组件结构类名          |
-| `onChange`    | `Function \| null`                  | `null`  | 用户切换面板后的回调      |
+| 参数          | 类型                                | 默认值     | 说明                      |
+| ------------- | ----------------------------------- | ---------- | ------------------------- |
+| `data`        | `AccordionItem[]`                   | 必填       | 初始非空面板配置列表      |
+| `id`          | `string \| null`                    | `null`     | 根节点 id；为空时自动生成 |
+| `active`      | `number \| string \| Array \| null` | `0`        | 初始激活项                |
+| `collapsible` | `boolean`                           | `false`    | 允许关闭当前已激活项      |
+| `multiple`    | `boolean`                           | `false`    | 允许同时展开多个面板      |
+| `direction`   | `'vertical' \| 'horizontal'`        | `vertical` | 布局与展开动画方向        |
+| `className`   | `object`                            | 见下表     | 覆盖组件结构类名          |
+| `onChange`    | `Function \| null`                  | `null`     | 用户切换面板后的回调      |
 
 ### `data`
 
-| 字段      | 类型                | 说明                                                                 |
-| --------- | ------------------- | -------------------------------------------------------------------- |
-| `name`    | `string`            | 可选；为空时自动生成。传入固定值时必须唯一，响应式更新时建议保持稳定 |
-| `title`   | `RenderableContent` | 面板头内容                                                           |
-| `content` | `RenderableContent` | 面板内容                                                             |
+| 字段      | 类型                            | 说明                                                                 |
+| --------- | ------------------------------- | -------------------------------------------------------------------- |
+| `name`    | `string`                        | 可选；为空时自动生成。传入固定值时必须唯一，响应式更新时建议保持稳定 |
+| `title`   | `RenderableContent`             | 面板头内容                                                           |
+| `content` | `RenderableContent \| Function` | 面板内容；函数会在激活时执行                                         |
+| `cache`   | `boolean`                       | 函数型 content 是否缓存结果                                          |
+| `ttl`     | `number`                        | 缓存有效时间，单位毫秒；`0` 表示不过期                               |
 
 ### `className`
 
@@ -201,5 +233,5 @@ callbackAccordion.build();
 | 区域     | 支持                                                              |
 | -------- | ----------------------------------------------------------------- |
 | header   | `role="button"`、`tabindex="0"`、`aria-expanded`、`aria-controls` |
-| panel    | `role="region"`、`aria-hidden`、`aria-labelledby`、关闭态 `inert` |
+| panel    | `role="region"`、`aria-hidden`、`aria-labelledby`、异步 content 的 `aria-live` / `aria-busy`、关闭态 `inert` |
 | keyboard | `Enter` / `Space` 切换                                            |

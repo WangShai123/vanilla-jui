@@ -3,13 +3,13 @@
 Pagination 是分页组件。它根据 `total`、`page.size`、`page.current` 和页码窗口配置渲染分页按钮，并在页码变化时通过 `onChange(page, instance)` 通知业务层加载数据。
 
 ```js
-import { createPagination } from "vanilla-jui";
-import "vanilla-jui/style.css";
+import { createPagination } from 'vanilla-jui';
+import 'vanilla-jui/style.css';
 ```
 
 ## 基础用法
 
-组件需要显式 `build()`，然后由用户手动挂载 `dom.root`。
+组件需要显式 `build()`，然后由用户手动挂载 `pagination.element`，或调用 `pagination.mount(container)`。
 
 ```js
 const pagination = createPagination({
@@ -21,14 +21,14 @@ const pagination = createPagination({
   },
 }).build();
 
-document.querySelector("#pager").appendChild(pagination.element);
+document.querySelector('#pager').appendChild(pagination.element);
 ```
 
 `total` 表示总数据数，不是总页数。总页数由 `Math.ceil(total / page.size)` 计算，最小为 `1`。
 
 ## State 更新
 
-Pagination 支持通过响应式 `state` 刷新 DOM。更新 `total`、`page` 或 `count` 后，会自动重新计算 `pageCount`、夹取当前页并重渲染页码窗口。
+Pagination 支持通过响应式 `state` 刷新 DOM。更新 `total`、`page` 或 `count` 后，会自动重新计算 `pageCount`、夹取当前页并刷新页码窗口。
 
 ```js
 pagination.setState({ total: 60 });
@@ -79,7 +79,12 @@ loadPage(1);
 `build()` 会创建离线 DOM：
 
 ```html
-<div class="j-pagination" role="navigation" aria-label="Pagination" data-pagination="root">
+<div
+  class="j-pagination"
+  role="navigation"
+  aria-label="Pagination"
+  data-pagination="root"
+>
   <ul class="pagination" data-pagination-list aria-live="polite">
     <li class="item" data-pagination-control="prev">
       <button class="j-button is-icon is-ghost" data-page-action="prev">
@@ -154,28 +159,31 @@ const pagination = createPagination({
 | `state.page.current`   | `number`  | 当前页码                   |
 | `state.count.sibling`  | `number`  | 当前页左右相邻页数         |
 | `state.count.boundary` | `number`  | 首尾边界页数               |
-| `state.pageCount`      | `number`  | 计算后的总页数，最小为 `1` |
 | `state.locked`         | `boolean` | 当前是否处于异步切换锁定中 |
+
+`pageCount` 是实例只读 getter，不在 `state` 内。
 
 ## className
 
-| 字段      | 默认值                    |
-| --------- | ------------------------- |
-| `root`    | `j-pagination`            |
-| `list`    | `pagination`              |
-| `item`    | `item`                    |
-| `more`    | `more`                    |
-| `button`  | `j-button is-icon is-ghost` |
+| 字段      | 默认值                       |
+| --------- | ---------------------------- |
+| `root`    | `j-pagination`               |
+| `list`    | `pagination`                 |
+| `item`    | `item`                       |
+| `more`    | `more`                       |
+| `button`  | `j-button is-icon is-ghost`  |
 | `current` | `j-button is-icon is-active` |
-| `loading` | `animate-spin`            |
+| `loading` | `animate-spin`               |
 
 ## Methods
 
-| 方法                  | 说明                         |
-| --------------------- | ---------------------------- |
-| `build()`             | 创建离线 DOM                 |
-| `go(page)`            | 跳转到指定页码               |
-| `setState({ ... })`   | 更新分页状态并自动重渲染     |
-| `destroy()`           | 销毁实例，释放事件和 DOM     |
+| 方法                | 说明                     |
+| ------------------- | ------------------------ |
+| `build()`           | 创建离线 DOM             |
+| `mount(container)`  | 构建并挂载根节点         |
+| `unmount()`         | 移除根节点，保留 state   |
+| `go(page)`          | 跳转到指定页码           |
+| `setState({ ... })` | 更新分页状态             |
+| `destroy()`         | 销毁实例，释放事件和 DOM |
 
-`go(page)` 需要在 `build()` 后调用。`destroy()` 会移除已经挂载的 `dom.root`。
+`go(page)` 需要在 `build()` 后调用。`destroy()` 会移除已经挂载的 `element`。

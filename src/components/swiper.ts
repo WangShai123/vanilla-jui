@@ -16,13 +16,12 @@ import { joinClasses } from '../utilities/class-name.ts';
 import {
   all,
   isElement,
-  normalizeContentNodes,
   q,
   type RenderableContent,
 } from '../utilities/dom.ts';
 import { createEventManager } from '../utilities/events.ts';
 import { randomId } from '../utilities/id.ts';
-import { createScheduledTask } from '../utilities/scheduler.ts';
+import { createScheduledTask } from '../core/scheduler.ts';
 import {
   type ResolveSchema,
   resolveProps,
@@ -808,7 +807,9 @@ export function createSwiper(input: SwiperProps = {}): Swiper {
         const { item, index } = itemAccessor();
         const context = { swiper, item, index };
         if (item.children != null) {
-          return normalizeContentNodes(item.children, context);
+          return typeof item.children === 'function'
+            ? item.children(context)
+            : item.children;
         }
         return [
           item.image

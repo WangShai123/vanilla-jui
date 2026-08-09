@@ -1,8 +1,8 @@
 # Modal
 
-Modal 继承 `Component`，基于 `vanilla-signal` 的 `createDeepStore` 和 `render` 实现，源码位于 `src/components/modal.ts`。实例创建时的结构配置保存在 `props`，运行时交互由 `state` 驱动。
+Modal 是基于 `defineComponent()` 的交互组件，源码位于 `src/components/modal.ts`。实例创建时的结构和行为配置保存在 `props`，运行时交互由 `createDeepStore` 创建的 `state` 驱动。视图在 `build()` 时创建一次，根节点保持稳定；显示和隐藏由 `state.visible`、presence 和 Motion API 协调。
 
-核心 API：`createModal(props).build().show()`。
+核心 API：`createModal(props).build().show()`。也可以使用 `mount(container)` 挂载稳定根节点，但 Modal 的常规显示流程由 `show()` / `hide()` 通过 `document.body` 管理。
 
 ## 导入
 
@@ -35,7 +35,7 @@ dialog.show();
 dialog.state.visible = true;
 ```
 
-`content` 支持字符串、数字、布尔值、DOM 节点、节点数组、函数和空值。函数型 `content` 会收到当前 Modal 实例，返回值会继续按同一套内容规则归一化。
+`content` 支持字符串、数字、布尔值、DOM 节点、节点数组、函数和空值。字符串始终按文本渲染，不解析 HTML。函数型 `content` 会收到当前 Modal 实例，返回值会继续按同一套内容规则渲染。
 
 ```js
 const dialog = createModal({
@@ -75,9 +75,9 @@ modal.state.loading = true;
 modal.state.visible = false;
 ```
 
-`build()` 用于创建 DOM。`state.visible` 是显示和隐藏的状态源，写成 `true` 时，Modal 会挂载已构建的根节点、锁定页面滚动、绑定关闭事件并聚焦第一个可交互元素；写成 `false` 时，会执行隐藏动画、清理事件、释放滚动锁并移除 DOM。
+`build()` 用于创建 owned view。`state.visible` 是显示和隐藏的状态源，写成 `true` 时，Modal 会挂载已构建的根节点、锁定页面滚动、绑定关闭事件并聚焦第一个可交互元素；写成 `false` 时，会执行隐藏动画、清理事件、释放滚动锁并移除 DOM。
 
-Modal 的入场和离场由公共 presence 机制协调，内部使用 `createTransition()` 创建 opacity/scale Web Animation。同一个 Animation 正向播放为入场、反向播放为离场；离场的 `finished` 完成后才卸载 DOM。快速连续调用 `show()` / `hide()` 时，过期任务不会卸载已重新打开的节点。详见 [Presence 与 Motion](../utilities/presence.md) 和 [Transition API](../utilities/motion.md)。
+Modal 的入场和离场由公共 presence 机制协调，内部使用 `createTransition()` 创建 opacity/scale Web Animation。同一个 Animation 正向播放为入场、反向播放为离场；离场的 `finished` 完成后才卸载 DOM。快速连续调用 `show()` / `hide()` 时，过期任务不会卸载已重新打开的节点。详见 [Presence 与 Motion](../core/presence.md) 和 [Transition API](../core/motion.md)。
 
 Modal 不会自动 build。调用 `show()` 或直接写 `state.visible = true` 前，必须先调用 `build()`。
 
@@ -207,31 +207,34 @@ dialog.setState({ showCancel: false });
 
 ## 实例属性
 
-继承自 `Component` 的常用属性：
+Modal 公开 `defineComponent()` 返回的公共控制器属性：
 
-| 属性                | 说明                                      |
-| ------------------- | ----------------------------------------- |
-| `props`             | 归一化后的初始化配置                      |
-| `state`             | 响应式状态对象，也是运行时 UI 的主要来源  |
-| `dom`               | DOM 引用容器，含 `modal/body/footer/form` |
-| `runtime.destroyed` | 实例是否已销毁                            |
+| 属性                | 说明                                                 |
+| ------------------- | ---------------------------------------------------- |
+| `props`             | 归一化后的初始化配置                                 |
+| `state`             | 响应式状态对象，也是运行时 UI 的主要来源             |
+| `runtime.built`     | 是否已创建 owned view                                |
+| `runtime.mounted`   | 根节点当前是否挂载                                   |
+| `runtime.destroyed` | 实例是否已销毁                                       |
+| `element`           | build 后的稳定根节点；build 前和 destroy 后为 `null` |
 
-Modal 还维护内部 `cache` 和 `cleanup`，用于初始快照、样式、焦点、计时器和事件清理；业务代码通常不需要直接访问。
+Modal 的 dialog、内部 Form、事件清理、焦点快照和滚动锁都保存在闭包内，不作为公开 DOM map 暴露。业务代码应只依赖 `element`、`state` 和公开方法。
 
 ## 实例方法
 
-| 方法              | 说明                                                 |
-| ----------------- | ---------------------------------------------------- |
-| `build()`         | 创建 Modal DOM 并返回当前实例                        |
-| `show()`          | 设置 `state.visible = true` 并返回当前实例           |
-| `hide()`          | 设置 `state.visible = false` 并返回当前实例          |
-| `setState(patch)` | 批量设置响应式状态字段并返回当前实例                 |
-| `requestSubmit()` | 表单模式提交 Form；非表单模式执行确认逻辑            |
-| `isBusy()`        | 返回 `loading` 或 `processing` 是否为 true           |
-| `reset()`         | 恢复初始 `mode/content/fields`，并清空运行时提交状态 |
-| `destroy()`       | 销毁实例，释放 DOM、Form、事件和响应式渲染资源       |
+| 方法               | 说明                                                 |
+| ------------------ | ---------------------------------------------------- |
+| `build()`          | 创建 Modal DOM 并返回当前实例                        |
+| `mount(container)` | 构建并挂载根节点；普通业务更常用 `show()`            |
+| `unmount()`        | 移除根节点，保留 state 和 view owner                 |
+| `show()`           | 设置 `state.visible = true` 并返回当前实例           |
+| `hide()`           | 设置 `state.visible = false` 并返回当前实例          |
+| `setState(patch)`  | 批量设置响应式状态字段并返回当前实例                 |
+| `requestSubmit()`  | 表单模式提交 Form；非表单模式执行确认逻辑            |
+| `reset()`          | 恢复初始 `mode/content/fields`，并清空运行时提交状态 |
+| `destroy()`        | 销毁实例，释放 DOM、Form、事件和响应式渲染资源       |
 
-继承自 `Component` 的方法也可使用：`on()`、`off()`、`emit()`、`use()`。
+公共控制器方法还包括 `own()`、`use()`、`on()`、`off()` 和 `emit()`，语义见 [Functional Component Runtime](./component.md)。
 
 ## 参数
 

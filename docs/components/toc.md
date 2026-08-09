@@ -1,8 +1,8 @@
 # Toc
 
-Toc 是页面目录组件，源码位于 `src/components/toc.ts`。它继承 `Component`，负责扫描内容区域内的标题、渲染锚点列表，并随页面滚动更新当前 active 项。
+Toc 是页面目录组件，源码位于 `src/components/toc.ts`。它通过 `createToc(props)` 创建 `defineComponent()` 控制器，负责扫描内容区域内的标题、渲染 keyed 锚点列表，并随页面滚动更新当前 active 项。
 
-构造函数只归一化配置并初始化 `props`、`dom`、`runtime`、`state`。调用 `build()` 后才会解析目标 DOM、创建 `toc.element`、渲染目录和绑定事件。Toc 不会自动挂载，用户需要手动把 `toc.element` 添加到指定容器。
+工厂函数只归一化配置并初始化 `props`、`runtime` 和 `state`。调用 `build()` 后才会解析目标 DOM、创建 `toc.element`、扫描标题并绑定滚动事件。Toc 不会自动挂载，用户可以手动插入 `toc.element`，也可以调用 `toc.mount(container)`。
 
 ## 导入
 
@@ -36,7 +36,7 @@ document.querySelector('.article-sidebar').appendChild(toc.element);
 </article>
 ```
 
-`build()` 会创建目录根节点和列表。默认类名保持 `.j-toc`、`.toc-list`、`.toc-link`，也可以通过 `className` 覆盖；组件内部交互使用 `data-toc-*`，不依赖 CSS 类选择器。
+`build()` 会创建目录根节点和列表。默认类名保持 `.j-toc`、`.toc-list`、`.toc-link`，也可以通过 `className` 覆盖；组件内部交互使用 `data-toc-*`，不依赖 CSS 类选择器。目录项使用标题 id 作为 key，刷新时保留未删除项的节点身份。
 
 ## 参数
 
@@ -58,36 +58,28 @@ document.querySelector('.article-sidebar').appendChild(toc.element);
 
 ## 实例属性
 
-| 属性      | 类型        | 说明               |
-| --------- | ----------- | ------------------ |
-| `props`   | `object`    | 归一化后的配置对象 |
-| `dom`     | `object`    | DOM 引用集合       |
-| `state`   | `DeepStore` | 响应式状态         |
-| `runtime` | `object`    | 运行时状态         |
+| 属性      | 类型                  | 说明                                   |
+| --------- | --------------------- | -------------------------------------- |
+| `props`   | `object`              | 归一化后的配置对象                     |
+| `state`   | `DeepStore`           | 响应式状态                             |
+| `runtime` | `object`              | `built/mounted/destroyed` 生命周期标记 |
+| `element` | `HTMLElement \| null` | build 后的稳定目录根节点               |
 
-### `dom`
-
-| 属性           | 类型              | 说明                 |
-| -------------- | ----------------- | -------------------- |
-| `dom.root`     | `Element \| null` | 目录根节点           |
-| `dom.target`   | `Element \| null` | 被扫描的内容区域     |
-| `dom.list`     | `Element \| null` | 目录列表根节点       |
-| `dom.headings` | `Element[]`       | 当前扫描到的标题元素 |
-| `dom.links`    | `Element[]`       | 当前渲染的目录链接   |
+Toc 的扫描目标、标题节点、滚动 RAF 状态和事件管理器保存在组件闭包内，不作为公开 DOM map 暴露。
 
 ### `state`
 
-| 属性                  | 类型                                                                   | 说明                                    |
-| --------------------- | ---------------------------------------------------------------------- | --------------------------------------- |
-| `state.items`         | `Array<{ id: string, text: string, level: number, element: Element }>` | 标题数据                                |
-| `state.current.index` | `number`                                                               | 当前 active 项索引，无 active 时为 `-1` |
-| `state.current.item`  | `object \| null`                                                       | 当前 active 项数据                      |
+| 属性                  | 类型                                                 | 说明                                    |
+| --------------------- | ---------------------------------------------------- | --------------------------------------- |
+| `state.items`         | `Array<{ id: string, text: string, level: number }>` | 标题数据                                |
+| `state.current.index` | `number`                                             | 当前 active 项索引，无 active 时为 `-1` |
+| `state.current.item`  | `object \| null`                                     | 当前 active 项数据                      |
 
 ## 实例方法
 
 ### `build()`
 
-解析 `target`，创建 `dom.root` / `dom.list`，渲染目录列表并绑定滚动事件。该方法不会自动挂载 `dom.root`。
+解析 `target`，创建 `element`，渲染目录列表并绑定滚动事件。该方法不会自动挂载根节点。
 
 ```js
 toc.build();
@@ -101,7 +93,7 @@ document.querySelector('.article-sidebar').appendChild(toc.element);
 
 ### `refresh()`
 
-重新扫描标题并重建目录列表。适合内容区域动态变化后调用。
+重新扫描标题并写入 `state.items`。列表由 keyed `For` 更新，适合内容区域动态变化后调用。
 
 ```js
 toc.refresh();
@@ -127,7 +119,7 @@ toc.activate(1);
 
 ### `destroy()`
 
-销毁实例，移除事件监听，并移除 `dom.root`。
+销毁实例，取消 pending RAF，移除事件监听，释放 owned view，并移除组件创建的根节点。
 
 ```js
 toc.destroy();
@@ -138,4 +130,4 @@ toc.destroy();
 | 参数   | 无     |
 | 返回值 | `void` |
 
-继承自 `Component` 的 `on()`、`off()`、`emit()`、`use()` 也可使用。
+公共控制器方法还包括 `mount()`、`unmount()`、`setState()`、`own()`、`use()`、`on()`、`off()` 和 `emit()`，语义见 [Functional Component Runtime](./component.md)。

@@ -2,9 +2,11 @@ import {
   For,
   createDeepStore,
   createEffect,
+  createMemo,
   createSignal,
   flushSync,
   jsx,
+  onCleanup,
 } from 'vanilla-signal';
 
 import {
@@ -12,14 +14,12 @@ import {
   defineComponent,
 } from '../core/component.ts';
 import { createLoading } from '../primitives/loading.ts';
-import {
-  type RenderableContent,
-  normalizeContentNodes,
-} from '../utilities/dom.ts';
+import { joinClasses } from '../utilities/class-name.ts';
+import { type RenderableContent } from '../utilities/dom.ts';
 import { createEventManager } from '../utilities/events.ts';
 import { randomId } from '../utilities/id.ts';
 import { createElementRef, createKeyedElementRefs } from '../utilities/refs.ts';
-import { createScheduledTask } from '../utilities/scheduler.ts';
+import { createScheduledTask } from '../core/scheduler.ts';
 import {
   type ResolveSchema,
   resolveProps,
@@ -37,7 +37,6 @@ export interface TabsClassNames {
   tab: string;
   panelWrap: string;
   panel: string;
-  disabled: string;
   dragging: string;
 }
 
@@ -50,12 +49,7 @@ export interface TabsPanelContext {
   name: string | number;
 }
 
-export interface TabTitleContext {
-  tabs: Tabs;
-  item: TabItem;
-}
-
-export type TabPanel =
+export type TabContent =
   | RenderableContent<TabsPanelContext>
   | ((context: TabsPanelContext) => RenderableContent<TabsPanelContext>)
   | ((
@@ -64,8 +58,8 @@ export type TabPanel =
 
 export interface TabItem extends Record<string, unknown> {
   name?: string;
-  title: RenderableContent<TabTitleContext>;
-  panel: TabPanel;
+  title: Exclude<RenderableContent, (...args: never[]) => unknown>;
+  content: TabContent;
   cache?: boolean;
   ttl?: number;
 }
@@ -101,8 +95,8 @@ interface TabsState extends Record<string, unknown> {
   data: TabItem[];
   active: TabsValue;
   disabled: TabsDisabled;
-  direction: TabsDirection;
   draggable: boolean;
+  dragging: boolean;
   loading: boolean;
 }
 
@@ -118,7 +112,6 @@ interface TabsPanelCacheEntry {
 
 interface TabsActions {
   activate(value: TabsValue): Promise<void>;
-  refresh(): Tabs;
 }
 
 type TabsBase = FunctionalComponent<
@@ -141,9 +134,8 @@ const DEFAULT_CLASS_NAMES: TabsClassNames = {
   wrap: 'tab-wrap',
   list: 'tab-list',
   tab: 'tab-item',
-  panelWrap: 'tab-panel',
+  panelWrap: 'panel-list',
   panel: 'panel-item',
-  disabled: 'is-disabled',
   dragging: 'dragging',
 };
 
@@ -180,7 +172,7 @@ const TAB_CONFIG_RULE = {
   shape: {
     name: ['string', 'null', 'undefined'],
     title: 'renderable',
-    panel: 'renderable',
+    content: 'renderable',
     cache: ['boolean', 'undefined'],
     ttl: ['number', 'undefined'],
   },
@@ -190,23 +182,32 @@ const TABS_STATE_SCHEMA = {
   data: TABS_PROPS_SCHEMA.data,
   active: TABS_PROPS_SCHEMA.active,
   disabled: TABS_PROPS_SCHEMA.disabled,
-  direction: TABS_PROPS_SCHEMA.direction,
 };
+
+function normalizeTabItem(
+  item: TabItem,
+  index: number,
+  namespace = 'Tabs.data'
+): TabItem {
+  validateParam(String(index), item, TAB_CONFIG_RULE, namespace);
+  const name = typeof item.name === 'string' ? item.name.trim() : '';
+  const resolvedName = name || randomId();
+  return { ...item, name: resolvedName };
+}
 
 function normalizeData(data: unknown, namespace = 'Tabs.data'): TabItem[] {
   validateParam('data', data, TABS_STATE_SCHEMA.data, namespace);
   const names = new Set<string>();
   return (data as TabItem[]).map((item, index) => {
-    validateParam(String(index), item, TAB_CONFIG_RULE, namespace);
-    const name = typeof item.name === 'string' ? item.name.trim() : '';
-    const resolvedName = name || randomId();
+    const next = normalizeTabItem(item, index, namespace);
+    const resolvedName = next.name as string;
     if (names.has(resolvedName)) {
       throw new Error(
         `${namespace}: item name "${resolvedName}" must be unique.`
       );
     }
     names.add(resolvedName);
-    return { ...item, name: resolvedName };
+    return next;
   });
 }
 
@@ -237,8 +238,8 @@ export function createTabs(input: TabsProps = {}): Tabs {
     data: props.data,
     active: props.active,
     disabled: props.disabled,
-    direction: props.direction,
     draggable: false,
+    dragging: false,
     loading: false,
   }) as TabsState;
   const events = createEventManager();
@@ -250,20 +251,26 @@ export function createTabs(input: TabsProps = {}): Tabs {
   const loaders = new Map<string, () => Promise<void>>();
   let instance!: Tabs;
   let loadId = 0;
-  let dragging = false;
+  let pointerDragging = false;
   let inertiaFrame = 0;
   let resizeFrame = 0;
   let velocity = 0;
 
-  const itemName = (item: TabItem): string => item.name as string;
   const getIndex = (value: TabsValue): number =>
     typeof value === 'number'
       ? value
-      : state.data.findIndex((item) => itemName(item) === value);
+      : state.data.findIndex((item) => item.name === value);
   const current = (): TabsCurrent => {
     const index = getIndex(state.active);
     const item = state.data[index];
-    return item ? { index, name: itemName(item) } : { index: -1, name: null };
+    return item
+      ? { index, name: item.name as string }
+      : { index: -1, name: null };
+  };
+  const activeName = (): string | null => {
+    if (typeof state.active === 'string') return state.active;
+    const item = state.data[state.active];
+    return item ? (item.name as string) : null;
   };
   const disabledNames = (): string[] => {
     const values = Array.isArray(state.disabled)
@@ -280,13 +287,14 @@ export function createTabs(input: TabsProps = {}): Tabs {
     );
   };
   const isDisabled = (name: string): boolean => disabledNames().includes(name);
-  const isActive = (name: string): boolean => current().name === name;
+  const isActive = (name: string): boolean => activeName() === name;
+  const renderableData = createMemo(() => state.data);
 
   const refreshDrag = (): void => {
     const wrap = wrapRef.current;
     const list = listRef.current;
     if (!wrap || !list) return;
-    const vertical = state.direction === 'left' || state.direction === 'right';
+    const vertical = props.direction === 'left' || props.direction === 'right';
     const next = vertical
       ? list.scrollHeight > wrap.clientHeight + 5
       : list.scrollWidth > wrap.clientWidth + 5;
@@ -303,7 +311,7 @@ export function createTabs(input: TabsProps = {}): Tabs {
     if (!wrap) return;
     let speed = velocity;
     let last = performance.now();
-    const vertical = state.direction === 'left' || state.direction === 'right';
+    const vertical = props.direction === 'left' || props.direction === 'right';
     const step = (now: number): void => {
       const elapsed = now - last;
       last = now;
@@ -327,7 +335,7 @@ export function createTabs(input: TabsProps = {}): Tabs {
     let distance = 0;
     const position = (event: PointerDragEvent): number => {
       const vertical =
-        state.direction === 'left' || state.direction === 'right';
+        props.direction === 'left' || props.direction === 'right';
       if ('touches' in event) {
         const touch = event.touches[0] || event.changedTouches[0];
         return vertical ? touch.pageY : touch.pageX;
@@ -338,18 +346,20 @@ export function createTabs(input: TabsProps = {}): Tabs {
       if (!state.draggable) return;
       if (!(event instanceof MouseEvent) && !(event instanceof TouchEvent))
         return;
-      dragging = true;
-      list.classList.add(props.className.dragging);
+      pointerDragging = true;
+      flushSync(() => {
+        state.dragging = true;
+      });
       start = position(event);
       last = start;
       const vertical =
-        state.direction === 'left' || state.direction === 'right';
+        props.direction === 'left' || props.direction === 'right';
       scrollStart = vertical ? wrap.scrollTop : wrap.scrollLeft;
       velocity = 0;
       cancelAnimationFrame(inertiaFrame);
     };
     const moveDrag = (event: Event): void => {
-      if (!dragging) return;
+      if (!pointerDragging) return;
       if (!(event instanceof MouseEvent) && !(event instanceof TouchEvent))
         return;
       event.preventDefault();
@@ -362,15 +372,17 @@ export function createTabs(input: TabsProps = {}): Tabs {
       requestAnimationFrame(() => {
         pendingFrame = false;
         const vertical =
-          state.direction === 'left' || state.direction === 'right';
+          props.direction === 'left' || props.direction === 'right';
         if (vertical) wrap.scrollTop = scrollStart + distance;
         else wrap.scrollLeft = scrollStart + distance;
       });
     };
     const endDrag = (): void => {
-      if (!dragging) return;
-      dragging = false;
-      list.classList.remove(props.className.dragging);
+      if (!pointerDragging) return;
+      pointerDragging = false;
+      flushSync(() => {
+        state.dragging = false;
+      });
       startInertia();
     };
     events.on('drag:mousedown', list, 'mousedown', startDrag);
@@ -393,7 +405,7 @@ export function createTabs(input: TabsProps = {}): Tabs {
     const index = getIndex(value);
     const item = state.data[index];
     if (!item) return;
-    const name = itemName(item);
+    const name = item.name as string;
     if (isDisabled(name) || isActive(name)) return;
     flushSync(() => {
       state.active = value;
@@ -404,35 +416,33 @@ export function createTabs(input: TabsProps = {}): Tabs {
     );
   };
 
-  const panelView = (
-    itemAccessor: () => TabItem,
-    indexAccessor: () => number,
-    name: string
-  ): HTMLElement => {
-    const initial = itemAccessor().panel;
+  const panelView = (item: () => TabItem, index: () => number): HTMLElement => {
+    const name = item().name as string;
+    const initial = item().content;
     const [content, setContent] = createSignal<
       RenderableContent<TabsPanelContext>
     >(typeof initial === 'function' ? null : initial);
     const [loading, setLoading] = createSignal(false);
-    let source: TabPanel = initial;
+    let source: TabContent = initial;
     let localLoadId = 0;
     let pending: Promise<void> | null = null;
 
     const context = (): TabsPanelContext => ({
       tabs: instance,
-      item: itemAccessor(),
-      index: indexAccessor(),
+      item: item(),
+      index: index(),
       name,
     });
     const load = async (): Promise<void> => {
-      const item = itemAccessor();
-      if (typeof item.panel !== 'function') {
-        setContent(item.panel);
+      const current = item();
+      const source = current.content;
+      if (typeof source !== 'function') {
+        setContent(source);
         return;
       }
-      const cached = item.cache ? cache.get(name) : null;
-      const ttl = normalizeTtl(item.ttl);
-      if (cached && (!ttl || Date.now() - cached.updatedAt <= ttl)) {
+      const cached = current.cache ? cache.get(name) : null;
+      const ttlValue = normalizeTtl(current.ttl);
+      if (cached && (!ttlValue || Date.now() - cached.updatedAt <= ttlValue)) {
         setContent(cached.content);
         return;
       }
@@ -446,11 +456,11 @@ export function createTabs(input: TabsProps = {}): Tabs {
       });
       const task = Promise.resolve()
         .then(() =>
-          (item.panel as (context: TabsPanelContext) => unknown)(context())
+          (source as (context: TabsPanelContext) => unknown)(context())
         )
         .then((result) => {
           if (request !== localLoadId || instance.runtime.destroyed) return;
-          if (item.cache) {
+          if (item().cache) {
             cache.set(name, {
               content: result as RenderableContent<TabsPanelContext>,
               updatedAt: Date.now(),
@@ -471,18 +481,29 @@ export function createTabs(input: TabsProps = {}): Tabs {
       return task;
     };
     loaders.set(name, load);
+    onCleanup(() => {
+      cache.delete(name);
+      loaders.delete(name);
+    });
 
     createEffect(() => {
-      const panel = itemAccessor().panel;
-      if (panel !== source) {
-        source = panel;
+      const nextContent = item().content;
+      if (nextContent !== source) {
+        source = nextContent;
         localLoadId += 1;
         pending = null;
         cache.delete(name);
-        setContent(typeof panel === 'function' ? null : panel);
+        setContent(typeof nextContent === 'function' ? null : nextContent);
       }
       if (isActive(name)) void load();
     });
+
+    const panelContent = (): RenderableContent<TabsPanelContext> => {
+      if (loading()) return createLoading('flex-start', 'flex-start');
+      const value = content();
+      if (typeof value === 'function') return value(context());
+      return value;
+    };
 
     return jsx('div', {
       className: props.className.panel,
@@ -490,50 +511,38 @@ export function createTabs(input: TabsProps = {}): Tabs {
       role: 'tabpanel',
       'aria-hidden': () => (isActive(name) ? 'false' : 'true'),
       'aria-live': () =>
-        typeof itemAccessor().panel === 'function' ? 'polite' : null,
+        typeof item().content === 'function' ? 'polite' : null,
       'aria-busy': () => String(loading()),
       hidden: () => !isActive(name),
       ref: panels.bind(name),
-      children: () =>
-        loading()
-          ? createLoading()
-          : normalizeContentNodes(content(), context()),
+      children: panelContent,
     }) as HTMLElement;
   };
 
-  const tabView = (
-    itemAccessor: () => TabItem,
-    _indexAccessor: () => number
-  ): HTMLElement => {
-    const name = itemName(itemAccessor());
+  const tabView = (item: () => TabItem, _index: () => number): HTMLElement => {
+    const name = item().name as string;
     return jsx('div', {
-      className: () =>
-        [props.className.tab, isDisabled(name) ? props.className.disabled : '']
-          .filter(Boolean)
-          .join(' '),
+      className: props.className.tab,
       'data-tabs-tab': name,
       role: 'tab',
       'aria-selected': () => (isActive(name) ? 'true' : 'false'),
       'aria-disabled': () => (isDisabled(name) ? 'true' : 'false'),
       ref: tabs.bind(name),
-      children: () =>
-        normalizeContentNodes(itemAccessor().title, {
-          tabs: instance,
-          item: itemAccessor(),
-        }),
+      children: item().title,
     }) as HTMLElement;
   };
 
-  instance = defineComponent({
+  instance = defineComponent<
+    ResolvedTabsProps,
+    TabsState,
+    HTMLElement,
+    TabsActions
+  >({
     name: 'Tabs',
     props,
     state,
     actions: {
       activate,
-      refresh() {
-        refreshTask.flush();
-        return instance;
-      },
     },
     normalizeStatePatch(patch) {
       return {
@@ -565,27 +574,33 @@ export function createTabs(input: TabsProps = {}): Tabs {
     },
     view: () => {
       createEffect(() => {
-        const layoutKey = `${state.direction}:${state.data.length}`;
-        if (layoutKey) refreshTask.schedule();
+        const dataLength = state.data.length;
+        refreshTask.schedule();
+        return dataLength;
       });
       return jsx('div', {
         className: props.className.root,
         id: props.id,
         'data-tabs': 'root',
-        'data-tabs-direction': () => state.direction,
+        'data-tabs-direction': props.direction,
         children: [
           jsx('div', {
             className: props.className.wrap,
             'data-tabs-wrap': '',
             ref: wrapRef.set,
             children: jsx('nav', {
-              className: props.className.list,
+              className: () =>
+                joinClasses(
+                  props.className.list,
+                  state.dragging && props.className.dragging
+                ),
               'data-tabs-list': '',
               ref: listRef.set,
               children: For({
-                each: () => state.data,
-                key: (item: TabItem) => itemName(item),
-                children: tabView,
+                each: renderableData,
+                key: (item: TabItem) => item.name,
+                children: (item: () => TabItem, index: () => number) =>
+                  tabView(item, index),
               }),
             }),
           }),
@@ -593,17 +608,10 @@ export function createTabs(input: TabsProps = {}): Tabs {
             className: props.className.panelWrap,
             'data-tabs-panel-wrap': '',
             children: For({
-              each: () => state.data,
-              key: (item: TabItem) => itemName(item),
-              children: (
-                itemAccessor: () => TabItem,
-                indexAccessor: () => number
-              ) =>
-                panelView(
-                  itemAccessor,
-                  indexAccessor,
-                  itemName(itemAccessor())
-                ),
+              each: renderableData,
+              key: (item: TabItem) => item.name,
+              children: (item: () => TabItem, index: () => number) =>
+                panelView(item, index),
             }),
           }),
         ],
