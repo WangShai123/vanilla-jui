@@ -3,7 +3,6 @@
  */
 
 @layer color {
-
   /**
      * Advanced color mode: display-p3
      *
@@ -15,7 +14,6 @@
      */
   @supports (color: color(display-p3 1 1 1)) {
     @media (color-gamut: p3) {
-
       :root,
       .light {
         /* gray */
@@ -503,7 +501,6 @@
 
   @supports (color: color(display-p3 1 1 1)) {
     @media (color-gamut: p3) {
-
       .dark {
         /* gray */
         --gray-1: oklch(17.8% 0.0034 264.5);

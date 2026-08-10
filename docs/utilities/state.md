@@ -11,11 +11,11 @@ import {
 
 ## Store helpers
 
-| 方法 | 说明 |
-| --- | --- |
-| `getStoreVersion(value)` | 读取对象的数字 `__version__`；其他值返回 `0` |
-| `trackStoreVersion(value)` | 响应式读取 `__version__` 并原样返回输入 |
-| `stateSnapshot(value)` | 使用 `vanilla-signal` 的 `unwrap()` 获取非代理快照 |
+| 方法                       | 说明                                               |
+| -------------------------- | -------------------------------------------------- |
+| `getStoreVersion(value)`   | 读取对象的数字 `__version__`；其他值返回 `0`       |
+| `trackStoreVersion(value)` | 响应式读取 `__version__` 并原样返回输入            |
+| `stateSnapshot(value)`     | 使用 `vanilla-signal` 的 `unwrap()` 获取非代理快照 |
 
 `trackStoreVersion()` 用于依赖整个 deep store 的变异版本，而不是手工遍历每个字段。
 
@@ -24,11 +24,11 @@ import {
 把响应式读取桥接到昂贵的命令式副作用，并返回销毁函数。声明式属性、文本和列表
 应直接依赖 state，不应通过它二次管理 DOM。
 
-| 选项 | 默认值 | 说明 |
-| --- | --- | --- |
-| `deferInitial` | `true` | 是否让 `createWatch` 延迟初次回调 |
-| `flushInitial` | `false` | 初次回调出现时是否同步执行 `sync` |
-| `flush` | `'microtask'` | 后续更新使用微任务合并或同步执行 |
+| 选项           | 默认值        | 说明                              |
+| -------------- | ------------- | --------------------------------- |
+| `deferInitial` | `true`        | 是否让 `createWatch` 延迟初次回调 |
+| `flushInitial` | `false`       | 初次回调出现时是否同步执行 `sync` |
+| `flush`        | `'microtask'` | 后续更新使用微任务合并或同步执行  |
 
 ```ts
 const disposeSync = createStateSync(

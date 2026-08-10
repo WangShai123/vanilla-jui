@@ -14,9 +14,11 @@ function controlledAnimation(finished?: Promise<void>): {
   cancel: ReturnType<typeof vi.fn>;
 } {
   let resolve!: () => void;
-  const promise = finished || new Promise<void>((done) => {
-    resolve = done;
-  });
+  const promise =
+    finished ||
+    new Promise<void>((done) => {
+      resolve = done;
+    });
   if (finished) resolve = () => {};
   const cancel = vi.fn();
   return {

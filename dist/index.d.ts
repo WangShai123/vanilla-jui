@@ -1068,6 +1068,7 @@ interface FormValidatorConfig {
   onSubmit?: (() => void) | null;
   [key: string]: unknown;
 }
+type ButtonsPosition = 'start' | 'center' | 'end';
 interface FormProps extends Record<string, unknown> {
   id?: string | null;
   vertical?: boolean;
@@ -1075,6 +1076,7 @@ interface FormProps extends Record<string, unknown> {
   style?: FormStyle;
   fields?: readonly FormItem<FormField>[];
   buttons?: boolean | readonly FormButton[];
+  buttonsPosition?: ButtonsPosition;
   className?: FormClassNameConfig;
   validator?: FormValidatorConfig;
   onSubmit?: ((data: FormDataRecord, form: Form) => void | Promise<void>) | null;
@@ -1087,12 +1089,23 @@ interface ResolvedFormProps extends Record<string, unknown> {
   style: FormStyle;
   fields: FormItem<FormField>[];
   buttons: FormButton[];
+  buttonsPosition: ButtonsPosition;
   className: FormClassNames;
   validator: FormValidatorConfig;
   onSubmit: ((data: FormDataRecord, form: Form) => void | Promise<void>) | null;
   onReset: ((event: Event, form: Form) => void) | null;
 }
-interface FormState extends ResolvedFormProps {
+interface FormState extends Record<string, unknown> {
+  id: string;
+  vertical: boolean;
+  itemVertical: boolean;
+  style: FormStyle;
+  fields: FormItem<FormField>[];
+  buttons: FormButton[];
+  className: FormClassNames;
+  validator: FormValidatorConfig;
+  onSubmit: ((data: FormDataRecord, form: Form) => void | Promise<void>) | null;
+  onReset: ((event: Event, form: Form) => void) | null;
   submitting: boolean;
   data: FormDataRecord | null;
 }
@@ -1356,6 +1369,7 @@ interface ModalText {
   confirm: string;
   cancel: string;
 }
+type ModalStyle = string | Partial<CSSStyleDeclaration> | null;
 interface ModalProps extends Record<string, unknown> {
   content?: ModalContent;
   cache?: boolean;
@@ -1373,6 +1387,7 @@ interface ModalProps extends Record<string, unknown> {
   onCancel?: ((modal: Modal) => void | Promise<void>) | null;
   header?: boolean;
   footer?: boolean;
+  style?: ModalStyle;
   id?: string | null;
   escClose?: boolean;
   bgClose?: boolean;
@@ -1386,6 +1401,7 @@ interface ResolvedModalProps extends Record<string, unknown> {
   showCancel: boolean;
   showClose: boolean;
   fullscreen: boolean;
+  style: ModalStyle;
   text: ModalText;
   onShow: NonNullable<ModalProps['onShow']> | null;
   onShown: NonNullable<ModalProps['onShown']> | null;
@@ -1736,4 +1752,4 @@ interface MenuState extends Record<string, unknown> {
 type Menu = FunctionalComponent<ResolvedMenuProps, MenuState, HTMLElement>;
 declare function createMenu(input?: MenuProps): Menu;
 //#endregion
-export { CleanupFunction, CollapseMotionController, CollapseTransitionDefinition, ComponentCleanup, ComponentContext, ComponentController, ComponentDefinition, ComponentLifecycleEvent, ComponentListener, ComponentPlugin, ComponentPluginOptions, ComponentProps, ComponentRuntime, ComponentState, ContainerExpect, DOMReference, type DebounceSettings, type DebouncedFunc, DropInstance, ElementRef, FieldOption, Flow, FlowAction, FlowBusyHook, FlowBusyStrategy, FlowChangeHook, FlowClassNameConfig, FlowClassNames, FlowCleanup, FlowContext, FlowData, FlowDirection, FlowErrorHook, FlowFinishHook, FlowGoToOptions, FlowGuardHook, FlowLifecycleHook, FlowMoveHook, FlowPayload, FlowProps, FlowRenderContext, FlowSlot, FlowSlotName, FlowSnapshot, FlowState, FlowStep, FlowStepResult, FlowSubscriber, FlowTarget, FlowText, Form, FormButton, FormClassNameConfig, FormClassNames, FormDataRecord, FormDataValue, FormField, FormItem, FormItemNext, FormItemType, FormOption, FormProps, FormValidatorConfig, FunctionalComponent, IEventManager, IconAttributeValue, IconName, IconPathMap, IconProps, KeyedElementRefs, LazyRenderCallback, LazyRenderOptions, LazyRenderTarget, Menu, MenuClassNameConfig, MenuClassNames, MenuItem, MenuItemId, MenuProps, MenuType, Modal, ModalClassNameConfig, ModalClassNames, ModalProps, ModalText, MotionController, NormalizeContext, Offcanvas, OffcanvasAnimate, OffcanvasClassNameConfig, OffcanvasClassNames, OffcanvasContent, OffcanvasDirection, OffcanvasProps, OwnedView, OwnedViewOptions, Pagination, PaginationClassNameConfig, PaginationClassNames, PaginationCount, PaginationPage, PaginationProps, ParabolaInstance, ParamRule, ParamRuleInput, PopupProps, PresenceController, PresenceOptions, PresencePhase, PublicFlowStep, QueryContext, RenderableContent, RequireContainerResult, ResolveContainerResult, ResolveSchema, ResolvedProps, StateSyncOptions, SupportES2022, Swiper, SwiperClassNameConfig, SwiperClassNames, SwiperDataItem, SwiperDataLoader, SwiperDataSource, SwiperProps, SwiperSlideContext, TabContent, TabItem, Tabs, TabsClassNameConfig, TabsClassNames, TabsDirection, TabsDisabled, TabsPanelContext, TabsProps, TabsValue, ThemeClassNameConfig, ThemeClassNames, ThemeConfigKey, ThemeInstance, ThemeOptions, ThemePanelGroup, ThemeResolvedOptions, type ThrottleSettings, Toast, ToastActionProps, ToastClassNameConfig, ToastClassNames, ToastOptions, ToastType, TocCurrent, TocItem, TooltipInstance, TransitionDefinition, TransitionTarget, ValidateCondition, ValidatorInstance, addIcons, all, checkModernBrowser, copy, createAccordion, createCollapseTransition, createDrop, createElementRef, createEventManager, createFlow, createForm, createKeyedElementRefs, createLoading, createMenu, createModal, createMotionGroup, createOffcanvas, createOwnedView, createPagination, createParabola, createPopup, createPresence, createScheduledTask, createStateSync, createSticky, createSwiper, createTabs, createTheme, createToc, createTooltip, createTransition, createValidator, debounce, defineComponent, flexPosition, getRegistedIconPath, getStoreVersion, getType, icon, iconHtml, iconMarkup, isDomElementValue, isDomNodeValue, isElement, isHtmlElementValue, isMobile, isModernBrowser, isNilValue, isNode, isPlainObject, isRenderableContent, isRenderablePrimitive, isRenderableValue, lazyRender, listen, postJson, q, randomId, removeComponentPlugin, requireContainer, resolveContainer, resolveElement, resolveNode, resolveNodeList, resolveProps, restUrl, stateSnapshot, throttle, timer, trackStoreVersion, useComponentPlugin, uuid, validateParam, waitForMotion };
+export { ButtonsPosition, CleanupFunction, CollapseMotionController, CollapseTransitionDefinition, ComponentCleanup, ComponentContext, ComponentController, ComponentDefinition, ComponentLifecycleEvent, ComponentListener, ComponentPlugin, ComponentPluginOptions, ComponentProps, ComponentRuntime, ComponentState, ContainerExpect, DOMReference, type DebounceSettings, type DebouncedFunc, DropInstance, ElementRef, FieldOption, Flow, FlowAction, FlowBusyHook, FlowBusyStrategy, FlowChangeHook, FlowClassNameConfig, FlowClassNames, FlowCleanup, FlowContext, FlowData, FlowDirection, FlowErrorHook, FlowFinishHook, FlowGoToOptions, FlowGuardHook, FlowLifecycleHook, FlowMoveHook, FlowPayload, FlowProps, FlowRenderContext, FlowSlot, FlowSlotName, FlowSnapshot, FlowState, FlowStep, FlowStepResult, FlowSubscriber, FlowTarget, FlowText, Form, FormButton, FormClassNameConfig, FormClassNames, FormDataRecord, FormDataValue, FormField, FormItem, FormItemNext, FormItemType, FormOption, FormProps, FormValidatorConfig, FunctionalComponent, IEventManager, IconAttributeValue, IconName, IconPathMap, IconProps, KeyedElementRefs, LazyRenderCallback, LazyRenderOptions, LazyRenderTarget, Menu, MenuClassNameConfig, MenuClassNames, MenuItem, MenuItemId, MenuProps, MenuType, Modal, ModalClassNameConfig, ModalClassNames, ModalProps, ModalText, MotionController, NormalizeContext, Offcanvas, OffcanvasAnimate, OffcanvasClassNameConfig, OffcanvasClassNames, OffcanvasContent, OffcanvasDirection, OffcanvasProps, OwnedView, OwnedViewOptions, Pagination, PaginationClassNameConfig, PaginationClassNames, PaginationCount, PaginationPage, PaginationProps, ParabolaInstance, ParamRule, ParamRuleInput, PopupProps, PresenceController, PresenceOptions, PresencePhase, PublicFlowStep, QueryContext, RenderableContent, RequireContainerResult, ResolveContainerResult, ResolveSchema, ResolvedProps, StateSyncOptions, SupportES2022, Swiper, SwiperClassNameConfig, SwiperClassNames, SwiperDataItem, SwiperDataLoader, SwiperDataSource, SwiperProps, SwiperSlideContext, TabContent, TabItem, Tabs, TabsClassNameConfig, TabsClassNames, TabsDirection, TabsDisabled, TabsPanelContext, TabsProps, TabsValue, ThemeClassNameConfig, ThemeClassNames, ThemeConfigKey, ThemeInstance, ThemeOptions, ThemePanelGroup, ThemeResolvedOptions, type ThrottleSettings, Toast, ToastActionProps, ToastClassNameConfig, ToastClassNames, ToastOptions, ToastType, TocCurrent, TocItem, TooltipInstance, TransitionDefinition, TransitionTarget, ValidateCondition, ValidatorInstance, addIcons, all, checkModernBrowser, copy, createAccordion, createCollapseTransition, createDrop, createElementRef, createEventManager, createFlow, createForm, createKeyedElementRefs, createLoading, createMenu, createModal, createMotionGroup, createOffcanvas, createOwnedView, createPagination, createParabola, createPopup, createPresence, createScheduledTask, createStateSync, createSticky, createSwiper, createTabs, createTheme, createToc, createTooltip, createTransition, createValidator, debounce, defineComponent, flexPosition, getRegistedIconPath, getStoreVersion, getType, icon, iconHtml, iconMarkup, isDomElementValue, isDomNodeValue, isElement, isHtmlElementValue, isMobile, isModernBrowser, isNilValue, isNode, isPlainObject, isRenderableContent, isRenderablePrimitive, isRenderableValue, lazyRender, listen, postJson, q, randomId, removeComponentPlugin, requireContainer, resolveContainer, resolveElement, resolveNode, resolveNodeList, resolveProps, restUrl, stateSnapshot, throttle, timer, trackStoreVersion, useComponentPlugin, uuid, validateParam, waitForMotion };

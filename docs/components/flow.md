@@ -122,19 +122,19 @@ slot context 包含 `flow`、`snapshot`、`state`、`steps`、`currentStep`、`c
 
 ## Step 配置
 
-| 参数       | 类型                                           | 说明                                             |
-| ---------- | ---------------------------------------------- | ------------------------------------------------ |
-| `id`       | `string`                                       | 步骤 id，必须唯一                                |
-| `title`    | `string`                                       | 步骤标题，默认 UI 显示在 `.flow-step-title`      |
-| `content`  | `string \| number \| Node \| Array \| Function \| null` | 默认 body 内容                          |
-| `data`     | `object`                                       | 步骤初始缓存数据                                 |
-| `modal`    | `object \| Function \| null`                   | 给 Modal 适配层消费的步骤视图配置                |
-| `onEnter`  | `Function`                                     | 进入步骤后触发                                   |
-| `onLeave`  | `Function`                                     | 离开步骤前触发                                   |
-| `onNext`   | `Function`                                     | 当前步骤 next 时触发，可返回目标步骤 id 或数据   |
-| `onBack`   | `Function`                                     | 当前步骤 back 时触发，可返回目标步骤 id 或数据   |
-| `canEnter` | `Function`                                     | 返回 `false` 时阻止进入                          |
-| `canLeave` | `Function`                                     | 返回 `false` 时阻止离开                          |
+| 参数       | 类型                                                    | 说明                                           |
+| ---------- | ------------------------------------------------------- | ---------------------------------------------- |
+| `id`       | `string`                                                | 步骤 id，必须唯一                              |
+| `title`    | `string`                                                | 步骤标题，默认 UI 显示在 `.flow-step-title`    |
+| `content`  | `string \| number \| Node \| Array \| Function \| null` | 默认 body 内容                                 |
+| `data`     | `object`                                                | 步骤初始缓存数据                               |
+| `modal`    | `object \| Function \| null`                            | 给 Modal 适配层消费的步骤视图配置              |
+| `onEnter`  | `Function`                                              | 进入步骤后触发                                 |
+| `onLeave`  | `Function`                                              | 离开步骤前触发                                 |
+| `onNext`   | `Function`                                              | 当前步骤 next 时触发，可返回目标步骤 id 或数据 |
+| `onBack`   | `Function`                                              | 当前步骤 back 时触发，可返回目标步骤 id 或数据 |
+| `canEnter` | `Function`                                              | 返回 `false` 时阻止进入                        |
+| `canLeave` | `Function`                                              | 返回 `false` 时阻止离开                        |
 
 `content` 函数接收 Flow context。用于 Modal 时，推荐把 Modal 专属内容写在 `modal` 中，避免把 Flow context 内容函数交给 Modal 渲染。
 
@@ -142,12 +142,12 @@ slot context 包含 `flow`、`snapshot`、`state`、`steps`、`currentStep`、`c
 
 `onNext` 和 `onBack` 可以返回：
 
-| 返回值              | 行为                               |
-| ------------------- | ---------------------------------- |
-| `undefined`         | 使用默认目标步骤                   |
-| `'step-id'`         | 跳转到指定步骤                     |
-| `{ id, data }`      | 跳转到指定步骤，并用 `data` 写缓存 |
-| `object` 或 `null`  | 使用默认目标步骤，并作为 payload   |
+| 返回值             | 行为                               |
+| ------------------ | ---------------------------------- |
+| `undefined`        | 使用默认目标步骤                   |
+| `'step-id'`        | 跳转到指定步骤                     |
+| `{ id, data }`     | 跳转到指定步骤，并用 `data` 写缓存 |
+| `object` 或 `null` | 使用默认目标步骤，并作为 payload   |
 
 示例：
 
@@ -186,10 +186,10 @@ Flow 在 `next/back/goTo/finish` 运行期间会设置：
 
 重复动作由 `busyStrategy` 控制：
 
-| 值       | 行为                             |
-| -------- | -------------------------------- |
-| `ignore` | 默认值，直接返回当前快照         |
-| `throw`  | 抛出 `code` 为 `FLOW_BUSY` 的错  |
+| 值       | 行为                            |
+| -------- | ------------------------------- |
+| `ignore` | 默认值，直接返回当前快照        |
+| `throw`  | 抛出 `code` 为 `FLOW_BUSY` 的错 |
 
 transition 失败时默认 `rollbackOnError: true`，会恢复到动作开始前的步骤和数据，并把错误写入 `state.error`。如果业务希望失败后停留在已经切换到的状态，可设置 `rollbackOnError: false`。
 
@@ -265,105 +265,105 @@ modal.show();
 
 ## Options
 
-| 参数              | 类型                        | 默认值     | 说明                                    |
-| ----------------- | --------------------------- | ---------- | --------------------------------------- |
-| `id`              | `string \| null`            | 自动生成   | 默认 UI 根节点 id                       |
-| `steps`           | `FlowStep[]`                | `[]`       | 步骤列表，不能为空                      |
-| `initial`         | `string \| number \| null`  | `null`     | 初始步骤 id 或索引                      |
-| `cache`           | `boolean`                   | `true`     | 是否把步骤 payload 合并到全局 `data`    |
-| `linear`          | `boolean`                   | `true`     | 默认步骤条是否禁止跳到未来步骤          |
-| `render`          | `boolean`                   | `true`     | 是否启用默认 UI                         |
-| `rollbackOnError` | `boolean`                   | `true`     | transition 失败时是否回滚状态           |
-| `busyStrategy`    | `'ignore' \| 'throw'`       | `'ignore'` | loading 中重复动作的处理策略            |
-| `showBack`        | `boolean`                   | `true`     | 默认 footer 是否显示 back 按钮          |
-| `showNext`        | `boolean`                   | `true`     | 默认 footer 是否显示 next/finish 按钮   |
-| `showReset`       | `boolean`                   | `false`    | 默认 footer 是否显示 reset 按钮         |
-| `text`            | `object`                    | `{}`       | `back/next/finish/reset` 文案配置       |
-| `className`       | `object \| string`          | 默认类名   | 默认 UI 类名；字符串会追加到 root       |
-| `renderHeader`    | `Function \| false \| null` | `null`     | 自定义 header 内容                      |
-| `renderBody`      | `Function \| false \| null` | `null`     | 自定义 body 内容                        |
-| `renderFooter`    | `Function \| false \| null` | `null`     | 自定义 footer 内容                      |
-| `onChange`        | `Function \| null`          | `null`     | 状态变化后触发                          |
-| `onNext`          | `Function \| null`          | `null`     | 全局 next hook                          |
-| `onBack`          | `Function \| null`          | `null`     | 全局 back hook                          |
-| `onFinish`        | `Function \| null`          | `null`     | 完成时触发                              |
-| `onError`         | `Function \| null`          | `null`     | hook 或 guard 错误时触发                |
-| `onBusy`          | `Function \| null`          | `null`     | 重复动作被拦截时触发                    |
+| 参数              | 类型                        | 默认值     | 说明                                  |
+| ----------------- | --------------------------- | ---------- | ------------------------------------- |
+| `id`              | `string \| null`            | 自动生成   | 默认 UI 根节点 id                     |
+| `steps`           | `FlowStep[]`                | `[]`       | 步骤列表，不能为空                    |
+| `initial`         | `string \| number \| null`  | `null`     | 初始步骤 id 或索引                    |
+| `cache`           | `boolean`                   | `true`     | 是否把步骤 payload 合并到全局 `data`  |
+| `linear`          | `boolean`                   | `true`     | 默认步骤条是否禁止跳到未来步骤        |
+| `render`          | `boolean`                   | `true`     | 是否启用默认 UI                       |
+| `rollbackOnError` | `boolean`                   | `true`     | transition 失败时是否回滚状态         |
+| `busyStrategy`    | `'ignore' \| 'throw'`       | `'ignore'` | loading 中重复动作的处理策略          |
+| `showBack`        | `boolean`                   | `true`     | 默认 footer 是否显示 back 按钮        |
+| `showNext`        | `boolean`                   | `true`     | 默认 footer 是否显示 next/finish 按钮 |
+| `showReset`       | `boolean`                   | `false`    | 默认 footer 是否显示 reset 按钮       |
+| `text`            | `object`                    | `{}`       | `back/next/finish/reset` 文案配置     |
+| `className`       | `object \| string`          | 默认类名   | 默认 UI 类名；字符串会追加到 root     |
+| `renderHeader`    | `Function \| false \| null` | `null`     | 自定义 header 内容                    |
+| `renderBody`      | `Function \| false \| null` | `null`     | 自定义 body 内容                      |
+| `renderFooter`    | `Function \| false \| null` | `null`     | 自定义 footer 内容                    |
+| `onChange`        | `Function \| null`          | `null`     | 状态变化后触发                        |
+| `onNext`          | `Function \| null`          | `null`     | 全局 next hook                        |
+| `onBack`          | `Function \| null`          | `null`     | 全局 back hook                        |
+| `onFinish`        | `Function \| null`          | `null`     | 完成时触发                            |
+| `onError`         | `Function \| null`          | `null`     | hook 或 guard 错误时触发              |
+| `onBusy`          | `Function \| null`          | `null`     | 重复动作被拦截时触发                  |
 
 ## className
 
-| 字段        | 默认值                 |
-| ----------- | ---------------------- |
-| `root`      | `j-flow`               |
-| `header`    | `flow-header`          |
-| `steps`     | `flow-steps`           |
-| `step`      | `flow-step`            |
-| `active`    | `is-active`            |
-| `complete`  | `is-complete`          |
-| `stepButton`| `flow-step-button`     |
-| `stepIndex` | `flow-step-index`      |
-| `stepTitle` | `flow-step-title`      |
-| `body`      | `flow-body`            |
-| `footer`    | `flow-footer`          |
-| `button`    | `j-button`             |
-| `reset`     | `is-ghost flow-reset`  |
-| `back`      | `is-ghost flow-back`   |
-| `next`      | `is-primary flow-next` |
+| 字段         | 默认值                 |
+| ------------ | ---------------------- |
+| `root`       | `j-flow`               |
+| `header`     | `flow-header`          |
+| `steps`      | `flow-steps`           |
+| `step`       | `flow-step`            |
+| `active`     | `is-active`            |
+| `complete`   | `is-complete`          |
+| `stepButton` | `flow-step-button`     |
+| `stepIndex`  | `flow-step-index`      |
+| `stepTitle`  | `flow-step-title`      |
+| `body`       | `flow-body`            |
+| `footer`     | `flow-footer`          |
+| `button`     | `j-button`             |
+| `reset`      | `is-ghost flow-reset`  |
+| `back`       | `is-ghost flow-back`   |
+| `next`       | `is-primary flow-next` |
 
 传对象时会和默认类名合并，指定字段会替换默认值；传字符串时只追加到 `root`。
 
 ## 实例属性
 
-| 属性          | 说明                                      |
-| ------------- | ----------------------------------------- |
-| `props`       | 归一化后的初始化配置                      |
-| `steps`       | 克隆后的步骤列表                          |
-| `state`       | 响应式状态对象                            |
+| 属性          | 说明                                             |
+| ------------- | ------------------------------------------------ |
+| `props`       | 归一化后的初始化配置                             |
+| `steps`       | 克隆后的步骤列表                                 |
+| `state`       | 响应式状态对象                                   |
 | `dom`         | 默认 UI DOM 引用，包含 `root/header/body/footer` |
-| `runtime`     | 运行时标记，包含 `built/destroyed` 等     |
-| `currentStep` | 当前步骤配置                              |
-| `currentData` | 当前步骤缓存数据                          |
-| `canBack`     | 当前是否可以返回                          |
-| `canNext`     | 当前是否可以前进                          |
-| `isLast`      | 当前是否最后一步                          |
+| `runtime`     | 运行时标记，包含 `built/destroyed` 等            |
+| `currentStep` | 当前步骤配置                                     |
+| `currentData` | 当前步骤缓存数据                                 |
+| `canBack`     | 当前是否可以返回                                 |
+| `canNext`     | 当前是否可以前进                                 |
+| `isLast`      | 当前是否最后一步                                 |
 
 不提供 `root` getter。需要访问 DOM 时使用 `flow.element`。
 
 ## 实例方法
 
-| 方法                                  | 说明                                                             |
-| ------------------------------------- | ---------------------------------------------------------------- |
-| `build()`                             | 构建实例；默认 UI 模式会创建 `flow.element`                     |
-| `next(payload?)`                      | 前进一步；最后一步会调用 `finish()`                              |
-| `back(payload?)`                      | 返回上一步                                                       |
-| `goTo(target, payload?, options?)`    | 跳转到指定步骤 id 或索引                                         |
-| `setData(data)`                       | 合并全局数据                                                     |
-| `setStepData(stepId, data, options?)` | 合并指定步骤缓存；`silent` 为 true 时不触发变更通知              |
-| `getStepData(stepId)`                 | 获取指定步骤缓存副本                                             |
-| `snapshot()`                          | 获取当前不可变快照                                               |
-| `subscribe(handler)`                  | 订阅快照变化，返回取消订阅函数                                   |
-| `reset()`                             | 重置到初始步骤和初始数据                                         |
-| `finish(payload?, options?)`          | 完成流程并触发 `onFinish`                                        |
-| `destroy()`                           | 销毁实例、移除默认 UI、取消动作并执行清理                        |
+| 方法                                  | 说明                                                |
+| ------------------------------------- | --------------------------------------------------- |
+| `build()`                             | 构建实例；默认 UI 模式会创建 `flow.element`         |
+| `next(payload?)`                      | 前进一步；最后一步会调用 `finish()`                 |
+| `back(payload?)`                      | 返回上一步                                          |
+| `goTo(target, payload?, options?)`    | 跳转到指定步骤 id 或索引                            |
+| `setData(data)`                       | 合并全局数据                                        |
+| `setStepData(stepId, data, options?)` | 合并指定步骤缓存；`silent` 为 true 时不触发变更通知 |
+| `getStepData(stepId)`                 | 获取指定步骤缓存副本                                |
+| `snapshot()`                          | 获取当前不可变快照                                  |
+| `subscribe(handler)`                  | 订阅快照变化，返回取消订阅函数                      |
+| `reset()`                             | 重置到初始步骤和初始数据                            |
+| `finish(payload?, options?)`          | 完成流程并触发 `onFinish`                           |
+| `destroy()`                           | 销毁实例、移除默认 UI、取消动作并执行清理           |
 
 ## Snapshot
 
-| 字段            | 说明                                  |
-| --------------- | ------------------------------------- |
-| `id`            | Flow id                               |
-| `currentId`     | 当前步骤 id                           |
-| `currentIndex`  | 当前步骤索引                          |
-| `previousId`    | 上一个步骤 id                         |
-| `previousIndex` | 上一个步骤索引                        |
-| `direction`     | 最近一次切换方向                      |
-| `history`       | 访问历史                              |
-| `data`          | 全局数据副本                          |
-| `stepData`      | 全部步骤数据副本                      |
-| `currentData`   | 当前步骤数据副本                      |
-| `currentStep`   | 当前步骤的公开配置，不包含 hook       |
-| `canBack`       | 是否可以返回                          |
-| `canNext`       | 是否可以前进                          |
-| `isLast`        | 是否最后一步                          |
-| `loading`       | 是否有动作执行中                      |
-| `busyAction`    | 当前执行中的动作                      |
-| `error`         | 最近一次错误                          |
+| 字段            | 说明                            |
+| --------------- | ------------------------------- |
+| `id`            | Flow id                         |
+| `currentId`     | 当前步骤 id                     |
+| `currentIndex`  | 当前步骤索引                    |
+| `previousId`    | 上一个步骤 id                   |
+| `previousIndex` | 上一个步骤索引                  |
+| `direction`     | 最近一次切换方向                |
+| `history`       | 访问历史                        |
+| `data`          | 全局数据副本                    |
+| `stepData`      | 全部步骤数据副本                |
+| `currentData`   | 当前步骤数据副本                |
+| `currentStep`   | 当前步骤的公开配置，不包含 hook |
+| `canBack`       | 是否可以返回                    |
+| `canNext`       | 是否可以前进                    |
+| `isLast`        | 是否最后一步                    |
+| `loading`       | 是否有动作执行中                |
+| `busyAction`    | 当前执行中的动作                |
+| `error`         | 最近一次错误                    |

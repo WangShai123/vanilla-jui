@@ -141,18 +141,19 @@ Form 通过 `createMemo()` 从 `fields` 入口派生渲染列表，并交给 key
 
 ## 参数
 
-| 参数           | 类型               | 默认值         | 说明                                                   |
-| -------------- | ------------------ | -------------- | ------------------------------------------------------ |
-| `id`           | `string \| null`   | 自动生成       | 表单根节点 id                                          |
-| `vertical`     | `boolean`          | `true`         | 根表单使用 `is-vertical` 或 `is-horizontal`            |
-| `itemVertical` | `boolean`          | `true`         | 字段项使用 `is-item-vertical` 或横向布局               |
-| `style`        | `string \| object` | `''`           | 表单根节点内联样式                                     |
-| `fields`       | `Array<FormItem>`  | `[]`           | 表单项配置，也是动态表单责任链入口                     |
-| `buttons`      | `boolean \| Array` | Submit / Reset | `false` 隐藏按钮，`true` 使用默认按钮                  |
-| `className`    | `object`           | 内置样式类     | 覆盖根节点、布局、字段、控件、按钮等默认类名           |
-| `validator`    | `object`           | `{}`           | 传给 `Validator` 验证模块的 `rules`、`messages` 等配置 |
-| `onSubmit`     | `Function \| null` | `null`         | 校验通过后触发，参数为 `(data, form)`                  |
-| `onReset`      | `Function \| null` | `null`         | 重置时触发，参数为 `(event, form)`                     |
+| 参数              | 类型                           | 默认值         | 说明                                                             |
+| ----------------- | ------------------------------ | -------------- | ---------------------------------------------------------------- |
+| `id`              | `string \| null`               | 自动生成       | 表单根节点 id                                                    |
+| `vertical`        | `boolean`                      | `true`         | 根表单使用 `is-vertical` 或 `is-horizontal`                      |
+| `itemVertical`    | `boolean`                      | `true`         | 字段项使用 `is-item-vertical` 或横向布局                         |
+| `style`           | `string \| object`             | `''`           | 表单根节点内联样式                                               |
+| `fields`          | `Array<FormItem>`              | `[]`           | 表单项配置，也是动态表单责任链入口                               |
+| `buttons`         | `boolean \| Array`             | Submit / Reset | `false` 隐藏按钮，`true` 使用默认按钮                            |
+| `buttonsPosition` | `'start' \| 'center' \| 'end'` | `'end'`        | 按钮区 `justify-content`，`center` 原样使用，其它映射为 `flex-*` |
+| `className`       | `object`                       | 内置样式类     | 覆盖根节点、布局、字段、控件、按钮等默认类名                     |
+| `validator`       | `object`                       | `{}`           | 传给 `Validator` 验证模块的 `rules`、`messages` 等配置           |
+| `onSubmit`        | `Function \| null`             | `null`         | 校验通过后触发，参数为 `(data, form)`                            |
+| `onReset`         | `Function \| null`             | `null`         | 重置时触发，参数为 `(event, form)`                               |
 
 ## 样式类覆盖
 

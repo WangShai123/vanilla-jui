@@ -289,7 +289,9 @@ export function createPagination(input: PaginationProps = {}): Pagination {
   let changeId = 0;
   let pagination: Pagination;
 
-  const pageCount = createMemo(() => getPageCount(state.total, state.page.size));
+  const pageCount = createMemo(() =>
+    getPageCount(state.total, state.page.size)
+  );
   const isLocked = (): boolean => props.lock && state.locked;
   const isPrevDisabled = (): boolean => isLocked() || state.page.current <= 1;
   const isNextDisabled = (): boolean =>

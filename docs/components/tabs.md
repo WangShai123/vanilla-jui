@@ -63,13 +63,13 @@ Tabs 创建扁平内容结构。标题直接渲染在 `.tab-item` 内，面板�
 
 ## TabItem
 
-| 字段    | 类型                            | 必填 | 说明                                 |
-| ------- | ------------------------------- | ---- | ------------------------------------ |
-| `name`  | `string`                        | 否   | 标签唯一名称，不传时自动生成         |
-| `title` | `RenderableContent`             | 是   | 标签标题内容                         |
-| `content` | `RenderableContent \| Function` | 是   | 面板内容；函数会在激活时执行         |
-| `cache` | `boolean`                       | 否   | 函数型 content 是否缓存结果            |
-| `ttl`   | `number`                        | 否   | 缓存有效时间，单位毫秒；`0` 表示不过期 |
+| 字段      | 类型                            | 必填 | 说明                                   |
+| --------- | ------------------------------- | ---- | -------------------------------------- |
+| `name`    | `string`                        | 否   | 标签唯一名称，不传时自动生成           |
+| `title`   | `RenderableContent`             | 是   | 标签标题内容                           |
+| `content` | `RenderableContent \| Function` | 是   | 面板内容；函数会在激活时执行           |
+| `cache`   | `boolean`                       | 否   | 函数型 content 是否缓存结果            |
+| `ttl`     | `number`                        | 否   | 缓存有效时间，单位毫秒；`0` 表示不过期 |
 
 `RenderableContent` 支持类型: `访问器`、`数组`、`DocumentFragment`、`Node`、`null`、`boolean` 和普通文本值
 
@@ -90,16 +90,16 @@ Tabs 创建扁平内容结构。标题直接渲染在 `.tab-item` 内，面板�
 
 ## State
 
-| 字段            | 类型                                          | 说明                                         |
-| --------------- | --------------------------------------------- | -------------------------------------------- |
+| 字段            | 类型                                          | 说明                                           |
+| --------------- | --------------------------------------------- | ---------------------------------------------- |
 | `data`          | `TabItem[]`                                   | 标签项数据源，由 keyed 列表更新 tab 和 content |
-| `active`        | `number \| string`                            | 当前期望激活项，可传索引或名称               |
-| `disabled`      | `number \| string \| Array<number \| string>` | 当前禁用项                                   |
-| `current.index` | `number`                                      | 当前激活索引                                 |
-| `current.name`  | `string \| null`                              | 当前激活名称                                 |
-| `draggable`     | `boolean`                                     | 标签列表是否可拖拽                           |
-| `dragging`      | `boolean`                                     | 当前是否处于拖拽滚动中                       |
-| `loading`       | `boolean`                                     | 当前是否加载异步面板                         |
+| `active`        | `number \| string`                            | 当前期望激活项，可传索引或名称                 |
+| `disabled`      | `number \| string \| Array<number \| string>` | 当前禁用项                                     |
+| `current.index` | `number`                                      | 当前激活索引                                   |
+| `current.name`  | `string \| null`                              | 当前激活名称                                   |
+| `draggable`     | `boolean`                                     | 标签列表是否可拖拽                             |
+| `dragging`      | `boolean`                                     | 当前是否处于拖拽滚动中                         |
+| `loading`       | `boolean`                                     | 当前是否加载异步面板                           |
 
 ## 数据更新
 

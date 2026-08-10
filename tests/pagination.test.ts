@@ -289,7 +289,7 @@ describe('Pagination', () => {
     expect(
       pagination.element
         ?.querySelector('[data-page-action="next"]')
-      ?.getAttribute('aria-disabled')
+        ?.getAttribute('aria-disabled')
     ).toBe('true');
   });
 

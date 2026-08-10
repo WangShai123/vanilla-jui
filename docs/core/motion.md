@@ -36,11 +36,11 @@ target 是延迟 getter，允许在元素 build 前创建 motion。每次 `enter
 
 返回的 `MotionController`：
 
-| 方法             | 行为                          |
-| ---------------- | ----------------------------- |
+| 方法             | 行为                           |
+| ---------------- | ------------------------------ |
 | `enter(signal?)` | 播放隐藏端到可见端的 Animation |
 | `leave(signal?)` | 播放可见端到隐藏端的 Animation |
-| `cancel()`       | 取消 Animation 并释放元素引用 |
+| `cancel()`       | 取消 Animation 并释放元素引用  |
 
 `enter()`/`leave()` 返回 `Promise<void>`。播放失败或 Animation 被取消时 Promise 仍
 正常完成。AbortSignal 结束本次等待；Presence 可据此让旧操作失效并立即开始新的方向

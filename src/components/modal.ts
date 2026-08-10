@@ -17,11 +17,7 @@ import { icon } from '../primitives/icons.ts';
 import { createLoading } from '../primitives/loading.ts';
 import { createPopup } from '../primitives/popup.ts';
 import { joinClasses } from '../utilities/class-name.ts';
-import {
-  all,
-  q,
-  type RenderableContent,
-} from '../utilities/dom.ts';
+import { all, q, type RenderableContent } from '../utilities/dom.ts';
 import { randomId } from '../utilities/id.ts';
 import { createMotionGroup, createTransition } from '../core/motion.ts';
 import { isPlainObject } from '../utilities/object.ts';
@@ -62,6 +58,8 @@ export interface ModalText {
   cancel: string;
 }
 
+type ModalStyle = string | Partial<CSSStyleDeclaration> | null;
+
 export interface ModalProps extends Record<string, unknown> {
   content?: ModalContent;
   cache?: boolean;
@@ -79,6 +77,7 @@ export interface ModalProps extends Record<string, unknown> {
   onCancel?: ((modal: Modal) => void | Promise<void>) | null;
   header?: boolean;
   footer?: boolean;
+  style?: ModalStyle;
   id?: string | null;
   escClose?: boolean;
   bgClose?: boolean;
@@ -93,6 +92,7 @@ interface ResolvedModalProps extends Record<string, unknown> {
   showCancel: boolean;
   showClose: boolean;
   fullscreen: boolean;
+  style: ModalStyle;
   text: ModalText;
   onShow: NonNullable<ModalProps['onShow']> | null;
   onShown: NonNullable<ModalProps['onShown']> | null;
@@ -258,6 +258,7 @@ function normalizeProps(input: ModalProps): ResolvedModalProps {
     escClose: props.escClose as boolean,
     bgClose: props.bgClose as boolean,
     className: props.className as ModalClassNames,
+    style: props.style as ModalStyle,
   };
 }
 
@@ -681,6 +682,7 @@ export function createModal(input: ModalProps = {}): Modal {
         id: props.id,
         role: 'document',
         'data-modal-dialog': props.id,
+        ...(props.style ? { style: props.style } : {}),
         'data-mount': () => (motionVisible() ? 'true' : 'false'),
         children: [
           jsx('div', {
@@ -689,27 +691,27 @@ export function createModal(input: ModalProps = {}): Modal {
             children: () =>
               props.header && !state.loading
                 ? [
-                  jsx('div', {
-                    className: props.className.title,
-                    id: `${props.id}_title`,
-                    'aria-label': props.text.title,
-                    children: props.text.title,
-                  }),
-                  props.showClose
-                    ? jsx('button', {
-                        type: 'button',
-                        className: joinClasses(
-                          props.className.button,
-                          props.className.closeBtn
-                        ),
-                        'data-action': 'close',
-                        'aria-label': t('Close', locales),
-                        disabled: isBusy,
-                        children: icon('close'),
-                      })
-                    : null,
-                ]
-              : null,
+                    jsx('div', {
+                      className: props.className.title,
+                      id: `${props.id}_title`,
+                      'aria-label': props.text.title,
+                      children: props.text.title,
+                    }),
+                    props.showClose
+                      ? jsx('button', {
+                          type: 'button',
+                          className: joinClasses(
+                            props.className.button,
+                            props.className.closeBtn
+                          ),
+                          'data-action': 'close',
+                          'aria-label': t('Close', locales),
+                          disabled: isBusy,
+                          children: icon('close'),
+                        })
+                      : null,
+                  ]
+                : null,
           }),
           jsx('div', {
             className: props.className.body,
@@ -724,30 +726,30 @@ export function createModal(input: ModalProps = {}): Modal {
             children: () =>
               props.footer && !state.loading
                 ? [
-                  props.showCancel
-                    ? jsx('button', {
-                        type: 'button',
-                        className: joinClasses(
-                          props.className.button,
-                          props.className.cancelBtn
-                        ),
-                        'data-action': 'cancel',
-                        disabled: isBusy,
-                        children: props.text.cancel,
-                      })
-                    : null,
-                  jsx('button', {
-                    type: 'button',
-                    className: joinClasses(
-                      props.className.button,
-                      props.className.confirmBtn
-                    ),
-                    'data-action': 'confirm',
-                    disabled: isBusy,
-                    children: props.text.confirm,
-                  }),
-                ]
-              : null,
+                    props.showCancel
+                      ? jsx('button', {
+                          type: 'button',
+                          className: joinClasses(
+                            props.className.button,
+                            props.className.cancelBtn
+                          ),
+                          'data-action': 'cancel',
+                          disabled: isBusy,
+                          children: props.text.cancel,
+                        })
+                      : null,
+                    jsx('button', {
+                      type: 'button',
+                      className: joinClasses(
+                        props.className.button,
+                        props.className.confirmBtn
+                      ),
+                      'data-action': 'confirm',
+                      disabled: isBusy,
+                      children: props.text.confirm,
+                    }),
+                  ]
+                : null,
           }),
         ],
       }) as HTMLElement;

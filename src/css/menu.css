@@ -587,7 +587,7 @@
   }
 
   /* drop menu  */
-  .drop-menu {
+  .drop-menu .drop-container {
     min-width: 100px;
     max-width: 200px;
     padding: var(--s2);
@@ -613,8 +613,9 @@
     padding: var(--space) var(--s2);
     text-decoration: none;
     color: var(--ui-fg-muted);
-    border-radius: var(--radius-md);
     user-select: none;
+    border-radius: var(--radius-sm);
+    transition: none;
   }
 
   .drop-menu .menu-item a .menu-text {
@@ -633,7 +634,7 @@
   }
 
   .drop-menu .menu-item.menu-heading {
-    padding: var(--space) var(--s2);
+    padding: 2px var(--s2);
     color: var(--ui-fg-soft);
     font-size: var(--font-size-sm);
   }

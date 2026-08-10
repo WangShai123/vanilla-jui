@@ -63,12 +63,12 @@ const dialog = createModal({
 
 把运行时需要关注的数据放入响应式 `state`：
 
-| 字段         | 说明                                      |
-| ------------ | ----------------------------------------- |
-| `visible`    | 是否显示；显示和隐藏的响应式状态源        |
-| `content`    | 当前内容源                                |
-| `loading`    | 异步函数型 `content` 正在解析             |
-| `processing` | 异步 `onConfirm` 或 `onCancel` 正在处理   |
+| 字段         | 说明                                    |
+| ------------ | --------------------------------------- |
+| `visible`    | 是否显示；显示和隐藏的响应式状态源      |
+| `content`    | 当前内容源                              |
+| `loading`    | 异步函数型 `content` 正在解析           |
+| `processing` | 异步 `onConfirm` 或 `onCancel` 正在处理 |
 
 `loading` 只服务于异步内容解析。`processing` 只服务于确认/取消动作的异步回调；同步 `onConfirm` 和 `onCancel` 不会进入 processing。`loading` 和 `processing` 共用同一个遮罩层，processing 期间会阻止确认、取消、关闭、Esc 和背景点击等交互入口。
 
@@ -140,43 +140,43 @@ const modal = createModal({
 
 ## 实例方法
 
-| 方法               | 说明                                 |
-| ------------------ | ------------------------------------ |
-| `build()`          | 创建 Modal 骨架并返回当前实例        |
+| 方法               | 说明                                      |
+| ------------------ | ----------------------------------------- |
+| `build()`          | 创建 Modal 骨架并返回当前实例             |
 | `mount(container)` | 构建并挂载根节点；普通业务更常用 `show()` |
-| `unmount()`        | 移除根节点，保留 state 和 view owner |
-| `show()`           | 设置 `state.visible = true`          |
-| `hide()`           | 设置 `state.visible = false`         |
-| `setState(patch)`  | 批量设置响应式状态字段               |
-| `reset()`          | 恢复初始 content，清空缓存和运行状态 |
-| `destroy()`        | 销毁实例，释放 DOM、事件和响应式资源 |
+| `unmount()`        | 移除根节点，保留 state 和 view owner      |
+| `show()`           | 设置 `state.visible = true`               |
+| `hide()`           | 设置 `state.visible = false`              |
+| `setState(patch)`  | 批量设置响应式状态字段                    |
+| `reset()`          | 恢复初始 content，清空缓存和运行状态      |
+| `destroy()`        | 销毁实例，释放 DOM、事件和响应式资源      |
 
 公共控制器方法还包括 `own()`、`use()`、`on()`、`off()` 和 `emit()`，语义见 [Functional Component Runtime](./component.md)。
 
 ## 参数
 
-| 参数         | 类型                                                               | 默认值     | 说明                                       |
-| ------------ | ------------------------------------------------------------------ | ---------- | ------------------------------------------ |
-| `content`    | `string \| number \| boolean \| Node \| Array \| Function \| null` | `''`       | 初始内容，也是 `state.content` 初值        |
-| `cache`      | `boolean`                                                          | `false`    | 是否缓存函数型异步 `content` 的解析结果    |
-| `ttl`        | `number`                                                           | `0`        | 内容缓存有效期，单位毫秒；`0` 表示不过期   |
-| `position`   | `string`                                                           | `'center'` | 弹窗布局位置，对应 `is-${position}`        |
-| `showCancel` | `boolean`                                                          | `true`     | 是否显示取消按钮                           |
-| `showClose`  | `boolean`                                                          | `true`     | 是否显示右上角关闭按钮                     |
-| `fullscreen` | `boolean`                                                          | `false`    | 是否全屏                                   |
-| `text`       | `object`                                                           | 见下表     | 初始化文案配置                             |
-| `header`     | `boolean`                                                          | `true`     | 是否显示头部                               |
-| `footer`     | `boolean`                                                          | `true`     | 是否显示底部                               |
-| `id`         | `string \| null`                                                   | 自动生成   | 弹窗 id；空字符串或 `null` 会自动生成      |
-| `escClose`   | `boolean`                                                          | `false`    | 是否允许 Esc 关闭                          |
-| `bgClose`    | `boolean`                                                          | `false`    | 是否允许点击背景关闭                       |
-| `className`  | `object`                                                           | 见下表     | 覆盖组件结构类名，仅初始化时生效           |
-| `onShow`     | `(modal) => void \| Promise<void>`                                 | `null`     | 开始显示时触发                             |
-| `onShown`    | `(modal) => void \| Promise<void>`                                 | `null`     | 显示后触发                                 |
-| `onHide`     | `(modal) => void \| Promise<void>`                                 | `null`     | 开始隐藏时触发                             |
-| `onHidden`   | `(modal) => void \| Promise<void>`                                 | `null`     | 隐藏并移除 DOM 后触发                      |
-| `onConfirm`  | `(modal) => void \| Promise<void>`                                 | `null`     | 确认时触发，由调用方决定是否关闭           |
-| `onCancel`   | `(modal) => void \| Promise<void>`                                 | `null`     | `data-action="cancel/close"` 触发          |
+| 参数         | 类型                                                               | 默认值     | 说明                                     |
+| ------------ | ------------------------------------------------------------------ | ---------- | ---------------------------------------- |
+| `content`    | `string \| number \| boolean \| Node \| Array \| Function \| null` | `''`       | 初始内容，也是 `state.content` 初值      |
+| `cache`      | `boolean`                                                          | `false`    | 是否缓存函数型异步 `content` 的解析结果  |
+| `ttl`        | `number`                                                           | `0`        | 内容缓存有效期，单位毫秒；`0` 表示不过期 |
+| `position`   | `string`                                                           | `'center'` | 弹窗布局位置，对应 `is-${position}`      |
+| `showCancel` | `boolean`                                                          | `true`     | 是否显示取消按钮                         |
+| `showClose`  | `boolean`                                                          | `true`     | 是否显示右上角关闭按钮                   |
+| `fullscreen` | `boolean`                                                          | `false`    | 是否全屏                                 |
+| `text`       | `object`                                                           | 见下表     | 初始化文案配置                           |
+| `header`     | `boolean`                                                          | `true`     | 是否显示头部                             |
+| `footer`     | `boolean`                                                          | `true`     | 是否显示底部                             |
+| `id`         | `string \| null`                                                   | 自动生成   | 弹窗 id；空字符串或 `null` 会自动生成    |
+| `escClose`   | `boolean`                                                          | `false`    | 是否允许 Esc 关闭                        |
+| `bgClose`    | `boolean`                                                          | `false`    | 是否允许点击背景关闭                     |
+| `className`  | `object`                                                           | 见下表     | 覆盖组件结构类名，仅初始化时生效         |
+| `onShow`     | `(modal) => void \| Promise<void>`                                 | `null`     | 开始显示时触发                           |
+| `onShown`    | `(modal) => void \| Promise<void>`                                 | `null`     | 显示后触发                               |
+| `onHide`     | `(modal) => void \| Promise<void>`                                 | `null`     | 开始隐藏时触发                           |
+| `onHidden`   | `(modal) => void \| Promise<void>`                                 | `null`     | 隐藏并移除 DOM 后触发                    |
+| `onConfirm`  | `(modal) => void \| Promise<void>`                                 | `null`     | 确认时触发，由调用方决定是否关闭         |
+| `onCancel`   | `(modal) => void \| Promise<void>`                                 | `null`     | `data-action="cancel/close"` 触发        |
 
 `content` 会作为初始状态进入 `state`，可在运行时通过 `state.content` 或 `setState({ content })` 更新。其余参数都是实例结构或行为配置，实例创建后保持固定。
 

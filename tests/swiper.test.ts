@@ -158,8 +158,9 @@ describe('Swiper', () => {
     expect(images.every((image) => image.getAttribute('src') !== '')).toBe(
       true
     );
-    expect(images.filter((image) => image.dataset.status === 'loading'))
-      .toHaveLength(3);
+    expect(
+      images.filter((image) => image.dataset.status === 'loading')
+    ).toHaveLength(3);
     expect(images.every((image) => !image.classList.contains('loading'))).toBe(
       true
     );

@@ -13,11 +13,11 @@ timer.start('toast:42', 5000, () => closeToast(42)); // 替换前一次
 timer.cancel('toast:42');
 ```
 
-| 成员 | 说明 |
-| --- | --- |
-| `timer.start(key, duration, callback)` | 创建或替换 timeout |
-| `timer.cancel(key)` | 清除指定 timeout；不存在时无操作 |
-| `timer.timers` | 底层可变记录，仅用于诊断 |
+| 成员                                   | 说明                             |
+| -------------------------------------- | -------------------------------- |
+| `timer.start(key, duration, callback)` | 创建或替换 timeout               |
+| `timer.cancel(key)`                    | 清除指定 timeout；不存在时无操作 |
+| `timer.timers`                         | 底层可变记录，仅用于诊断         |
 
 注册表由所有调用方共享，key 应包含组件/实例命名空间以避免碰撞。它没有
 `cancelAll()`；组件生命周期需要保存并取消自己创建的每个 key。动画完成时序应使用

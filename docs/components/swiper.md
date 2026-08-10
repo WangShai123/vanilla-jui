@@ -151,23 +151,23 @@ type SwiperDataLoader = (
 
 ## Props
 
-| 参数              | 类型                                               | 默认值   | 说明                               |
-| ----------------- | -------------------------------------------------- | -------- | ---------------------------------- |
-| `id`              | `string \| null`                                  | `null`   | 组件创建的根节点 id                |
-| `data`            | `SwiperDataItem[] \| SwiperDataLoader`            | `[]`     | 初始数据或异步数据函数             |
-| `loop`            | `boolean`                                          | `true`   | 是否循环播放                       |
-| `autoplay`        | `boolean`                                          | `true`   | 是否自动播放                       |
-| `delay`           | `number`                                           | `3000`   | 自动播放间隔，最低按 16ms 执行     |
-| `lazyload`        | `boolean`                                          | `true`   | 是否延迟加载图片                   |
-| `pagination`      | `boolean`                                          | `true`   | 是否显示分页指示器                 |
-| `navigation`      | `boolean`                                          | `true`   | 是否显示前后导航                   |
-| `speed`           | `number`                                           | `300`    | 切换动画时长                       |
-| `touchRatio`      | `number`                                           | `1`      | 拖拽距离倍率                       |
-| `touchAngle`      | `number`                                           | `45`     | 横向滑动判定角度，范围 `0-90`      |
-| `longSwipesMs`    | `number`                                           | `300`    | 长滑动时间阈值                     |
-| `longSwipesRatio` | `number`                                           | `0.05`   | 触发切换的滑动比例，范围 `0-1`     |
-| `preventClick`    | `boolean`                                          | `true`   | 拖拽后是否阻止交互元素误点击       |
-| `className`       | `Partial<SwiperClassNames>`                        | 默认类名 | 覆盖生成 DOM 的结构类名            |
+| 参数              | 类型                                   | 默认值   | 说明                           |
+| ----------------- | -------------------------------------- | -------- | ------------------------------ |
+| `id`              | `string \| null`                       | `null`   | 组件创建的根节点 id            |
+| `data`            | `SwiperDataItem[] \| SwiperDataLoader` | `[]`     | 初始数据或异步数据函数         |
+| `loop`            | `boolean`                              | `true`   | 是否循环播放                   |
+| `autoplay`        | `boolean`                              | `true`   | 是否自动播放                   |
+| `delay`           | `number`                               | `3000`   | 自动播放间隔，最低按 16ms 执行 |
+| `lazyload`        | `boolean`                              | `true`   | 是否延迟加载图片               |
+| `pagination`      | `boolean`                              | `true`   | 是否显示分页指示器             |
+| `navigation`      | `boolean`                              | `true`   | 是否显示前后导航               |
+| `speed`           | `number`                               | `300`    | 切换动画时长                   |
+| `touchRatio`      | `number`                               | `1`      | 拖拽距离倍率                   |
+| `touchAngle`      | `number`                               | `45`     | 横向滑动判定角度，范围 `0-90`  |
+| `longSwipesMs`    | `number`                               | `300`    | 长滑动时间阈值                 |
+| `longSwipesRatio` | `number`                               | `0.05`   | 触发切换的滑动比例，范围 `0-1` |
+| `preventClick`    | `boolean`                              | `true`   | 拖拽后是否阻止交互元素误点击   |
+| `className`       | `Partial<SwiperClassNames>`            | 默认类名 | 覆盖生成 DOM 的结构类名        |
 
 ## State
 

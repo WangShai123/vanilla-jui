@@ -425,5 +425,4 @@ describe('Tabs', () => {
 
     expect(mutations).toHaveLength(0);
   });
-
 });

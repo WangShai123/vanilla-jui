@@ -16,14 +16,14 @@ import {
 
 ## 原子类型判定
 
-| 方法 | 判定范围 |
-| --- | --- |
-| `isNilValue` | `null | undefined` |
-| `isDomNodeValue` | DOM `Node` |
-| `isDomElementValue` | DOM `Element` |
-| `isHtmlElementValue` | DOM `HTMLElement` |
-| `isRenderablePrimitive` | string、number、boolean |
-| `isRenderableValue` | nullish、renderable primitive、函数、数组或 Node |
+| 方法                    | 判定范围                                         |
+| ----------------------- | ------------------------------------------------ |
+| `isNilValue`            | `null                                            | undefined` |
+| `isDomNodeValue`        | DOM `Node`                                       |
+| `isDomElementValue`     | DOM `Element`                                    |
+| `isHtmlElementValue`    | DOM `HTMLElement`                                |
+| `isRenderablePrimitive` | string、number、boolean                          |
+| `isRenderableValue`     | nullish、renderable primitive、函数、数组或 Node |
 
 `isRenderableValue` 只判定内容类别，不把值转换成节点，也不解析 HTML 字符串。组件
 内容渲染遵循 `vanilla-signal` children 语义。
@@ -44,17 +44,22 @@ getType(document.body); // "HTMLElement"
 rule 可直接写类型名/类型名数组，也可使用 `ParamRule`：
 
 ```ts
-validateParam('data', rows, {
-  type: 'array',
-  nonEmpty: true,
-  items: {
-    type: 'plainObject',
-    shape: {
-      title: 'renderable',
-      enabled: ['boolean', 'undefined'],
+validateParam(
+  'data',
+  rows,
+  {
+    type: 'array',
+    nonEmpty: true,
+    items: {
+      type: 'plainObject',
+      shape: {
+        title: 'renderable',
+        enabled: ['boolean', 'undefined'],
+      },
     },
   },
-}, 'Table.props');
+  'Table.props'
+);
 ```
 
 ### 类型规则
@@ -65,21 +70,21 @@ validateParam('data', rows, {
 
 ### 约束规则
 
-| 字段 | 适用值 | 行为 |
-| --- | --- | --- |
-| `required` | 任意 | 禁止 null/undefined |
-| `enum` | 任意 | 必须由 `includes()` 命中 |
-| `nonEmpty` | string/array | 长度必须大于 0 |
-| `minLength`, `maxLength` | string/array | 长度上下限 |
-| `finite`, `integer` | number | 有限数、整数 |
-| `min`, `max` | number | 包含边界 |
-| `greaterThan`, `lessThan` | number | 不包含边界 |
-| `plain` | object | 必须为 plain object |
-| `items` | array | 递归校验每个元素 |
-| `shape` | object | 递归校验声明字段 |
-| `conditions` | 任意 | 函数或 `{ test, message? }` 列表 |
-| `validate` | 任意 | 最后的业务谓词 |
-| `message` | 任意 | 仅覆盖 `validate` 失败消息 |
+| 字段                      | 适用值       | 行为                             |
+| ------------------------- | ------------ | -------------------------------- |
+| `required`                | 任意         | 禁止 null/undefined              |
+| `enum`                    | 任意         | 必须由 `includes()` 命中         |
+| `nonEmpty`                | string/array | 长度必须大于 0                   |
+| `minLength`, `maxLength`  | string/array | 长度上下限                       |
+| `finite`, `integer`       | number       | 有限数、整数                     |
+| `min`, `max`              | number       | 包含边界                         |
+| `greaterThan`, `lessThan` | number       | 不包含边界                       |
+| `plain`                   | object       | 必须为 plain object              |
+| `items`                   | array        | 递归校验每个元素                 |
+| `shape`                   | object       | 递归校验声明字段                 |
+| `conditions`              | 任意         | 函数或 `{ test, message? }` 列表 |
+| `validate`                | 任意         | 最后的业务谓词                   |
+| `message`                 | 任意         | 仅覆盖 `validate` 失败消息       |
 
 长度/数字/plain 等专项约束只在值属于对应类别时运行，因此 schema 应同时声明
 `type`。例如 `{ nonEmpty: true }` 本身不会拒绝数字。
@@ -97,7 +102,7 @@ const schema = {
   id: {
     default: null,
     types: ['string', 'null'],
-    normalize: (value) => typeof value === 'string' ? value.trim() : value,
+    normalize: (value) => (typeof value === 'string' ? value.trim() : value),
   },
   data: {
     default: [],

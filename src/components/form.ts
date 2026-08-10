@@ -13,10 +13,7 @@ import {
   defineComponent,
 } from '../core/component.ts';
 import { joinClasses } from '../utilities/class-name.ts';
-import {
-  type RenderableContent,
-  all,
-} from '../utilities/dom.ts';
+import { type RenderableContent, all } from '../utilities/dom.ts';
 import { randomId } from '../utilities/id.ts';
 import { isPlainObject } from '../utilities/object.ts';
 import {
@@ -136,6 +133,8 @@ export interface FormValidatorConfig {
   [key: string]: unknown;
 }
 
+export type ButtonsPosition = 'start' | 'center' | 'end';
+
 export interface FormProps extends Record<string, unknown> {
   id?: string | null;
   vertical?: boolean;
@@ -143,6 +142,7 @@ export interface FormProps extends Record<string, unknown> {
   style?: FormStyle;
   fields?: readonly FormItem<FormField>[];
   buttons?: boolean | readonly FormButton[];
+  buttonsPosition?: ButtonsPosition;
   className?: FormClassNameConfig;
   validator?: FormValidatorConfig;
   onSubmit?:
@@ -158,13 +158,24 @@ interface ResolvedFormProps extends Record<string, unknown> {
   style: FormStyle;
   fields: FormItem<FormField>[];
   buttons: FormButton[];
+  buttonsPosition: ButtonsPosition;
   className: FormClassNames;
   validator: FormValidatorConfig;
   onSubmit: ((data: FormDataRecord, form: Form) => void | Promise<void>) | null;
   onReset: ((event: Event, form: Form) => void) | null;
 }
 
-interface FormState extends ResolvedFormProps {
+interface FormState extends Record<string, unknown> {
+  id: string;
+  vertical: boolean;
+  itemVertical: boolean;
+  style: FormStyle;
+  fields: FormItem<FormField>[];
+  buttons: FormButton[];
+  className: FormClassNames;
+  validator: FormValidatorConfig;
+  onSubmit: ((data: FormDataRecord, form: Form) => void | Promise<void>) | null;
+  onReset: ((event: Event, form: Form) => void) | null;
   submitting: boolean;
   data: FormDataRecord | null;
 }
@@ -251,6 +262,11 @@ const FORM_PROPS_SCHEMA = {
       return value;
     },
   },
+  buttonsPosition: {
+    default: 'end',
+    type: 'string',
+    enum: ['start', 'center', 'end'],
+  },
   className: {
     default: DEFAULT_CLASS_NAMES,
     type: 'object',
@@ -311,7 +327,7 @@ function flattenFormItems(
     current: FormItem<FormField>
   ): FormItem<FormField> | null => {
     const index = roots.indexOf(current);
-    return index >= 0 ? (roots[index + 1] || null) : null;
+    return index >= 0 ? roots[index + 1] || null : null;
   };
 
   for (const root of roots) {
@@ -386,6 +402,10 @@ function setElementStyle(element: HTMLElement, style: FormStyle): void {
   }
 }
 
+function resolveButtonsJustifyContent(position: ButtonsPosition): string {
+  return position === 'center' ? 'center' : `flex-${position}`;
+}
+
 function cloneValidator(validator: unknown): FormValidatorConfig {
   const source = (
     isPlainObject(validator) ? validator : {}
@@ -412,6 +432,7 @@ function normalizeProps(input: FormProps): ResolvedFormProps {
     style: props.style as FormStyle,
     fields,
     buttons: cloneButtons(props.buttons as readonly FormButton[]),
+    buttonsPosition: props.buttonsPosition as ButtonsPosition,
     className: resolveClassNames(props.className),
     validator: cloneValidator(props.validator),
     onSubmit: props.onSubmit as ResolvedFormProps['onSubmit'],
@@ -443,6 +464,14 @@ function cloneResolvedProps(props: ResolvedFormProps): ResolvedFormProps {
     className: resolveClassNames(props.className),
     validator: cloneValidator(props.validator),
   };
+}
+
+function cloneStateProps(
+  props: ResolvedFormProps
+): Omit<FormState, 'submitting' | 'data'> {
+  const stateProps: Partial<ResolvedFormProps> = cloneResolvedProps(props);
+  delete stateProps.buttonsPosition;
+  return stateProps as Omit<FormState, 'submitting' | 'data'>;
 }
 
 function autoComplete(type: string): string {
@@ -495,8 +524,11 @@ function radioNodeListItems(value: RadioNodeList | Element): Element[] {
 export function createForm(input: FormProps = {}): Form {
   const props = normalizeProps(input);
   const initial = cloneResolvedProps(props);
+  const buttonsJustifyContent = resolveButtonsJustifyContent(
+    props.buttonsPosition
+  );
   const state = createDeepStore({
-    ...cloneResolvedProps(props),
+    ...cloneStateProps(props),
     submitting: false,
     data: null,
   }) as FormState;
@@ -512,7 +544,9 @@ export function createForm(input: FormProps = {}): Form {
     if (state.fields.includes(item)) return item;
     const cached = runtimeItems.get(item);
     if (cached) return cached;
-    const runtimeItem = createDeepStore(cloneFormItem(item)) as FormItem<FormField>;
+    const runtimeItem = createDeepStore(
+      cloneFormItem(item)
+    ) as FormItem<FormField>;
     runtimeItems.set(item, runtimeItem);
     return runtimeItem;
   };
@@ -530,7 +564,8 @@ export function createForm(input: FormProps = {}): Form {
   const itemKey = (item: FormItem, index: number): string => {
     if (item.id) return `item:${item.id}`;
     const field = item.payload as FormField;
-    if (field && typeof field === 'object') return `${fieldKey(field)}:${item.type}`;
+    if (field && typeof field === 'object')
+      return `${fieldKey(field)}:${item.type}`;
     return `item:${item.type}:${index}`;
   };
   const resolveFieldId = (field: FormField, index: number): string => {
@@ -603,14 +638,13 @@ export function createForm(input: FormProps = {}): Form {
     if (!field.name || !form.element) return [];
     const element = form.element.elements.namedItem(field.name);
     if (!element) return [];
-    return radioNodeListItems(element).filter((item) => item instanceof Element);
+    return radioNodeListItems(element).filter(
+      (item) => item instanceof Element
+    );
   };
   const syncFieldValue = (
     field: FormField,
-    control:
-      | HTMLInputElement
-      | HTMLSelectElement
-      | HTMLTextAreaElement,
+    control: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement,
     type: FormControlType | 'checkbox' | 'radio' = 'text'
   ): void => {
     flushSync(() => {
@@ -898,6 +932,9 @@ export function createForm(input: FormProps = {}): Form {
   const buttonsView = (): HTMLElement =>
     jsx('div', {
       className: () => state.className.buttons,
+      style: {
+        justifyContent: buttonsJustifyContent,
+      },
       'data-form-buttons': '',
       hidden: () => state.buttons.length === 0,
       children: For({

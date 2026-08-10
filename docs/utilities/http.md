@@ -20,10 +20,14 @@ restUrl; // "https://example.com/wp-json"
 `response.json()` 的 Promise。
 
 ```ts
-const result = await postJson<{ id: number }>('/api/items', { title: 'One' }, {
-  signal: controller.signal,
-  headers: { Authorization: 'Bearer token' },
-});
+const result = await postJson<{ id: number }>(
+  '/api/items',
+  { title: 'One' },
+  {
+    signal: controller.signal,
+    headers: { Authorization: 'Bearer token' },
+  }
+);
 ```
 
 `options` 类型为 `Omit<RequestInit, 'method' | 'body'>`。调用方不能覆盖 method 或

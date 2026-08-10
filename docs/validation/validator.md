@@ -7,15 +7,15 @@ Validator 是表单校验模块，源码位于 `src/validation/validator.ts`。
 ## 导入
 
 ```js
-import { createValidator } from "vanilla-jui";
-import "vanilla-jui/style.css";
+import { createValidator } from 'vanilla-jui';
+import 'vanilla-jui/style.css';
 ```
 
 ## 基础用法
 
 ```js
 const validator = createValidator(
-  document.querySelector("form"),
+  document.querySelector('form'),
   {
     rules: {
       email: { required: true, email: true },
@@ -23,15 +23,15 @@ const validator = createValidator(
       plan: { selected: true },
     },
     messages: {
-      email: { required: "Email required", email: "Invalid email" },
-      password: { minLength: "Password too short" },
-      plan: { selected: "Plan required" },
+      email: { required: 'Email required', email: 'Invalid email' },
+      password: { minLength: 'Password too short' },
+      plan: { selected: 'Plan required' },
     },
     onSubmit: (validator) => {
       console.log(validator.runtime.valid);
     },
   },
-  true,
+  true
 );
 ```
 
@@ -80,7 +80,9 @@ Validator 优先使用最近的 `[data-form-control]` 作为字段容器；如�
 ```html
 <div data-form-control="email">
   <input name="email" />
-  <div class="help-block is-invalid" data-validator-help="email">Email required</div>
+  <div class="help-block is-invalid" data-validator-help="email">
+    Email required
+  </div>
 </div>
 ```
 
@@ -126,11 +128,11 @@ Validator 依赖属性名作为交互选择器。已有的 `[data-form-help]` �
 ### 自定义规则
 
 ```js
-const validator = createValidator("#form", {
+const validator = createValidator('#form', {
   rules: {
     username: {
       validate: (element, validator) => {
-        if (element.value.includes("admin")) return "不能包含 admin";
+        if (element.value.includes('admin')) return '不能包含 admin';
         return true;
       },
     },

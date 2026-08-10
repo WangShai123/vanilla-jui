@@ -129,6 +129,25 @@ describe('Form', () => {
     expect(form.element?.querySelector('[data-form-buttons]')).toBeTruthy();
   });
 
+  it('resolves button position from props into inline style', () => {
+    form = createForm({ buttonsPosition: 'center' }).build();
+    mountForm();
+
+    const buttons = form.element?.querySelector<HTMLElement>(
+      '[data-form-buttons]'
+    );
+    expect(buttons?.style.justifyContent).toBe('center');
+
+    form.destroy();
+    form = createForm({ buttonsPosition: 'start' }).build();
+    mountForm();
+
+    const nextButtons = form.element?.querySelector<HTMLElement>(
+      '[data-form-buttons]'
+    );
+    expect(nextButtons?.style.justifyContent).toBe('flex-start');
+  });
+
   it('reactively updates fields and preserves stable data selectors', () => {
     form = createForm({
       id: 'update-form',
@@ -253,12 +272,16 @@ describe('Form', () => {
     submit(form.element);
     await Promise.resolve();
 
-    const submitButton =
-      form.element.querySelector<HTMLButtonElement>('[data-action="submit"]');
-    const resetButton =
-      form.element.querySelector<HTMLButtonElement>('[data-action="reset"]');
+    const submitButton = form.element.querySelector<HTMLButtonElement>(
+      '[data-action="submit"]'
+    );
+    const resetButton = form.element.querySelector<HTMLButtonElement>(
+      '[data-action="reset"]'
+    );
     const fieldControls = Array.from(form.element.elements).filter(
-      (element): element is
+      (
+        element
+      ): element is
         | HTMLInputElement
         | HTMLSelectElement
         | HTMLTextAreaElement =>
@@ -371,7 +394,9 @@ describe('Form', () => {
     }).build();
     mountForm();
 
-    expect(form.element?.querySelector('[data-form-item="details"]')).toBeNull();
+    expect(
+      form.element?.querySelector('[data-form-item="details"]')
+    ).toBeNull();
     expect(form.validate()).toBe(true);
 
     (form.state.fields[0].payload as { value: string }).value = 'advanced';
@@ -383,7 +408,7 @@ describe('Form', () => {
     expect(form.validate()).toBe(false);
     expect(
       form.element?.querySelector('[data-validator-help="details"]')
-      ?.textContent
+        ?.textContent
     ).toBe('Details are required.');
   });
 

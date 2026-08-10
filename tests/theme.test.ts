@@ -30,7 +30,9 @@ function readThemeCookie(): Record<string, unknown> | null {
     value?: string;
   };
   if (typeof record.value !== 'string') return null;
-  const payload = JSON.parse(record.value) as { value?: Record<string, unknown> };
+  const payload = JSON.parse(record.value) as {
+    value?: Record<string, unknown>;
+  };
   return payload.value || null;
 }
 

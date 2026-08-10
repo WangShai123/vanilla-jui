@@ -1,7 +1,14 @@
 // @vitest-environment jsdom
 
 import { insert } from 'vanilla-signal';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vite-plus/test';
 
 import { createSticky } from '../src/primitives/sticky.ts';
 

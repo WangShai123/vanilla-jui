@@ -6,20 +6,20 @@
 
 组件由工厂函数创建，公共结构如下：
 
-| 字段或方法 | 说明 |
-| --- | --- |
-| `props` | schema 解析后的创建配置 |
-| `state` | `createDeepStore` 创建的响应式状态 |
-| `runtime` | `built`、`mounted`、`destroyed` 生命周期标记 |
-| `element` | build 后的稳定根节点，build 前和 destroy 后为 `null` |
-| `build()` | 创建一次 owned view，不自动挂载 |
-| `mount(container)` | 构建并挂载稳定根节点 |
-| `unmount()` | 解除挂载，保留 state 和 view owner |
-| `setState()` | 归一化、校验并同步提交状态补丁 |
-| `own(cleanup)` | 注册实例拥有的资源清理函数 |
-| `use(plugin)` | 安装实例插件 |
-| `on/off/emit` | 组件生命周期或扩展事件 |
-| `destroy()` | 释放 view owner、资源、插件和节点 |
+| 字段或方法         | 说明                                                 |
+| ------------------ | ---------------------------------------------------- |
+| `props`            | schema 解析后的创建配置                              |
+| `state`            | `createDeepStore` 创建的响应式状态                   |
+| `runtime`          | `built`、`mounted`、`destroyed` 生命周期标记         |
+| `element`          | build 后的稳定根节点，build 前和 destroy 后为 `null` |
+| `build()`          | 创建一次 owned view，不自动挂载                      |
+| `mount(container)` | 构建并挂载稳定根节点                                 |
+| `unmount()`        | 解除挂载，保留 state 和 view owner                   |
+| `setState()`       | 归一化、校验并同步提交状态补丁                       |
+| `own(cleanup)`     | 注册实例拥有的资源清理函数                           |
+| `use(plugin)`      | 安装实例插件                                         |
+| `on/off/emit`      | 组件生命周期或扩展事件                               |
+| `destroy()`        | 释放 view owner、资源、插件和节点                    |
 
 组件不公开内部 DOM map。测量、焦点、滚动和动画需要的节点使用闭包内 refs；业务使用者只依赖 `element`。
 

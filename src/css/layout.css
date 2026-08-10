@@ -102,9 +102,11 @@
       linear-gradient(to right, var(--ui-surface-subtle) 1px, transparent 1px),
       linear-gradient(to bottom, var(--ui-surface-subtle) 1px, transparent 1px);
     background-size: 40px 56px;
-    mask-image: radial-gradient(ellipse 25% 10% at 50% 0%,
-        #000 60%,
-        transparent 300%);
+    mask-image: radial-gradient(
+      ellipse 25% 10% at 50% 0%,
+      #000 60%,
+      transparent 300%
+    );
     pointer-events: none;
     user-select: none;
   }
@@ -119,9 +121,11 @@
   .placeholder-image {
     width: 100%;
     height: 100%;
-    background: linear-gradient(135deg,
-        var(--ui-bg-muted) 0%,
-        var(--ui-surface-subtle) 100%);
+    background: linear-gradient(
+      135deg,
+      var(--ui-bg-muted) 0%,
+      var(--ui-surface-subtle) 100%
+    );
     display: flex;
     align-items: center;
     justify-content: center;

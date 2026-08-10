@@ -230,8 +230,8 @@ callbackAccordion.build();
 
 ## 无障碍
 
-| 区域     | 支持                                                              |
-| -------- | ----------------------------------------------------------------- |
-| header   | `role="button"`、`tabindex="0"`、`aria-expanded`、`aria-controls` |
+| 区域     | 支持                                                                                                         |
+| -------- | ------------------------------------------------------------------------------------------------------------ |
+| header   | `role="button"`、`tabindex="0"`、`aria-expanded`、`aria-controls`                                            |
 | panel    | `role="region"`、`aria-hidden`、`aria-labelledby`、异步 content 的 `aria-live` / `aria-busy`、关闭态 `inert` |
-| keyboard | `Enter` / `Space` 切换                                            |
+| keyboard | `Enter` / `Space` 切换                                                                                       |

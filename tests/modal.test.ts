@@ -11,10 +11,7 @@ import {
 import { jsx } from 'vanilla-signal';
 
 import { createModal, type Modal } from '../src/components/modal.ts';
-import {
-  createForm,
-  type FormDataRecord,
-} from '../src/components/form.ts';
+import { createForm, type FormDataRecord } from '../src/components/form.ts';
 
 let modal: Modal | null = null;
 
@@ -447,8 +444,7 @@ describe('Modal', () => {
   });
 
   it('uses an external Form instance as modal content', async () => {
-    const onSubmit =
-      vi.fn<(data: FormDataRecord) => void>();
+    const onSubmit = vi.fn<(data: FormDataRecord) => void>();
     const form = createForm({
       fields: [
         {

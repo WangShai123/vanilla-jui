@@ -32,9 +32,9 @@ import {
 
 ## DOM 类型谓词
 
-| 方法 | 返回值 |
-| --- | --- |
-| `isNode(value)` | 当前环境中是否为 `Node` |
+| 方法               | 返回值                     |
+| ------------------ | -------------------------- |
+| `isNode(value)`    | 当前环境中是否为 `Node`    |
 | `isElement(value)` | 当前环境中是否为 `Element` |
 
 无对应 DOM 构造器的 SSR 环境中，两者返回 `false`。
@@ -44,11 +44,11 @@ import {
 `DOMReference` 可以是 `Node`、CSS selector、递归节点数组或
 `false | null | undefined`。
 
-| 方法 | 结果 |
-| --- | --- |
-| `resolveNodeList(ref)` | 所有节点；空/无匹配/数组含非 Node 时为 `null` |
-| `resolveNode(ref)` | 直接 Node、selector 第一个结果或数组第一个节点 |
-| `resolveElement(ref)` | 直接 Element、selector 第一个元素或数组第一个 Element |
+| 方法                   | 结果                                                  |
+| ---------------------- | ----------------------------------------------------- |
+| `resolveNodeList(ref)` | 所有节点；空/无匹配/数组含非 Node 时为 `null`         |
+| `resolveNode(ref)`     | 直接 Node、selector 第一个结果或数组第一个节点        |
+| `resolveElement(ref)`  | 直接 Element、selector 第一个元素或数组第一个 Element |
 
 ```ts
 resolveNodeList(['#app']); // null，数组成员必须已经是 Node
@@ -77,12 +77,12 @@ all<HTMLButtonElement>('button', root); // Element[]
 目标首次进入 IntersectionObserver 可视区域时调用 callback，并停止观察。target 可为
 CSS selector 或 Element，返回幂等清理函数。
 
-| 选项 | 默认值 | 说明 |
-| --- | --- | --- |
-| `threshold` | `0.1` | IntersectionObserver threshold |
-| `rootMargin` | `'0px'` | observer root margin |
-| `root` | `null` | observer root |
-| `waitForDOM` | `true` | 目标未挂载时是否用 MutationObserver 等待 |
+| 选项         | 默认值  | 说明                                     |
+| ------------ | ------- | ---------------------------------------- |
+| `threshold`  | `0.1`   | IntersectionObserver threshold           |
+| `rootMargin` | `'0px'` | observer root margin                     |
+| `root`       | `null`  | observer root                            |
+| `waitForDOM` | `true`  | 目标未挂载时是否用 MutationObserver 等待 |
 
 ```ts
 const stop = lazyRender('#chart', renderChart, {

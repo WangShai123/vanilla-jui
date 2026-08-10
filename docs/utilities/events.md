@@ -19,12 +19,12 @@ stop(); // 无副作用
 
 创建实例级事件注册表。每个监听器由非空字符串 key 标识。
 
-| 方法 | 返回值 | 行为 |
-| --- | --- | --- |
-| `on(key, target, type, handler, options?)` | `() => void` | 同 key 重绑前先解绑旧监听器 |
-| `off(key)` | `boolean` | 解绑并删除；不存在时返回 `false` |
-| `clear()` | `void` | 解绑全部已记录监听器 |
-| `size()` | `number` | 当前记录数 |
+| 方法                                       | 返回值       | 行为                             |
+| ------------------------------------------ | ------------ | -------------------------------- |
+| `on(key, target, type, handler, options?)` | `() => void` | 同 key 重绑前先解绑旧监听器      |
+| `off(key)`                                 | `boolean`    | 解绑并删除；不存在时返回 `false` |
+| `clear()`                                  | `void`       | 解绑全部已记录监听器             |
+| `size()`                                   | `number`     | 当前记录数                       |
 
 ```ts
 const events = createEventManager();
