@@ -1,4 +1,10 @@
-import { For, createDeepStore, flushSync, jsx } from 'vanilla-signal';
+import {
+  For,
+  createMemo,
+  createDeepStore,
+  flushSync,
+  jsx,
+} from 'vanilla-signal';
 
 import {
   type FunctionalComponent,
@@ -20,13 +26,13 @@ interface TocClassNames {
 
 type TocClassNameConfig = Partial<TocClassNames>;
 
-interface TocItem {
+export interface TocItem {
   id: string;
   text: string;
   level: number;
 }
 
-interface TocCurrent {
+export interface TocCurrent {
   index: number;
   item: TocItem | null;
 }
@@ -35,6 +41,7 @@ interface TocProps extends Record<string, unknown> {
   target?: DOMReference;
   headings?: string;
   offset?: number;
+  reactive?: boolean;
   className?: TocClassNameConfig;
   onChange?:
     | ((item: TocItem | null, index: number, toc: TocInstance) => void)
@@ -45,6 +52,7 @@ interface ResolvedTocProps extends Record<string, unknown> {
   target: DOMReference;
   headings: string;
   offset: number;
+  reactive: boolean;
   className: TocClassNames;
   onChange:
     | ((item: TocItem | null, index: number, toc: TocInstance) => void)
@@ -59,6 +67,8 @@ interface TocState extends Record<string, unknown> {
 interface TocRuntimeExtras {
   ticking: boolean;
   frameId: number;
+  refreshing: boolean;
+  refreshFrameId: number;
 }
 
 interface TocScrollOptions {
@@ -67,7 +77,6 @@ interface TocScrollOptions {
 }
 
 interface TocActions {
-  refresh(): TocInstance;
   activate(index: number): TocInstance;
 }
 
@@ -94,6 +103,7 @@ const TOC_PROPS_SCHEMA = {
     type: 'number',
     min: 0,
   },
+  reactive: { default: false, type: 'boolean' },
   className: {
     default: DEFAULT_CLASS_NAMES,
     type: 'object',
@@ -113,6 +123,7 @@ function normalizeProps(input: TocProps): ResolvedTocProps {
     target: props.target as DOMReference,
     headings: props.headings as string,
     offset: props.offset as number,
+    reactive: props.reactive as boolean,
     className: props.className as TocClassNames,
     onChange: props.onChange as ResolvedTocProps['onChange'],
   };
@@ -138,11 +149,18 @@ export function createToc(props: TocProps = {}): TocInstance {
     items: [],
     current: { index: -1, item: null },
   }) as TocState;
-  const runtime: TocRuntimeExtras = { ticking: false, frameId: 0 };
+  const runtime: TocRuntimeExtras = {
+    ticking: false,
+    frameId: 0,
+    refreshing: false,
+    refreshFrameId: 0,
+  };
   const events = createEventManager();
   let target: Element | null = null;
   let headings: HTMLHeadingElement[] = [];
+  let observer: MutationObserver | null = null;
   let toc: TocInstance;
+  const renderableItems = createMemo(() => state.items);
 
   const setActive = (index: number): void => {
     if (index === state.current.index) return;
@@ -176,6 +194,16 @@ export function createToc(props: TocProps = {}): TocInstance {
     });
   };
 
+  const scheduleRefresh = (): void => {
+    if (runtime.refreshing) return;
+    runtime.refreshing = true;
+    runtime.refreshFrameId = requestAnimationFrame(() => {
+      runtime.refreshing = false;
+      runtime.refreshFrameId = 0;
+      syncFromTarget();
+    });
+  };
+
   const scrollToItem = (
     item: TocItem,
     { activeIndex = -1, updateHash = false }: TocScrollOptions = {}
@@ -194,8 +222,8 @@ export function createToc(props: TocProps = {}): TocInstance {
     }
   };
 
-  const refresh = (): TocInstance => {
-    if (toc.runtime.destroyed || !toc.runtime.built || !target) return toc;
+  const syncFromTarget = (): void => {
+    if (toc.runtime.destroyed || !toc.runtime.built || !target) return;
     headings = all<HTMLHeadingElement>(settings.headings, target);
     const items = headings.map(normalizeHeading);
     flushSync(() => {
@@ -203,7 +231,6 @@ export function createToc(props: TocProps = {}): TocInstance {
       state.current = { index: -1, item: null };
     });
     updateActive();
-    return toc;
   };
 
   const activate = (index: number): TocInstance => {
@@ -222,7 +249,7 @@ export function createToc(props: TocProps = {}): TocInstance {
     name: 'Toc',
     props: settings,
     state,
-    actions: { refresh, activate },
+    actions: { activate },
     view: () =>
       jsx('nav', {
         className: settings.className.toc,
@@ -231,7 +258,7 @@ export function createToc(props: TocProps = {}): TocInstance {
           className: settings.className.list,
           'data-toc-list': 'root',
           children: For({
-            each: () => state.items,
+            each: renderableItems,
             key: (item: TocItem) => item.id,
             children: (
               itemAccessor: () => TocItem,
@@ -269,12 +296,29 @@ export function createToc(props: TocProps = {}): TocInstance {
       target = requireContainer(settings.target, 'Toc.target');
       events.on('scroll', window, 'scroll', onScroll, { passive: true });
       context.own(() => events.clear());
-      refresh();
+      syncFromTarget();
+      if (settings.reactive) {
+        observer = new MutationObserver(scheduleRefresh);
+        observer.observe(target, {
+          childList: true,
+          subtree: true,
+          characterData: true,
+        });
+        context.own(() => {
+          observer?.disconnect();
+          observer = null;
+        });
+      }
     },
     onDestroy() {
       if (runtime.frameId) cancelAnimationFrame(runtime.frameId);
+      if (runtime.refreshFrameId) cancelAnimationFrame(runtime.refreshFrameId);
       runtime.frameId = 0;
+      runtime.refreshFrameId = 0;
       runtime.ticking = false;
+      runtime.refreshing = false;
+      observer?.disconnect();
+      observer = null;
       target = null;
       headings = [];
     },

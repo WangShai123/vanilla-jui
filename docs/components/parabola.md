@@ -104,7 +104,7 @@ const started = await parabola.show();
 
 ### `destroy()`
 
-销毁实例，之后 `show()` 永远返回 `false`。销毁会取消尚未生产小球的延迟任务，但不会手动结束已经生产出来的小球动画；这些小球会继续飞行，并在动画结束后自行移除。
+销毁实例，之后 `show()` 永远返回 `false`。销毁会取消尚未生产小球的延迟任务、取消进行中的 `requestAnimationFrame`，并立即移除已经生产的小球和实例根节点。
 
 ```js
 parabola.destroy();

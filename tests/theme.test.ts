@@ -9,6 +9,8 @@ let theme: ReturnType<typeof createTheme> | null = null;
 const themeStorage = createStorage({
   driver: 'cookie',
   codec: 'json',
+  namespace: '',
+  keySeparator: '',
   driverOptions: {
     path: '/',
     sameSite: 'lax',
@@ -19,6 +21,17 @@ function waitStorage(): Promise<void> {
   return new Promise((resolve) => {
     setTimeout(resolve, 0);
   });
+}
+
+function readThemeCookie(): Record<string, unknown> | null {
+  const match = document.cookie.match(/(?:^|; )ui-theme=([^;]*)/);
+  if (!match) return null;
+  const record = JSON.parse(decodeURIComponent(match[1])) as {
+    value?: string;
+  };
+  if (typeof record.value !== 'string') return null;
+  const payload = JSON.parse(record.value) as { value?: Record<string, unknown> };
+  return payload.value || null;
 }
 
 beforeEach(() => {
@@ -126,6 +139,18 @@ describe('Theme', () => {
         .querySelector('[data-theme-button="theme"][data-theme-value="indigo"]')
         ?.hasAttribute('aria-selected')
     ).toBe(false);
+  });
+
+  it('writes config to the configured theme cookie', async () => {
+    theme = createTheme({ theme: 'indigo' });
+
+    theme.setConfig({ mode: 'auto', theme: 'mint' });
+    await waitStorage();
+
+    expect(readThemeCookie()).toMatchObject({
+      mode: 'auto',
+      theme: 'mint',
+    });
   });
 
   it('destroy unbinds document interaction', () => {

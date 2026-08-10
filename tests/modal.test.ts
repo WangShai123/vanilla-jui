@@ -11,10 +11,17 @@ import {
 import { jsx } from 'vanilla-signal';
 
 import { createModal, type Modal } from '../src/components/modal.ts';
+import {
+  createForm,
+  type FormDataRecord,
+} from '../src/components/form.ts';
 
 let modal: Modal | null = null;
 
 async function flushPresence(): Promise<void> {
+  await Promise.resolve();
+  await Promise.resolve();
+  await Promise.resolve();
   await Promise.resolve();
   await Promise.resolve();
   await Promise.resolve();
@@ -34,6 +41,25 @@ function body(instance: Modal): HTMLElement | null {
   return (
     instance.element?.querySelector<HTMLElement>('[data-modal-body]') || null
   );
+}
+
+function header(instance: Modal): HTMLElement | null {
+  return instance.element?.querySelector<HTMLElement>('.modal-header') || null;
+}
+
+function footer(instance: Modal): HTMLElement | null {
+  return instance.element?.querySelector<HTMLElement>('.modal-footer') || null;
+}
+
+function deferred<T = void>(): {
+  promise: Promise<T>;
+  resolve: (value: T) => void;
+} {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>((done) => {
+    resolve = done;
+  });
+  return { promise, resolve };
 }
 
 function pendingAnimation(): {
@@ -150,21 +176,59 @@ describe('Modal', () => {
     modal = createModal({ content: 'Animated content' }).build();
     const panel = dialog(modal);
     if (!panel) throw new Error('Expected modal dialog.');
-    const motion = pendingAnimation();
+    const rootMotion = pendingAnimation();
+    const panelMotion = pendingAnimation();
+    Object.defineProperty(modal.element, 'animate', {
+      configurable: true,
+      value: () => rootMotion.animation,
+    });
     Object.defineProperty(panel, 'animate', {
       configurable: true,
-      value: () => motion.animation,
+      value: () => panelMotion.animation,
     });
 
     modal.show();
     modal.hide();
 
-    expect(panel?.getAttribute('aria-hidden')).toBe('true');
-    expect(motion.animation.playbackRate).toBe(-1);
+    expect(panel?.getAttribute('data-mount')).toBe('false');
+    expect(modal.element?.getAttribute('data-mount')).toBe('false');
     expect(document.body.contains(modal.element)).toBe(true);
 
-    motion.resolve();
+    rootMotion.resolve();
+    panelMotion.resolve();
     await flushPresence();
+    expect(document.body.contains(modal.element)).toBe(false);
+  });
+
+  it('keeps body content stable while leaving', async () => {
+    modal = createModal({ content: 'Closing body' }).build();
+    const panel = dialog(modal);
+    if (!panel) throw new Error('Expected modal dialog.');
+    const rootMotion = pendingAnimation();
+    const panelMotion = pendingAnimation();
+    Object.defineProperty(modal.element, 'animate', {
+      configurable: true,
+      value: () => rootMotion.animation,
+    });
+    Object.defineProperty(panel, 'animate', {
+      configurable: true,
+      value: () => panelMotion.animation,
+    });
+
+    modal.show();
+    await Promise.resolve();
+    expect(body(modal)?.textContent).toBe('Closing body');
+
+    modal.hide();
+    await Promise.resolve();
+
+    expect(document.body.contains(modal.element)).toBe(true);
+    expect(body(modal)?.textContent).toBe('Closing body');
+
+    rootMotion.resolve();
+    panelMotion.resolve();
+    await flushPresence();
+
     expect(document.body.contains(modal.element)).toBe(false);
   });
 
@@ -192,6 +256,8 @@ describe('Modal', () => {
     await Promise.resolve();
     expect(onConfirm).toHaveBeenCalledTimes(1);
     expect(modal.state.visible).toBe(true);
+    expect(modal.state.processing).toBe(false);
+    expect(dialog(modal)?.querySelector('[aria-live="polite"]')).toBeNull();
 
     modal.hide();
     await flushPresence();
@@ -212,16 +278,197 @@ describe('Modal', () => {
     expect(modal.state.visible).toBe(false);
   });
 
-  it('submits Form data and merges extra fields', async () => {
-    const onSubmit = vi.fn();
+  it('uses loading only for async content resolution', async () => {
+    const pending = deferred<string>();
+    const content = vi.fn(() => pending.promise);
     modal = createModal({
-      id: 'form-modal',
-      fields: [{ label: 'Name', name: 'name', type: 'text', required: true }],
-      onSubmit,
+      id: 'async-content',
+      text: { title: 'Async content' },
+      content,
     }).build();
 
-    expect(modal.state.mode).toBe('form');
+    await Promise.resolve();
+    expect(content).not.toHaveBeenCalled();
+    expect(body(modal)?.textContent).toBe('');
+
     modal.show();
+    await Promise.resolve();
+
+    expect(content).toHaveBeenCalledTimes(1);
+    expect(modal.state.loading).toBe(true);
+    expect(modal.state.processing).toBe(false);
+    expect(header(modal)?.hidden).toBe(true);
+    expect(footer(modal)?.hidden).toBe(true);
+    expect(body(modal)?.querySelector('[aria-live="polite"]')).toBeNull();
+    expect(dialog(modal)?.querySelector('[aria-live="polite"]')).toBeTruthy();
+
+    pending.resolve('Loaded content');
+    await flushPresence();
+
+    expect(modal.state.loading).toBe(false);
+    expect(header(modal)?.hidden).toBe(false);
+    expect(footer(modal)?.hidden).toBe(false);
+    expect(body(modal)?.textContent).toBe('Loaded content');
+  });
+
+  it('caches async content until ttl expires', async () => {
+    vi.setSystemTime(1000);
+    let loadCount = 0;
+    const content = vi.fn(async () => `Loaded ${++loadCount}`);
+    modal = createModal({
+      id: 'cached-content',
+      content,
+      cache: true,
+      ttl: 1000,
+    }).build();
+
+    expect(content).not.toHaveBeenCalled();
+    modal.show();
+    await flushPresence();
+    expect(content).toHaveBeenCalledTimes(1);
+    expect(body(modal)?.textContent).toBe('Loaded 1');
+
+    modal.hide();
+    await flushPresence();
+    modal.show();
+    await flushPresence();
+
+    expect(content).toHaveBeenCalledTimes(1);
+    expect(body(modal)?.textContent).toBe('Loaded 1');
+
+    vi.setSystemTime(2001);
+    modal.hide();
+    await flushPresence();
+    modal.show();
+    await flushPresence();
+
+    expect(content).toHaveBeenCalledTimes(2);
+    expect(body(modal)?.textContent).toBe('Loaded 2');
+  });
+
+  it('uses processing for async confirm and cancel handlers', async () => {
+    const confirm = deferred();
+    const cancel = deferred();
+    const onConfirm = vi.fn(() => confirm.promise);
+    const onCancel = vi.fn(() => cancel.promise);
+    modal = createModal({
+      id: 'processing-modal',
+      content: 'Processing body',
+      escClose: true,
+      bgClose: true,
+      onConfirm,
+      onCancel,
+    }).build();
+
+    modal.show();
+    dialog(modal)
+      ?.querySelector<HTMLElement>('[data-action="confirm"]')
+      ?.click();
+    await Promise.resolve();
+
+    expect(onConfirm).toHaveBeenCalledTimes(1);
+    expect(modal.state.loading).toBe(false);
+    expect(modal.state.processing).toBe(true);
+    expect(dialog(modal)?.querySelector('[aria-live="polite"]')).toBeTruthy();
+    expect(
+      dialog(modal)?.querySelector<HTMLButtonElement>('[data-action="close"]')
+        ?.disabled
+    ).toBe(true);
+
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    modal.element?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    expect(modal.state.visible).toBe(true);
+
+    confirm.resolve(undefined);
+    await flushPresence();
+
+    expect(modal.state.processing).toBe(false);
+
+    dialog(modal)
+      ?.querySelector<HTMLElement>('[data-action="cancel"]')
+      ?.click();
+    await Promise.resolve();
+
+    expect(onCancel).toHaveBeenCalledTimes(1);
+    expect(modal.state.processing).toBe(true);
+    expect(modal.state.visible).toBe(true);
+
+    cancel.resolve(undefined);
+    await flushPresence();
+
+    expect(modal.state.processing).toBe(false);
+    expect(modal.state.visible).toBe(false);
+  });
+
+  it('keeps processing state stable until async confirm hide finishes leaving', async () => {
+    const confirm = deferred();
+    modal = createModal({
+      id: 'processing-hide-modal',
+      content: 'Processing body',
+      onConfirm: async (instance) => {
+        await confirm.promise;
+        instance.hide();
+      },
+    }).build();
+    const panel = dialog(modal);
+    if (!panel) throw new Error('Expected modal dialog.');
+    const rootMotion = pendingAnimation();
+    const panelMotion = pendingAnimation();
+    Object.defineProperty(modal.element, 'animate', {
+      configurable: true,
+      value: () => rootMotion.animation,
+    });
+    Object.defineProperty(panel, 'animate', {
+      configurable: true,
+      value: () => panelMotion.animation,
+    });
+
+    modal.show();
+    dialog(modal)
+      ?.querySelector<HTMLElement>('[data-action="confirm"]')
+      ?.click();
+    await Promise.resolve();
+    expect(modal.state.processing).toBe(true);
+
+    confirm.resolve(undefined);
+    await flushPresence();
+
+    expect(modal.state.visible).toBe(false);
+    expect(modal.state.processing).toBe(true);
+    expect(document.body.contains(modal.element)).toBe(true);
+    expect(dialog(modal)?.querySelector('[aria-live="polite"]')).toBeTruthy();
+
+    rootMotion.resolve();
+    panelMotion.resolve();
+    await flushPresence();
+
+    expect(modal.state.processing).toBe(false);
+    expect(document.body.contains(modal.element)).toBe(false);
+  });
+
+  it('uses an external Form instance as modal content', async () => {
+    const onSubmit =
+      vi.fn<(data: FormDataRecord) => void>();
+    const form = createForm({
+      fields: [
+        {
+          type: 'text',
+          payload: { label: 'Name', name: 'name', required: true },
+        },
+      ],
+      buttons: false,
+      onSubmit,
+    }).build();
+    modal = createModal({
+      id: 'external-form-modal',
+      content: () => form.element,
+      onConfirm: () => {
+        form.requestSubmit();
+      },
+    }).build();
+
+    modal.show();
+    await Promise.resolve();
 
     const input = modal.element
       ?.querySelector<HTMLFormElement>('form')
@@ -230,70 +477,12 @@ describe('Modal', () => {
       throw new Error('Expected name input.');
     }
     input.value = 'alice';
-    modal.state.extraData = { source: 'test' };
-    modal.requestSubmit();
-    await Promise.resolve();
-
-    expect(onSubmit).toHaveBeenCalledWith(
-      { name: 'alice', source: 'test' },
-      modal
-    );
-    expect(modal.state.data).toEqual({ name: 'alice', source: 'test' });
-  });
-
-  it('uses explicit mode instead of fields shape to choose body rendering', async () => {
-    const onConfirm = vi.fn();
-    const onSubmit = vi.fn();
-    modal = createModal({
-      id: 'content-with-fields',
-      mode: 'content',
-      content: 'Plain body',
-      fields: [{ label: 'Hidden field', name: 'hidden' }],
-      onConfirm,
-      onSubmit,
-    }).build();
-
-    expect(modal.state.mode).toBe('content');
-    expect(modal.state.fields).toHaveLength(1);
-
-    modal.show();
-    expect(modal.element?.querySelector('form')).toBeNull();
-    expect(body(modal)?.textContent).toBe('Plain body');
-
     dialog(modal)
       ?.querySelector<HTMLElement>('[data-action="confirm"]')
       ?.click();
     await Promise.resolve();
 
-    expect(onConfirm).toHaveBeenCalledTimes(1);
-    expect(onSubmit).not.toHaveBeenCalled();
-  });
-
-  it('switches body rendering only when mode changes', async () => {
-    modal = createModal({
-      id: 'mode-switch',
-      mode: 'form',
-      content: 'Stored content',
-      fields: [{ label: 'Name', name: 'name', type: 'text' }],
-    }).build();
-
-    modal.show();
-    expect(modal.element?.querySelector('form')).toBeTruthy();
-
-    modal.setState({ content: 'Next content' });
-    await Promise.resolve();
-    expect(modal.state.mode).toBe('form');
-    expect(modal.element?.querySelector('form')).toBeTruthy();
-    expect(body(modal)?.textContent).not.toContain('Next content');
-
-    modal.setState({ mode: 'content' });
-    await Promise.resolve();
-    expect(modal.element?.querySelector('form')).toBeNull();
-    expect(body(modal)?.textContent).toBe('Next content');
-
-    modal.state.mode = 'form';
-    await Promise.resolve();
-    expect(modal.element?.querySelector('form')).toBeTruthy();
+    expect(onSubmit).toHaveBeenCalledWith({ name: 'alice' }, form);
   });
 
   it('updates and resets reactive state while rejecting static props', () => {
@@ -303,9 +492,9 @@ describe('Modal', () => {
       text: { title: 'Initial title', confirm: 'OK', cancel: 'Cancel' },
     }).build();
 
-    modal.setState({ content: 'Updated', loading: true });
+    modal.setState({ content: 'Updated', processing: true });
     expect(modal.state.content).toBe('Updated');
-    expect(modal.state.loading).toBe(true);
+    expect(modal.state.processing).toBe(true);
 
     expect(() => setInvalidState({ id: 'next-modal' })).toThrow(
       /not a supported state key/
@@ -320,13 +509,13 @@ describe('Modal', () => {
       /not a supported state key/
     );
     expect(() => setInvalidState({ mode: 'auto' })).toThrow(
-      /expects one of content, form/
+      /not a supported state key/
     );
 
     modal.reset();
-    expect(modal.state.mode).toBe('content');
     expect(modal.state.content).toBe('Initial');
     expect(modal.state.loading).toBe(false);
+    expect(modal.state.processing).toBe(false);
   });
 
   it('requires build before show', () => {

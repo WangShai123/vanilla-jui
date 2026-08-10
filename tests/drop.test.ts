@@ -8,9 +8,10 @@ import {
   it,
   vi,
 } from 'vite-plus/test';
-import { jsx } from 'vanilla-signal';
+import { insert, jsx } from 'vanilla-signal';
 
-import { createDrop } from '../src/primitives/drop.ts';
+import { createDrop, type DropInstance } from '../src/primitives/drop.ts';
+import { q } from '../src/utilities/dom.ts';
 
 let drop: ReturnType<typeof createDrop> | null = null;
 
@@ -18,8 +19,19 @@ function target(id = 'target'): HTMLButtonElement {
   const button = document.createElement('button');
   button.id = id;
   button.textContent = 'Target';
-  document.body.appendChild(button);
+  insert(document.body, button);
   return button;
+}
+
+function find<TElement extends Element = Element>(
+  selector: string,
+  context: Element | null | undefined
+): TElement | null {
+  return context ? q<TElement>(selector, context) : null;
+}
+
+async function flushMicrotasks(count = 4): Promise<void> {
+  for (let i = 0; i < count; i += 1) await Promise.resolve();
 }
 
 beforeEach(() => {
@@ -48,14 +60,12 @@ describe('Drop', () => {
 
     expect(drop.element?.classList.contains('j-drop')).toBe(true);
     expect(drop.element?.getAttribute('data-drop')).toBe('menu');
-    expect(
-      drop.element?.querySelector('[data-drop-container="menu"]')
-    ).toBeTruthy();
+    expect(find('[data-drop-container="menu"]', drop.element)).toBeTruthy();
 
     drop.show(false);
     expect(document.body.contains(drop.element)).toBe(true);
     expect(drop.element?.getAttribute('aria-expanded')).toBe('true');
-    expect(drop.element?.querySelector('b')?.textContent).toBe('Drop content');
+    expect(find('b', drop.element)?.textContent).toBe('Drop content');
   });
 
   it('allows className overrides without changing data selectors', () => {
@@ -72,9 +82,7 @@ describe('Drop', () => {
 
     expect(drop.element?.classList.contains('qa-drop')).toBe(true);
     expect(drop.element?.classList.contains('j-drop')).toBe(false);
-    expect(
-      drop.element?.querySelector('[data-drop-container="custom"]')
-    ).toBeTruthy();
+    expect(find('[data-drop-container="custom"]', drop.element)).toBeTruthy();
   });
 
   it('supports click mode document closing and callbacks', () => {
@@ -127,6 +135,60 @@ describe('Drop', () => {
     expect(
       drop.element?.firstElementChild?.getAttribute('data-drop-container')
     ).toBeTruthy();
-    expect(drop.element?.querySelector('[data-custom-wrapper]')).toBe(section);
+    expect(find('[data-custom-wrapper]', drop.element)).toBe(section);
+  });
+
+  it('does not set aria-hidden when custom content may contain focusable nodes', () => {
+    const button = target();
+    drop = createDrop(button, {
+      content: jsx('button', {
+        type: 'button',
+        children: 'Focusable content',
+      }),
+    });
+
+    expect(drop.element?.hasAttribute('aria-hidden')).toBe(false);
+    drop.show(false);
+    expect(drop.element?.hasAttribute('aria-hidden')).toBe(false);
+    drop.hide(false);
+    expect(drop.element?.hasAttribute('aria-hidden')).toBe(false);
+  });
+
+  it('renders async content with loading and reuses cached content within ttl', async () => {
+    const button = target();
+    let resolveContent!: (content: ReturnType<typeof jsx>) => void;
+    const loader = vi.fn(
+      () =>
+        new Promise<ReturnType<typeof jsx>>((resolve) => {
+          resolveContent = resolve;
+        })
+    );
+    drop = createDrop(button, {
+      content: (_instance: DropInstance) => loader(),
+      cache: true,
+      ttl: 50,
+    });
+
+    drop.show(false);
+    await flushMicrotasks();
+    expect(loader).toHaveBeenCalledTimes(1);
+    expect(find('[aria-busy="true"]', drop.element)).toBeTruthy();
+
+    resolveContent(jsx('strong', { children: 'Async content' }));
+    await flushMicrotasks();
+
+    expect(find('[aria-busy="false"]', drop.element)).toBeTruthy();
+    expect(find('strong', drop.element)?.textContent).toBe('Async content');
+
+    drop.hide(false);
+    drop.show(false);
+    await flushMicrotasks();
+    expect(loader).toHaveBeenCalledTimes(1);
+
+    drop.hide(false);
+    vi.setSystemTime(Date.now() + 51);
+    drop.show(false);
+    await flushMicrotasks();
+    expect(loader).toHaveBeenCalledTimes(2);
   });
 });

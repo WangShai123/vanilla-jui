@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
 
-import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
+import { insert } from 'vanilla-signal';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 
-import { createSticky } from '../src/components/sticky.ts';
+import { createSticky } from '../src/primitives/sticky.ts';
 
 let sticky: ReturnType<typeof createSticky> | null = null;
 
@@ -36,6 +37,25 @@ function mockHeight(target: HTMLElement, height: number): void {
     configurable: true,
   });
 }
+
+async function tick(): Promise<void> {
+  await Promise.resolve();
+  await Promise.resolve();
+}
+
+beforeEach(() => {
+  Object.defineProperty(window, 'requestAnimationFrame', {
+    value: (callback: FrameRequestCallback) => {
+      callback(0);
+      return 1;
+    },
+    configurable: true,
+  });
+  Object.defineProperty(window, 'cancelAnimationFrame', {
+    value: vi.fn(),
+    configurable: true,
+  });
+});
 
 afterEach(() => {
   sticky?.destroy();
@@ -81,7 +101,7 @@ describe('Sticky', () => {
 
   it('ignores overflow when configured', () => {
     const parent = mount();
-    const onRefresh =
+    const onReBuild =
       vi.fn<(sticky: ReturnType<typeof createSticky>) => void>();
 
     sticky = createSticky({
@@ -89,12 +109,12 @@ describe('Sticky', () => {
       target: '.widget',
       max: 1,
       overflow: 'ignore',
-      onRefresh,
+      onReBuild,
     }).build();
 
     expect(sticky.state.items).toHaveLength(0);
     expect(sticky.state?.items).toHaveLength(0);
-    expect(onRefresh).not.toHaveBeenCalled();
+    expect(onReBuild).not.toHaveBeenCalled();
   });
 
   it('restores original inline styles on destroy', () => {
@@ -113,5 +133,34 @@ describe('Sticky', () => {
     expect(target.style.position).toBe('relative');
     expect(target.style.top).toBe('3px');
     expect(target.style.zIndex).toBe('2');
+  });
+
+  it('rebuilds sticky targets when a widget is added after build', async () => {
+    const parent = mount();
+    mockHeight(element('#a'), 20);
+
+    sticky = createSticky({
+      parent,
+      target: '.widget',
+      top: 10,
+      gap: 5,
+      reactive: true,
+    }).build();
+
+    const ad = document.createElement('section');
+    ad.id = 'ad';
+    ad.className = 'widget';
+    mockHeight(ad, 40);
+    insert(parent, ad);
+    await tick();
+
+    expect(sticky.state.items.map((item) => item.key)).toEqual([
+      'a',
+      'b',
+      'c',
+      'ad',
+    ]);
+    expect(ad.style.position).toBe('sticky');
+    expect(ad.style.top).toBe('45px');
   });
 });

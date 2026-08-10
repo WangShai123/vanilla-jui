@@ -176,7 +176,7 @@ describe('Offcanvas', () => {
     await hiding;
     expect(document.body.contains(offcanvas.element)).toBe(false);
     expect(onHidden).toHaveBeenCalledWith(offcanvas);
-    expect(motion.animation.playbackRate).toBe(-1);
+    expect(motion.animate).toHaveBeenCalledTimes(2);
   });
 
   it('allows className overrides without changing data selectors', async () => {
@@ -233,6 +233,7 @@ describe('Offcanvas', () => {
 
     expect(document.body.contains(offcanvas.element)).toBe(true);
     expect(offcanvas.element?.getAttribute('aria-expanded')).toBe('false');
+    expect(offcanvas.element?.getAttribute('data-mount')).toBe('false');
 
     motion.setFinished(Promise.resolve());
     await offcanvas.show();
@@ -263,6 +264,37 @@ describe('Offcanvas', () => {
 
     offcanvas.destroy();
     expect(document.body.style.overflow).toBe('auto');
+  });
+
+  it('keeps body overflow locked until every visible offcanvas is hidden', async () => {
+    document.body.style.overflow = 'auto';
+    const first = mount(
+      createOffcanvas({
+        id: 'first-scroll-offcanvas',
+        overlay: false,
+        content: 'First',
+      })
+    );
+    const second = mount(
+      createOffcanvas({
+        id: 'second-scroll-offcanvas',
+        overlay: false,
+        content: 'Second',
+      })
+    );
+    offcanvas = second;
+
+    await first.show();
+    await second.show();
+    expect(document.body.style.overflow).toBe('hidden');
+
+    await first.hide();
+    expect(document.body.style.overflow).toBe('hidden');
+
+    await second.hide();
+    expect(document.body.style.overflow).toBe('auto');
+
+    first.destroy();
   });
 
   it('closes by nested data-action, overlay and Escape', async () => {

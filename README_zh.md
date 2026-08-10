@@ -41,4 +41,4 @@ const { createToast, createModal } = jui;
 
 ## 文档
 
-[在线文档](https://docs.jealer.com/vanilla-jui/)
+[在线文档](https://app.jealer.com/vanilla-jui/)

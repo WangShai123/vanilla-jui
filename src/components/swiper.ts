@@ -12,13 +12,9 @@ import {
   defineComponent,
 } from '../core/component.ts';
 import { icon } from '../primitives/icons.ts';
+import { createLoading } from '../primitives/loading.ts';
 import { joinClasses } from '../utilities/class-name.ts';
-import {
-  all,
-  isElement,
-  q,
-  type RenderableContent,
-} from '../utilities/dom.ts';
+import { all, q, type RenderableContent } from '../utilities/dom.ts';
 import { createEventManager } from '../utilities/events.ts';
 import { randomId } from '../utilities/id.ts';
 import { createScheduledTask } from '../core/scheduler.ts';
@@ -48,9 +44,6 @@ export interface SwiperClassNames {
   next: string;
   active: string;
   disabled: string;
-  loading: string;
-  loaded: string;
-  error: string;
 }
 
 export type SwiperClassNameConfig = Partial<SwiperClassNames>;
@@ -83,9 +76,15 @@ export interface SwiperSlideContext {
   index: number;
 }
 
+export type SwiperDataLoader = (
+  swiper: Swiper
+) => SwiperDataItem[] | Promise<SwiperDataItem[]>;
+
+export type SwiperDataSource = SwiperDataItem[] | SwiperDataLoader;
+
 export interface SwiperProps extends Record<string, unknown> {
   id?: string | null;
-  data?: SwiperDataItem[];
+  data?: SwiperDataSource;
   loop?: boolean;
   autoplay?: boolean;
   delay?: number;
@@ -103,7 +102,7 @@ export interface SwiperProps extends Record<string, unknown> {
 
 interface ResolvedSwiperProps extends Record<string, unknown> {
   id: string | null;
-  data: SwiperDataItem[];
+  data: SwiperDataSource;
   loop: boolean;
   autoplay: boolean;
   delay: number;
@@ -121,6 +120,7 @@ interface ResolvedSwiperProps extends Record<string, unknown> {
 
 interface SwiperState extends Record<string, unknown> {
   data: SwiperDataItem[];
+  loading: boolean;
   index: number;
   trackIndex: number;
   transform: number;
@@ -142,7 +142,6 @@ interface SwipePoint {
 }
 
 interface SwiperActions {
-  refresh(): Swiper;
   slideTo(index: number): void;
   slideToTrack(index: number): void;
   next(): void;
@@ -182,9 +181,6 @@ const DEFAULT_CLASS_NAMES: SwiperClassNames = {
   next: 'is-next',
   active: 'is-active',
   disabled: 'is-disabled',
-  loading: 'loading',
-  loaded: 'loaded',
-  error: 'error',
 };
 
 const SWIPER_OPTIONS_SCHEMA = {
@@ -195,7 +191,7 @@ const SWIPER_OPTIONS_SCHEMA = {
     normalize: (value: unknown) =>
       typeof value === 'string' ? value.trim() : value,
   },
-  data: { default: [], type: 'array' },
+  data: { default: [], types: ['array', 'function'] },
   loop: { default: true, type: 'boolean' },
   autoplay: { default: true, type: 'boolean' },
   delay: { default: 3000, type: 'number', min: 0 },
@@ -231,7 +227,8 @@ const SWIPER_DATA_ITEM_RULE = {
 };
 
 const SWIPER_STATE_SCHEMA = {
-  data: SWIPER_OPTIONS_SCHEMA.data,
+  data: { type: 'array' },
+  loading: { type: 'boolean' },
   index: { type: 'number' },
   trackIndex: { type: 'number' },
   transform: { type: 'number' },
@@ -257,6 +254,10 @@ function cloneData(data: SwiperDataItem[] | undefined): SwiperDataItem[] {
   return Array.isArray(data) ? data.map((item) => ({ ...item })) : [];
 }
 
+function cloneDataSource(source: SwiperDataSource): SwiperDataSource {
+  return Array.isArray(source) ? cloneData(source) : source;
+}
+
 function normalizeProps(input: SwiperProps = {}): ResolvedSwiperProps {
   const props = resolveProps(
     input,
@@ -266,25 +267,17 @@ function normalizeProps(input: SwiperProps = {}): ResolvedSwiperProps {
   return {
     ...props,
     id: props.id?.trim() || null,
-    data: cloneData(props.data),
+    data: cloneDataSource(props.data),
     className: { ...props.className },
   };
 }
 
-function findUniqueElementById(id: string): HTMLElement | null {
-  const matches = Array.from(
-    document.querySelectorAll<HTMLElement>('[id]')
-  ).filter((element) => element.id === id);
-  validateParam('id', matches, { type: 'array', maxLength: 1 }, 'Swiper.props');
-  return matches[0] || null;
-}
-
 export function createSwiper(input: SwiperProps = {}): Swiper {
   const props = normalizeProps(input);
-  const boundRoot = props.id ? findUniqueElementById(props.id) : null;
-  const ownsElement = !boundRoot;
+  const initialData = Array.isArray(props.data) ? props.data : [];
   const state = createDeepStore({
-    data: cloneData(props.data),
+    data: cloneData(initialData),
+    loading: false,
     index: 0,
     trackIndex: 0,
     transform: 0,
@@ -294,17 +287,12 @@ export function createSwiper(input: SwiperProps = {}): Swiper {
   const events = createEventManager();
   const itemKeys = new WeakMap<object, string>();
   const imageCleanups = new Set<() => void>();
-  const staticGenerated = new Set<Element>();
   let swiper!: Swiper;
   let wrapper: HTMLElement | null = null;
   let slides: HTMLElement[] = [];
-  let pagination: HTMLElement | null = null;
-  let prevButton: HTMLElement | null = null;
-  let nextButton: HTMLElement | null = null;
   let normalizedItems: () => NormalizedSwiperDataItem[] = () => [];
   let trackItems: () => TrackItem[] = () => [];
-  let staticRealCount = 0;
-  let staticLoopReady = false;
+  let dataLoadId = 0;
   let timer: ReturnType<typeof setInterval> | null = null;
   let mountFrame: number | null = null;
   let logs: SwipeLog[] = [];
@@ -369,9 +357,8 @@ export function createSwiper(input: SwiperProps = {}): Swiper {
       },
     ];
   };
-  const realCount = (): number =>
-    ownsElement ? normalizedItems().length : staticRealCount;
-  const trackCount = (): number => slides.length;
+  const realCount = (): number => normalizedItems().length;
+  const trackCount = (): number => trackItems().length;
   const toRealIndex = (index = state.trackIndex): number => {
     const count = realCount();
     if (!count) return 0;
@@ -389,11 +376,6 @@ export function createSwiper(input: SwiperProps = {}): Swiper {
   };
   const refreshSlides = (): void => {
     slides = wrapper ? all<HTMLElement>('[data-swiper-slide]', wrapper) : [];
-    if (!ownsElement) {
-      staticRealCount = slides.filter(
-        (slide) => !slide.hasAttribute('data-clone')
-      ).length;
-    }
   };
   const clearImageCleanups = (): void => {
     for (const cleanup of imageCleanups) cleanup();
@@ -444,7 +426,7 @@ export function createSwiper(input: SwiperProps = {}): Swiper {
       if (hasSource && !image.complete && (image.onload || image.onerror)) {
         continue;
       }
-      image.classList.add(props.className.loading);
+      image.dataset.status = 'loading';
       const cleanup = (): void => {
         image.onload = null;
         image.onerror = null;
@@ -452,13 +434,11 @@ export function createSwiper(input: SwiperProps = {}): Swiper {
       };
       imageCleanups.add(cleanup);
       const markLoaded = (): void => {
-        image.classList.remove(props.className.loading);
-        image.classList.add(props.className.loaded);
+        image.dataset.status = 'loaded';
         cleanup();
       };
       const markError = (): void => {
-        image.classList.remove(props.className.loading);
-        image.classList.add(props.className.error);
+        image.dataset.status = 'error';
         cleanup();
       };
       image.onload = markLoaded;
@@ -658,7 +638,7 @@ export function createSwiper(input: SwiperProps = {}): Swiper {
       event.preventDefault()
     );
     events.on('transitionend', wrapper, 'transitionend', onTransitionEnd);
-    events.on('resize', window, 'resize', () => swiper.refresh());
+    events.on('resize', window, 'resize', syncAfterData);
     events.on('mouseenter', root, 'mouseenter', pause);
     events.on('mouseleave', root, 'mouseleave', resume);
     events.on('controls', root, 'click', (event) => {
@@ -675,95 +655,7 @@ export function createSwiper(input: SwiperProps = {}): Swiper {
     });
   };
 
-  const ensureStaticNavigation = (
-    direction: 'prev' | 'next',
-    iconName: 'arrow-left' | 'arrow-right'
-  ): HTMLElement => {
-    const root = swiper.element;
-    if (!root) throw new Error('Swiper: root not found.');
-    const directionClass =
-      direction === 'prev' ? props.className.prev : props.className.next;
-    let button = q<HTMLElement>(`[data-action="${direction}"]`, root);
-    if (!button) {
-      button = jsx('button', {
-        type: 'button',
-        className: joinClasses(props.className.navigation, directionClass),
-        'data-action': direction,
-        'data-swiper-navigation': direction,
-        children: icon(iconName),
-      }) as HTMLElement;
-      root.appendChild(button);
-      staticGenerated.add(button);
-    } else {
-      button.classList.add(props.className.navigation, directionClass);
-      button.setAttribute('data-swiper-navigation', direction);
-      if (!q('svg', button)) button.appendChild(icon(iconName));
-    }
-    button.setAttribute(
-      'aria-label',
-      direction === 'prev' ? 'Previous slide' : 'Next slide'
-    );
-    return button;
-  };
-  const setupStaticControls = (): void => {
-    const root = swiper.element;
-    if (!root) return;
-    if (props.pagination) {
-      pagination = q<HTMLElement>('[data-swiper-pagination]', root);
-      if (!pagination) {
-        pagination = jsx('div', {
-          className: joinClasses(
-            props.className.pagination,
-            props.className.paginationHorizontal,
-            props.className.paginationClickable,
-            props.className.paginationBulletGroup
-          ),
-          'data-swiper-pagination': '',
-        }) as HTMLElement;
-        root.appendChild(pagination);
-        staticGenerated.add(pagination);
-      }
-      pagination.textContent = '';
-      for (let index = 0; index < realCount(); index += 1) {
-        const bullet = jsx('button', {
-          type: 'button',
-          className: joinClasses(
-            props.className.indicator,
-            props.className.bullet
-          ),
-          'data-swiper-bullet': String(index),
-          'aria-label': `Go to slide ${index + 1}`,
-        }) as HTMLElement;
-        pagination.appendChild(bullet);
-        staticGenerated.add(bullet);
-      }
-    }
-    if (props.navigation) {
-      prevButton = ensureStaticNavigation('prev', 'arrow-left');
-      nextButton = ensureStaticNavigation('next', 'arrow-right');
-    }
-  };
-  const initStaticLoop = (): void => {
-    if (ownsElement || staticLoopReady || !wrapper || !props.loop) return;
-    refreshSlides();
-    if (staticRealCount <= 1) return;
-    const first = slides[0]?.cloneNode(true) as HTMLElement | undefined;
-    const last = slides[slides.length - 1]?.cloneNode(true) as
-      | HTMLElement
-      | undefined;
-    if (!first || !last) return;
-    first.setAttribute('data-clone', 'first');
-    last.setAttribute('data-clone', 'last');
-    first.removeAttribute('data-swiper-index');
-    last.removeAttribute('data-swiper-index');
-    wrapper.appendChild(first);
-    wrapper.insertBefore(last, slides[0]);
-    staticGenerated.add(first);
-    staticGenerated.add(last);
-    staticLoopReady = true;
-    refreshSlides();
-  };
-  const refreshAfterData = (): void => {
+  const syncAfterData = (): void => {
     if (!swiper.runtime.built) return;
     pause();
     clearImageCleanups();
@@ -774,14 +666,42 @@ export function createSwiper(input: SwiperProps = {}): Swiper {
     if (props.lazyload) loadImages();
     if (props.autoplay && hasLayout()) resume();
   };
-  const dataTask = createScheduledTask(refreshAfterData);
-  const queueMountRefresh = (): void => {
+  const dataTask = createScheduledTask(syncAfterData);
+  const queueLayoutSync = (): void => {
     if (mountFrame != null || typeof requestAnimationFrame !== 'function')
       return;
     mountFrame = requestAnimationFrame(() => {
       mountFrame = null;
       if (!swiper.runtime.destroyed && swiper.element?.isConnected)
-        swiper.refresh();
+        syncAfterData();
+    });
+  };
+  const loadData = async (): Promise<void> => {
+    if (typeof props.data !== 'function') return;
+    const requestId = ++dataLoadId;
+    flushSync(() => {
+      state.loading = true;
+    });
+    try {
+      const result = await Promise.resolve(props.data(swiper));
+      if (swiper.runtime.destroyed || requestId !== dataLoadId) return;
+      validateParam('data', result, { type: 'array' }, 'Swiper.data');
+      const data = cloneData(result);
+      normalizeData(data);
+      flushSync(() => {
+        state.data = data;
+      });
+    } finally {
+      if (!swiper.runtime.destroyed && requestId === dataLoadId) {
+        flushSync(() => {
+          state.loading = false;
+        });
+      }
+    }
+  };
+  const requestData = (): void => {
+    void loadData().catch((error: unknown) => {
+      if (!swiper.runtime.destroyed) console.error('Swiper.data error:', error);
     });
   };
 
@@ -840,21 +760,9 @@ export function createSwiper(input: SwiperProps = {}): Swiper {
     SwiperActions
   >({
     name: 'Swiper',
-    ownsElement,
     props,
     state,
     actions: {
-      refresh() {
-        if (!swiper.runtime.built)
-          throw new Error('Swiper.refresh: call build() first.');
-        refreshSlides();
-        updateSize();
-        setTrackIndex(trackIndexForRealIndex(state.index), false);
-        if (props.lazyload) loadImages();
-        if (props.autoplay && hasLayout()) resume();
-        else pause();
-        return swiper;
-      },
       slideTo(index) {
         swiper.slideToTrack(trackIndexForRealIndex(index));
       },
@@ -906,70 +814,31 @@ export function createSwiper(input: SwiperProps = {}): Swiper {
       if (Array.isArray(patch.data)) normalizeData(patch.data);
     },
     view: () => {
-      if (boundRoot) {
-        wrapper = q<HTMLElement>('[data-swiper-wrapper]', boundRoot);
-        validateParam(
-          'wrapper',
-          wrapper,
-          {
-            validate: isElement,
-            message: 'expects [data-swiper-wrapper] in the root element.',
-          },
-          'Swiper'
-        );
-        createEffect(() => {
-          if (wrapper) {
-            wrapper.style.transform = `translate3d(${state.transform}px, 0, 0)`;
-            wrapper.style.transition = state.animating
-              ? `transform ${props.speed}ms cubic-bezier(0.25, 0.46, 0.45, 0.94)`
-              : 'none';
-          }
-          boundRoot.style.setProperty(
-            '--swiper-slide-width',
-            `${state.width}px`
-          );
-        });
-        createEffect(() => {
-          const active = state.index;
-          for (const bullet of all<HTMLElement>(
-            '[data-swiper-bullet]',
-            boundRoot
-          )) {
-            const current = Number(bullet.dataset.swiperBullet) === active;
-            bullet.classList.toggle(props.className.active, current);
-            if (current) bullet.setAttribute('aria-current', 'true');
-            else bullet.removeAttribute('aria-current');
-          }
-          if (!props.loop) {
-            const atStart = active <= 0;
-            const atEnd = active >= realCount() - 1;
-            prevButton?.classList.toggle(props.className.disabled, atStart);
-            nextButton?.classList.toggle(props.className.disabled, atEnd);
-            if (prevButton instanceof HTMLButtonElement)
-              prevButton.disabled = atStart;
-            if (nextButton instanceof HTMLButtonElement)
-              nextButton.disabled = atEnd;
-          }
-        });
-        return boundRoot;
-      }
-
       normalizedItems = createMemo(() => normalizeData(state.data));
       trackItems = createMemo(() => createTrackItems(normalizedItems()));
+      const loadingView = (): HTMLDivElement => {
+        const view = createLoading();
+        view.setAttribute('data-swiper-loading', '');
+        return view;
+      };
       wrapper = jsx('div', {
         className: props.className.wrapper,
         'data-swiper-wrapper': '',
         'aria-live': 'polite',
-        children: For({
-          each: trackItems,
-          key: (item: TrackItem) => item.key,
-          children: slideView,
-        }),
+        children: () =>
+          state.loading
+            ? loadingView()
+            : For({
+                each: trackItems,
+                key: (item: TrackItem) => item.key,
+                children: slideView,
+              }),
       }) as HTMLElement;
       const root = jsx('div', {
         id: props.id || randomId(),
         className: props.className.root,
         'data-swiper': 'root',
+        'data-status': () => (state.loading ? 'loading' : 'loaded'),
         children: [
           wrapper,
           props.pagination
@@ -1070,38 +939,28 @@ export function createSwiper(input: SwiperProps = {}): Swiper {
       if (!root || !wrapper) return;
       wrapper.setAttribute('aria-live', 'polite');
       refreshSlides();
-      if (!ownsElement) {
-        initStaticLoop();
-        setupStaticControls();
-      }
       bindEvents();
       updateSize();
       setTrackIndex(trackIndexForRealIndex(state.index), false);
       if (props.lazyload) loadImages();
       if (props.autoplay && hasLayout()) play();
       context.own(() => events.clear());
-      queueMountRefresh();
+      requestData();
+      queueLayoutSync();
     },
     onMount() {
-      swiper.refresh();
+      syncAfterData();
+      queueLayoutSync();
     },
     onDestroy() {
       pause();
       dataTask.dispose();
+      dataLoadId += 1;
       clearImageCleanups();
       if (mountFrame != null) cancelAnimationFrame(mountFrame);
       mountFrame = null;
-      for (const element of staticGenerated) element.remove();
-      staticGenerated.clear();
-      if (!ownsElement && wrapper) {
-        wrapper.style.removeProperty('transform');
-        wrapper.style.removeProperty('transition');
-      }
       wrapper = null;
       slides = [];
-      pagination = null;
-      prevButton = null;
-      nextButton = null;
     },
   }) as Swiper;
 

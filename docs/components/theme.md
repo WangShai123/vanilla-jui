@@ -29,45 +29,10 @@ document.body.appendChild(themePanel);
 ## Head 脚本
 
 ```html
-<script>
-  (function (d, k) {
-    var v = {
-        mode: 'dark',
-        theme: 'indigo',
-        radius: 'sm',
-        shadow: 'sm',
-        font: 'sm',
-      },
-      m = d.cookie.match(new RegExp('(?:^|; )' + k + '=([^;]*)')),
-      o = v;
-    if (m) {
-      try {
-        var record = JSON.parse(decodeURIComponent(m[1])),
-          payload = JSON.parse(record.value);
-        o = Object.assign({}, v, payload.value || {});
-      } catch (e) {
-        o = v;
-      }
-    }
-    try {
-      var r =
-          o.mode === 'auto'
-            ? matchMedia('(prefers-color-scheme: dark)').matches
-              ? 'dark'
-              : 'light'
-            : o.mode,
-        h = d.documentElement;
-      h.classList.add(
-        r || 'dark',
-        'j-theme-' + (o.theme || v.theme),
-        'j-radius-' + (o.radius || v.radius),
-        'j-shadow-' + (o.shadow || v.shadow),
-        'j-font-' + (o.font || v.font)
-      );
-    } catch (e) {}
-  })(document, 'ui-theme');
-</script>
+<script>(function(d,k){var v={mode:'dark',theme:'indigo',radius:'sm',shadow:'sm',font:'sm'},m=d.cookie.match(new RegExp('(?:^|; )'+k+'=([^;]*)')),o=v;if(m){try{var r=JSON.parse(decodeURIComponent(m[1]));if(r&&typeof r.val==='string')o=Object.assign({},v,JSON.parse(r.val)||{})}catch(e){o=v}}try{var c=o.mode==='auto'?matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light':o.mode,h=d.documentElement;h.classList.add(c||'dark','j-theme-'+(o.theme||v.theme),'j-radius-'+(o.radius||v.radius),'j-shadow-'+(o.shadow||v.shadow),'j-font-'+(o.font||v.font))}catch(e){}})(document,'ui-theme');</script>
 ```
+
+`createStorage({ driver: 'cookie', codec: 'json', namespace: '', keySeparator: '' })` 写入的 cookie 值是 URL 编码后的 JSON 字符串。head script 只需要解析外层记录，并确认 `val` 存在且能被 `JSON.parse()` 解析成主题配置；不需要在首屏脚本里完整校验外层记录字段。
 
 ## 方法
 

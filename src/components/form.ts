@@ -2,6 +2,8 @@ import {
   For,
   createDeepStore,
   createEffect,
+  createMemo,
+  createSignal,
   flushSync,
   jsx,
 } from 'vanilla-signal';
@@ -23,18 +25,23 @@ import {
   validateParam,
 } from '../utilities/types.ts';
 import { createValidator } from '../validation/validator.ts';
+import { createLoading } from '../primitives/loading.ts';
 
 type FormValue = string | number | boolean;
-type FormOptionInput = FormValue | FormOption;
+export type FieldOption = FormValue | FormOption;
 type FormStyle = string | Partial<CSSStyleDeclaration> | null;
 export type FormDataValue = FormDataEntryValue | FormDataEntryValue[];
 export type FormDataRecord = Record<string, FormDataValue>;
+export type FormItemType = FormControlType;
 type FormControlType =
   | 'checkbox'
   | 'custom'
+  | 'email'
+  | 'password'
   | 'radio'
   | 'select'
   | 'switch'
+  | 'text'
   | 'textarea'
   | (string & {});
 
@@ -77,12 +84,24 @@ export interface FormOption {
   disabled?: boolean;
 }
 
+export type FormItemNext = (
+  current: FormItem,
+  acients: FormItem[]
+) => FormItem | null;
+
+export interface FormItem<TPayload = FormField> {
+  id?: string;
+  type: FormItemType;
+  payload: TPayload;
+  next?: FormItemNext | null;
+}
+
 export interface FormField {
+  [key: string]: unknown;
   id?: string;
   label?: RenderableContent<Form> | false;
   name?: string;
-  type?: FormControlType;
-  options?: readonly FormOptionInput[];
+  options?: readonly FieldOption[];
   value?: FormDataEntryValue | boolean | readonly FormDataEntryValue[];
   checked?: boolean;
   required?: boolean;
@@ -122,7 +141,7 @@ export interface FormProps extends Record<string, unknown> {
   vertical?: boolean;
   itemVertical?: boolean;
   style?: FormStyle;
-  fields?: readonly FormField[];
+  fields?: readonly FormItem<FormField>[];
   buttons?: boolean | readonly FormButton[];
   className?: FormClassNameConfig;
   validator?: FormValidatorConfig;
@@ -137,7 +156,7 @@ interface ResolvedFormProps extends Record<string, unknown> {
   vertical: boolean;
   itemVertical: boolean;
   style: FormStyle;
-  fields: FormField[];
+  fields: FormItem<FormField>[];
   buttons: FormButton[];
   className: FormClassNames;
   validator: FormValidatorConfig;
@@ -167,6 +186,7 @@ interface FormControlContext {
   form: Form;
   field: FormField;
   index: number;
+  item: FormItem<FormField>;
 }
 
 const DEFAULT_CLASS_NAMES: FormClassNames = {
@@ -202,6 +222,9 @@ const DEFAULT_BUTTONS: FormButton[] = [
   { type: 'submit', text: 'Submit', theme: 'primary', action: 'submit' },
   { type: 'reset', text: 'Reset', theme: 'ghost', action: 'reset' },
 ];
+
+// Guard against malformed dynamic chains that never terminate.
+const FORM_ITEM_LIMIT = 1000;
 
 const FORM_PROPS_SCHEMA = {
   id: {
@@ -239,20 +262,35 @@ const FORM_PROPS_SCHEMA = {
 } satisfies ResolveSchema<FormProps>;
 
 function cloneOptions(
-  options: readonly FormOptionInput[] | undefined
-): FormOptionInput[] {
+  options: readonly FieldOption[] | undefined
+): FieldOption[] {
   if (!Array.isArray(options)) return [];
   return options.map((option) =>
     option && typeof option === 'object' ? { ...option } : option
   );
 }
 
-function cloneFields(fields: readonly FormField[] | undefined): FormField[] {
-  if (!Array.isArray(fields)) return [];
-  return fields.map((field) => ({
+function cloneField(field: FormField): FormField {
+  return {
     ...field,
     options: cloneOptions(field.options),
-  }));
+  };
+}
+
+function cloneFormItem(item: FormItem<FormField>): FormItem<FormField> {
+  return {
+    ...(item.id ? { id: item.id } : {}),
+    type: item.type,
+    payload: cloneField(item.payload),
+    next: item.next || null,
+  };
+}
+
+function cloneFields(
+  fields: readonly FormItem<FormField>[] | undefined
+): FormItem<FormField>[] {
+  if (!Array.isArray(fields)) return [];
+  return fields.map((item) => cloneFormItem(item));
 }
 
 function cloneButtons(
@@ -262,7 +300,43 @@ function cloneButtons(
   return buttons.map((button) => ({ ...button }));
 }
 
-function normalizeOption(option: FormOptionInput): FormOption {
+function flattenFormItems(
+  rootsInput: readonly FormItem<FormField>[],
+  resolveItem: (item: FormItem<FormField>) => FormItem<FormField>
+): FormItem<FormField>[] {
+  const result: FormItem<FormField>[] = [];
+  const roots = Array.isArray(rootsInput) ? rootsInput : [];
+  const seen = new WeakSet<FormItem<FormField>>();
+  const defaultNext = (
+    current: FormItem<FormField>
+  ): FormItem<FormField> | null => {
+    const index = roots.indexOf(current);
+    return index >= 0 ? (roots[index + 1] || null) : null;
+  };
+
+  for (const root of roots) {
+    if (seen.has(root)) continue;
+    let current: FormItem<FormField> | null = root;
+    const acients: FormItem<FormField>[] = [];
+    let guard = 0;
+
+    while (current && guard < FORM_ITEM_LIMIT) {
+      guard += 1;
+      if (seen.has(current)) break;
+      seen.add(current);
+      result.push(current);
+      acients.push(current);
+      const next = current.next
+        ? current.next(current, acients)
+        : defaultNext(current);
+      current = next ? resolveItem(next) : null;
+    }
+  }
+
+  return result;
+}
+
+function normalizeOption(option: FieldOption): FormOption {
   if (option && typeof option === 'object') return option;
   return { value: option, text: String(option) };
 }
@@ -329,13 +403,14 @@ function cloneValidator(validator: unknown): FormValidatorConfig {
 
 function normalizeProps(input: FormProps): ResolvedFormProps {
   const props = resolveProps(input, FORM_PROPS_SCHEMA, 'Form.props');
+  const fields = cloneFields(props.fields as readonly FormItem<FormField>[]);
   return {
     ...props,
     id: String(props.id),
     vertical: Boolean(props.vertical),
     itemVertical: Boolean(props.itemVertical),
     style: props.style as FormStyle,
-    fields: cloneFields(props.fields as readonly FormField[]),
+    fields,
     buttons: cloneButtons(props.buttons as readonly FormButton[]),
     className: resolveClassNames(props.className),
     validator: cloneValidator(props.validator),
@@ -349,7 +424,7 @@ interface FormActions {
   reset(): Form;
   collectData(): FormDataRecord;
   requestSubmit(): Form;
-  setFields(fields: readonly FormField[]): Form;
+  setFields(fields: readonly FormItem<FormField>[]): Form;
   resetFields(): Form;
 }
 
@@ -412,6 +487,11 @@ function isChecked(
   );
 }
 
+function radioNodeListItems(value: RadioNodeList | Element): Element[] {
+  if (value instanceof RadioNodeList) return Array.from(value);
+  return [value];
+}
+
 export function createForm(input: FormProps = {}): Form {
   const props = normalizeProps(input);
   const initial = cloneResolvedProps(props);
@@ -422,14 +502,36 @@ export function createForm(input: FormProps = {}): Form {
   }) as FormState;
   const cache: FormCache = { initial, fieldIds: new Map() };
   const fieldKeys = new WeakMap<object, string>();
+  const [chainVersion, setChainVersion] = createSignal(0);
+  let runtimeItems = new WeakMap<FormItem<FormField>, FormItem<FormField>>();
   let validator: ValidatorInstance | null = null;
   let form!: Form;
+  const resolveRuntimeItem = (
+    item: FormItem<FormField>
+  ): FormItem<FormField> => {
+    if (state.fields.includes(item)) return item;
+    const cached = runtimeItems.get(item);
+    if (cached) return cached;
+    const runtimeItem = createDeepStore(cloneFormItem(item)) as FormItem<FormField>;
+    runtimeItems.set(item, runtimeItem);
+    return runtimeItem;
+  };
+  const renderedItems = createMemo(() => {
+    chainVersion();
+    return flattenFormItems(state.fields, resolveRuntimeItem);
+  });
 
   const fieldKey = (field: FormField): string => {
     if (field.id) return `id:${field.id}`;
     if (field.name) return `name:${field.name}`;
     if (!fieldKeys.has(field)) fieldKeys.set(field, randomId());
     return fieldKeys.get(field) as string;
+  };
+  const itemKey = (item: FormItem, index: number): string => {
+    if (item.id) return `item:${item.id}`;
+    const field = item.payload as FormField;
+    if (field && typeof field === 'object') return `${fieldKey(field)}:${item.type}`;
+    return `item:${item.type}:${index}`;
   };
   const resolveFieldId = (field: FormField, index: number): string => {
     if (field.id) return field.id;
@@ -497,6 +599,60 @@ export function createForm(input: FormProps = {}): Form {
     }
   };
 
+  const fieldControls = (field: FormField): Element[] => {
+    if (!field.name || !form.element) return [];
+    const element = form.element.elements.namedItem(field.name);
+    if (!element) return [];
+    return radioNodeListItems(element).filter((item) => item instanceof Element);
+  };
+  const syncFieldValue = (
+    field: FormField,
+    control:
+      | HTMLInputElement
+      | HTMLSelectElement
+      | HTMLTextAreaElement,
+    type: FormControlType | 'checkbox' | 'radio' = 'text'
+  ): void => {
+    flushSync(() => {
+      if (control instanceof HTMLSelectElement) {
+        field.value = control.multiple
+          ? Array.from(control.selectedOptions).map((option) => option.value)
+          : control.value;
+        return;
+      }
+      if (control instanceof HTMLTextAreaElement) {
+        field.value = control.value;
+        return;
+      }
+      if (type === 'switch') {
+        field.checked = control.checked;
+        field.value = control.checked ? control.value : '';
+        return;
+      }
+      if (type === 'radio') {
+        if (control.checked) field.value = control.value;
+        return;
+      }
+      if (type === 'checkbox') {
+        if (Array.isArray(field.options)) {
+          field.value = fieldControls(field)
+            .filter(
+              (item): item is HTMLInputElement =>
+                item instanceof HTMLInputElement && item.checked
+            )
+            .map((item) => item.value);
+          return;
+        }
+        field.checked = control.checked;
+        field.value = control.checked ? control.value : '';
+        return;
+      }
+      field.value = control.value;
+      if (control.type === 'checkbox') field.checked = control.checked;
+    });
+    setChainVersion((version: number) => version + 1);
+  };
+
   const controlProps = <TExtra extends Record<string, unknown>>(
     field: FormField,
     id: string,
@@ -507,7 +663,7 @@ export function createForm(input: FormProps = {}): Form {
     id,
     placeholder: field.placeholder || '',
     required: !!field.required,
-    disabled: !!field.disabled,
+    disabled: () => state.submitting || !!field.disabled,
     readonly: !!field.readonly,
     'data-form-field': field.name || id,
   });
@@ -548,8 +704,15 @@ export function createForm(input: FormProps = {}): Form {
                 type === 'radio'
                   ? isSelected(field.value, item.value)
                   : isChecked(field.value, item.value, item.checked),
-              disabled: !!item.disabled || !!field.disabled,
+              disabled: () =>
+                state.submitting || !!item.disabled || !!field.disabled,
               required: !!field.required,
+              onChange: (event: Event) => {
+                const target = event.currentTarget;
+                if (target instanceof HTMLInputElement) {
+                  syncFieldValue(field, target, type);
+                }
+              },
             }),
             jsx('span', {
               className: type === 'radio' ? names.radioText : '',
@@ -563,28 +726,42 @@ export function createForm(input: FormProps = {}): Form {
   };
 
   const controlView = (
+    type: FormItemType,
     field: FormField,
     id: string,
-    index: number
+    index: number,
+    item: FormItem<FormField>
   ): RenderableContent<FormControlContext> => {
     const names = state.className;
-    if (field.type === 'textarea') {
+    if (type === 'textarea') {
       return jsx(
         'textarea',
         controlProps(field, id, {
           className: field.className || names.textarea,
           autocomplete: field.autocomplete,
           value: field.value ?? '',
+          onInput: (event: Event) => {
+            const target = event.currentTarget;
+            if (target instanceof HTMLTextAreaElement) {
+              syncFieldValue(field, target, 'textarea');
+            }
+          },
         })
       ) as HTMLTextAreaElement;
     }
-    if (field.type === 'select') {
+    if (type === 'select') {
       return jsx(
         'select',
         controlProps(field, id, {
           className: field.className || names.select,
           autocomplete: field.autocomplete || 'off',
           multiple: !!field.multiple,
+          onChange: (event: Event) => {
+            const target = event.currentTarget;
+            if (target instanceof HTMLSelectElement) {
+              syncFieldValue(field, target, 'select');
+            }
+          },
           children: (field.options || []).map((option) => {
             const item = normalizeOption(option);
             return jsx('option', {
@@ -597,11 +774,11 @@ export function createForm(input: FormProps = {}): Form {
         })
       ) as HTMLSelectElement;
     }
-    if (field.type === 'radio') return choiceGroupView(field, id, 'radio');
-    if (field.type === 'checkbox' && Array.isArray(field.options)) {
+    if (type === 'radio') return choiceGroupView(field, id, 'radio');
+    if (type === 'checkbox' && Array.isArray(field.options)) {
       return choiceGroupView(field, id, 'checkbox');
     }
-    if (field.type === 'switch') {
+    if (type === 'switch') {
       return jsx('label', {
         className: joinClasses(
           names.switch,
@@ -617,8 +794,14 @@ export function createForm(input: FormProps = {}): Form {
             name: field.name,
             value: field.value ?? '1',
             checked: !!field.checked,
-            disabled: !!field.disabled,
+            disabled: () => state.submitting || !!field.disabled,
             required: !!field.required,
+            onChange: (event: Event) => {
+              const target = event.currentTarget;
+              if (target instanceof HTMLInputElement) {
+                syncFieldValue(field, target, 'switch');
+              }
+            },
           }),
           jsx('span', {
             className: names.switchSlider,
@@ -627,66 +810,90 @@ export function createForm(input: FormProps = {}): Form {
         ],
       }) as HTMLLabelElement;
     }
-    if (field.type === 'custom') {
+    if (type === 'custom') {
       return typeof field.content === 'function'
-        ? field.content({ form, field, index })
+        ? field.content({ form, field, index, item })
         : field.content;
     }
-    const type = field.type || 'text';
+    const inputType = type || 'text';
     return jsx('input', {
       ...controlProps(field, id, {
-        type,
+        type: inputType,
         className: field.className || names.input,
-        autocomplete: field.autocomplete || autoComplete(type),
+        autocomplete: field.autocomplete || autoComplete(inputType),
         value: field.value ?? '',
+        onInput: (event: Event) => {
+          const target = event.currentTarget;
+          if (target instanceof HTMLInputElement) {
+            syncFieldValue(field, target, inputType);
+          }
+        },
       }),
       checked: field.checked === undefined ? undefined : !!field.checked,
     }) as HTMLInputElement;
   };
 
   const fieldView = (
-    fieldAccessor: () => FormField,
+    itemAccessor: () => FormItem<FormField>,
     indexAccessor: () => number
   ): HTMLElement => {
-    const field = fieldAccessor();
+    const item = itemAccessor();
+    const field = item.payload;
+    const fieldAccessor = (): FormField => itemAccessor().payload;
     const index = indexAccessor();
     const id = resolveFieldId(field, index);
-    const names = state.className;
     return jsx('div', {
-      className: names.item,
-      'data-form-item': field.name || String(index),
-      style: { display: field.type === 'hidden' ? 'none' : '' },
+      className: () => state.className.item,
+      'data-form-item': () => fieldAccessor().name || String(indexAccessor()),
+      style: () => ({
+        display: itemAccessor().type === 'hidden' ? 'none' : '',
+      }),
       children: [
-        field.label === false || field.label === undefined
-          ? null
-          : jsx('label', {
-              className: joinClasses(
-                names.label,
-                fieldIsRequired(field, state.validator.rules)
-                  ? names.required
+        () => {
+          const current = fieldAccessor();
+          if (current.label === false || current.label === undefined) {
+            return null;
+          }
+          return jsx('label', {
+            className: () =>
+              joinClasses(
+                state.className.label,
+                fieldIsRequired(fieldAccessor(), state.validator.rules)
+                  ? state.className.required
                   : ''
               ),
-              'data-form-label': field.name || id,
-              for: id,
-              children: field.label,
-            }),
+            'data-form-label': () => fieldAccessor().name || id,
+            for: id,
+            children: () => fieldAccessor().label,
+          });
+        },
         jsx('div', {
-          className: names.control,
-          'data-form-control': field.name || String(index),
+          className: () => state.className.control,
+          'data-form-control': () =>
+            fieldAccessor().name || String(indexAccessor()),
           children: [
-            controlView(field, id, index),
-            field.help
-              ? jsx('div', {
-                  className: 'help-block',
-                  'data-form-help': field.name || String(index),
-                  children: field.help,
-                })
-              : null,
+            controlView(item.type, field, id, index, item),
+            () => {
+              const current = fieldAccessor();
+              return current.help
+                ? jsx('div', {
+                    className: 'help-block',
+                    'data-form-help': () =>
+                      fieldAccessor().name || String(indexAccessor()),
+                    children: () => fieldAccessor().help,
+                  })
+                : null;
+            },
           ],
         }),
       ],
     }) as HTMLElement;
   };
+
+  const itemView = (
+    itemAccessor: () => FormItem<FormField>,
+    indexAccessor: () => number
+  ): HTMLElement => fieldView(itemAccessor, indexAccessor);
 
   const buttonsView = (): HTMLElement =>
     jsx('div', {
@@ -715,7 +922,11 @@ export function createForm(input: FormProps = {}): Form {
             disabled: () => state.submitting || !!buttonAccessor().disabled,
             children: () => {
               const button = buttonAccessor();
-              return button.text ?? button.label ?? '';
+              const content = button.text ?? button.label ?? '';
+              const submitting =
+                state.submitting &&
+                (button.type === 'submit' || button.action === 'submit');
+              return submitting ? [createLoading(), content] : content;
             },
           }),
       }),
@@ -754,13 +965,19 @@ export function createForm(input: FormProps = {}): Form {
       setFields(fields) {
         validateParam('fields', fields, 'array', 'Form.setFields');
         cache.fieldIds.clear();
+        runtimeItems = new WeakMap();
         flushSync(() => {
           state.fields = cloneFields(fields);
         });
         return form;
       },
       resetFields() {
-        return form.setFields(initial.fields);
+        cache.fieldIds.clear();
+        runtimeItems = new WeakMap();
+        flushSync(() => {
+          state.fields = cloneFields(initial.fields);
+        });
+        return form;
       },
     },
     normalizeStatePatch(patch) {
@@ -807,17 +1024,16 @@ export function createForm(input: FormProps = {}): Form {
         },
         children: [
           For({
-            each: () => state.fields,
-            key: (field: FormField) => fieldKey(field),
-            children: fieldView,
+            each: renderedItems,
+            key: itemKey,
+            children: itemView,
           }),
           buttonsView(),
         ],
       }) as HTMLFormElement;
       createEffect(() => setElementStyle(element, state.style));
       createEffect(() => {
-        const validatorOptions = state.validator;
-        if (validatorOptions) syncValidator();
+        if (validator) validator.props = { ...state.validator, onSubmit: null };
       });
       return element;
     },
@@ -828,6 +1044,7 @@ export function createForm(input: FormProps = {}): Form {
       validator?.destroy();
       validator = null;
       cache.fieldIds.clear();
+      runtimeItems = new WeakMap();
     },
   }) as Form;
 

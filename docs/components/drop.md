@@ -8,7 +8,6 @@ Drop 的根节点在实例创建时生成，但只在 `show()` 时挂载到 `doc
 
 ```js
 import { createDrop } from 'vanilla-jui';
-import 'vanilla-jui/style.css';
 ```
 
 ## 基础用法
@@ -24,7 +23,24 @@ drop.show();
 drop.hide();
 ```
 
-`reference` 可以是选择器或 DOM 节点，会在创建时解析为触发元素。`content` 支持字符串、DOM 节点、节点数组、函数和 `null`。字符串始终按文本渲染，不解析 HTML。传入 Element 节点时会直接作为浮层内容 wrapper 使用；其它内容会放入默认 `.drop-container` 容器。
+`reference` 可以是选择器或 DOM 节点，会在创建时解析为触发元素。`content` 支持字符串、DOM 节点、节点数组、函数和 `null`。字符串始终按文本渲染，不解析 HTML。内容始终渲染在默认 `.drop-container` 容器或自定义 `className.container` 容器内。
+
+## 异步内容
+
+`content` 为函数时会收到当前 Drop 实例，并在 `show()` 时执行。函数可以同步返回可渲染内容，也可以返回 Promise。异步结果返回前，内容容器会插入 `createLoading()` 生成的加载节点，并标记 `aria-busy="true"`。
+
+```js
+const drop = createDrop(button, {
+  content: async (instance) => {
+    const html = await fetchMenu(instance.target);
+    return html.title;
+  },
+  cache: true,
+  ttl: 2000,
+});
+```
+
+`cache: true` 会缓存函数返回值；`ttl` 是缓存有效期，单位毫秒。`ttl: 0` 表示缓存不过期。隐藏或销毁期间返回的旧异步结果会被忽略，避免覆盖下一次展示的内容。
 
 ## Hover 模式
 
@@ -50,19 +66,21 @@ createDrop(button, { position: 'right', content: '...' });
 
 ## 参数
 
-| 参数          | 类型                                           | 默认值    | 说明                                 |
-| ------------- | ---------------------------------------------- | --------- | ------------------------------------ |
-| `mode`        | `'click' \| 'hover'`                           | `'click'` | 触发方式                             |
-| `position`    | `string`                                       | `'auto'`  | 浮层位置                             |
-| `offset`      | `number`                                       | `10`      | 与目标元素间距                       |
-| `content`     | `string \| Node \| Node[] \| Function \| null` | `''`      | 浮层内容                             |
-| `delay`       | `number \| { show?: number, hide?: number }`   | `0`       | 展示/隐藏延迟（毫秒）                |
-| `hoverIntent` | `boolean`                                      | `true`    | hover 模式下启用意图判断，减少误触发 |
-| `name`        | `string \| null`                               | `null`    | 浮层名称，写入 `data-drop`           |
-| `id`          | `string \| null`                               | `null`    | 浮层 id，不传时自动生成              |
-| `className`   | `object`                                       | 见下表    | 覆盖组件结构类名                     |
-| `onShown`     | `Function \| null`                             | `null`    | 展示后回调                           |
-| `onHidden`    | `Function \| null`                             | `null`    | 隐藏后回调                           |
+| 参数          | 类型                                         | 默认值    | 说明                                 |
+| ------------- | -------------------------------------------- | --------- | ------------------------------------ |
+| `mode`        | `'click' \| 'hover'`                         | `'click'` | 触发方式                             |
+| `position`    | `string`                                     | `'auto'`  | 浮层位置                             |
+| `offset`      | `number`                                     | `10`      | 与目标元素间距                       |
+| `content`     | `RenderableContent \| Function`              | `''`      | 浮层内容，函数支持异步返回           |
+| `cache`       | `boolean`                                    | `false`   | 是否缓存函数内容返回值               |
+| `ttl`         | `number`                                     | `0`       | 内容缓存有效期，单位毫秒             |
+| `delay`       | `number \| { show?: number, hide?: number }` | `0`       | 展示/隐藏延迟（毫秒）                |
+| `hoverIntent` | `boolean`                                    | `true`    | hover 模式下启用意图判断，减少误触发 |
+| `name`        | `string \| null`                             | `null`    | 浮层名称，写入 `data-drop`           |
+| `id`          | `string \| null`                             | `null`    | 浮层 id，不传时自动生成              |
+| `className`   | `object`                                     | 见下表    | 覆盖组件结构类名                     |
+| `onShown`     | `Function \| null`                           | `null`    | 展示后回调                           |
+| `onHidden`    | `Function \| null`                           | `null`    | 隐藏后回调                           |
 
 ## className
 

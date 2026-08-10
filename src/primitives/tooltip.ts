@@ -64,6 +64,8 @@ interface TooltipProps extends Record<string, unknown> {
   offset?: number;
   message?: string;
   theme?: TooltipTheme;
+  cache?: boolean;
+  ttl?: number;
   className?: TooltipClassNameConfig;
   id?: string | null;
   delay?: number | DropDelay;
@@ -79,6 +81,8 @@ interface ResolvedTooltipProps extends Record<string, unknown> {
   offset: number;
   message: string;
   theme: TooltipTheme;
+  cache: boolean;
+  ttl: number;
   className: TooltipClassNames;
   id: string | null;
   delay: number | DropDelay;
@@ -144,6 +148,12 @@ const TOOLTIP_OPTIONS_SCHEMA = {
     types: ['string', 'boolean'],
     enum: [false, 'reverse', 'primary', 'success', 'warning', 'error'],
   },
+  cache: { default: false, type: 'boolean' },
+  ttl: {
+    default: 0,
+    type: 'number',
+    min: 0,
+  },
   className: {
     default: DEFAULT_CLASS_NAMES,
     type: 'object',
@@ -165,6 +175,8 @@ function normalizeProps(input: TooltipProps): ResolvedTooltipProps {
     offset: props.offset as number,
     message: props.message as string,
     theme: props.theme as TooltipTheme,
+    cache: props.cache as boolean,
+    ttl: props.ttl as number,
     className: props.className as TooltipClassNames,
     id: props.id as string | null,
     delay: props.delay as number | DropDelay,
@@ -201,6 +213,8 @@ export function createTooltip(
     mode: props.mode,
     position: props.position,
     offset: props.offset,
+    cache: props.cache,
+    ttl: props.ttl,
     id: props.id,
     delay: props.delay,
     hoverIntent: props.hoverIntent,

@@ -70,6 +70,10 @@
     margin-top: 1rem;
   }
 
+  .j-form [data-form-buttons] button {
+    position: relative;
+  }
+
   .j-form.is-horizontal .form-buttons {
     margin: 0;
   }

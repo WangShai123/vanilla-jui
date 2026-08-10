@@ -36,7 +36,19 @@ document.querySelector('.article-sidebar').appendChild(toc.element);
 </article>
 ```
 
-`build()` 会创建目录根节点和列表。默认类名保持 `.j-toc`、`.toc-list`、`.toc-link`，也可以通过 `className` 覆盖；组件内部交互使用 `data-toc-*`，不依赖 CSS 类选择器。目录项使用标题 id 作为 key，刷新时保留未删除项的节点身份。
+`build()` 会创建目录根节点和列表。默认类名保持 `.j-toc`、`.toc-list`、`.toc-link`，也可以通过 `className` 覆盖；组件内部交互使用 `data-toc-*`，不依赖 CSS 类选择器。目录项使用标题 id 作为 key，`state.items` 变化时由 keyed `For` 局部更新。
+
+## 响应式数据
+
+Toc 的视图读取 `state.items`。如果业务已经持有编辑器中的 heading 数据，可以直接写入状态：
+
+```js
+toc.state.items = headings;
+```
+
+这种方式不需要扫描 DOM，也不会启用额外观察器。列表由 `state.items` 驱动，数据变化后 keyed `For` 会自动局部更新目录视图。
+
+如果业务希望在目标内容区域的 heading DOM 增删或文本变化时自动重新扫描，可以设置 `reactive: true`。该模式会启用 `MutationObserver`，默认关闭以避免普通静态页面产生额外开销。
 
 ## 参数
 
@@ -53,6 +65,7 @@ document.querySelector('.article-sidebar').appendChild(toc.element);
 | `target`    | `string \| Element \| Node \| null` | `'.j-content'` | 扫描标题的单一内容区域                              |
 | `headings`  | `string`                            | `'h2, h3'`     | 标题选择器                                          |
 | `offset`    | `number`                            | `80`           | 判断 active 标题的顶部偏移，单位 px                 |
+| `reactive`  | `boolean`                           | `false`        | 是否观察目标 DOM 变化并自动同步 `state.items`       |
 | `className` | `object`                            | 默认类名       | 覆盖 `toc`、`list`、`link`、`active`、`levelPrefix` |
 | `onChange`  | `Function \| null`                  | `null`         | active 项变化后触发，参数为 `(item, index, toc)`    |
 
@@ -84,19 +97,6 @@ Toc 的扫描目标、标题节点、滚动 RAF 状态和事件管理器保存�
 ```js
 toc.build();
 document.querySelector('.article-sidebar').appendChild(toc.element);
-```
-
-| 项     | 说明          |
-| ------ | ------------- |
-| 参数   | 无            |
-| 返回值 | 当前 Toc 实例 |
-
-### `refresh()`
-
-重新扫描标题并写入 `state.items`。列表由 keyed `For` 更新，适合内容区域动态变化后调用。
-
-```js
-toc.refresh();
 ```
 
 | 项     | 说明          |

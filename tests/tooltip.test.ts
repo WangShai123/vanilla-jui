@@ -8,8 +8,10 @@ import {
   it,
   vi,
 } from 'vite-plus/test';
+import { insert } from 'vanilla-signal';
 
 import { createTooltip } from '../src/primitives/tooltip.ts';
+import { q } from '../src/utilities/dom.ts';
 
 let tooltip: ReturnType<typeof createTooltip> | null = null;
 
@@ -17,8 +19,15 @@ function target(id = 'target'): HTMLButtonElement {
   const button = document.createElement('button');
   button.id = id;
   button.textContent = 'Target';
-  document.body.appendChild(button);
+  insert(document.body, button);
   return button;
+}
+
+function find<TElement extends Element = Element>(
+  selector: string,
+  context: Element | null | undefined
+): TElement | null {
+  return context ? q<TElement>(selector, context) : null;
 }
 
 beforeEach(() => {
@@ -41,12 +50,10 @@ describe('Tooltip', () => {
     });
 
     expect(tooltip.element?.getAttribute('data-drop')).toBe('help');
-    expect(
-      tooltip.element?.querySelector('[data-tooltip="help"]')
-    ).toBeTruthy();
-    expect(
-      tooltip.element?.querySelector('[data-tooltip-message]')?.textContent
-    ).toBe('Helpful message');
+    expect(find('[data-tooltip="help"]', tooltip.element)).toBeTruthy();
+    expect(find('[data-tooltip-message]', tooltip.element)?.textContent).toBe(
+      'Helpful message'
+    );
   });
 
   it('allows className overrides for tooltip container and message', () => {
@@ -61,18 +68,17 @@ describe('Tooltip', () => {
 
     expect(tooltip.element?.classList.contains('j-drop')).toBe(true);
     expect(
-      tooltip.element
-        ?.querySelector('[data-tooltip]')
-        ?.classList.contains('qa-tooltip')
+      find('[data-tooltip]', tooltip.element)?.classList.contains('qa-tooltip')
     ).toBe(true);
     expect(
-      tooltip.element
-        ?.querySelector('[data-tooltip-message]')
-        ?.classList.contains('qa-tooltip-message')
+      find('[data-tooltip-message]', tooltip.element)?.classList.contains(
+        'qa-tooltip-message'
+      )
     ).toBe(true);
 
     tooltip.show(false);
     expect(tooltip.element?.getAttribute('aria-expanded')).toBe('true');
+    expect(tooltip.element?.hasAttribute('aria-hidden')).toBe(false);
   });
 
   it('sets theme class only when theme is configured', () => {
@@ -82,9 +88,7 @@ describe('Tooltip', () => {
     });
 
     expect(
-      tooltip.element
-        ?.querySelector('[data-tooltip]')
-        ?.classList.contains('is-primary')
+      find('[data-tooltip]', tooltip.element)?.classList.contains('is-primary')
     ).toBe(false);
 
     tooltip.destroy();
@@ -96,9 +100,7 @@ describe('Tooltip', () => {
     });
 
     expect(
-      tooltip.element
-        ?.querySelector('[data-tooltip]')
-        ?.classList.contains('is-primary')
+      find('[data-tooltip]', tooltip.element)?.classList.contains('is-primary')
     ).toBe(true);
   });
 
@@ -114,7 +116,7 @@ describe('Tooltip', () => {
       },
     });
 
-    const container = tooltip.element?.querySelector('[data-tooltip]');
+    const container = find('[data-tooltip]', tooltip.element);
 
     expect(container?.classList.contains('j-tooltip')).toBe(true);
     expect(container?.classList.contains('qa-error-theme')).toBe(true);

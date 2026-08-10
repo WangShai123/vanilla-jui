@@ -195,14 +195,14 @@ transition 失败时默认 `rollbackOnError: true`，会恢复到动作开始前
 
 Flow 会为当前动作创建 `AbortController`，hook context 中的 `signal` 可传给 `fetch`。`destroy()` 会中止当前动作并执行通过 `addCleanup()` 注册的清理函数。
 
-## Modal 集成
+## Modal 组合
 
-Modal 只消费 Flow 的 `next()`、`back()`、`snapshot()` 协议。传入 `flow` 后，Modal 内容区里的 `data-action="next"` 和 `data-action="back"` 会映射到流程动作。
+Flow 不依赖 Modal，Modal 也不内置 Flow 或 Form 适配层。需要流程弹窗时，由业务代码创建 Flow，并把当前步骤内容或外部 Form 实例挂载到 Modal 的 `content` 中；Modal 的按钮回调只负责调用 `flow.next()`、`flow.back()` 或外部 `form.requestSubmit()`。
 
-表单步骤应把字段写在 `step.modal.fields`：
+表单步骤应显式创建 Form，并在提交成功后把数据交给 Flow：
 
 ```js
-import { createFlow, createModal } from 'vanilla-jui';
+import { createFlow, createForm, createModal } from 'vanilla-jui';
 
 const flow = createFlow({
   render: false,
@@ -210,33 +210,58 @@ const flow = createFlow({
     {
       id: 'account',
       title: 'Account',
-      modal: {
-        fields: [{ label: 'Email', name: 'email', type: 'email' }],
-      },
+      data: { type: 'form' },
     },
     {
       id: 'confirm',
       title: 'Confirm',
-      modal: ({ data }) => ({
-        fields: null,
-        content: `Email: ${data.email}`,
-      }),
+      data: { type: 'summary' },
     },
   ],
 }).build();
 
-const first = flow.snapshot().currentStep;
+const form = createForm({
+  fields: [
+    {
+      type: 'email',
+      payload: { label: 'Email', name: 'email', required: true },
+    },
+  ],
+  buttons: false,
+  onSubmit: async (data) => {
+    await flow.next(data);
+    modal.setState({ content: renderStep() });
+  },
+}).build();
+
+const renderStep = () => {
+  const snapshot = flow.snapshot();
+  if (snapshot.currentId === 'account') return form.element;
+  return `Email: ${snapshot.data.email}`;
+};
+
 const modal = createModal({
-  flow,
-  ...(first?.modal && typeof first.modal === 'object' ? first.modal : {}),
+  content: renderStep,
+  onConfirm: () => {
+    if (flow.snapshot().currentId === 'account') form.requestSubmit();
+    else modal.hide();
+  },
+  onCancel: async () => {
+    if (flow.snapshot().canBack) {
+      await flow.back();
+      modal.setState({ content: renderStep() });
+      return;
+    }
+    modal.hide();
+  },
 }).build();
 
 modal.show();
 ```
 
-当前 Modal 是表单模式时，Modal 会先执行 Form 校验，再把收集到的数据作为 payload 传给 `flow.next()` 或 `flow.back()`。返回表单步骤时，Modal 会用当前步骤缓存回填同名字段。
+这种组合方式让 Flow 只负责步骤、数据和动作时序，Form 只负责字段和校验，Modal 只负责弹层展示与确认/取消动作。
 
-`step.modal` 可以是对象，也可以是函数。函数接收 `{ flow, snapshot, step, modal, data, currentData }`，返回包含 `content` 或 `fields` 的 Modal 状态配置。Modal 的标题、按钮文案、位置、关闭行为等初始化配置不会随步骤自动改变。
+`step.modal` 仍可作为业务自定义元数据保存，但它不会被 Modal 自动消费。需要使用时，应由业务代码在 `renderStep()` 或 Modal 回调里读取并转换成对应的 `content`、按钮文案或其他初始化配置。
 
 ## Options
 

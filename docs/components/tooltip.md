@@ -8,7 +8,6 @@ Tooltip 自身不创建额外生命周期。实例方法会转发到底层 Drop�
 
 ```js
 import { createTooltip } from 'vanilla-jui';
-import 'vanilla-jui/style.css';
 ```
 
 ## 基础用法
@@ -33,6 +32,8 @@ tooltip.hide();
 | `position`    | Drop position                                | `'auto'`  | 浮层位置，取值与 Drop 一致     |
 | `offset`      | `number`                                     | `8`       | 与目标元素间距                 |
 | `theme`       | `false \| 'reverse' \| 'primary' \| ...`     | `false`   | 主题色，见下方说明             |
+| `cache`       | `boolean`                                    | `false`   | 透传给 Drop 的内容缓存开关     |
+| `ttl`         | `number`                                     | `0`       | 透传给 Drop 的缓存有效期，毫秒 |
 | `delay`       | `number \| { show?: number, hide?: number }` | `100`     | 展示/隐藏延迟，单位毫秒        |
 | `hoverIntent` | `boolean`                                    | `true`    | hover 模式下启用意图判断       |
 | `name`        | `string \| null`                             | `null`    | 提示名称，传给 Drop 和内容节点 |

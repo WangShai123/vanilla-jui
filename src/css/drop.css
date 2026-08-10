@@ -24,5 +24,8 @@
     background: var(--drop-bg);
     color: var(--drop-fg);
     box-shadow: var(--drop-box-shadow);
+    position: relative;
+    min-width: 64px;
+    min-height: 32px;
   }
 }

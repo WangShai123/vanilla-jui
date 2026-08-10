@@ -105,7 +105,7 @@ const panel = createOffcanvas({
 
 点击遮罩、按 `Escape`、或点击面板内 `data-action="close"` / `data-action="cancel"` 的元素都会触发关闭。
 
-默认情况下，面板展示时会给 `document.body` 设置 `overflow: hidden`，隐藏后恢复。需要保留页面自身滚动行为时，可以设置 `bodyOverflow: false`。
+默认情况下，面板展示时会给 `document.body` 设置 `overflow: hidden`，隐藏后恢复。多个 Offcanvas 同时展示时会共享滚动锁，直到最后一个面板隐藏或销毁后才恢复原值。需要保留页面自身滚动行为时，可以设置 `bodyOverflow: false`。
 
 ## Props
 
@@ -156,6 +156,6 @@ const panel = createOffcanvas({
 
 `show()` 和 `hide()` 需要在 `build()` 后调用。
 
-两者通过公共 presence 协调器管理 DOM 生命周期。`show()` 在挂载后正向播放面板和遮罩 Motion；`hide()` 反向播放同一组 Animation，全部完成后再卸载。动画不依赖默认 className 或 `style.css`。
+两者通过公共 presence 协调器管理 DOM 生命周期。`show()` 在挂载后播放面板和遮罩的进入 Motion；`hide()` 播放对应的离场 Motion，全部完成后再卸载。动画不依赖默认 className 或 `style.css`。
 
 机制说明和自定义组件接入方式见 [Presence 与 Motion](../core/presence.md)。

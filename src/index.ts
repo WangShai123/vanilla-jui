@@ -27,6 +27,7 @@ export * from './primitives/tooltip.ts';
 export * from './primitives/toast.ts';
 export * from './primitives/theme.ts';
 export * from './primitives/parabola.ts';
+export * from './primitives/sticky.ts';
 
 // Validation
 export * from './validation/validator.ts';
@@ -34,7 +35,6 @@ export * from './validation/validator.ts';
 // Components
 export * from './core/component.ts';
 export * from './components/toc.ts';
-export * from './components/sticky.ts';
 export * from './components/accordion.ts';
 export * from './components/form.ts';
 export * from './components/flow.ts';

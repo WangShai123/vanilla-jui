@@ -185,7 +185,7 @@ vanilla-jui 不使用组件基类和继承。`defineComponent()` 负责所有组
 
 - JS 管理挂载、激活、失活、卸载和并发操作失效。
 - state 只表达组件是否激活，例如 `visible`；view 把它绑定到 `aria-*`、`data-*`、class 或 style。
-- Motion 层只管理 keyframes、timing、反向播放、取消和完成信号。
+- Motion 层只管理 keyframes、timing、方向性播放、取消和完成信号。
 - CSS 管理静态外观、主题，以及稳定挂载节点的 hover/focus 等局部 transition。
 - 同一组 motion 属性只能有一个时间源：要么由 `createTransition` 的 Web Animations 定义，要么由 CSS 定义，不能双写。
 - 库组件的入场、离场、展开、收起等行为动画必须优先使用 Motion API，不得依赖默认 className 或 `style.css`。
@@ -202,7 +202,7 @@ leave: deactivate -> await motion -> unmount
 
 Presence 使用 `flushSync` 同步提交 `activate/deactivate` 中的响应式视图绑定。组件只需同步写 state，不重复调用 `flushSync`。
 
-需要编程化、可反向和离场后卸载的库内行为动画，优先使用 `createTransition`。它复用同一个 Web Animation 正向/反向播放，Presence 直接等待 `Animation.finished`，不再从 CSS 反向探测时序。纯 CSS 方案仍可不传 `motion`：Presence 会等待根节点的有限 CSS Animation/Transition，并在不支持 `getAnimations()` 时使用 computed-style 回退。
+需要编程化、可离场后卸载的库内行为动画，优先使用 `createTransition`。它按 enter/leave 当前方向创建 Web Animation，leave 使用反向 keyframes，Presence 直接等待 `Animation.finished`，不再从 CSS 反向探测时序。纯 CSS 方案仍可不传 `motion`：Presence 会等待根节点的有限 CSS Animation/Transition，并在不支持 `getAnimations()` 时使用 computed-style 回退。
 
 Presence 使用操作序列处理反向交互。进入过程中关闭，或离开过程中重开时，旧操作可以自然结束，但不得再提交 `visible` phase、执行卸载或触发过期生命周期回调。
 

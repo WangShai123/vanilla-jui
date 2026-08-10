@@ -1,8 +1,10 @@
 # Sticky
 
-Sticky 是用于侧边栏 widget 的吸附组件，源码位于 `src/components/sticky.ts`。
+Sticky 是用于侧边栏 widget 的吸附原语，源码位于 `src/primitives/sticky.ts`。
 
-它是围绕已有 DOM 工作的行为控制器，会给一个或多个目标元素设置 `position: sticky`，并按照元素顺序自动累加 `top` 偏移，避免多个 widget 在滚动吸附时重叠。实例使用 `props`、`runtime` 和 `state` 描述配置、生命周期和计算结果，并在 `destroy()` 时恢复目标元素原始的内联样式。
+它是围绕已有 DOM 工作的行为控制器，不基于 `defineComponent()`，不会创建根节点。Sticky 会给一个或多个目标元素设置 `position: sticky`，并按照元素顺序自动累加 `top` 偏移，避免多个 widget 在滚动吸附时重叠。实例使用 `props`、`runtime` 和 `state` 描述配置、生命周期和计算结果，并在 `destroy()` 时恢复目标元素原始的内联样式。
+
+Sticky 默认不会观察 DOM 变化。需要在用户浏览过程中动态加入广告 widget、推荐模块等新目标时，可以设置 `reactive: true`，组件会观察 `parent`（未传时为 `document.body`）并在目标增删后重新解析 target。默认关闭是为了避免静态侧边栏产生不必要的 `MutationObserver` 开销。
 
 ## 导入
 
@@ -122,7 +124,8 @@ createSticky({
 | `top`       | `number`                                     | `16`        | 第一项 sticky 的顶部偏移，单位 px               |
 | `gap`       | `number`                                     | `16`        | 多个 sticky 元素之间的间距，单位 px             |
 | `overflow`  | `'destroy' \| 'ignore'`                      | `'destroy'` | 超出 `max` 时的处理策略                         |
-| `onRefresh` | `Function \| null`                           | `null`      | 每次重新计算 top 后触发，参数为当前 Sticky 实例 |
+| `reactive`  | `boolean`                                    | `false`     | 是否观察父容器 DOM 变化并自动重新解析目标       |
+| `onReBuild` | `Function \| null`                           | `null`      | 每次重新计算 top 后触发，参数为当前 Sticky 实例 |
 
 ## 实例属性
 
@@ -159,12 +162,12 @@ sticky.build();
 | 参数   | 无               |
 | 返回值 | 当前 Sticky 实例 |
 
-### `refresh()`
+### `reBuild()`
 
-重新计算当前实例内所有 Sticky 目标的 top。适合内容高度变化后手动调用。
+重新解析目标集合并计算当前实例内所有 Sticky 目标的 top。适合目标增删或内容高度变化后手动调用；`reactive: true` 时，父容器 DOM 变化会自动调度该方法。
 
 ```js
-sticky.refresh();
+sticky.reBuild();
 ```
 
 | 项     | 说明             |
@@ -185,4 +188,4 @@ sticky.destroy();
 | 参数   | 无     |
 | 返回值 | `void` |
 
-Sticky 不创建根节点，也不提供 `mount()`、`setState()`、`on()`、`off()`、`emit()` 或 `use()`；运行时变化通过 `refresh()` 重新计算。
+Sticky 不创建根节点，也不提供 `mount()`、`setState()`、`on()`、`off()`、`emit()` 或 `use()`；运行时变化通过 `reBuild()` 重新计算。

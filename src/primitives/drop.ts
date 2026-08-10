@@ -1,4 +1,4 @@
-import { jsx } from 'vanilla-signal';
+import { createRoot, createSignal, insert, jsx } from 'vanilla-signal';
 
 import {
   type DOMReference,
@@ -8,6 +8,7 @@ import {
 import { createEventManager } from '../utilities/events.ts';
 import { randomId } from '../utilities/id.ts';
 import { type ResolveSchema, resolveProps } from '../utilities/types.ts';
+import { createLoading } from './loading.ts';
 
 type DropMode = 'hover' | 'click';
 type DropPosition =
@@ -33,12 +34,22 @@ interface DropDelay {
   hide?: number;
 }
 
+type DropContent =
+  | RenderableContent<DropInstance>
+  | ((
+      drop: DropInstance
+    ) =>
+      | RenderableContent<DropInstance>
+      | Promise<RenderableContent<DropInstance>>);
+
 interface DropProps extends Record<string, unknown> {
   name?: string | null;
   mode?: DropMode;
   position?: DropPosition;
   offset?: number;
-  content?: RenderableContent<DropInstance>;
+  content?: DropContent;
+  cache?: boolean;
+  ttl?: number;
   className?: DropClassNameConfig;
   id?: string | null;
   delay?: number | DropDelay;
@@ -52,7 +63,9 @@ interface ResolvedDropProps extends Record<string, unknown> {
   mode: DropMode;
   position: DropPosition;
   offset: number;
-  content: RenderableContent<DropInstance>;
+  content: DropContent;
+  cache: boolean;
+  ttl: number;
   className: DropClassNames;
   id: string;
   delay: number | DropDelay;
@@ -64,6 +77,11 @@ interface ResolvedDropProps extends Record<string, unknown> {
 interface DropTimer {
   show: ReturnType<typeof setTimeout> | null;
   hide: ReturnType<typeof setTimeout> | null;
+}
+
+interface DropContentCacheEntry {
+  content: RenderableContent<DropInstance>;
+  updatedAt: number;
 }
 
 export interface DropInstance {
@@ -117,6 +135,12 @@ const DROP_PROPS_SCHEMA = {
     default: '',
     type: 'renderable',
   },
+  cache: { default: false, type: 'boolean' },
+  ttl: {
+    default: 0,
+    type: 'number',
+    min: 0,
+  },
   className: {
     default: DEFAULT_CLASS_NAMES,
     type: 'object',
@@ -150,7 +174,9 @@ function normalizeProps(input: DropProps): ResolvedDropProps {
     mode: props.mode as DropMode,
     position: props.position as DropPosition,
     offset: props.offset as number,
-    content: props.content as RenderableContent<DropInstance>,
+    content: props.content as DropContent,
+    cache: props.cache as boolean,
+    ttl: props.ttl as number,
     className: props.className as DropClassNames,
     id: props.id as string,
     delay: props.delay as number | DropDelay,
@@ -173,6 +199,10 @@ function normalizeDelay(delay: number | DropDelay): Required<DropDelay> {
   return { show: 0, hide: 0 };
 }
 
+function normalizeTtl(ttl: number | undefined): number {
+  return typeof ttl === 'number' && ttl > 0 ? ttl : 0;
+}
+
 /**
  * 通用浮层组件。
  *
@@ -193,24 +223,84 @@ export function createDrop(
   let visible = false;
   let destroyed = false;
   let drop!: DropInstance;
-  const wrapper = jsx('div', {
-    className: props.className.container,
-    'data-drop-container': props.name || props.id,
-    children: () =>
-      typeof props.content === 'function' ? props.content(drop) : props.content,
+  let contentCache: DropContentCacheEntry | null = null;
+  let pending: Promise<void> | null = null;
+  let loadId = 0;
+  let disposeView = (): void => {};
+  const [content, setContent] = createSignal<RenderableContent<DropInstance>>(
+    typeof props.content === 'function' ? null : props.content
+  );
+  const [loading, setLoading] = createSignal(false);
+  const renderContent = (): RenderableContent<DropInstance> => {
+    if (loading()) return createLoading();
+    const value = content();
+    if (typeof value === 'function') return value(drop);
+    return value;
+  };
+  const { root } = createRoot((dispose) => {
+    disposeView = dispose;
+    const wrapper = jsx('div', {
+      className: props.className.container,
+      'data-drop-container': props.name || props.id,
+      'aria-live': () =>
+        typeof props.content === 'function' ? 'polite' : null,
+      'aria-busy': () => String(loading()),
+      children: renderContent,
+    });
+    return {
+      root: jsx('div', {
+        className: props.className.root,
+        id: props.id,
+        'data-drop': props.name || randomId(),
+        'aria-expanded': 'false',
+        children: wrapper,
+      }) as HTMLElement,
+    };
   });
-  const root = jsx('div', {
-    className: props.className.root,
-    id: props.id,
-    'data-drop': props.name || randomId(),
-    'aria-hidden': 'true',
-    'aria-expanded': 'false',
-    children: wrapper,
-  }) as HTMLElement;
 
   const cancelTimer = (key: keyof DropTimer): void => {
     if (timer[key]) clearTimeout(timer[key]);
     timer[key] = null;
+  };
+  const loadContent = async (): Promise<void> => {
+    const source = props.content;
+    if (typeof source !== 'function') {
+      setContent(source);
+      return;
+    }
+
+    const ttl = normalizeTtl(props.ttl);
+    if (
+      props.cache &&
+      contentCache &&
+      (!ttl || Date.now() - contentCache.updatedAt <= ttl)
+    ) {
+      setContent(contentCache.content);
+      return;
+    }
+
+    if (pending) return pending;
+
+    const request = ++loadId;
+    setLoading(true);
+    const task = Promise.resolve()
+      .then(() => source(drop))
+      .then((result) => {
+        if (destroyed || request !== loadId) return;
+        if (props.cache) {
+          contentCache = {
+            content: result,
+            updatedAt: Date.now(),
+          };
+        }
+        setContent(result);
+      })
+      .finally(() => {
+        if (request === loadId && !destroyed) setLoading(false);
+        if (pending === task) pending = null;
+      });
+    pending = task;
+    return task;
   };
   const setPosition = (): void => {
     if (!target) return;
@@ -278,14 +368,19 @@ export function createDrop(
   const applyVisible = (next: boolean): void => {
     if (destroyed || visible === next) return;
     if (next) {
-      if (!root.parentNode) document.body.appendChild(root);
+      if (!root.parentNode) insert(document.body, root);
       setPosition();
+      void loadContent().then(() => {
+        if (visible && !destroyed) setPosition();
+      });
     } else {
+      loadId += 1;
+      pending = null;
+      setLoading(false);
       root.style.top = '';
       root.style.left = '';
       root.remove();
     }
-    root.setAttribute('aria-hidden', next ? 'false' : 'true');
     root.setAttribute('aria-expanded', next ? 'true' : 'false');
     visible = next;
     void (next ? props.onShown?.(drop) : props.onHidden?.(drop));
@@ -378,7 +473,11 @@ export function createDrop(
       cancelTimer('show');
       cancelTimer('hide');
       events.clear();
+      loadId += 1;
+      pending = null;
+      setLoading(false);
       root.remove();
+      disposeView();
       target = null;
       visible = false;
     },

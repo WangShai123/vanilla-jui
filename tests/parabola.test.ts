@@ -65,6 +65,10 @@ beforeEach(() => {
     }),
     configurable: true,
   });
+  Object.defineProperty(window, 'cancelAnimationFrame', {
+    value: vi.fn(),
+    configurable: true,
+  });
   vi.spyOn(performance, 'now').mockReturnValue(0);
 });
 
@@ -241,7 +245,7 @@ describe('Parabola', () => {
     expect(balls()).toHaveLength(1);
   });
 
-  it('destroy disables future production without manually removing active balls', async () => {
+  it('destroy cancels active animations and removes active balls', async () => {
     const { from, to } = mount();
     const parabola = createParabola({ from, to });
     instances.push(parabola);
@@ -254,7 +258,9 @@ describe('Parabola', () => {
     parabola.destroy();
 
     expect(parabola.runtime.destroyed).toBe(true);
-    expect(balls()).toHaveLength(1);
+    expect(balls()).toHaveLength(0);
+    expect(parabola.element).toBeNull();
+    expect(window.cancelAnimationFrame).toHaveBeenCalled();
     await expect(parabola.show()).resolves.toBe(false);
   });
 });

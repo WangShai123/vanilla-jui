@@ -28,9 +28,10 @@ function mount(instance: PaginationInstance): PaginationInstance {
   return instance;
 }
 
-async function tick(): Promise<void> {
-  await Promise.resolve();
-  await Promise.resolve();
+async function tick(count = 2): Promise<void> {
+  for (let index = 0; index < count; index += 1) {
+    await Promise.resolve();
+  }
 }
 
 beforeEach(() => {
@@ -92,6 +93,12 @@ describe('Pagination', () => {
     ).toBe(false);
     expect(
       pagination.element.querySelector('[data-pagination-more] button')
+    ).toBeNull();
+    expect(
+      pagination.element.querySelectorAll('[data-pagination-item="1"] button')
+    ).toHaveLength(1);
+    expect(
+      pagination.element.querySelector('[data-pagination-item="1"] span')
     ).toBeNull();
     expect(
       pagination.element.querySelector("[aria-current='page']")?.textContent
@@ -168,7 +175,7 @@ describe('Pagination', () => {
     expect(pagination.state.page.current).toBe(3);
   });
 
-  it('refreshes from state updates and clamps current page', async () => {
+  it('updates from state changes and clamps current page', async () => {
     pagination = mount(
       createPagination({
         total: 20,
@@ -199,6 +206,117 @@ describe('Pagination', () => {
     expect(
       pagination.element?.querySelectorAll('[data-pagination-item]')
     ).toHaveLength(2);
+  });
+
+  it('keeps root, mount parent, and keyed page nodes stable across state changes', async () => {
+    pagination = mount(
+      createPagination({
+        total: 80,
+        page: { size: 10, current: 1 },
+        count: { sibling: 1, boundary: 1 },
+      })
+    );
+
+    const root = pagination.element;
+    const parent = root?.parentNode;
+    const page2 = pagination.element?.querySelector(
+      '[data-pagination-item="2"]'
+    );
+    if (!page2) throw new Error('Missing page 2 item.');
+
+    pagination.state.total = 60;
+    pagination.state.page.current = 2;
+    pagination.state.count.sibling = 2;
+    await tick();
+
+    expect(pagination.element).toBe(root);
+    expect(root?.parentNode).toBe(parent);
+    expect(
+      pagination.element?.querySelector('[data-pagination-item="2"]')
+    ).toBe(page2);
+    expect(
+      pagination.element?.querySelector("[aria-current='page']")?.textContent
+    ).toBe('2');
+  });
+
+  it('reacts to async data source pagination changes from onChange', async () => {
+    const onChange = vi.fn(
+      async (page: number, instance: PaginationInstance) => {
+        await Promise.resolve();
+        instance.setState({
+          total: 12,
+          page: { size: 5, current: page },
+          count: { sibling: 0, boundary: 1 },
+        });
+      }
+    );
+
+    pagination = mount(
+      createPagination({
+        total: 100,
+        page: { size: 10, current: 1 },
+        count: { sibling: 1, boundary: 1 },
+        onChange,
+      })
+    );
+    const root = pagination.element;
+    const parent = root?.parentNode;
+
+    pagination.go(7);
+    expect(pagination.state.page.current).toBe(7);
+    expect(pagination.state.locked).toBe(true);
+
+    await tick(6);
+
+    expect(onChange).toHaveBeenCalledWith(7, pagination);
+    expect(pagination.pageCount).toBe(3);
+    expect(pagination.state.total).toBe(12);
+    expect(pagination.state.page.size).toBe(5);
+    expect(pagination.state.page.current).toBe(3);
+    expect(pagination.state.count).toEqual({ sibling: 0, boundary: 1 });
+    expect(pagination.state.locked).toBe(false);
+    expect(pagination.element).toBe(root);
+    expect(root?.parentNode).toBe(parent);
+    expect(
+      pagination.element?.querySelector("[aria-current='page']")?.textContent
+    ).toBe('3');
+    expect(
+      pagination.element?.querySelectorAll('[data-pagination-item]')
+    ).toHaveLength(3);
+    expect(pagination.element?.querySelector('[data-pagination-more]')).toBe(
+      null
+    );
+    expect(
+      pagination.element
+        ?.querySelector('[data-page-action="next"]')
+      ?.getAttribute('aria-disabled')
+    ).toBe('true');
+  });
+
+  it('unmounts and remounts with the same root and live state bindings', async () => {
+    pagination = createPagination({
+      total: 40,
+      page: { size: 10, current: 1 },
+    }).build();
+
+    const root = pagination.element;
+    if (!root) throw new Error('Expected Pagination root.');
+
+    pagination.mount(app());
+    expect(app().contains(root)).toBe(true);
+
+    pagination.unmount();
+    expect(app().contains(root)).toBe(false);
+
+    pagination.mount(app());
+    pagination.setState({ page: { ...pagination.state.page, current: 3 } });
+    await tick();
+
+    expect(pagination.element).toBe(root);
+    expect(app().contains(root)).toBe(true);
+    expect(
+      pagination.element?.querySelector("[aria-current='page']")?.textContent
+    ).toBe('3');
   });
 
   it('removes mounted DOM on destroy', () => {

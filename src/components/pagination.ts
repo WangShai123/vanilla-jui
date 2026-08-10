@@ -2,6 +2,7 @@ import {
   For,
   createDeepStore,
   createEffect,
+  createMemo,
   flushSync,
   jsx,
 } from 'vanilla-signal';
@@ -270,6 +271,13 @@ function resolvePageItems(
   return items;
 }
 
+function requirePageItem(item: PaginationItem): PageItem {
+  if (item.type !== 'page') {
+    throw new Error('Pagination.itemView: expects page item.');
+  }
+  return item;
+}
+
 export function createPagination(input: PaginationProps = {}): Pagination {
   const props = normalizeProps(input);
   const state = createDeepStore({
@@ -281,13 +289,14 @@ export function createPagination(input: PaginationProps = {}): Pagination {
   let changeId = 0;
   let pagination: Pagination;
 
-  const pageCount = (): number => getPageCount(state.total, state.page.size);
+  const pageCount = createMemo(() => getPageCount(state.total, state.page.size));
   const isLocked = (): boolean => props.lock && state.locked;
   const isPrevDisabled = (): boolean => isLocked() || state.page.current <= 1;
   const isNextDisabled = (): boolean =>
     isLocked() || state.page.current >= pageCount();
-  const pageItems = (): PaginationItem[] =>
-    resolvePageItems(state.page.current, pageCount(), state.count);
+  const pageItems = createMemo(() =>
+    resolvePageItems(state.page.current, pageCount(), state.count)
+  );
 
   const unlock = (id: number): void => {
     if (props.lock && !pagination.runtime.destroyed && id === changeId) {
@@ -365,8 +374,27 @@ export function createPagination(input: PaginationProps = {}): Pagination {
     }) as HTMLElement;
   };
 
-  const itemView = (itemAccessor: () => PaginationItem): HTMLElement =>
-    jsx('li', {
+  const itemView = (itemAccessor: () => PaginationItem): HTMLElement => {
+    if (itemAccessor().type === 'more') {
+      return jsx('li', {
+        className: () =>
+          joinClasses(
+            props.className.item,
+            itemAccessor().type === 'more' ? props.className.more : ''
+          ),
+        'data-pagination-more': () =>
+          itemAccessor().type === 'more' ? itemAccessor().key : null,
+        children: jsx('span', {
+          className: props.className.button,
+          children: icon('more'),
+        }),
+      }) as HTMLElement;
+    }
+
+    const page = (): number => requirePageItem(itemAccessor()).page;
+    const isCurrentPage = (): boolean => page() === state.page.current;
+
+    return jsx('li', {
       className: () =>
         joinClasses(
           props.className.item,
@@ -378,41 +406,35 @@ export function createPagination(input: PaginationProps = {}): Pagination {
         const item = itemAccessor();
         return item.type === 'page' ? String(item.page) : null;
       },
-      children: () => {
-        const item = itemAccessor();
-        if (item.type === 'more') {
-          return jsx('span', {
-            className: props.className.button,
-            children: icon('more'),
-          });
-        }
-        if (item.page === state.page.current) {
-          return jsx('span', {
-            className: props.className.current,
-            'data-current-page': String(item.page),
-            'aria-current': 'page',
-            'aria-label': `Page ${item.page}, current page`,
-            children: isLocked()
-              ? jsx('i', {
-                  className: props.className.loading,
-                  children: icon('loader'),
-                })
-              : String(item.page),
-          });
-        }
-        return jsx('button', {
-          className: props.className.button,
-          type: 'button',
-          'data-page': String(item.page),
-          'aria-label': `Go to page ${item.page}`,
-          'aria-disabled': isLocked() ? 'true' : 'false',
-          tabindex: isLocked() ? '-1' : null,
-          disabled: isLocked(),
-          onClick: () => go(item.page),
-          children: String(item.page),
-        });
-      },
+      children: jsx('button', {
+        className: () =>
+          isCurrentPage() ? props.className.current : props.className.button,
+        type: 'button',
+        'data-page': () => String(page()),
+        'data-current-page': () => (isCurrentPage() ? String(page()) : null),
+        'aria-current': () => (isCurrentPage() ? 'page' : null),
+        'aria-label': () =>
+          isCurrentPage()
+            ? `Page ${page()}, current page`
+            : `Go to page ${page()}`,
+        'aria-disabled': () =>
+          isLocked() || isCurrentPage() ? 'true' : 'false',
+        tabindex: () => (isLocked() || isCurrentPage() ? '-1' : null),
+        disabled: () => isLocked() || isCurrentPage(),
+        onClick: () => {
+          const current = page();
+          if (!isLocked() && !isCurrentPage()) go(current);
+        },
+        children: () =>
+          isLocked() && isCurrentPage()
+            ? jsx('i', {
+                className: props.className.loading,
+                children: icon('loader'),
+              })
+            : String(page()),
+      }),
     }) as HTMLElement;
+  };
 
   pagination = defineComponent<
     ResolvedPaginationProps,

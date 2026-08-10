@@ -30,6 +30,9 @@ declare function isMobile(): boolean;
  * @returns {Promise<boolean>} 是否复制成功。
  */
 declare function copy(text: unknown): Promise<boolean>;
+type SupportES2022 = boolean;
+declare function isModernBrowser(): SupportES2022;
+declare function checkModernBrowser(): SupportES2022;
 //#endregion
 //#region src/utilities/id.d.ts
 /**
@@ -457,12 +460,15 @@ interface DropDelay$1 {
   show?: number;
   hide?: number;
 }
+type DropContent = RenderableContent<DropInstance> | ((drop: DropInstance) => RenderableContent<DropInstance> | Promise<RenderableContent<DropInstance>>);
 interface DropProps extends Record<string, unknown> {
   name?: string | null;
   mode?: DropMode$1;
   position?: DropPosition$1;
   offset?: number;
-  content?: RenderableContent<DropInstance>;
+  content?: DropContent;
+  cache?: boolean;
+  ttl?: number;
   className?: DropClassNameConfig;
   id?: string | null;
   delay?: number | DropDelay$1;
@@ -475,7 +481,9 @@ interface ResolvedDropProps extends Record<string, unknown> {
   mode: DropMode$1;
   position: DropPosition$1;
   offset: number;
-  content: RenderableContent<DropInstance>;
+  content: DropContent;
+  cache: boolean;
+  ttl: number;
   className: DropClassNames;
   id: string;
   delay: number | DropDelay$1;
@@ -541,6 +549,8 @@ interface TooltipProps extends Record<string, unknown> {
   offset?: number;
   message?: string;
   theme?: TooltipTheme;
+  cache?: boolean;
+  ttl?: number;
   className?: TooltipClassNameConfig;
   id?: string | null;
   delay?: number | DropDelay;
@@ -579,6 +589,7 @@ interface ToastOptions {
   className?: ToastClassNameConfig;
 }
 interface ToastActionProps extends ToastOptions {
+  type?: ToastType;
   text?: {
     close?: string;
     action?: string;
@@ -696,6 +707,52 @@ interface ParabolaInstance {
   destroy(): void;
 }
 declare function createParabola(input?: ParabolaProps): ParabolaInstance;
+//#endregion
+//#region src/primitives/sticky.d.ts
+type StickyOverflow = 'destroy' | 'ignore';
+interface StickyProps extends Record<string, unknown> {
+  target?: DOMReference;
+  parent?: DOMReference;
+  max?: number;
+  top?: number;
+  gap?: number;
+  overflow?: StickyOverflow;
+  reactive?: boolean;
+  onReBuild?: ((sticky: StickyInstance) => void) | null;
+}
+interface ResolvedStickyProps extends Record<string, unknown> {
+  target: DOMReference;
+  parent: DOMReference;
+  max: number;
+  top: number;
+  gap: number;
+  overflow: StickyOverflow;
+  reactive: boolean;
+  onReBuild: ((sticky: StickyInstance) => void) | null;
+}
+interface StickyStateItem {
+  key: string;
+  index: number;
+  top: number;
+}
+interface StickyState extends Record<string, unknown> {
+  items: StickyStateItem[];
+}
+interface StickyRuntime {
+  built: boolean;
+  destroyed: boolean;
+  reBuilding: boolean;
+  reBuildFrameId: number;
+}
+interface StickyInstance {
+  readonly props: ResolvedStickyProps;
+  readonly state: StickyState;
+  readonly runtime: StickyRuntime;
+  build(): StickyInstance;
+  reBuild(): StickyInstance;
+  destroy(): void;
+}
+declare function createSticky(props?: StickyProps): StickyInstance;
 //#endregion
 //#region src/validation/validator.d.ts
 type ValidatorElement = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
@@ -835,6 +892,7 @@ interface TocProps extends Record<string, unknown> {
   target?: DOMReference;
   headings?: string;
   offset?: number;
+  reactive?: boolean;
   className?: TocClassNameConfig;
   onChange?: ((item: TocItem | null, index: number, toc: TocInstance) => void) | null;
 }
@@ -842,6 +900,7 @@ interface ResolvedTocProps extends Record<string, unknown> {
   target: DOMReference;
   headings: string;
   offset: number;
+  reactive: boolean;
   className: TocClassNames;
   onChange: ((item: TocItem | null, index: number, toc: TocInstance) => void) | null;
 }
@@ -850,53 +909,10 @@ interface TocState extends Record<string, unknown> {
   current: TocCurrent;
 }
 interface TocActions {
-  refresh(): TocInstance;
   activate(index: number): TocInstance;
 }
 type TocInstance = FunctionalComponent<ResolvedTocProps, TocState, HTMLElement, TocActions>;
 declare function createToc(props?: TocProps): TocInstance;
-//#endregion
-//#region src/components/sticky.d.ts
-type StickyOverflow = 'destroy' | 'ignore';
-interface StickyProps extends Record<string, unknown> {
-  target?: DOMReference;
-  parent?: DOMReference;
-  max?: number;
-  top?: number;
-  gap?: number;
-  overflow?: StickyOverflow;
-  onRefresh?: ((sticky: StickyInstance) => void) | null;
-}
-interface ResolvedStickyProps extends Record<string, unknown> {
-  target: DOMReference;
-  parent: DOMReference;
-  max: number;
-  top: number;
-  gap: number;
-  overflow: StickyOverflow;
-  onRefresh: ((sticky: StickyInstance) => void) | null;
-}
-interface StickyStateItem {
-  key: string;
-  index: number;
-  top: number;
-}
-interface StickyState extends Record<string, unknown> {
-  items: StickyStateItem[];
-}
-interface StickyRuntime {
-  built: boolean;
-  destroyed: boolean;
-}
-interface StickyInstance {
-  readonly props: ResolvedStickyProps;
-  readonly state: StickyState;
-  readonly runtime: StickyRuntime;
-  build(): StickyInstance;
-  refresh(): StickyInstance;
-  destroy(): void;
-}
-declare function createSticky(props?: StickyProps): StickyInstance;
 //#endregion
 //#region src/components/accordion.d.ts
 type AccordionActive = number | string | Array<number | string> | null;
@@ -966,11 +982,12 @@ declare function createAccordion(props: AccordionProps): AccordionInstance;
 //#endregion
 //#region src/components/form.d.ts
 type FormValue = string | number | boolean;
-type FormOptionInput = FormValue | FormOption;
+type FieldOption = FormValue | FormOption;
 type FormStyle = string | Partial<CSSStyleDeclaration> | null;
 type FormDataValue = FormDataEntryValue | FormDataEntryValue[];
 type FormDataRecord = Record<string, FormDataValue>;
-type FormControlType = 'checkbox' | 'custom' | 'radio' | 'select' | 'switch' | 'textarea' | (string & {});
+type FormItemType = FormControlType;
+type FormControlType = 'checkbox' | 'custom' | 'email' | 'password' | 'radio' | 'select' | 'switch' | 'text' | 'textarea' | (string & {});
 interface FormClassNames {
   form: string;
   vertical: string;
@@ -1007,12 +1024,19 @@ interface FormOption {
   checked?: boolean;
   disabled?: boolean;
 }
+type FormItemNext = (current: FormItem, acients: FormItem[]) => FormItem | null;
+interface FormItem<TPayload = FormField> {
+  id?: string;
+  type: FormItemType;
+  payload: TPayload;
+  next?: FormItemNext | null;
+}
 interface FormField {
+  [key: string]: unknown;
   id?: string;
   label?: RenderableContent<Form> | false;
   name?: string;
-  type?: FormControlType;
-  options?: readonly FormOptionInput[];
+  options?: readonly FieldOption[];
   value?: FormDataEntryValue | boolean | readonly FormDataEntryValue[];
   checked?: boolean;
   required?: boolean;
@@ -1049,7 +1073,7 @@ interface FormProps extends Record<string, unknown> {
   vertical?: boolean;
   itemVertical?: boolean;
   style?: FormStyle;
-  fields?: readonly FormField[];
+  fields?: readonly FormItem<FormField>[];
   buttons?: boolean | readonly FormButton[];
   className?: FormClassNameConfig;
   validator?: FormValidatorConfig;
@@ -1061,7 +1085,7 @@ interface ResolvedFormProps extends Record<string, unknown> {
   vertical: boolean;
   itemVertical: boolean;
   style: FormStyle;
-  fields: FormField[];
+  fields: FormItem<FormField>[];
   buttons: FormButton[];
   className: FormClassNames;
   validator: FormValidatorConfig;
@@ -1076,13 +1100,14 @@ interface FormControlContext {
   form: Form;
   field: FormField;
   index: number;
+  item: FormItem<FormField>;
 }
 interface FormActions {
   validate(): boolean;
   reset(): Form;
   collectData(): FormDataRecord;
   requestSubmit(): Form;
-  setFields(fields: readonly FormField[]): Form;
+  setFields(fields: readonly FormItem<FormField>[]): Form;
   resetFields(): Form;
 }
 type Form = FunctionalComponent<ResolvedFormProps, FormState, HTMLFormElement, FormActions>;
@@ -1311,8 +1336,8 @@ declare function createFlow(input?: FlowProps): Flow;
 //#endregion
 //#region src/components/modal.d.ts
 type ModalTextInput = Partial<ModalText> & Record<string, unknown>;
-type ModalContent = RenderableContent<Modal>;
-type ModalMode = 'content' | 'form';
+type ModalContentResult = RenderableContent<Modal>;
+type ModalContent = ModalContentResult | ((modal: Modal) => ModalContentResult | Promise<ModalContentResult>);
 interface ModalClassNames {
   layout: string;
   modal: string;
@@ -1332,8 +1357,9 @@ interface ModalText {
   cancel: string;
 }
 interface ModalProps extends Record<string, unknown> {
-  mode?: ModalMode | null;
   content?: ModalContent;
+  cache?: boolean;
+  ttl?: number;
   position?: string;
   showCancel?: boolean;
   showClose?: boolean;
@@ -1344,9 +1370,7 @@ interface ModalProps extends Record<string, unknown> {
   onHide?: ((modal: Modal) => void | Promise<void>) | null;
   onHidden?: ((modal: Modal) => void | Promise<void>) | null;
   onConfirm?: ((modal: Modal) => void | Promise<void>) | null;
-  onSubmit?: ((data: FormDataRecord, modal: Modal) => void | Promise<void>) | null;
   onCancel?: ((modal: Modal) => void | Promise<void>) | null;
-  fields?: readonly FormField[] | null;
   header?: boolean;
   footer?: boolean;
   id?: string | null;
@@ -1355,8 +1379,9 @@ interface ModalProps extends Record<string, unknown> {
   className?: ModalClassNameConfig;
 }
 interface ResolvedModalProps extends Record<string, unknown> {
-  mode: ModalMode;
   content: ModalContent;
+  cache: boolean;
+  ttl: number;
   position: string;
   showCancel: boolean;
   showClose: boolean;
@@ -1367,9 +1392,7 @@ interface ResolvedModalProps extends Record<string, unknown> {
   onHide: NonNullable<ModalProps['onHide']> | null;
   onHidden: NonNullable<ModalProps['onHidden']> | null;
   onConfirm: NonNullable<ModalProps['onConfirm']> | null;
-  onSubmit: NonNullable<ModalProps['onSubmit']> | null;
   onCancel: NonNullable<ModalProps['onCancel']> | null;
-  fields: FormField[] | null;
   header: boolean;
   footer: boolean;
   id: string;
@@ -1378,20 +1401,15 @@ interface ResolvedModalProps extends Record<string, unknown> {
   className: ModalClassNames;
 }
 interface ModalState extends Record<string, unknown> {
-  mode: ModalMode;
   content: ModalContent;
-  fields: FormField[] | null;
   loading: boolean;
   processing: boolean;
   visible: boolean;
-  data: FormDataRecord | null;
-  extraData: FormDataRecord | null;
 }
 interface ModalActions {
   show(): Modal;
   hide(): Modal;
   reset(): Modal;
-  requestSubmit(): void;
 }
 type Modal = FunctionalComponent<ResolvedModalProps, ModalState, HTMLElement, ModalActions>;
 declare function createModal(input?: ModalProps): Modal;
@@ -1414,9 +1432,6 @@ interface SwiperClassNames {
   next: string;
   active: string;
   disabled: string;
-  loading: string;
-  loaded: string;
-  error: string;
 }
 type SwiperClassNameConfig = Partial<SwiperClassNames>;
 interface SwiperDataItem extends Record<string, unknown> {
@@ -1437,9 +1452,11 @@ interface SwiperSlideContext {
   item: NormalizedSwiperDataItem;
   index: number;
 }
+type SwiperDataLoader = (swiper: Swiper) => SwiperDataItem[] | Promise<SwiperDataItem[]>;
+type SwiperDataSource = SwiperDataItem[] | SwiperDataLoader;
 interface SwiperProps extends Record<string, unknown> {
   id?: string | null;
-  data?: SwiperDataItem[];
+  data?: SwiperDataSource;
   loop?: boolean;
   autoplay?: boolean;
   delay?: number;
@@ -1456,7 +1473,7 @@ interface SwiperProps extends Record<string, unknown> {
 }
 interface ResolvedSwiperProps extends Record<string, unknown> {
   id: string | null;
-  data: SwiperDataItem[];
+  data: SwiperDataSource;
   loop: boolean;
   autoplay: boolean;
   delay: number;
@@ -1473,6 +1490,7 @@ interface ResolvedSwiperProps extends Record<string, unknown> {
 }
 interface SwiperState extends Record<string, unknown> {
   data: SwiperDataItem[];
+  loading: boolean;
   index: number;
   trackIndex: number;
   transform: number;
@@ -1480,7 +1498,6 @@ interface SwiperState extends Record<string, unknown> {
   width: number;
 }
 interface SwiperActions {
-  refresh(): Swiper;
   slideTo(index: number): void;
   slideToTrack(index: number): void;
   next(): void;
@@ -1508,7 +1525,6 @@ interface TabsClassNames {
   tab: string;
   panelWrap: string;
   panel: string;
-  disabled: string;
   dragging: string;
 }
 type TabsClassNameConfig = Partial<TabsClassNames>;
@@ -1720,4 +1736,4 @@ interface MenuState extends Record<string, unknown> {
 type Menu = FunctionalComponent<ResolvedMenuProps, MenuState, HTMLElement>;
 declare function createMenu(input?: MenuProps): Menu;
 //#endregion
-export { CleanupFunction, CollapseMotionController, CollapseTransitionDefinition, ComponentCleanup, ComponentContext, ComponentController, ComponentDefinition, ComponentLifecycleEvent, ComponentListener, ComponentPlugin, ComponentPluginOptions, ComponentProps, ComponentRuntime, ComponentState, ContainerExpect, DOMReference, type DebounceSettings, type DebouncedFunc, DropInstance, ElementRef, Flow, FlowAction, FlowBusyHook, FlowBusyStrategy, FlowChangeHook, FlowClassNameConfig, FlowClassNames, FlowCleanup, FlowContext, FlowData, FlowDirection, FlowErrorHook, FlowFinishHook, FlowGoToOptions, FlowGuardHook, FlowLifecycleHook, FlowMoveHook, FlowPayload, FlowProps, FlowRenderContext, FlowSlot, FlowSlotName, FlowSnapshot, FlowState, FlowStep, FlowStepResult, FlowSubscriber, FlowTarget, FlowText, Form, FormButton, FormClassNameConfig, FormClassNames, FormDataRecord, FormDataValue, FormField, FormOption, FormProps, FormValidatorConfig, FunctionalComponent, IEventManager, IconAttributeValue, IconName, IconPathMap, IconProps, KeyedElementRefs, LazyRenderCallback, LazyRenderOptions, LazyRenderTarget, Menu, MenuClassNameConfig, MenuClassNames, MenuItem, MenuItemId, MenuProps, MenuType, Modal, ModalClassNameConfig, ModalClassNames, ModalMode, ModalProps, ModalText, MotionController, NormalizeContext, Offcanvas, OffcanvasAnimate, OffcanvasClassNameConfig, OffcanvasClassNames, OffcanvasContent, OffcanvasDirection, OffcanvasProps, OwnedView, OwnedViewOptions, Pagination, PaginationClassNameConfig, PaginationClassNames, PaginationCount, PaginationPage, PaginationProps, ParabolaInstance, ParamRule, ParamRuleInput, PopupProps, PresenceController, PresenceOptions, PresencePhase, PublicFlowStep, QueryContext, RenderableContent, RequireContainerResult, ResolveContainerResult, ResolveSchema, ResolvedProps, StateSyncOptions, Swiper, SwiperClassNameConfig, SwiperClassNames, SwiperDataItem, SwiperProps, SwiperSlideContext, TabContent, TabItem, Tabs, TabsClassNameConfig, TabsClassNames, TabsDirection, TabsDisabled, TabsPanelContext, TabsProps, TabsValue, ThemeClassNameConfig, ThemeClassNames, ThemeConfigKey, ThemeInstance, ThemeOptions, ThemePanelGroup, ThemeResolvedOptions, type ThrottleSettings, Toast, ToastActionProps, ToastClassNameConfig, ToastClassNames, ToastOptions, ToastType, TooltipInstance, TransitionDefinition, TransitionTarget, ValidateCondition, ValidatorInstance, addIcons, all, copy, createAccordion, createCollapseTransition, createDrop, createElementRef, createEventManager, createFlow, createForm, createKeyedElementRefs, createLoading, createMenu, createModal, createMotionGroup, createOffcanvas, createOwnedView, createPagination, createParabola, createPopup, createPresence, createScheduledTask, createStateSync, createSticky, createSwiper, createTabs, createTheme, createToc, createTooltip, createTransition, createValidator, debounce, defineComponent, flexPosition, getRegistedIconPath, getStoreVersion, getType, icon, iconHtml, iconMarkup, isDomElementValue, isDomNodeValue, isElement, isHtmlElementValue, isMobile, isNilValue, isNode, isPlainObject, isRenderableContent, isRenderablePrimitive, isRenderableValue, lazyRender, listen, postJson, q, randomId, removeComponentPlugin, requireContainer, resolveContainer, resolveElement, resolveNode, resolveNodeList, resolveProps, restUrl, stateSnapshot, throttle, timer, trackStoreVersion, useComponentPlugin, uuid, validateParam, waitForMotion };
+export { CleanupFunction, CollapseMotionController, CollapseTransitionDefinition, ComponentCleanup, ComponentContext, ComponentController, ComponentDefinition, ComponentLifecycleEvent, ComponentListener, ComponentPlugin, ComponentPluginOptions, ComponentProps, ComponentRuntime, ComponentState, ContainerExpect, DOMReference, type DebounceSettings, type DebouncedFunc, DropInstance, ElementRef, FieldOption, Flow, FlowAction, FlowBusyHook, FlowBusyStrategy, FlowChangeHook, FlowClassNameConfig, FlowClassNames, FlowCleanup, FlowContext, FlowData, FlowDirection, FlowErrorHook, FlowFinishHook, FlowGoToOptions, FlowGuardHook, FlowLifecycleHook, FlowMoveHook, FlowPayload, FlowProps, FlowRenderContext, FlowSlot, FlowSlotName, FlowSnapshot, FlowState, FlowStep, FlowStepResult, FlowSubscriber, FlowTarget, FlowText, Form, FormButton, FormClassNameConfig, FormClassNames, FormDataRecord, FormDataValue, FormField, FormItem, FormItemNext, FormItemType, FormOption, FormProps, FormValidatorConfig, FunctionalComponent, IEventManager, IconAttributeValue, IconName, IconPathMap, IconProps, KeyedElementRefs, LazyRenderCallback, LazyRenderOptions, LazyRenderTarget, Menu, MenuClassNameConfig, MenuClassNames, MenuItem, MenuItemId, MenuProps, MenuType, Modal, ModalClassNameConfig, ModalClassNames, ModalProps, ModalText, MotionController, NormalizeContext, Offcanvas, OffcanvasAnimate, OffcanvasClassNameConfig, OffcanvasClassNames, OffcanvasContent, OffcanvasDirection, OffcanvasProps, OwnedView, OwnedViewOptions, Pagination, PaginationClassNameConfig, PaginationClassNames, PaginationCount, PaginationPage, PaginationProps, ParabolaInstance, ParamRule, ParamRuleInput, PopupProps, PresenceController, PresenceOptions, PresencePhase, PublicFlowStep, QueryContext, RenderableContent, RequireContainerResult, ResolveContainerResult, ResolveSchema, ResolvedProps, StateSyncOptions, SupportES2022, Swiper, SwiperClassNameConfig, SwiperClassNames, SwiperDataItem, SwiperDataLoader, SwiperDataSource, SwiperProps, SwiperSlideContext, TabContent, TabItem, Tabs, TabsClassNameConfig, TabsClassNames, TabsDirection, TabsDisabled, TabsPanelContext, TabsProps, TabsValue, ThemeClassNameConfig, ThemeClassNames, ThemeConfigKey, ThemeInstance, ThemeOptions, ThemePanelGroup, ThemeResolvedOptions, type ThrottleSettings, Toast, ToastActionProps, ToastClassNameConfig, ToastClassNames, ToastOptions, ToastType, TocCurrent, TocItem, TooltipInstance, TransitionDefinition, TransitionTarget, ValidateCondition, ValidatorInstance, addIcons, all, checkModernBrowser, copy, createAccordion, createCollapseTransition, createDrop, createElementRef, createEventManager, createFlow, createForm, createKeyedElementRefs, createLoading, createMenu, createModal, createMotionGroup, createOffcanvas, createOwnedView, createPagination, createParabola, createPopup, createPresence, createScheduledTask, createStateSync, createSticky, createSwiper, createTabs, createTheme, createToc, createTooltip, createTransition, createValidator, debounce, defineComponent, flexPosition, getRegistedIconPath, getStoreVersion, getType, icon, iconHtml, iconMarkup, isDomElementValue, isDomNodeValue, isElement, isHtmlElementValue, isMobile, isModernBrowser, isNilValue, isNode, isPlainObject, isRenderableContent, isRenderablePrimitive, isRenderableValue, lazyRender, listen, postJson, q, randomId, removeComponentPlugin, requireContainer, resolveContainer, resolveElement, resolveNode, resolveNodeList, resolveProps, restUrl, stateSnapshot, throttle, timer, trackStoreVersion, useComponentPlugin, uuid, validateParam, waitForMotion };

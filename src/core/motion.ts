@@ -86,22 +86,21 @@ export function createTransition(
   target: TransitionTarget,
   definition: TransitionDefinition
 ): MotionController {
-  let element: Element | null = null;
   let animation: Animation | null = null;
 
-  const ensureAnimation = (): Animation | null => {
+  const resolveElement = (): Element | null => {
     const nextElement = target() || null;
     if (!nextElement || typeof nextElement.animate !== 'function') return null;
-    if (animation && element === nextElement) return animation;
-    animation?.cancel();
-    element = nextElement;
-    animation = nextElement.animate(
-      definition.keyframes,
-      resolvedOptions(nextElement, definition)
-    );
-    animation.pause();
-    animation.currentTime = 0;
-    return animation;
+    return nextElement;
+  };
+
+  const keyframesFor = (
+    direction: 1 | -1
+  ): Keyframe[] | PropertyIndexedKeyframes => {
+    if (direction === 1 || !Array.isArray(definition.keyframes)) {
+      return definition.keyframes;
+    }
+    return definition.keyframes.slice().reverse();
   };
 
   const play = async (
@@ -109,20 +108,16 @@ export function createTransition(
     signal?: AbortSignal
   ): Promise<void> => {
     if (signal?.aborted) return;
-    const current = ensureAnimation();
-    if (!current) return;
-    const endTime = current.effect?.getComputedTiming().endTime;
-    if (
-      direction === -1 &&
-      current.currentTime == null &&
-      typeof endTime === 'number' &&
-      Number.isFinite(endTime)
-    ) {
-      current.currentTime = endTime;
-    }
-    current.playbackRate = direction * (Math.abs(current.playbackRate) || 1);
-    current.play();
-    await waitForAnimation(current, signal);
+    const currentElement = resolveElement();
+    if (!currentElement) return;
+    animation?.cancel();
+    animation = currentElement.animate(
+      keyframesFor(direction),
+      resolvedOptions(currentElement, definition)
+    );
+    const currentAnimation = animation;
+    await waitForAnimation(currentAnimation, signal);
+    if (signal?.aborted || animation !== currentAnimation) return;
   };
 
   return {
@@ -131,7 +126,6 @@ export function createTransition(
     cancel() {
       animation?.cancel();
       animation = null;
-      element = null;
     },
   };
 }

@@ -9,7 +9,11 @@ import {
   vi,
 } from 'vite-plus/test';
 
-import { createForm, type FormDataRecord } from '../src/components/form.ts';
+import {
+  createForm,
+  type FormDataRecord,
+  type FormItem,
+} from '../src/components/form.ts';
 
 type FormInstance = ReturnType<typeof createForm>;
 
@@ -30,6 +34,22 @@ function mountForm(): void {
   app().appendChild(form.element);
 }
 
+async function tick(): Promise<void> {
+  await Promise.resolve();
+  await Promise.resolve();
+}
+
+function deferred<T = void>(): {
+  promise: Promise<T>;
+  resolve: (value: T) => void;
+} {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>((done) => {
+    resolve = done;
+  });
+  return { promise, resolve };
+}
+
 beforeEach(() => {
   document.body.innerHTML = '<div id="app"></div>';
 });
@@ -45,8 +65,14 @@ describe('Form', () => {
     form = createForm({
       id: 'default-form',
       fields: [
-        { label: 'Email', name: 'email', type: 'email', required: true },
-        { label: 'Bio', name: 'bio', type: 'textarea', help: 'Short bio' },
+        {
+          type: 'email',
+          payload: { label: 'Email', name: 'email', required: true },
+        },
+        {
+          type: 'textarea',
+          payload: { label: 'Bio', name: 'bio', help: 'Short bio' },
+        },
       ],
     });
 
@@ -73,7 +99,12 @@ describe('Form', () => {
   it('allows className overrides without changing data selectors', () => {
     form = createForm({
       id: 'custom-form',
-      fields: [{ label: 'Name', name: 'name', help: 'Static help' }],
+      fields: [
+        {
+          type: 'text',
+          payload: { label: 'Name', name: 'name', help: 'Static help' },
+        },
+      ],
       className: {
         form: 'profile-form',
         vertical: 'profile-stack',
@@ -101,14 +132,14 @@ describe('Form', () => {
   it('reactively updates fields and preserves stable data selectors', () => {
     form = createForm({
       id: 'update-form',
-      fields: [{ label: 'Name', name: 'name' }],
+      fields: [{ type: 'text', payload: { label: 'Name', name: 'name' } }],
       buttons: false,
     }).build();
     mountForm();
 
     form.setFields([
-      { label: 'Name', name: 'name' },
-      { label: 'Bio', name: 'bio', type: 'textarea' },
+      { type: 'text', payload: { label: 'Name', name: 'name' } },
+      { type: 'textarea', payload: { label: 'Bio', name: 'bio' } },
     ]);
 
     expect(form.element?.querySelectorAll('[data-form-item]')).toHaveLength(2);
@@ -124,15 +155,20 @@ describe('Form', () => {
     form = createForm({
       id: 'submit-form',
       fields: [
-        { label: 'Email', name: 'email', type: 'email' },
         {
-          label: 'Tags',
-          name: 'tags',
+          type: 'email',
+          payload: { label: 'Email', name: 'email' },
+        },
+        {
           type: 'checkbox',
-          options: [
-            { value: 'ui', text: 'UI', checked: true },
-            { value: 'dx', text: 'DX', checked: true },
-          ],
+          payload: {
+            label: 'Tags',
+            name: 'tags',
+            options: [
+              { value: 'ui', text: 'UI', checked: true },
+              { value: 'dx', text: 'DX', checked: true },
+            ],
+          },
         },
       ],
       buttons: false,
@@ -154,5 +190,328 @@ describe('Form', () => {
       email: 'demo@example.com',
       tags: ['ui', 'dx'],
     });
+  });
+
+  it('disables buttons and fields while inserting loading before submit text', async () => {
+    const pending = deferred();
+    form = createForm({
+      id: 'submitting-form',
+      fields: [
+        {
+          type: 'text',
+          payload: { label: 'Name', name: 'name', value: 'alice' },
+        },
+        {
+          type: 'textarea',
+          payload: { label: 'Bio', name: 'bio' },
+        },
+        {
+          type: 'select',
+          payload: {
+            label: 'Role',
+            name: 'role',
+            value: 'admin',
+            options: [{ value: 'admin', text: 'Admin' }],
+          },
+        },
+        {
+          type: 'radio',
+          payload: {
+            label: 'Mode',
+            name: 'mode',
+            value: 'basic',
+            options: [{ value: 'basic', text: 'Basic' }],
+          },
+        },
+        {
+          type: 'checkbox',
+          payload: {
+            label: 'Tags',
+            name: 'tags',
+            options: [{ value: 'ui', text: 'UI', checked: true }],
+          },
+        },
+        {
+          type: 'switch',
+          payload: {
+            label: 'Publish',
+            name: 'publish',
+            value: '1',
+            checked: true,
+          },
+        },
+      ],
+      buttons: [
+        { type: 'submit', text: 'Save', theme: 'primary', action: 'submit' },
+        { type: 'reset', text: 'Reset', theme: 'ghost', action: 'reset' },
+      ],
+      onSubmit: () => pending.promise,
+    }).build();
+    mountForm();
+
+    if (!form.element) throw new Error('Form root was not rendered.');
+    submit(form.element);
+    await Promise.resolve();
+
+    const submitButton =
+      form.element.querySelector<HTMLButtonElement>('[data-action="submit"]');
+    const resetButton =
+      form.element.querySelector<HTMLButtonElement>('[data-action="reset"]');
+    const fieldControls = Array.from(form.element.elements).filter(
+      (element): element is
+        | HTMLInputElement
+        | HTMLSelectElement
+        | HTMLTextAreaElement =>
+        (element instanceof HTMLInputElement ||
+          element instanceof HTMLSelectElement ||
+          element instanceof HTMLTextAreaElement) &&
+        !(element instanceof HTMLButtonElement)
+    );
+
+    expect(form.state.submitting).toBe(true);
+    expect(submitButton?.disabled).toBe(true);
+    expect(resetButton?.disabled).toBe(true);
+    expect(submitButton?.textContent).toContain('Save');
+    expect(submitButton?.querySelector('[aria-live="polite"]')).toBeTruthy();
+    expect(fieldControls.every((control) => control.disabled)).toBe(true);
+
+    pending.resolve(undefined);
+    await tick();
+
+    expect(form.state.submitting).toBe(false);
+    expect(submitButton?.querySelector('[aria-live="polite"]')).toBeNull();
+    expect(submitButton?.textContent).toBe('Save');
+    expect(submitButton?.disabled).toBe(false);
+    expect(resetButton?.disabled).toBe(false);
+    expect(fieldControls.every((control) => control.disabled)).toBe(false);
+  });
+
+  it('renders dynamic next items with local keyed reuse', async () => {
+    const email: FormItem = {
+      type: 'email',
+      payload: {
+        label: 'Email',
+        name: 'email',
+      },
+      next: null,
+    };
+    const name: FormItem = {
+      type: 'text',
+      payload: {
+        label: 'Name',
+        name: 'name',
+        showEmail: false,
+      },
+      next: null,
+    };
+    name.next = (current) =>
+      (current.payload as { showEmail: boolean }).showEmail ? email : null;
+
+    form = createForm({
+      id: 'dynamic-next-form',
+      fields: [name],
+      buttons: false,
+    }).build();
+    mountForm();
+
+    const root = form.element;
+    const nameItem = form.element?.querySelector('[data-form-item="name"]');
+
+    (form.state.fields[0].payload as { showEmail: boolean }).showEmail = true;
+    await tick();
+
+    expect(form.element).toBe(root);
+    expect(form.element?.parentNode).toBe(app());
+    expect(form.element?.querySelectorAll('[data-form-item]')).toHaveLength(2);
+    expect(form.element?.querySelector('[data-form-item="name"]')).toBe(
+      nameItem
+    );
+    expect(
+      form.element?.querySelector('[data-form-field="email"]')
+    ).toBeInstanceOf(HTMLInputElement);
+  });
+
+  it('updates conditional next items and validates the current form controls', async () => {
+    const details: FormItem = {
+      type: 'text',
+      payload: {
+        label: 'Details',
+        name: 'details',
+      },
+      next: null,
+    };
+    const mode: FormItem = {
+      type: 'text',
+      payload: {
+        label: 'Mode',
+        name: 'mode',
+        value: 'basic',
+      },
+      next: null,
+    };
+    mode.next = (current, acients) => {
+      expect(acients[0]).toBe(current);
+      return (current.payload as { value: string }).value === 'advanced'
+        ? details
+        : null;
+    };
+
+    form = createForm({
+      id: 'dynamic-validator-form',
+      fields: [mode],
+      buttons: false,
+      validator: {
+        rules: {
+          details: { required: true },
+        },
+        messages: {
+          details: { required: 'Details are required.' },
+        },
+      },
+    }).build();
+    mountForm();
+
+    expect(form.element?.querySelector('[data-form-item="details"]')).toBeNull();
+    expect(form.validate()).toBe(true);
+
+    (form.state.fields[0].payload as { value: string }).value = 'advanced';
+    await tick();
+
+    expect(
+      form.element?.querySelector('[data-form-item="details"]')
+    ).toBeTruthy();
+    expect(form.validate()).toBe(false);
+    expect(
+      form.element?.querySelector('[data-validator-help="details"]')
+      ?.textContent
+    ).toBe('Details are required.');
+  });
+
+  it('uses select changes to choose the next dynamic form item', async () => {
+    const input: FormItem = {
+      type: 'text',
+      payload: {
+        label: 'Dynamic Input',
+        name: 'dynamicValue',
+      },
+      next: null,
+    };
+    const textarea: FormItem = {
+      type: 'textarea',
+      payload: {
+        label: 'Dynamic Textarea',
+        name: 'dynamicValue',
+      },
+      next: null,
+    };
+    const selector: FormItem = {
+      type: 'select',
+      payload: {
+        label: 'Field Type',
+        name: 'fieldType',
+        value: 'input',
+        options: [
+          { value: 'input', text: 'Input' },
+          { value: 'textarea', text: 'Textarea' },
+        ],
+      },
+      next: null,
+    };
+    selector.next = (current) =>
+      (current.payload as { value: string }).value === 'textarea'
+        ? textarea
+        : input;
+
+    form = createForm({
+      id: 'select-dynamic-form',
+      fields: [selector],
+      buttons: false,
+    }).build();
+    mountForm();
+
+    expect(
+      form.element?.querySelector('[data-form-field="dynamicValue"]')
+    ).toBeInstanceOf(HTMLInputElement);
+
+    const select = form.element?.elements.namedItem('fieldType');
+    if (!(select instanceof HTMLSelectElement)) {
+      throw new Error('Field type select was not rendered.');
+    }
+
+    select.value = 'textarea';
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+    await tick();
+
+    expect(
+      form.element?.querySelector('[data-form-field="dynamicValue"]')
+    ).toBeInstanceOf(HTMLTextAreaElement);
+    expect((form.state.fields[0].payload as { value: string }).value).toBe(
+      'textarea'
+    );
+  });
+
+  it('uses radio changes to choose the next dynamic form item', async () => {
+    const input: FormItem = {
+      type: 'text',
+      payload: {
+        label: 'Dynamic Input',
+        name: 'dynamicValue',
+        placeholder: 'Radio chose an input.',
+      },
+      next: null,
+    };
+    const textarea: FormItem = {
+      type: 'textarea',
+      payload: {
+        label: 'Dynamic Textarea',
+        name: 'dynamicValue',
+        placeholder: 'Radio chose a textarea.',
+      },
+      next: null,
+    };
+    const selector: FormItem = {
+      type: 'radio',
+      payload: {
+        label: 'Field Type',
+        name: 'fieldType',
+        value: 'input',
+        options: [
+          { value: 'input', text: 'Input' },
+          { value: 'textarea', text: 'Textarea' },
+        ],
+      },
+      next: null,
+    };
+    selector.next = (current) =>
+      (current.payload as { value: string }).value === 'textarea'
+        ? textarea
+        : input;
+
+    form = createForm({
+      id: 'radio-dynamic-form',
+      fields: [selector],
+      buttons: false,
+    }).build();
+    mountForm();
+
+    expect(
+      form.element?.querySelector('[data-form-field="dynamicValue"]')
+    ).toBeInstanceOf(HTMLInputElement);
+
+    const radio = form.element?.querySelector<HTMLInputElement>(
+      'input[name="fieldType"][value="textarea"]'
+    );
+    if (!radio) throw new Error('Textarea radio was not rendered.');
+
+    radio.checked = true;
+    radio.dispatchEvent(new Event('change', { bubbles: true }));
+    await tick();
+
+    expect(
+      form.element?.querySelector('[data-form-field="dynamicValue"]')
+    ).toBeInstanceOf(HTMLTextAreaElement);
+    expect((form.state.fields[0].payload as { value: string }).value).toBe(
+      'textarea'
+    );
   });
 });

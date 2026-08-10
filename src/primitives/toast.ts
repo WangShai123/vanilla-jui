@@ -1,4 +1,4 @@
-import { jsx } from 'vanilla-signal';
+import { insert, jsx } from 'vanilla-signal';
 import { t } from 'vanilla-signal-i18n';
 
 import locales from '../locales/index.ts';
@@ -7,8 +7,6 @@ import { joinClasses } from '../utilities/class-name.ts';
 import { q } from '../utilities/dom.ts';
 import { listen } from '../utilities/events.ts';
 import { randomId } from '../utilities/id.ts';
-import { createTransition } from '../core/motion.ts';
-import { createPresence, type PresenceController } from '../core/presence.ts';
 import { timer } from '../utilities/timer.ts';
 import { validateParam } from '../utilities/types.ts';
 
@@ -75,7 +73,8 @@ const LITE_DURATION_RULE = { type: 'number', greaterThan: 0 };
 
 const timers = new Set<string>();
 const disposers = new Map<HTMLElement, () => void>();
-const presences = new Map<HTMLElement, PresenceController>();
+const animations = new Map<HTMLElement, Animation>();
+const operations = new Map<HTMLElement, number>();
 let classNames = DEFAULT_CLASS_NAMES;
 
 function mergeClassNames(value?: ToastClassNameConfig): ToastClassNames {
@@ -93,7 +92,7 @@ function getOrCreateContainer(names: ToastClassNames): HTMLElement {
       className: names.container,
       'data-toast-container': '',
     }) as HTMLElement;
-    document.body.appendChild(container);
+    insert(document.body, container);
   } else {
     container.className = names.container;
   }
@@ -124,12 +123,92 @@ function cancelToastTimers(id: string): void {
 }
 
 function removeToastElement(element: HTMLElement): void {
+  animations.get(element)?.cancel();
+  animations.delete(element);
+  operations.delete(element);
   element.remove();
-  presences.delete(element);
   disposers.get(element)?.();
   disposers.delete(element);
   const container = q<HTMLElement>('[data-toast-container]');
   if (container && container.children.length === 0) container.remove();
+}
+
+function toastAnimationOptions(
+  element: HTMLElement,
+  duration: number,
+  easing: string
+): KeyframeAnimationOptions {
+  const reducedMotion =
+    element.ownerDocument.defaultView?.matchMedia?.(
+      '(prefers-reduced-motion: reduce)'
+    ).matches || false;
+  return {
+    duration: reducedMotion ? 0 : duration,
+    easing,
+    fill: 'both',
+  };
+}
+
+function waitForAnimation(animation: Animation): Promise<void> {
+  const finished = animation.finished.then(
+    () => undefined,
+    () => undefined
+  );
+  return finished;
+}
+
+function toastKeyframes(
+  element: HTMLElement,
+  phase: 'enter' | 'leave'
+): Keyframe[] {
+  const lite = element.hasAttribute('data-toast-lite');
+  if (lite && phase === 'enter') {
+    return [{ opacity: 0 }, { opacity: 1 }];
+  }
+  if (lite) {
+    return [
+      { opacity: 1, transform: 'translate(-50%, -50%)' },
+      {
+        opacity: 0,
+        transform: 'translate(-50%, calc(-50% - 8px))',
+      },
+    ];
+  }
+  return phase === 'enter'
+    ? [
+        { opacity: 0, transform: 'translate3d(0, -16px, 0)' },
+        { opacity: 1, transform: 'translate3d(0, 0, 0)' },
+      ]
+    : [
+        { opacity: 1, transform: 'translate3d(0, 0, 0)' },
+        { opacity: 0, transform: 'translate3d(0, -16px, 0)' },
+      ];
+}
+
+async function playToastAnimation(
+  element: HTMLElement,
+  phase: 'enter' | 'leave'
+): Promise<void> {
+  const operation = (operations.get(element) || 0) + 1;
+  operations.set(element, operation);
+  animations.get(element)?.cancel();
+  animations.delete(element);
+  if (typeof element.animate !== 'function') return;
+  const lite = element.hasAttribute('data-toast-lite');
+  const animation = element.animate(
+    toastKeyframes(element, phase),
+    toastAnimationOptions(
+      element,
+      phase === 'enter' ? (lite ? 150 : 240) : lite ? 120 : 180,
+      phase === 'enter'
+        ? 'cubic-bezier(0.16, 1, 0.3, 1)'
+        : 'cubic-bezier(0.4, 0, 1, 1)'
+    )
+  );
+  animations.set(element, animation);
+  await waitForAnimation(animation);
+  if (operations.get(element) !== operation) return;
+  if (animations.get(element) === animation) animations.delete(element);
 }
 
 function mountToast(
@@ -138,61 +217,28 @@ function mountToast(
   live: 'assertive' | 'polite',
   onEntered?: () => void
 ): void {
-  const lite = element.hasAttribute('data-toast-lite');
-  const motion = createTransition(() => element, {
-    keyframes: lite
-      ? [
-          {
-            opacity: 0,
-            transform: 'translate(-50%, -50%) scale(0.9)',
-          },
-          {
-            opacity: 1,
-            transform: 'translate(-50%, -50%) scale(1)',
-          },
-        ]
-      : [
-          { opacity: 0, transform: 'translateY(-100%)' },
-          { opacity: 1, transform: 'translateY(0)' },
-        ],
-    options: {
-      duration: lite ? 150 : 300,
-      easing: 'ease-in-out',
-    },
-  });
-  const presence = createPresence({
-    elements: () => [element],
-    mount,
-    activate: () => {
-      element.removeAttribute('data-unmount');
-      element.setAttribute('aria-live', live);
-    },
-    deactivate: () => {
-      element.removeAttribute('aria-live');
-      element.setAttribute('data-unmount', 'true');
-    },
-    motion,
-    unmount: () => removeToastElement(element),
-  });
-  presences.set(element, presence);
-  void presence.enter().then((completed) => {
-    if (completed && element.isConnected) onEntered?.();
+  element.removeAttribute('data-mount');
+  element.setAttribute('aria-live', live);
+  mount();
+  element.getBoundingClientRect();
+  void playToastAnimation(element, 'enter').then(() => {
+    if (!element.isConnected || element.dataset.mount === 'false') return;
+    onEntered?.();
   });
 }
 
 function hide(toast: HTMLElement | null | undefined): void {
   if (!toast) return;
-  if (toast.getAttribute('data-unmount') === 'true') return;
+  if (toast.getAttribute('data-mount') === 'false') return;
   disposers.get(toast)?.();
   disposers.delete(toast);
   const id = toast.dataset.toast || randomId();
   cancelToastTimers(id);
-  const presence = presences.get(toast);
-  if (!presence) {
-    removeToastElement(toast);
-    return;
-  }
-  void presence.leave();
+  toast.removeAttribute('aria-live');
+  toast.setAttribute('data-mount', 'false');
+  void playToastAnimation(toast, 'leave').then(() => {
+    if (toast.dataset.mount === 'false') removeToastElement(toast);
+  });
 }
 
 function show(
@@ -227,7 +273,7 @@ function show(
   }) as HTMLElement;
   mountToast(
     toast,
-    () => getOrCreateContainer(names).appendChild(toast),
+    () => insert(getOrCreateContainer(names), toast),
     type === 'error' ? 'assertive' : 'polite'
   );
   if (duration > 0) setToastTimer(id, 'hide', () => hide(toast), duration);
@@ -250,7 +296,7 @@ function lite(
   const previous = q<HTMLElement>('[data-toast-lite]');
   if (previous) {
     cancelToastTimers(previous.dataset.toast || '');
-    presences.get(previous)?.cancel();
+    animations.get(previous)?.cancel();
     removeToastElement(previous);
   }
   const id = randomId();
@@ -260,7 +306,7 @@ function lite(
     'data-toast-lite': '',
     children: message,
   }) as HTMLElement;
-  mountToast(element, () => document.body.appendChild(element), 'polite');
+  mountToast(element, () => insert(document.body, element), 'polite');
   setToastTimer(id, 'hide', () => hide(element), duration);
   return element;
 }
@@ -311,7 +357,7 @@ function action(message = '', props: ToastActionProps = {}): HTMLElement {
   }) as HTMLElement;
   mountToast(
     element,
-    () => getOrCreateContainer(names).appendChild(element),
+    () => insert(getOrCreateContainer(names), element),
     'polite',
     () => {
       q<HTMLButtonElement>('[data-action="toast-action"]', element)?.focus();
@@ -325,8 +371,9 @@ function clearAll(): void {
   timers.clear();
   for (const dispose of disposers.values()) dispose();
   disposers.clear();
-  for (const presence of presences.values()) presence.cancel();
-  presences.clear();
+  for (const animation of animations.values()) animation.cancel();
+  animations.clear();
+  operations.clear();
   q<HTMLElement>('[data-toast-container]')?.remove();
   q<HTMLElement>('[data-toast-lite]')?.remove();
 }

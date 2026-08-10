@@ -138,18 +138,6 @@ function hasFiles(element: HTMLInputElement): element is HTMLInputElement & {
   return !!element.files && element.files.length > 0;
 }
 
-function hasNativeValidationRule(element: ValidatorElement): boolean {
-  return (
-    element.hasAttribute('required') ||
-    element.hasAttribute('minlength') ||
-    element.hasAttribute('maxlength') ||
-    element.hasAttribute('pattern') ||
-    element.hasAttribute('min') ||
-    element.hasAttribute('max') ||
-    element.hasAttribute('step')
-  );
-}
-
 function validateRequired(
   element: ValidatorElement,
   required: unknown
@@ -380,7 +368,6 @@ export function createValidator(
   const validateRule = (control: ValidatorElement, name: string): boolean => {
     const rules = options?.rules[name];
     if (!rules) return true;
-    if (hasNativeValidationRule(control)) return runtime.valid;
 
     for (const rule of Object.keys(rules)) {
       const value = rules[rule];

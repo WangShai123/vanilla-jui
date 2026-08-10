@@ -8,20 +8,21 @@ import {
   createTransition,
 } from '../src/core/motion.ts';
 
-function controlledAnimation(): {
+function controlledAnimation(finished?: Promise<void>): {
   animation: Animation;
   resolve: () => void;
   cancel: ReturnType<typeof vi.fn>;
 } {
   let resolve!: () => void;
-  const finished = new Promise<void>((done) => {
+  const promise = finished || new Promise<void>((done) => {
     resolve = done;
   });
+  if (finished) resolve = () => {};
   const cancel = vi.fn();
   return {
     animation: {
       effect: { getComputedTiming: () => ({ endTime: 300 }) },
-      finished,
+      finished: promise,
       currentTime: null,
       playbackRate: 1,
       pause: vi.fn(),
@@ -77,10 +78,14 @@ describe('createTransition', () => {
     expect(secondCancel).toHaveBeenCalledOnce();
   });
 
-  it('reuses one Web Animation and reverses it for leave motion', async () => {
+  it('creates direction-specific Web Animations for enter and leave motion', async () => {
     const element = document.createElement('div');
-    const controlled = controlledAnimation();
-    const animate = vi.fn(() => controlled.animation);
+    const enterControl = controlledAnimation();
+    const leaveControl = controlledAnimation();
+    const animate = vi
+      .fn()
+      .mockReturnValueOnce(enterControl.animation)
+      .mockReturnValueOnce(leaveControl.animation);
     Object.defineProperty(element, 'animate', {
       configurable: true,
       value: animate,
@@ -93,19 +98,25 @@ describe('createTransition', () => {
 
     const entering = transition.enter(operation.signal);
     expect(animate).toHaveBeenCalledOnce();
-    expect(controlled.animation.currentTime).toBe(0);
-    expect(controlled.animation.playbackRate).toBe(1);
+    expect(animate).toHaveBeenLastCalledWith(
+      [{ opacity: 0 }, { opacity: 1 }],
+      expect.objectContaining({ duration: 300, easing: 'ease' })
+    );
 
     operation.abort();
     await entering;
     const leaving = transition.leave();
-    expect(animate).toHaveBeenCalledOnce();
-    expect(controlled.animation.playbackRate).toBe(-1);
+    expect(enterControl.cancel).toHaveBeenCalledOnce();
+    expect(animate).toHaveBeenCalledTimes(2);
+    expect(animate).toHaveBeenLastCalledWith(
+      [{ opacity: 1 }, { opacity: 0 }],
+      expect.objectContaining({ duration: 300, easing: 'ease' })
+    );
 
-    controlled.resolve();
+    leaveControl.resolve();
     await leaving;
     transition.cancel();
-    expect(controlled.cancel).toHaveBeenCalledOnce();
+    expect(leaveControl.cancel).toHaveBeenCalledOnce();
   });
 
   it('completes immediately when Web Animations are unavailable', async () => {

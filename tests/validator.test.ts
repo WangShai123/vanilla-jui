@@ -99,6 +99,34 @@ describe('Validator', () => {
     expect(form.querySelector('[data-validator-help="email"]')).toBeNull();
   });
 
+  it('applies configured rules when a control also has native validation attributes', () => {
+    const form = mount(`
+      <form>
+        <div data-form-control="message">
+          <input name="message" type="text" required value="1">
+        </div>
+      </form>
+    `);
+
+    validator = createValidator(form, {
+      rules: { message: { required: true, minLength: 5 } },
+      messages: {
+        message: {
+          required: 'Message required',
+          minLength: 'Message must contain at least 5 characters',
+        },
+      },
+    });
+
+    expect(validator.validate()).toBe(false);
+    expect(
+      form.querySelector('[data-validator-help="message"]')?.textContent
+    ).toBe('Message must contain at least 5 characters');
+
+    input(form, 'message').value = '12345';
+    expect(validator.validate()).toBe(true);
+  });
+
   it('binds submit and reset without recursively resetting', () => {
     const form = mount(`
       <form>

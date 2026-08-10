@@ -68,6 +68,31 @@ const pagination = createPagination({
 
 默认 `lock: true`。如果 `onChange` 返回 Promise，Promise settled 前会锁定分页控件，阻止继续点击切换。同步 `onChange` 会立即释放锁。
 
+如果接口返回的数据源发生增删，业务可以在同一个 `onChange` 中写入新的分页状态。Pagination 的 `pageCount` 和页码窗口由 `state.total`、`state.page`、`state.count` 派生，会自动更新 UI；当前页超过新总页数时会自动夹取。
+
+```js
+const pagination = createPagination({
+  total: 100,
+  page: { size: 10, current: 1 },
+  async onChange(page, instance) {
+    const result = await requestList({
+      page,
+      size: instance.state.page.size,
+    });
+
+    renderRows(result.rows);
+    instance.setState({
+      total: result.total,
+      page: {
+        size: result.page.size,
+        current: result.page.current,
+      },
+      count: result.count,
+    });
+  },
+}).build();
+```
+
 初始页数据建议由业务代码主动加载一次：
 
 ```js
@@ -95,7 +120,16 @@ loadPage(1);
       <button class="j-button is-icon is-ghost" data-page="2">2</button>
     </li>
     <li class="item" data-pagination-item="3">
-      <span class="j-button is-icon is-active" aria-current="page">3</span>
+      <button
+        class="j-button is-icon is-active"
+        data-page="3"
+        data-current-page="3"
+        aria-current="page"
+        aria-disabled="true"
+        disabled
+      >
+        3
+      </button>
     </li>
     <li class="item more" data-pagination-more="more-3-8">
       <span class="j-button is-icon is-ghost">...</span>

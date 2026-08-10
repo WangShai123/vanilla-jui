@@ -1,4 +1,4 @@
-import { jsx } from 'vanilla-signal';
+import { insert, jsx } from 'vanilla-signal';
 
 import { type DOMReference, resolveElement } from '../utilities/dom.ts';
 import { randomId } from '../utilities/id.ts';
@@ -129,6 +129,7 @@ export function createParabola(input: ParabolaProps = {}): ParabolaInstance {
   const runtime: ParabolaRuntime = { destroyed: false };
   const balls = new Set<HTMLElement>();
   const delays = new Map<string, () => void>();
+  const frames = new Map<HTMLElement, number>();
   let root: HTMLElement | null = null;
   let from = resolveElement(props.from);
   let to = resolveElement(props.to);
@@ -137,7 +138,7 @@ export function createParabola(input: ParabolaProps = {}): ParabolaInstance {
   const createRoot = (): void => {
     if (runtime.destroyed) return;
     if (root) {
-      if (!root.isConnected) document.body.appendChild(root);
+      if (!root.isConnected) insert(document.body, root);
       return;
     }
     root = jsx('div', {
@@ -149,7 +150,7 @@ export function createParabola(input: ParabolaProps = {}): ParabolaInstance {
         zIndex: '9999',
       },
     }) as HTMLElement;
-    document.body.appendChild(root);
+    insert(document.body, root);
   };
   const removeRootIfIdle = (): void => {
     if (!runtime.destroyed || balls.size > 0) return;
@@ -158,6 +159,9 @@ export function createParabola(input: ParabolaProps = {}): ParabolaInstance {
   };
   const removeBall = (ball: HTMLElement, notify: boolean): void => {
     if (!balls.has(ball)) return;
+    const frame = frames.get(ball);
+    if (frame) cancelAnimationFrame(frame);
+    frames.delete(ball);
     ball.remove();
     balls.delete(ball);
     if (notify) props.onHidden?.(parabola);
@@ -186,7 +190,7 @@ export function createParabola(input: ParabolaProps = {}): ParabolaInstance {
         top: `${path.startY}px`,
       },
     }) as HTMLElement;
-    root.appendChild(ball);
+    insert(root, ball);
     balls.add(ball);
     return ball;
   };
@@ -244,7 +248,10 @@ export function createParabola(input: ParabolaProps = {}): ParabolaInstance {
     const peakOffset = -100;
 
     const step = (currentTime: number): void => {
-      if (!ball.isConnected) return;
+      if (runtime.destroyed || !ball.isConnected) {
+        frames.delete(ball);
+        return;
+      }
 
       const elapsed = currentTime - startTime;
       const progress = Math.min(elapsed / duration, 1);
@@ -262,13 +269,14 @@ export function createParabola(input: ParabolaProps = {}): ParabolaInstance {
       ball.style.transform = `translate(-50%, -50%) scale(${1 - eased * 0.3})`;
 
       if (progress < 1) {
-        requestAnimationFrame(step);
+        frames.set(ball, requestAnimationFrame(step));
       } else {
+        frames.delete(ball);
         removeBall(ball, true);
       }
     };
 
-    requestAnimationFrame(step);
+    frames.set(ball, requestAnimationFrame(step));
   };
   const startDelay = (callback: () => void, onCancel: () => void): void => {
     const key = `parabola-show-${randomId()}`;
@@ -329,6 +337,8 @@ export function createParabola(input: ParabolaProps = {}): ParabolaInstance {
       from = null;
       to = null;
       runtime.destroyed = true;
+      for (const ball of balls) removeBall(ball, false);
+      frames.clear();
       removeRootIfIdle();
     },
   };

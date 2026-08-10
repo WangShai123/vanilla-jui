@@ -2,6 +2,7 @@ import {
   createDeepStore,
   createEffect,
   flushSync,
+  insert,
   jsx,
   untrack,
 } from 'vanilla-signal';
@@ -192,6 +193,9 @@ interface OffcanvasActions {
   hide(): Promise<void>;
 }
 
+let offcanvasScrollLockCount = 0;
+let offcanvasBodyOverflow = '';
+
 export type Offcanvas = FunctionalComponent<
   ResolvedOffcanvasProps,
   OffcanvasState,
@@ -232,6 +236,26 @@ export function createOffcanvas(input: OffcanvasProps = {}): Offcanvas {
   const events = createEventManager();
   const overlayRef = createElementRef<HTMLElement>();
   let offcanvas!: Offcanvas;
+  let scrollLocked = false;
+
+  const lockScroll = (): void => {
+    if (!props.bodyOverflow || scrollLocked) return;
+    if (offcanvasScrollLockCount === 0) {
+      offcanvasBodyOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+    }
+    offcanvasScrollLockCount += 1;
+    scrollLocked = true;
+  };
+  const unlockScroll = (): void => {
+    if (!scrollLocked) return;
+    offcanvasScrollLockCount = Math.max(0, offcanvasScrollLockCount - 1);
+    if (offcanvasScrollLockCount === 0) {
+      document.body.style.overflow = offcanvasBodyOverflow;
+      offcanvasBodyOverflow = '';
+    }
+    scrollLocked = false;
+  };
 
   const panelMotion = createTransition(() => offcanvas.element, {
     keyframes: [
@@ -252,9 +276,9 @@ export function createOffcanvas(input: OffcanvasProps = {}): Offcanvas {
     elements: () => [overlayRef.current, offcanvas.element],
     mount: () => {
       const overlay = overlayRef.current;
-      if (overlay && !overlay.isConnected) document.body.appendChild(overlay);
+      if (overlay && !overlay.isConnected) insert(document.body, overlay);
       offcanvas.mount(document.body);
-      if (props.bodyOverflow) document.body.style.overflow = 'hidden';
+      lockScroll();
     },
     activate: () => {
       state.visible = true;
@@ -266,7 +290,7 @@ export function createOffcanvas(input: OffcanvasProps = {}): Offcanvas {
     unmount: () => {
       overlayRef.current?.remove();
       offcanvas.unmount();
-      if (props.bodyOverflow) document.body.style.overflow = '';
+      unlockScroll();
     },
   });
 
@@ -372,7 +396,7 @@ export function createOffcanvas(input: OffcanvasProps = {}): Offcanvas {
             ref: overlayRef.set,
             className: props.className.overlay,
             'data-offcanvas-overlay': props.id,
-            'aria-hidden': () => String(!state.visible),
+            'data-mount': () => (state.visible ? 'true' : 'false'),
             style: props.filter ? { backdropFilter: 'blur(2px)' } : {},
             onClick: () => {
               if (props.bgClose) void offcanvas.hide();
@@ -406,6 +430,7 @@ export function createOffcanvas(input: OffcanvasProps = {}): Offcanvas {
         role: 'dialog',
         'aria-modal': props.overlay ? 'true' : 'false',
         'aria-expanded': () => String(state.visible),
+        'data-mount': () => (state.visible ? 'true' : 'false'),
         'data-offcanvas': 'root',
         'data-direction': props.direction,
         'data-animate': props.animate,
@@ -449,7 +474,7 @@ export function createOffcanvas(input: OffcanvasProps = {}): Offcanvas {
       presence.cancel();
       runtime.contentLoadId += 1;
       overlayRef.current?.remove();
-      if (props.bodyOverflow) document.body.style.overflow = '';
+      unlockScroll();
     },
   });
 

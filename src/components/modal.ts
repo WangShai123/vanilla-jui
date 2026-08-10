@@ -23,7 +23,7 @@ import {
   type RenderableContent,
 } from '../utilities/dom.ts';
 import { randomId } from '../utilities/id.ts';
-import { createTransition } from '../core/motion.ts';
+import { createMotionGroup, createTransition } from '../core/motion.ts';
 import { isPlainObject } from '../utilities/object.ts';
 import { createPresence } from '../core/presence.ts';
 import {
@@ -31,12 +31,15 @@ import {
   resolveProps,
   validateParam,
 } from '../utilities/types.ts';
-import { createForm, type FormDataRecord, type FormField } from './form.ts';
 
 type ModalTextInput = Partial<ModalText> & Record<string, unknown>;
-type ModalContent = RenderableContent<Modal>;
-type FormInstance = ReturnType<typeof createForm>;
-export type ModalMode = 'content' | 'form';
+type ModalContentResult = RenderableContent<Modal>;
+type ModalContent =
+  | ModalContentResult
+  | ((modal: Modal) => ModalContentResult | Promise<ModalContentResult>);
+interface ResolvedModalContent {
+  value: ModalContentResult;
+}
 
 export interface ModalClassNames {
   layout: string;
@@ -60,8 +63,9 @@ export interface ModalText {
 }
 
 export interface ModalProps extends Record<string, unknown> {
-  mode?: ModalMode | null;
   content?: ModalContent;
+  cache?: boolean;
+  ttl?: number;
   position?: string;
   showCancel?: boolean;
   showClose?: boolean;
@@ -72,11 +76,7 @@ export interface ModalProps extends Record<string, unknown> {
   onHide?: ((modal: Modal) => void | Promise<void>) | null;
   onHidden?: ((modal: Modal) => void | Promise<void>) | null;
   onConfirm?: ((modal: Modal) => void | Promise<void>) | null;
-  onSubmit?:
-    | ((data: FormDataRecord, modal: Modal) => void | Promise<void>)
-    | null;
   onCancel?: ((modal: Modal) => void | Promise<void>) | null;
-  fields?: readonly FormField[] | null;
   header?: boolean;
   footer?: boolean;
   id?: string | null;
@@ -86,8 +86,9 @@ export interface ModalProps extends Record<string, unknown> {
 }
 
 interface ResolvedModalProps extends Record<string, unknown> {
-  mode: ModalMode;
   content: ModalContent;
+  cache: boolean;
+  ttl: number;
   position: string;
   showCancel: boolean;
   showClose: boolean;
@@ -98,9 +99,7 @@ interface ResolvedModalProps extends Record<string, unknown> {
   onHide: NonNullable<ModalProps['onHide']> | null;
   onHidden: NonNullable<ModalProps['onHidden']> | null;
   onConfirm: NonNullable<ModalProps['onConfirm']> | null;
-  onSubmit: NonNullable<ModalProps['onSubmit']> | null;
   onCancel: NonNullable<ModalProps['onCancel']> | null;
-  fields: FormField[] | null;
   header: boolean;
   footer: boolean;
   id: string;
@@ -110,20 +109,19 @@ interface ResolvedModalProps extends Record<string, unknown> {
 }
 
 interface ModalState extends Record<string, unknown> {
-  mode: ModalMode;
   content: ModalContent;
-  fields: FormField[] | null;
   loading: boolean;
   processing: boolean;
   visible: boolean;
-  data: FormDataRecord | null;
-  extraData: FormDataRecord | null;
 }
 
 interface ModalCache {
   initial: ResolvedModalProps;
   previousActiveElement: HTMLElement | null;
-  formId: string;
+  content: ModalContentResult;
+  contentSource: ModalContent | null;
+  hasContent: boolean;
+  updatedAt: number;
 }
 
 type ModalStatePatch = Partial<ModalState>;
@@ -141,25 +139,9 @@ const DEFAULT_CLASS_NAMES: ModalClassNames = {
   confirmBtn: 'is-primary',
 };
 
-function cloneFields(
-  fields: readonly FormField[] | null | undefined
-): FormField[] {
-  if (!Array.isArray(fields)) return [];
-  return fields.map((field) => ({
-    ...field,
-    options: Array.isArray(field.options)
-      ? field.options.map(
-          (option: NonNullable<FormField['options']>[number]) =>
-            option && typeof option === 'object' ? { ...option } : option
-        )
-      : field.options,
-  }));
-}
-
 function cloneProps(props: ResolvedModalProps): ResolvedModalProps {
   return {
     ...props,
-    fields: Array.isArray(props.fields) ? cloneFields(props.fields) : null,
     text: { ...props.text },
     className: { ...props.className },
   };
@@ -167,23 +149,19 @@ function cloneProps(props: ResolvedModalProps): ResolvedModalProps {
 
 function createModalState(props: ResolvedModalProps): ModalState {
   return {
-    mode: props.mode,
     content: props.content,
-    fields: Array.isArray(props.fields) ? cloneFields(props.fields) : null,
     loading: false,
     processing: false,
     visible: false,
-    data: null,
-    extraData: null,
   };
 }
 
-function mergeExtraData(
-  data: FormDataRecord,
-  extraData: FormDataRecord | null
-): FormDataRecord {
-  if (!extraData || typeof extraData !== 'object') return data;
-  return Object.assign(data, extraData);
+function isPromiseLike<T>(value: unknown): value is PromiseLike<T> {
+  return !!value && typeof (value as PromiseLike<T>).then === 'function';
+}
+
+function normalizeTtl(ttl: number): number {
+  return Number.isFinite(ttl) ? Math.max(0, ttl) : 0;
 }
 
 const MODAL_CONTENT_RULE = {
@@ -205,18 +183,10 @@ const MODAL_TEXT_RULE = {
   },
 };
 
-const MODAL_FIELDS_RULE = { types: ['array', 'null'] };
 const MODAL_PROPS_SCHEMA = {
-  mode: {
-    default: null,
-    types: ['string', 'null'],
-    enum: ['content', 'form', null],
-    normalize: (value: unknown, context) => {
-      if (value != null) return value;
-      return Array.isArray(context.options.fields) ? 'form' : 'content';
-    },
-  },
   content: { default: '', ...MODAL_CONTENT_RULE },
+  cache: { default: false, type: 'boolean' },
+  ttl: { default: 0, type: 'number' },
   position: { default: 'center', type: 'string' },
   showCancel: { default: true, type: 'boolean' },
   showClose: { default: true, type: 'boolean' },
@@ -227,9 +197,7 @@ const MODAL_PROPS_SCHEMA = {
   onHide: { default: null, types: ['function', 'null'] },
   onHidden: { default: null, types: ['function', 'null'] },
   onConfirm: { default: null, types: ['function', 'null'] },
-  onSubmit: { default: null, types: ['function', 'null'] },
   onCancel: { default: null, types: ['function', 'null'] },
-  fields: { default: null, ...MODAL_FIELDS_RULE },
   header: { default: true, type: 'boolean' },
   footer: { default: true, type: 'boolean' },
   id: {
@@ -257,14 +225,10 @@ const MODAL_PROPS_SCHEMA = {
 } satisfies ResolveSchema<ModalProps>;
 
 const MODAL_STATE_SCHEMA = {
-  mode: { type: 'string', enum: ['content', 'form'] },
   content: MODAL_PROPS_SCHEMA.content,
-  fields: MODAL_PROPS_SCHEMA.fields,
   loading: { default: false, type: 'boolean' },
   processing: { default: false, type: 'boolean' },
   visible: { default: false, type: 'boolean' },
-  data: { default: null, types: ['object', 'null'] },
-  extraData: { default: null, types: ['object', 'null'] },
 };
 
 const MODAL_UPDATE_RULE = {
@@ -274,8 +238,9 @@ const MODAL_UPDATE_RULE = {
 function normalizeProps(input: ModalProps): ResolvedModalProps {
   const props = resolveProps(input, MODAL_PROPS_SCHEMA, 'Modal');
   return {
-    mode: props.mode as ModalMode,
     content: props.content as ModalContent,
+    cache: props.cache as boolean,
+    ttl: normalizeTtl(props.ttl as number),
     position: props.position as string,
     showCancel: props.showCancel as boolean,
     showClose: props.showClose as boolean,
@@ -286,11 +251,7 @@ function normalizeProps(input: ModalProps): ResolvedModalProps {
     onHide: props.onHide as ResolvedModalProps['onHide'],
     onHidden: props.onHidden as ResolvedModalProps['onHidden'],
     onConfirm: props.onConfirm as ResolvedModalProps['onConfirm'],
-    onSubmit: props.onSubmit as ResolvedModalProps['onSubmit'],
     onCancel: props.onCancel as ResolvedModalProps['onCancel'],
-    fields: Array.isArray(props.fields)
-      ? cloneFields(props.fields as FormField[])
-      : null,
     header: props.header as boolean,
     footer: props.footer as boolean,
     id: props.id as string,
@@ -307,7 +268,6 @@ interface ModalActions {
   show(): Modal;
   hide(): Modal;
   reset(): Modal;
-  requestSubmit(): void;
 }
 
 export type Modal = FunctionalComponent<
@@ -323,16 +283,45 @@ export function createModal(input: ModalProps = {}): Modal {
   const cache: ModalCache = {
     initial: cloneProps(props),
     previousActiveElement: null,
-    formId: `${props.id}_form`,
+    content: null,
+    contentSource: null,
+    hasContent: false,
+    updatedAt: 0,
   };
   const events = new Map<string, () => void>();
   const [motionVisible, setMotionVisible] = createSignal(false);
+  const [resolvedContent, setResolvedContent] =
+    createSignal<ResolvedModalContent>({ value: null });
   let modal!: Modal;
   let dialog: HTMLElement | null = null;
-  let form: FormInstance | null = null;
+  let loadingElement: HTMLDivElement | null = null;
   let scrollLocked = false;
+  let contentLoadId = 0;
 
-  const isBusy = (): boolean => state.loading || state.processing;
+  const isBusy = (): boolean => state.processing;
+  const isContentCacheValid = (source: ModalContent): boolean => {
+    if (!props.cache || !cache.hasContent || cache.contentSource !== source) {
+      return false;
+    }
+    const ttl = normalizeTtl(props.ttl);
+    return !ttl || Date.now() - cache.updatedAt <= ttl;
+  };
+  const setContentCache = (
+    source: ModalContent,
+    content: ModalContentResult
+  ): void => {
+    if (!props.cache) return;
+    cache.content = content;
+    cache.contentSource = source;
+    cache.hasContent = true;
+    cache.updatedAt = Date.now();
+  };
+  const clearContentCache = (): void => {
+    cache.content = null;
+    cache.contentSource = null;
+    cache.hasContent = false;
+    cache.updatedAt = 0;
+  };
   const clearEvents = (): void => {
     for (const dispose of events.values()) dispose();
     events.clear();
@@ -370,16 +359,25 @@ export function createModal(input: ModalProps = {}): Modal {
     cache.previousActiveElement = null;
     if (target && document.contains(target)) target.focus();
   };
-  const motion = createTransition(() => dialog, {
-    keyframes: [
-      { opacity: 0, transform: 'scale(0.8)' },
-      { opacity: 1, transform: 'scale(1)' },
-    ],
-    options: {
-      duration: 350,
-      easing: 'ease-in-out',
-    },
-  });
+  const motion = createMotionGroup(
+    createTransition(() => modal.element, {
+      keyframes: [{ opacity: 0 }, { opacity: 1 }],
+      options: {
+        duration: 220,
+        easing: 'ease',
+      },
+    }),
+    createTransition(() => dialog, {
+      keyframes: [
+        { opacity: 0, transform: 'scale(0.96)' },
+        { opacity: 1, transform: 'scale(1)' },
+      ],
+      options: {
+        duration: 220,
+        easing: 'ease',
+      },
+    })
+  );
   const presence = createPresence({
     elements: () => [modal.element, dialog],
     mount: () => {
@@ -395,87 +393,142 @@ export function createModal(input: ModalProps = {}): Modal {
       restoreFocus();
     },
   });
-  const destroyForm = (): void => {
-    form?.destroy();
-    form = null;
-  };
-  const handleSubmit = async (data: FormDataRecord): Promise<void> => {
-    if (!props.onSubmit) return;
-    flushSync(() => {
-      state.processing = true;
-    });
-    try {
-      await Promise.resolve(props.onSubmit(data, modal));
-      flushSync(() => {
-        state.extraData = null;
-      });
-    } catch (error) {
-      console.error('Modal.onSubmit error:', error);
-    } finally {
-      if (!modal.runtime.destroyed) {
-        flushSync(() => {
-          state.processing = false;
-        });
+  const syncLoadingElement = (): void => {
+    const busy = state.loading || state.processing;
+    if (busy) {
+      if (!loadingElement) loadingElement = createLoading();
+      if (dialog && loadingElement.parentElement !== dialog) {
+        dialog.append(loadingElement);
       }
+      return;
+    }
+    loadingElement?.remove();
+    loadingElement = null;
+  };
+  const setProcessing = (value: boolean): void => {
+    if (state.processing === value) return;
+    flushSync(() => {
+      state.processing = value;
+    });
+  };
+  const finishProcessing = (): void => {
+    if (state.visible && presence.phase !== 'leaving') {
+      setProcessing(false);
     }
   };
-  const handleFormSubmit = async (data: FormDataRecord): Promise<void> => {
-    if (isBusy()) return;
-    const merged = mergeExtraData(data, state.extraData);
-    flushSync(() => {
-      state.data = merged;
-    });
-    await handleSubmit(merged);
-  };
-  const ensureForm = (): FormInstance => {
-    if (!form) {
-      form = createForm({
-        id: cache.formId,
-        fields: state.fields || [],
-        buttons: false,
-        onSubmit: handleFormSubmit,
-      }).build();
+  const loadContent = (source: ModalContent = state.content): void => {
+    if (isContentCacheValid(source)) {
+      contentLoadId += 1;
+      flushSync(() => {
+        setResolvedContent({ value: cache.content });
+        state.loading = false;
+      });
+      return;
     }
-    return form;
-  };
-  const requestSubmit = (): void => {
-    if (state.mode === 'form') ensureForm().requestSubmit();
-    else void handleConfirm();
-  };
-  const handleConfirm = async (): Promise<void> => {
-    if (isBusy()) return;
-    flushSync(() => {
-      state.processing = true;
-    });
+
+    const loadId = ++contentLoadId;
+    if (typeof source !== 'function') {
+      clearContentCache();
+      flushSync(() => {
+        setResolvedContent({ value: source });
+        state.loading = false;
+      });
+      return;
+    }
+
+    let result: ModalContentResult | Promise<ModalContentResult>;
     try {
-      await Promise.resolve(props.onConfirm?.(modal));
+      result = source(modal);
+    } catch (error) {
+      console.error('Modal.content error:', error);
+      flushSync(() => {
+        setResolvedContent({ value: null });
+        state.loading = false;
+      });
+      return;
+    }
+    if (!isPromiseLike<ModalContentResult>(result)) {
+      setContentCache(source, result);
+      flushSync(() => {
+        setResolvedContent({ value: result });
+        state.loading = false;
+      });
+      return;
+    }
+
+    flushSync(() => {
+      state.loading = true;
+      setResolvedContent({ value: null });
+    });
+    void Promise.resolve(result)
+      .then((content) => {
+        if (modal.runtime.destroyed || loadId !== contentLoadId) return;
+        setContentCache(source, content);
+        flushSync(() => {
+          setResolvedContent({ value: content });
+        });
+      })
+      .catch((error) => {
+        if (modal.runtime.destroyed || loadId !== contentLoadId) return;
+        console.error('Modal.content error:', error);
+        flushSync(() => {
+          setResolvedContent({ value: null });
+        });
+      })
+      .finally(() => {
+        if (!modal.runtime.destroyed && loadId === contentLoadId) {
+          flushSync(() => {
+            state.loading = false;
+          });
+        }
+      });
+  };
+  const handleConfirm = (): void => {
+    if (isBusy()) return;
+    let result: void | Promise<void> | undefined;
+    try {
+      result = props.onConfirm?.(modal);
     } catch (error) {
       console.error('Modal.onConfirm error:', error);
-    } finally {
-      if (!modal.runtime.destroyed) {
-        flushSync(() => {
-          state.processing = false;
-        });
-      }
+      return;
     }
+    if (!isPromiseLike<void>(result)) return;
+    setProcessing(true);
+    void Promise.resolve(result)
+      .catch((error) => {
+        console.error('Modal.onConfirm error:', error);
+      })
+      .finally(() => {
+        if (!modal.runtime.destroyed) finishProcessing();
+      });
   };
-  const handleCancel = async (): Promise<void> => {
+  const handleCancel = (): void => {
     if (isBusy()) return;
-    flushSync(() => {
-      state.processing = true;
-    });
+    let result: void | Promise<void> | undefined;
     try {
-      await Promise.resolve(props.onCancel?.(modal));
-      modal.hide();
+      result = props.onCancel?.(modal);
     } catch (error) {
       console.error('Modal.onCancel error:', error);
-    } finally {
-      if (!modal.runtime.destroyed) {
-        flushSync(() => {
-          state.processing = false;
-        });
-      }
+      return;
     }
+    if (!isPromiseLike<void>(result)) {
+      modal.hide();
+      return;
+    }
+    setProcessing(true);
+    void Promise.resolve(result)
+      .then(() => {
+        if (modal.runtime.destroyed) return;
+        modal.hide();
+      })
+      .catch((error) => {
+        console.error('Modal.onCancel error:', error);
+      })
+      .finally(() => {
+        if (!modal.runtime.destroyed) {
+          finishProcessing();
+        }
+      });
   };
   const trapFocus = (event: KeyboardEvent): void => {
     if (!dialog) return;
@@ -505,7 +558,7 @@ export function createModal(input: ModalProps = {}): Modal {
     if (!dialog) return;
     const first = q<HTMLElement>(
       'input:not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]):not([data-action=close]), [tabindex]:not([tabindex="-1"])',
-      form?.element || dialog
+      dialog
     );
     if (first) first.focus();
     else {
@@ -518,19 +571,18 @@ export function createModal(input: ModalProps = {}): Modal {
     if (!root || !dialog) return;
     clearEvents();
     listen('root', root, 'click', (event) => {
-      if (props.bgClose && event.target === root) modal.hide();
+      if (props.bgClose && !isBusy() && event.target === root) modal.hide();
     });
     listen('dialog', dialog, 'click', (event) => {
       const target = event.target instanceof Element ? event.target : null;
       const action =
         target?.closest<HTMLElement>('[data-action]')?.dataset.action;
-      if (action === 'cancel' || action === 'close') void handleCancel();
-      else if (action === 'submit') requestSubmit();
-      else if (action === 'confirm') void handleConfirm();
+      if (action === 'cancel' || action === 'close') handleCancel();
+      else if (action === 'confirm') handleConfirm();
     });
     listen('keyboard', document, 'keydown', (event) => {
       if (!(event instanceof KeyboardEvent) || !state.visible) return;
-      if (event.key === 'Escape' && props.escClose) {
+      if (event.key === 'Escape' && props.escClose && !isBusy()) {
         event.preventDefault();
         modal.hide();
       } else if (event.key === 'Tab') trapFocus(event);
@@ -557,13 +609,16 @@ export function createModal(input: ModalProps = {}): Modal {
     if (presence.phase === 'hidden' || presence.phase === 'leaving') return;
     void props.onHide?.(modal);
     clearEvents();
-    flushSync(() => {
-      state.loading = false;
-      state.extraData = null;
-      state.data = null;
-    });
+    contentLoadId += 1;
     void presence.leave().then((completed) => {
-      if (completed && !modal.runtime.destroyed) void props.onHidden?.(modal);
+      if (completed && !modal.runtime.destroyed) {
+        flushSync(() => {
+          state.loading = false;
+          state.processing = false;
+          if (!props.cache) setResolvedContent({ value: null });
+        });
+        void props.onHidden?.(modal);
+      }
     });
   };
 
@@ -580,35 +635,25 @@ export function createModal(input: ModalProps = {}): Modal {
         return modal;
       },
       hide() {
-        modal.setState('visible', false);
+        flushSync(() => {
+          state.visible = false;
+        });
         return modal;
       },
       reset() {
         modal.setState({
-          mode: cache.initial.mode,
           content: cache.initial.content,
-          fields: cache.initial.fields
-            ? cloneFields(cache.initial.fields)
-            : null,
           loading: false,
           processing: false,
-          data: null,
-          extraData: null,
         });
+        clearContentCache();
+        setResolvedContent({ value: null });
         return modal;
       },
-      requestSubmit,
     },
     normalizeStatePatch(patch: ModalStatePatch) {
       return {
         ...patch,
-        ...(Object.hasOwn(patch, 'fields')
-          ? {
-              fields: Array.isArray(patch.fields)
-                ? cloneFields(patch.fields)
-                : null,
-            }
-          : {}),
       };
     },
     validateStatePatch(patch: ModalStatePatch) {
@@ -636,13 +681,14 @@ export function createModal(input: ModalProps = {}): Modal {
         id: props.id,
         role: 'document',
         'data-modal-dialog': props.id,
-        'aria-hidden': () => String(!motionVisible()),
+        'data-mount': () => (motionVisible() ? 'true' : 'false'),
         children: [
           jsx('div', {
             className: props.className.header,
-            hidden: !props.header,
-            children: props.header
-              ? [
+            hidden: () => !props.header || state.loading,
+            children: () =>
+              props.header && !state.loading
+                ? [
                   jsx('div', {
                     className: props.className.title,
                     id: `${props.id}_title`,
@@ -658,6 +704,7 @@ export function createModal(input: ModalProps = {}): Modal {
                         ),
                         'data-action': 'close',
                         'aria-label': t('Close', locales),
+                        disabled: isBusy,
                         children: icon('close'),
                       })
                     : null,
@@ -668,18 +715,15 @@ export function createModal(input: ModalProps = {}): Modal {
             className: props.className.body,
             'data-modal-body': '',
             children: () => {
-              if (state.mode === 'form') return ensureForm().element;
-              destroyForm();
-              return typeof state.content === 'function'
-                ? state.content(modal)
-                : state.content;
+              return resolvedContent().value;
             },
           }),
           jsx('div', {
             className: props.className.footer,
-            hidden: !props.footer,
-            children: props.footer
-              ? [
+            hidden: () => !props.footer || state.loading,
+            children: () =>
+              props.footer && !state.loading
+                ? [
                   props.showCancel
                     ? jsx('button', {
                         type: 'button',
@@ -693,20 +737,18 @@ export function createModal(input: ModalProps = {}): Modal {
                       })
                     : null,
                   jsx('button', {
-                    type: () => (state.mode === 'form' ? 'submit' : 'button'),
+                    type: 'button',
                     className: joinClasses(
                       props.className.button,
                       props.className.confirmBtn
                     ),
-                    'data-action': () =>
-                      state.mode === 'form' ? 'submit' : 'confirm',
+                    'data-action': 'confirm',
                     disabled: isBusy,
                     children: props.text.confirm,
                   }),
                 ]
               : null,
           }),
-          () => (state.loading ? createLoading() : null),
         ],
       }) as HTMLElement;
       const root = createPopup({
@@ -716,15 +758,27 @@ export function createModal(input: ModalProps = {}): Modal {
         labelledby: props.header ? `${props.id}_title` : '',
         content: dialog,
       });
+      root.setAttribute('data-mount', 'false');
       if (!props.header)
         root.setAttribute('aria-label', props.text.title || 'Modal');
+      createEffect(() => {
+        root.setAttribute('data-mount', motionVisible() ? 'true' : 'false');
+      });
+      createEffect(syncLoadingElement);
       createEffect(() => {
         const visible = state.visible;
         untrack(() => (visible ? showFromState() : hideFromState()));
       });
       createEffect(() => {
-        const fields = state.fields;
-        if (state.mode === 'form' && form) form.setFields(fields || []);
+        const visible = state.visible;
+        const content = state.content;
+        untrack(() => {
+          if (visible) loadContent(content);
+          else {
+            contentLoadId += 1;
+          }
+        });
+        void content;
       });
       return root;
     },
@@ -733,9 +787,10 @@ export function createModal(input: ModalProps = {}): Modal {
       if (wasVisible) void props.onHide?.(modal);
       presence.cancel();
       clearEvents();
-      destroyForm();
       unlockScroll();
       restoreFocus();
+      loadingElement?.remove();
+      loadingElement = null;
       dialog = null;
       if (wasVisible) void props.onHidden?.(modal);
     },

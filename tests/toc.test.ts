@@ -8,6 +8,7 @@ import {
   it,
   vi,
 } from 'vite-plus/test';
+import { insert } from 'vanilla-signal';
 
 import { createToc } from '../src/components/toc.ts';
 
@@ -41,6 +42,12 @@ function mockHeadingTop(element: Element, top: number): void {
       y: top,
       toJSON: () => ({}),
     }) as DOMRect;
+}
+
+async function tick(count = 4): Promise<void> {
+  for (let index = 0; index < count; index += 1) {
+    await Promise.resolve();
+  }
 }
 
 beforeEach(() => {
@@ -150,5 +157,76 @@ describe('Toc', () => {
       `#${toc.state?.items[1].id}`
     );
     expect(toc.state?.current.index).toBe(1);
+  });
+
+  it('updates rendered items when heading data changes through state', async () => {
+    const { container, target } = mount();
+
+    toc = createToc({ target }).build();
+    if (toc.element) container.appendChild(toc.element);
+    expect(container.querySelectorAll('[data-toc-index]')).toHaveLength(3);
+
+    toc.setState({
+      items: [
+        { id: 'intro', text: 'Edited Intro', level: 2 },
+        { id: 'details', text: 'Details', level: 3 },
+        { id: 'summary', text: 'Summary', level: 2 },
+        { id: 'live-heading', text: 'Live Heading', level: 3 },
+      ],
+    });
+    await tick();
+
+    expect(toc.state.items.map((item) => item.text)).toContain('Edited Intro');
+    expect(toc.state.items.map((item) => item.id)).toContain('live-heading');
+    expect(container.querySelectorAll('[data-toc-index]')).toHaveLength(4);
+    expect(
+      container.querySelector('[data-toc-target="live-heading"]')?.textContent
+    ).toBe('Live Heading');
+  });
+
+  it('does not observe target DOM changes when reactive is disabled', async () => {
+    const { container, target } = mount();
+
+    toc = createToc({ target }).build();
+    if (toc.element) container.appendChild(toc.element);
+    expect(container.querySelectorAll('[data-toc-index]')).toHaveLength(3);
+
+    const intro = target.querySelector<HTMLElement>('#intro');
+    if (!intro) throw new Error('Missing intro heading.');
+    intro.textContent = 'Edited Intro';
+
+    const added = document.createElement('h3');
+    added.id = 'manual-heading';
+    added.textContent = 'Manual Heading';
+    insert(target, added);
+
+    await tick();
+
+    expect(toc.state.items.map((item) => item.text)).not.toContain(
+      'Edited Intro'
+    );
+    expect(toc.state.items.map((item) => item.id)).not.toContain(
+      'manual-heading'
+    );
+    expect(container.querySelectorAll('[data-toc-index]')).toHaveLength(3);
+  });
+
+  it('observes target heading changes only when reactive is enabled', async () => {
+    const { container, target } = mount();
+
+    toc = createToc({ target, reactive: true }).build();
+    if (toc.element) container.appendChild(toc.element);
+    expect(container.querySelectorAll('[data-toc-index]')).toHaveLength(3);
+
+    const added = document.createElement('h3');
+    added.id = 'observed-heading';
+    added.textContent = 'Observed Heading';
+    insert(target, added);
+    await tick();
+
+    expect(toc.state.items.map((item) => item.id)).toContain(
+      'observed-heading'
+    );
+    expect(container.querySelectorAll('[data-toc-index]')).toHaveLength(4);
   });
 });

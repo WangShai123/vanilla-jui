@@ -11,14 +11,19 @@ import {
 
 import { Toast } from '../src/primitives/toast.ts';
 
-async function flushMotion(): Promise<void> {
+async function flushAnimation(): Promise<void> {
   for (let index = 0; index < 6; index += 1) await Promise.resolve();
 }
 
 function installControlledAnimations(): {
   controls: Map<
     HTMLElement,
-    { animation: Animation; setFinished: (value: Promise<void>) => void }
+    {
+      animation: Animation;
+      keyframes: Keyframe[] | PropertyIndexedKeyframes;
+      options: KeyframeAnimationOptions | number | undefined;
+      finish: () => void;
+    }
   >;
   restore: () => void;
 } {
@@ -28,17 +33,27 @@ function installControlledAnimations(): {
   );
   const controls = new Map<
     HTMLElement,
-    { animation: Animation; setFinished: (value: Promise<void>) => void }
+    {
+      animation: Animation;
+      keyframes: Keyframe[] | PropertyIndexedKeyframes;
+      options: KeyframeAnimationOptions | number | undefined;
+      finish: () => void;
+    }
   >();
   Object.defineProperty(HTMLElement.prototype, 'animate', {
     configurable: true,
-    value: function (this: HTMLElement): Animation {
-      let finished = Promise.resolve();
+    value: function (
+      this: HTMLElement,
+      keyframes: Keyframe[] | PropertyIndexedKeyframes,
+      options?: KeyframeAnimationOptions | number
+    ): Animation {
+      let finish!: () => void;
+      const finished = new Promise<void>((resolve) => {
+        finish = resolve;
+      });
       const animation = {
         effect: { getComputedTiming: () => ({ endTime: 300 }) },
-        get finished() {
-          return finished;
-        },
+        finished,
         currentTime: null,
         playbackRate: 1,
         pause: vi.fn(),
@@ -47,9 +62,9 @@ function installControlledAnimations(): {
       } as unknown as Animation;
       controls.set(this, {
         animation,
-        setFinished(value) {
-          finished = value;
-        },
+        keyframes,
+        options,
+        finish,
       });
       return animation;
     },
@@ -119,31 +134,32 @@ describe('Toast', () => {
     expect(document.body.contains(toast)).toBe(false);
   });
 
-  it('keeps a toast mounted until its leave Motion finishes', async () => {
+  it('keeps a toast mounted until its leave animation finishes', async () => {
     const animations = installControlledAnimations();
     try {
       const toast = Toast.success('Animated', 0, {
         className: { toast: 'qa-motion-toast' },
       });
-      const control = animations.controls.get(toast);
-      if (!control) throw new Error('Expected Toast animation.');
+      const enterControl = animations.controls.get(toast);
+      if (!enterControl) throw new Error('Expected Toast animation.');
       expect(toast.classList.contains('qa-motion-toast')).toBe(true);
-      let finish!: () => void;
-      control.setFinished(
-        new Promise<void>((resolve) => {
-          finish = resolve;
-        })
-      );
 
       Toast.hide(toast);
       await Promise.resolve();
+      const leaveControl = animations.controls.get(toast);
+      if (!leaveControl) throw new Error('Expected Toast leave animation.');
 
-      expect(toast.getAttribute('aria-hidden')).toBe('true');
-      expect(control.animation.playbackRate).toBe(-1);
+      expect(toast.hasAttribute('aria-hidden')).toBe(false);
+      expect(toast.getAttribute('data-mount')).toBe('false');
+      expect(leaveControl.animation.playbackRate).toBe(1);
+      expect(leaveControl.keyframes).toEqual([
+        { opacity: 1, transform: 'translate3d(0, 0, 0)' },
+        { opacity: 0, transform: 'translate3d(0, -16px, 0)' },
+      ]);
       expect(document.body.contains(toast)).toBe(true);
 
-      finish();
-      await flushMotion();
+      leaveControl.finish();
+      await flushAnimation();
       expect(document.body.contains(toast)).toBe(false);
     } finally {
       animations.restore();
@@ -180,7 +196,8 @@ describe('Toast', () => {
     await Promise.resolve();
 
     expect(onAction).toHaveBeenCalledTimes(1);
-    expect(toast.getAttribute('aria-hidden')).toBe('true');
+    expect(toast.hasAttribute('aria-hidden')).toBe(false);
+    expect(toast.getAttribute('data-mount')).toBe('false');
 
     Toast.warning('Warning', 1000);
     Toast.lite('Lite', 1000);
