@@ -25,8 +25,6 @@ export default defineConfig({
       clean: true,
       deps: {
         neverBundle: externalPackages,
-        alwaysBundle: [/^lodash-es(?:\/|$)/],
-        onlyBundle: ['lodash-es'],
       },
       css: {
         minify: true,

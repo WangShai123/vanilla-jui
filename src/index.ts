@@ -11,7 +11,6 @@ export * from './core/motion.ts';
 export * from './utilities/object.ts';
 export * from './utilities/timer.ts';
 export * from './utilities/types.ts';
-export * from './utilities/function.ts';
 export * from './core/scheduler.ts';
 export * from './utilities/state.ts';
 export * from './utilities/refs.ts';

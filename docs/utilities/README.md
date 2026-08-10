@@ -9,7 +9,6 @@
 | [class-name](class-name.md) | 内部 class token 拼接                  |
 | [dom](dom.md)               | DOM 引用解析、内容归一化、查询、懒渲染 |
 | [events](events.md)         | DOM 事件绑定与实例级清理               |
-| [function](function.md)     | `lodash-es` debounce/throttle 转发     |
 | [http](http.md)             | JSON POST、WordPress REST 根地址       |
 | [id](id.md)                 | UUID 与短随机 ID                       |
 | [object](object.md)         | plain object 判定                      |

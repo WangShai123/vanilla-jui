@@ -6,9 +6,8 @@ import { isPlainObject } from 'vanilla-jui';
 
 ## `isPlainObject(value)`
 
-通过 `lodash-es/isPlainObject` 判断值是否为普通对象。对象字面量和
-`Object.create(null)` 返回 `true`；数组、函数、DOM 节点和 class 实例返回
-`false`。
+判断值是否为普通对象。对象字面量和 `Object.create(null)` 返回 `true`；
+数组、函数、DOM 节点和 class 实例返回 `false`。
 
 ```ts
 isPlainObject({ value: 1 }); // true

@@ -1,6 +1,6 @@
 {
   "name": "vanilla-jui",
-  "version": "1.5.3",
+  "version": "1.5.4",
   "private": false,
   "description": "A lightweight, reactive, and fully customizable vanilla JS UI library.",
   "keywords": [
@@ -61,8 +61,6 @@
     "prepublishOnly": "vp run build"
   },
   "dependencies": {
-    "@types/lodash-es": "^4.17.12",
-    "lodash-es": "^4.18.1",
     "vanilla-create-storage": "latest",
     "vanilla-signal": "^1.1.4",
     "vanilla-signal-i18n": "latest"
@@ -72,9 +70,6 @@
     "jsdom": "^30.0.1",
     "typescript": "latest",
     "vite-plus": "latest"
-  },
-  "inlinedDependencies": {
-    "lodash-es": "4.18.1"
   },
   "registry": {
     "type": "git",
