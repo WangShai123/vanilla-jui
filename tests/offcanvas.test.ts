@@ -320,6 +320,8 @@ describe('Offcanvas', () => {
 
     await offcanvas.show();
     vi.advanceTimersByTime(11);
+    expect(overlay(offcanvas)?.getAttribute('data-mount')).toBe('true');
+    expect(overlay(offcanvas)?.hasAttribute('aria-hidden')).toBe(false);
     overlay(offcanvas)?.click();
     expect(offcanvas.state.visible).toBe(false);
 

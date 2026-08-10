@@ -3,6 +3,7 @@
  */
 
 @layer color {
+
   /**
 	 * gray, olive,
 	 * tomato, ruby, pink,
@@ -11,8 +12,7 @@
 	 * yellow, orange, gold
 	 */
   :root,
-  .light,
-  .light-theme {
+  .light {
     --white: #ffffff;
     --black: #000000;
 
@@ -497,8 +497,7 @@
     --gold-track: #b45309;
   }
 
-  .dark,
-  .dark-theme {
+  .dark {
     --white: #000000;
     --black: #ffffff;
 

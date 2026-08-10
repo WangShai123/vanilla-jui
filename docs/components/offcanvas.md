@@ -105,6 +105,8 @@ const panel = createOffcanvas({
 
 点击遮罩、按 `Escape`、或点击面板内 `data-action="close"` / `data-action="cancel"` 的元素都会触发关闭。
 
+启用 overlay 时，遮罩挂载期间会接收 pointer events，用于阻断页面其它元素点击并支持 `bgClose`。`pointer-events: none` 会让事件穿透到页面元素，不适合作为 Offcanvas 打开态的遮罩行为。
+
 默认情况下，面板展示时会给 `document.body` 设置 `overflow: hidden`，隐藏后恢复。多个 Offcanvas 同时展示时会共享滚动锁，直到最后一个面板隐藏或销毁后才恢复原值。需要保留页面自身滚动行为时，可以设置 `bodyOverflow: false`。
 
 ## Props
