@@ -43,5 +43,7 @@ export default {
     Confirm: '确认',
     Upgrade: '升级',
     wn: '您的浏览器版本过低，存在安全风险。请升级浏览器后再访问本站。',
+    Submit: '提交',
+    Reset: '重置',
   },
 };

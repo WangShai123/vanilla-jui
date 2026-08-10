@@ -1,6 +1,6 @@
 {
   "name": "vanilla-jui",
-  "version": "1.5.4",
+  "version": "1.5.5",
   "private": false,
   "description": "A lightweight, reactive, and fully customizable vanilla JS UI library.",
   "keywords": [
@@ -53,7 +53,7 @@
   },
   "scripts": {
     "build": "vp pack",
-    "pack": "vp pack",
+    "pack": "vp check --fix && vp pack",
     "dev": "vp dev",
     "test": "vp test",
     "check": "vp check",

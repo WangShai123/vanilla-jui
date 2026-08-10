@@ -1035,7 +1035,7 @@ interface FormField {
   label?: RenderableContent<Form> | false;
   name?: string;
   options?: readonly FieldOption[];
-  value?: FormDataEntryValue | boolean | readonly FormDataEntryValue[];
+  value?: FormDataEntryValue | FormValue | readonly (FormDataEntryValue | FormValue)[];
   checked?: boolean;
   required?: boolean;
   placeholder?: string;

@@ -294,8 +294,8 @@ describe('Modal', () => {
     expect(content).toHaveBeenCalledTimes(1);
     expect(modal.state.loading).toBe(true);
     expect(modal.state.processing).toBe(false);
-    expect(header(modal)?.hidden).toBe(true);
-    expect(footer(modal)?.hidden).toBe(true);
+    expect(header(modal)?.hasAttribute('hidden')).toBe(false);
+    expect(footer(modal)?.hasAttribute('hidden')).toBe(false);
     expect(body(modal)?.querySelector('[aria-live="polite"]')).toBeNull();
     expect(dialog(modal)?.querySelector('[aria-live="polite"]')).toBeTruthy();
 
@@ -303,9 +303,29 @@ describe('Modal', () => {
     await flushPresence();
 
     expect(modal.state.loading).toBe(false);
-    expect(header(modal)?.hidden).toBe(false);
-    expect(footer(modal)?.hidden).toBe(false);
+    expect(header(modal)?.hasAttribute('hidden')).toBe(false);
+    expect(footer(modal)?.hasAttribute('hidden')).toBe(false);
     expect(body(modal)?.textContent).toBe('Loaded content');
+  });
+
+  it('omits header and footer nodes when disabled', () => {
+    modal = createModal({
+      id: 'body-only-modal',
+      header: false,
+      footer: false,
+      content: 'Body only',
+      text: { title: 'Accessible body only' },
+    }).build();
+
+    expect(header(modal)).toBeNull();
+    expect(footer(modal)).toBeNull();
+    expect(modal.element?.hasAttribute('aria-labelledby')).toBe(false);
+    expect(modal.element?.getAttribute('aria-label')).toBe(
+      'Accessible body only'
+    );
+
+    modal.show();
+    expect(body(modal)?.textContent).toBe('Body only');
   });
 
   it('caches async content until ttl expires', async () => {

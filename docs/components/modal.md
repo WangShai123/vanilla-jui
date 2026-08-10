@@ -165,8 +165,8 @@ const modal = createModal({
 | `showClose`  | `boolean`                                                          | `true`     | 是否显示右上角关闭按钮                   |
 | `fullscreen` | `boolean`                                                          | `false`    | 是否全屏                                 |
 | `text`       | `object`                                                           | 见下表     | 初始化文案配置                           |
-| `header`     | `boolean`                                                          | `true`     | 是否显示头部                             |
-| `footer`     | `boolean`                                                          | `true`     | 是否显示底部                             |
+| `header`     | `boolean`                                                          | `true`     | 是否渲染头部节点                         |
+| `footer`     | `boolean`                                                          | `true`     | 是否渲染底部节点                         |
 | `id`         | `string \| null`                                                   | 自动生成   | 弹窗 id；空字符串或 `null` 会自动生成    |
 | `escClose`   | `boolean`                                                          | `false`    | 是否允许 Esc 关闭                        |
 | `bgClose`    | `boolean`                                                          | `false`    | 是否允许点击背景关闭                     |

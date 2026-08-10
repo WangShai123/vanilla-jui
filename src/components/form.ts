@@ -23,6 +23,8 @@ import {
 } from '../utilities/types.ts';
 import { createValidator } from '../validation/validator.ts';
 import { createLoading } from '../primitives/loading.ts';
+import { t } from 'vanilla-signal-i18n';
+import locales from '../locales/index.ts';
 
 type FormValue = string | number | boolean;
 export type FieldOption = FormValue | FormOption;
@@ -99,7 +101,10 @@ export interface FormField {
   label?: RenderableContent<Form> | false;
   name?: string;
   options?: readonly FieldOption[];
-  value?: FormDataEntryValue | boolean | readonly FormDataEntryValue[];
+  value?:
+    | FormDataEntryValue
+    | FormValue
+    | readonly (FormDataEntryValue | FormValue)[];
   checked?: boolean;
   required?: boolean;
   placeholder?: string;
@@ -230,8 +235,18 @@ const DEFAULT_CLASS_NAMES: FormClassNames = {
 };
 
 const DEFAULT_BUTTONS: FormButton[] = [
-  { type: 'submit', text: 'Submit', theme: 'primary', action: 'submit' },
-  { type: 'reset', text: 'Reset', theme: 'ghost', action: 'reset' },
+  {
+    type: 'submit',
+    text: t('Submit', locales),
+    theme: 'primary',
+    action: 'submit',
+  },
+  {
+    type: 'reset',
+    text: t('Reset', locales),
+    theme: 'ghost',
+    action: 'reset',
+  },
 ];
 
 // Guard against malformed dynamic chains that never terminate.
@@ -688,96 +703,109 @@ export function createForm(input: FormProps = {}): Form {
   };
 
   const controlProps = <TExtra extends Record<string, unknown>>(
-    field: FormField,
+    fieldAccessor: () => FormField,
     id: string,
     extra: TExtra
   ): TExtra & Record<string, unknown> => ({
     ...extra,
-    name: field.name,
+    name: () => fieldAccessor().name,
     id,
-    placeholder: field.placeholder || '',
-    required: !!field.required,
-    disabled: () => state.submitting || !!field.disabled,
-    readonly: !!field.readonly,
-    'data-form-field': field.name || id,
+    placeholder: () => fieldAccessor().placeholder || '',
+    required: () => !!fieldAccessor().required,
+    disabled: () => state.submitting || !!fieldAccessor().disabled,
+    readonly: () => !!fieldAccessor().readonly,
+    'data-form-field': () => fieldAccessor().name || id,
   });
 
   const choiceGroupView = (
-    field: FormField,
+    fieldAccessor: () => FormField,
     id: string,
     type: 'checkbox' | 'radio'
   ): HTMLElement => {
-    const direction = field.vertical ? 'vertical' : 'horizontal';
-    const names = state.className;
     return jsx('div', {
-      className: joinClasses(
-        type === 'radio' ? names.radio : names.checkbox,
-        direction === 'vertical'
-          ? names.choiceVertical
-          : names.choiceHorizontal,
-        field.group ? names.choiceGroup : '',
-        field.size ? `is-${field.size}` : ''
-      ),
-      'data-form-choice-group': field.name || id,
+      className: () => {
+        const field = fieldAccessor();
+        const direction = field.vertical ? 'vertical' : 'horizontal';
+        const names = state.className;
+        return joinClasses(
+          type === 'radio' ? names.radio : names.checkbox,
+          direction === 'vertical'
+            ? names.choiceVertical
+            : names.choiceHorizontal,
+          field.group ? names.choiceGroup : '',
+          field.size ? `is-${field.size}` : ''
+        );
+      },
+      'data-form-choice-group': () => fieldAccessor().name || id,
       'data-choice-type': type,
-      'data-choice-layout': direction,
-      children: (field.options || []).map((option, optionIndex) => {
-        const item = normalizeOption(option);
-        const optionId = `${id}_${optionIndex}`;
-        return jsx('label', {
-          className: type === 'radio' ? names.radioLabel : '',
-          'data-form-choice': field.name || id,
-          for: optionId,
-          children: [
-            jsx('input', {
-              type,
-              id: optionId,
-              name: field.name,
-              value: item.value ?? '',
-              checked:
-                type === 'radio'
-                  ? isSelected(field.value, item.value)
-                  : isChecked(field.value, item.value, item.checked),
-              disabled: () =>
-                state.submitting || !!item.disabled || !!field.disabled,
-              required: !!field.required,
-              onChange: (event: Event) => {
-                const target = event.currentTarget;
-                if (target instanceof HTMLInputElement) {
-                  syncFieldValue(field, target, type);
-                }
-              },
-            }),
-            jsx('span', {
-              className: type === 'radio' ? names.radioText : '',
-              'data-form-choice-text': '',
-              children: item.text ?? item.label ?? item.value ?? '',
-            }),
-          ],
-        });
-      }),
+      'data-choice-layout': () =>
+        fieldAccessor().vertical ? 'vertical' : 'horizontal',
+      children: () =>
+        (fieldAccessor().options || []).map((option, optionIndex) => {
+          const item = normalizeOption(option);
+          const optionId = `${id}_${optionIndex}`;
+          return jsx('label', {
+            className: () =>
+              type === 'radio' ? state.className.radioLabel : '',
+            'data-form-choice': () => fieldAccessor().name || id,
+            for: optionId,
+            children: [
+              jsx('input', {
+                type,
+                id: optionId,
+                name: () => fieldAccessor().name,
+                value: item.value ?? '',
+                checked: () =>
+                  type === 'radio'
+                    ? isSelected(fieldAccessor().value, item.value)
+                    : isChecked(
+                        fieldAccessor().value,
+                        item.value,
+                        item.checked
+                      ),
+                disabled: () =>
+                  state.submitting ||
+                  !!item.disabled ||
+                  !!fieldAccessor().disabled,
+                required: () => !!fieldAccessor().required,
+                onChange: (event: Event) => {
+                  const target = event.currentTarget;
+                  if (target instanceof HTMLInputElement) {
+                    syncFieldValue(fieldAccessor(), target, type);
+                  }
+                },
+              }),
+              jsx('span', {
+                className: () =>
+                  type === 'radio' ? state.className.radioText : '',
+                'data-form-choice-text': '',
+                children: item.text ?? item.label ?? item.value ?? '',
+              }),
+            ],
+          });
+        }),
     }) as HTMLElement;
   };
 
   const controlView = (
-    type: FormItemType,
-    field: FormField,
+    itemAccessor: () => FormItem<FormField>,
+    fieldAccessor: () => FormField,
     id: string,
-    index: number,
-    item: FormItem<FormField>
+    indexAccessor: () => number
   ): RenderableContent<FormControlContext> => {
-    const names = state.className;
+    const type = itemAccessor().type;
     if (type === 'textarea') {
       return jsx(
         'textarea',
-        controlProps(field, id, {
-          className: field.className || names.textarea,
-          autocomplete: field.autocomplete,
-          value: field.value ?? '',
+        controlProps(fieldAccessor, id, {
+          className: () =>
+            fieldAccessor().className || state.className.textarea,
+          autocomplete: () => fieldAccessor().autocomplete,
+          value: () => fieldAccessor().value ?? '',
           onInput: (event: Event) => {
             const target = event.currentTarget;
             if (target instanceof HTMLTextAreaElement) {
-              syncFieldValue(field, target, 'textarea');
+              syncFieldValue(fieldAccessor(), target, 'textarea');
             }
           },
         })
@@ -786,84 +814,99 @@ export function createForm(input: FormProps = {}): Form {
     if (type === 'select') {
       return jsx(
         'select',
-        controlProps(field, id, {
-          className: field.className || names.select,
-          autocomplete: field.autocomplete || 'off',
-          multiple: !!field.multiple,
+        controlProps(fieldAccessor, id, {
+          className: () => fieldAccessor().className || state.className.select,
+          autocomplete: () => fieldAccessor().autocomplete || 'off',
+          multiple: () => !!fieldAccessor().multiple,
           onChange: (event: Event) => {
             const target = event.currentTarget;
             if (target instanceof HTMLSelectElement) {
-              syncFieldValue(field, target, 'select');
+              syncFieldValue(fieldAccessor(), target, 'select');
             }
           },
-          children: (field.options || []).map((option) => {
-            const item = normalizeOption(option);
-            return jsx('option', {
-              value: item.value ?? '',
-              disabled: !!item.disabled,
-              selected: isSelected(field.value, item.value),
-              children: item.text ?? item.label ?? item.value ?? '',
-            });
-          }),
+          children: () =>
+            (fieldAccessor().options || []).map((option) => {
+              const item = normalizeOption(option);
+              return jsx('option', {
+                value: item.value ?? '',
+                disabled: !!item.disabled,
+                selected: () => isSelected(fieldAccessor().value, item.value),
+                children: item.text ?? item.label ?? item.value ?? '',
+              });
+            }),
         })
       ) as HTMLSelectElement;
     }
-    if (type === 'radio') return choiceGroupView(field, id, 'radio');
-    if (type === 'checkbox' && Array.isArray(field.options)) {
-      return choiceGroupView(field, id, 'checkbox');
+    if (type === 'radio') return choiceGroupView(fieldAccessor, id, 'radio');
+    if (type === 'checkbox' && Array.isArray(fieldAccessor().options)) {
+      return choiceGroupView(fieldAccessor, id, 'checkbox');
     }
     if (type === 'switch') {
       return jsx('label', {
-        className: joinClasses(
-          names.switch,
-          field.variant ? `is-${field.variant}` : names.switchDefault,
-          field.size ? `is-${field.size}` : names.switchSizeMd
-        ),
-        'data-form-switch': field.name || id,
+        className: () => {
+          const field = fieldAccessor();
+          const names = state.className;
+          return joinClasses(
+            names.switch,
+            field.variant ? `is-${field.variant}` : names.switchDefault,
+            field.size ? `is-${field.size}` : names.switchSizeMd
+          );
+        },
+        'data-form-switch': () => fieldAccessor().name || id,
         for: id,
         children: [
           jsx('input', {
             type: 'checkbox',
             id,
-            name: field.name,
-            value: field.value ?? '1',
-            checked: !!field.checked,
-            disabled: () => state.submitting || !!field.disabled,
-            required: !!field.required,
+            name: () => fieldAccessor().name,
+            value: () => fieldAccessor().value ?? '1',
+            checked: () => !!fieldAccessor().checked,
+            disabled: () => state.submitting || !!fieldAccessor().disabled,
+            required: () => !!fieldAccessor().required,
             onChange: (event: Event) => {
               const target = event.currentTarget;
               if (target instanceof HTMLInputElement) {
-                syncFieldValue(field, target, 'switch');
+                syncFieldValue(fieldAccessor(), target, 'switch');
               }
             },
           }),
           jsx('span', {
-            className: names.switchSlider,
+            className: () => state.className.switchSlider,
             'data-form-switch-slider': '',
           }),
         ],
       }) as HTMLLabelElement;
     }
     if (type === 'custom') {
+      const field = fieldAccessor();
       return typeof field.content === 'function'
-        ? field.content({ form, field, index, item })
+        ? field.content({
+            form,
+            field,
+            index: indexAccessor(),
+            item: itemAccessor(),
+          })
         : field.content;
     }
     const inputType = type || 'text';
     return jsx('input', {
-      ...controlProps(field, id, {
+      ...controlProps(fieldAccessor, id, {
         type: inputType,
-        className: field.className || names.input,
-        autocomplete: field.autocomplete || autoComplete(inputType),
-        value: field.value ?? '',
+        className: () => fieldAccessor().className || state.className.input,
+        autocomplete: () =>
+          fieldAccessor().autocomplete || autoComplete(inputType),
+        value: () => fieldAccessor().value ?? '',
         onInput: (event: Event) => {
           const target = event.currentTarget;
           if (target instanceof HTMLInputElement) {
-            syncFieldValue(field, target, inputType);
+            syncFieldValue(fieldAccessor(), target, inputType);
           }
         },
       }),
-      checked: field.checked === undefined ? undefined : !!field.checked,
+      checked: () => {
+        const checked = fieldAccessor().checked;
+        return checked === undefined ? undefined : !!checked;
+      },
     }) as HTMLInputElement;
   };
 
@@ -871,11 +914,8 @@ export function createForm(input: FormProps = {}): Form {
     itemAccessor: () => FormItem<FormField>,
     indexAccessor: () => number
   ): HTMLElement => {
-    const item = itemAccessor();
-    const field = item.payload;
     const fieldAccessor = (): FormField => itemAccessor().payload;
-    const index = indexAccessor();
-    const id = resolveFieldId(field, index);
+    const id = resolveFieldId(fieldAccessor(), indexAccessor());
     return jsx('div', {
       className: () => state.className.item,
       'data-form-item': () => fieldAccessor().name || String(indexAccessor()),
@@ -906,7 +946,7 @@ export function createForm(input: FormProps = {}): Form {
           'data-form-control': () =>
             fieldAccessor().name || String(indexAccessor()),
           children: [
-            controlView(item.type, field, id, index, item),
+            controlView(itemAccessor, fieldAccessor, id, indexAccessor),
             () => {
               const current = fieldAccessor();
               return current.help

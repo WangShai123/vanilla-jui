@@ -167,6 +167,89 @@ describe('Form', () => {
     ).toBeInstanceOf(HTMLTextAreaElement);
   });
 
+  it('updates reused field control values from setFields payloads', () => {
+    form = createForm({
+      id: 'edit-form',
+      fields: [
+        { type: 'text', payload: { label: 'Name', name: 'name' } },
+        { type: 'text', payload: { label: 'Slug', name: 'slug' } },
+        { type: 'number', payload: { label: 'Start', name: 'start' } },
+        { type: 'number', payload: { label: 'End', name: 'end' } },
+      ],
+      buttons: false,
+    }).build();
+    mountForm();
+
+    const nameInput = form.element?.elements.namedItem(
+      'name'
+    ) as HTMLInputElement | null;
+
+    form.setFields([
+      {
+        type: 'text',
+        payload: { label: 'Name', name: 'name', required: true, value: 'Demo' },
+      },
+      {
+        type: 'text',
+        payload: { label: 'Slug', name: 'slug', value: 'demo', readonly: true },
+      },
+      {
+        type: 'number',
+        payload: { label: 'Start', name: 'start', value: 10, readonly: true },
+      },
+      {
+        type: 'number',
+        payload: { label: 'End', name: 'end', value: 20, readonly: true },
+      },
+    ]);
+
+    expect(form.element?.elements.namedItem('name')).toBe(nameInput);
+    expect(nameInput?.value).toBe('Demo');
+    expect(nameInput?.required).toBe(true);
+
+    const slugInput = form.element?.elements.namedItem(
+      'slug'
+    ) as HTMLInputElement | null;
+    const startInput = form.element?.elements.namedItem(
+      'start'
+    ) as HTMLInputElement | null;
+    const endInput = form.element?.elements.namedItem(
+      'end'
+    ) as HTMLInputElement | null;
+
+    expect(slugInput?.value).toBe('demo');
+    expect(slugInput?.readOnly).toBe(true);
+    expect(startInput?.value).toBe('10');
+    expect(startInput?.readOnly).toBe(true);
+    expect(endInput?.value).toBe('20');
+    expect(endInput?.readOnly).toBe(true);
+  });
+
+  it('updates control value when nested field state changes', async () => {
+    form = createForm({
+      id: 'nested-field-form',
+      fields: [
+        {
+          type: 'text',
+          payload: { label: 'Name', name: 'name', value: 'Initial' },
+        },
+      ],
+      buttons: false,
+    }).build();
+    mountForm();
+
+    const nameInput = form.element?.elements.namedItem(
+      'name'
+    ) as HTMLInputElement | null;
+    expect(nameInput?.value).toBe('Initial');
+
+    form.state.fields[0]!.payload.value = 'Updated';
+    await Promise.resolve();
+
+    expect(form.element?.elements.namedItem('name')).toBe(nameInput);
+    expect(nameInput?.value).toBe('Updated');
+  });
+
   it('collects submitted form data', async () => {
     const onSubmit =
       vi.fn<(data: FormDataRecord, form: FormInstance) => void>();

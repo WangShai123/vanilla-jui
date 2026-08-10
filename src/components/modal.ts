@@ -685,34 +685,35 @@ export function createModal(input: ModalProps = {}): Modal {
         ...(props.style ? { style: props.style } : {}),
         'data-mount': () => (motionVisible() ? 'true' : 'false'),
         children: [
-          jsx('div', {
-            className: props.className.header,
-            hidden: () => !props.header || state.loading,
-            children: () =>
-              props.header && !state.loading
-                ? [
-                    jsx('div', {
-                      className: props.className.title,
-                      id: `${props.id}_title`,
-                      'aria-label': props.text.title,
-                      children: props.text.title,
-                    }),
-                    props.showClose
-                      ? jsx('button', {
-                          type: 'button',
-                          className: joinClasses(
-                            props.className.button,
-                            props.className.closeBtn
-                          ),
-                          'data-action': 'close',
-                          'aria-label': t('Close', locales),
-                          disabled: isBusy,
-                          children: icon('close'),
-                        })
-                      : null,
-                  ]
-                : null,
-          }),
+          props.header
+            ? jsx('div', {
+                className: props.className.header,
+                children: () =>
+                  state.loading
+                    ? null
+                    : [
+                        jsx('div', {
+                          className: props.className.title,
+                          id: `${props.id}_title`,
+                          'aria-label': props.text.title,
+                          children: props.text.title,
+                        }),
+                        props.showClose
+                          ? jsx('button', {
+                              type: 'button',
+                              className: joinClasses(
+                                props.className.button,
+                                props.className.closeBtn
+                              ),
+                              'data-action': 'close',
+                              'aria-label': t('Close', locales),
+                              disabled: isBusy,
+                              children: icon('close'),
+                            })
+                          : null,
+                      ],
+              })
+            : null,
           jsx('div', {
             className: props.className.body,
             'data-modal-body': '',
@@ -720,37 +721,38 @@ export function createModal(input: ModalProps = {}): Modal {
               return resolvedContent().value;
             },
           }),
-          jsx('div', {
-            className: props.className.footer,
-            hidden: () => !props.footer || state.loading,
-            children: () =>
-              props.footer && !state.loading
-                ? [
-                    props.showCancel
-                      ? jsx('button', {
+          props.footer
+            ? jsx('div', {
+                className: props.className.footer,
+                children: () =>
+                  state.loading
+                    ? null
+                    : [
+                        props.showCancel
+                          ? jsx('button', {
+                              type: 'button',
+                              className: joinClasses(
+                                props.className.button,
+                                props.className.cancelBtn
+                              ),
+                              'data-action': 'cancel',
+                              disabled: isBusy,
+                              children: props.text.cancel,
+                            })
+                          : null,
+                        jsx('button', {
                           type: 'button',
                           className: joinClasses(
                             props.className.button,
-                            props.className.cancelBtn
+                            props.className.confirmBtn
                           ),
-                          'data-action': 'cancel',
+                          'data-action': 'confirm',
                           disabled: isBusy,
-                          children: props.text.cancel,
-                        })
-                      : null,
-                    jsx('button', {
-                      type: 'button',
-                      className: joinClasses(
-                        props.className.button,
-                        props.className.confirmBtn
-                      ),
-                      'data-action': 'confirm',
-                      disabled: isBusy,
-                      children: props.text.confirm,
-                    }),
-                  ]
-                : null,
-          }),
+                          children: props.text.confirm,
+                        }),
+                      ],
+              })
+            : null,
         ],
       }) as HTMLElement;
       const root = createPopup({
