@@ -14,7 +14,12 @@ import {
 import { icon } from '../primitives/icons.ts';
 import { createLoading } from '../primitives/loading.ts';
 import { joinClasses } from '../utilities/class-name.ts';
-import { all, q, type RenderableContent } from '../utilities/dom.ts';
+import {
+  all,
+  asRenderable,
+  q,
+  type RenderableContent,
+} from '../utilities/dom.ts';
 import { createEventManager } from '../utilities/events.ts';
 import { randomId } from '../utilities/id.ts';
 import { createScheduledTask } from '../core/scheduler.ts';
@@ -706,51 +711,52 @@ export function createSwiper(input: SwiperProps = {}): Swiper {
   };
 
   const slideView = (itemAccessor: () => TrackItem): HTMLElement => {
-    const initial = itemAccessor();
-    const tag = initial.item.url ? 'a' : 'div';
-    return jsx(tag, {
+    const slideContent = () => {
+      const { item, index } = itemAccessor();
+      const context = { swiper, item, index };
+      if (item.children != null) {
+        return asRenderable(
+          typeof item.children === 'function'
+            ? item.children(context)
+            : item.children
+        );
+      }
+      return [
+        item.image
+          ? jsx('img', {
+              className: props.className.image,
+              alt: item.title || '',
+              loading: 'lazy',
+              ...(props.lazyload
+                ? { 'data-lazy': item.image }
+                : { src: item.image }),
+            })
+          : null,
+        item.title
+          ? jsx('span', {
+              className: props.className.title,
+              children: item.title,
+            })
+          : null,
+      ];
+    };
+    const commonProps = {
       className: props.className.slide,
-      href: () => itemAccessor().item.url || undefined,
-      target: () =>
-        itemAccessor().item.url
-          ? itemAccessor().item.blank
-            ? '_blank'
-            : '_self'
-          : undefined,
       'data-swiper-slide': () => String(itemAccessor().index),
       'data-swiper-index': () =>
         itemAccessor().clone ? null : String(itemAccessor().index),
       'data-clone': () => itemAccessor().clone,
       role: 'group',
       'aria-label': () => `Slide ${itemAccessor().index + 1}`,
-      children: () => {
-        const { item, index } = itemAccessor();
-        const context = { swiper, item, index };
-        if (item.children != null) {
-          return typeof item.children === 'function'
-            ? item.children(context)
-            : item.children;
-        }
-        return [
-          item.image
-            ? jsx('img', {
-                className: props.className.image,
-                alt: item.title || '',
-                loading: 'lazy',
-                ...(props.lazyload
-                  ? { 'data-lazy': item.image }
-                  : { src: item.image }),
-              })
-            : null,
-          item.title
-            ? jsx('span', {
-                className: props.className.title,
-                children: item.title,
-              })
-            : null,
-        ];
-      },
-    }) as HTMLElement;
+      children: slideContent,
+    };
+    return itemAccessor().item.url
+      ? jsx('a', {
+          ...commonProps,
+          href: () => itemAccessor().item.url || '',
+          target: () => (itemAccessor().item.blank ? '_blank' : '_self'),
+        })
+      : jsx('div', commonProps);
   };
 
   swiper = defineComponent<

@@ -1,3 +1,4 @@
+import { type Renderable } from 'vanilla-signal';
 import {
   isDomElementValue,
   isDomNodeValue,
@@ -31,6 +32,12 @@ export type RenderableContent<TContext = unknown> =
   | undefined
   | readonly RenderableContent<TContext>[]
   | ((context: TContext) => RenderableContent<TContext>);
+
+export function asRenderable<TContext>(
+  value: RenderableContent<TContext>
+): Renderable {
+  return value as Renderable;
+}
 
 export interface LazyRenderOptions {
   threshold?: number | number[];

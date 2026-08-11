@@ -12,7 +12,7 @@ import {
   defineComponent,
 } from '../core/component.ts';
 import { createLoading } from '../primitives/loading.ts';
-import { type RenderableContent } from '../utilities/dom.ts';
+import { asRenderable, type RenderableContent } from '../utilities/dom.ts';
 import { randomId } from '../utilities/id.ts';
 import { createEventManager } from '../utilities/events.ts';
 import { createMotionGroup, createTransition } from '../core/motion.ts';
@@ -448,11 +448,13 @@ export function createOffcanvas(input: OffcanvasProps = {}): Offcanvas {
           className: props.className.content,
           'data-offcanvas-content': props.id,
           children: () =>
-            state.loading
-              ? createLoading()
-              : typeof state.resolvedContent === 'function'
-                ? state.resolvedContent(offcanvas)
-                : state.resolvedContent,
+            asRenderable(
+              state.loading
+                ? createLoading()
+                : typeof state.resolvedContent === 'function'
+                  ? state.resolvedContent(offcanvas)
+                  : state.resolvedContent
+            ),
         }),
       }) as HTMLElement;
     },

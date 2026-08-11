@@ -1,6 +1,6 @@
 {
   "name": "vanilla-jui",
-  "version": "1.5.5",
+  "version": "1.5.6",
   "private": false,
   "description": "A lightweight, reactive, and fully customizable vanilla JS UI library.",
   "keywords": [
@@ -61,9 +61,9 @@
     "prepublishOnly": "vp run build"
   },
   "dependencies": {
-    "vanilla-create-storage": "latest",
-    "vanilla-signal": "^1.1.4",
-    "vanilla-signal-i18n": "latest"
+    "vanilla-create-storage": "^1.0.4",
+    "vanilla-signal": "^1.1.14",
+    "vanilla-signal-i18n": "^1.1.2"
   },
   "devDependencies": {
     "@tsdown/css": "latest",

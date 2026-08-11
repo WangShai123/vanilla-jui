@@ -17,7 +17,12 @@ import { icon } from '../primitives/icons.ts';
 import { createLoading } from '../primitives/loading.ts';
 import { createPopup } from '../primitives/popup.ts';
 import { joinClasses } from '../utilities/class-name.ts';
-import { all, q, type RenderableContent } from '../utilities/dom.ts';
+import {
+  all,
+  asRenderable,
+  q,
+  type RenderableContent,
+} from '../utilities/dom.ts';
 import { randomId } from '../utilities/id.ts';
 import { createMotionGroup, createTransition } from '../core/motion.ts';
 import { isPlainObject } from '../utilities/object.ts';
@@ -718,7 +723,7 @@ export function createModal(input: ModalProps = {}): Modal {
             className: props.className.body,
             'data-modal-body': '',
             children: () => {
-              return resolvedContent().value;
+              return asRenderable(resolvedContent().value);
             },
           }),
           props.footer

@@ -1,6 +1,7 @@
 import { createRoot, createSignal, insert, jsx } from 'vanilla-signal';
 
 import {
+  asRenderable,
   type DOMReference,
   type RenderableContent,
   resolveElement,
@@ -245,7 +246,7 @@ export function createDrop(
       'aria-live': () =>
         typeof props.content === 'function' ? 'polite' : null,
       'aria-busy': () => String(loading()),
-      children: renderContent,
+      children: () => asRenderable(renderContent()),
     });
     return {
       root: jsx('div', {

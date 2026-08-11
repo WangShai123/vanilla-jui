@@ -30,7 +30,6 @@ ESM
 
 ```javascript
 import { createToast, createModal } from 'vanilla-jui';
-import 'vanilla-jui/style.css';
 ```
 
 UMD, 全局变量名: `jui`

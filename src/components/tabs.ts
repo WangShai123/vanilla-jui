@@ -15,7 +15,7 @@ import {
 } from '../core/component.ts';
 import { createLoading } from '../primitives/loading.ts';
 import { joinClasses } from '../utilities/class-name.ts';
-import { type RenderableContent } from '../utilities/dom.ts';
+import { asRenderable, type RenderableContent } from '../utilities/dom.ts';
 import { createEventManager } from '../utilities/events.ts';
 import { randomId } from '../utilities/id.ts';
 import { createElementRef, createKeyedElementRefs } from '../utilities/refs.ts';
@@ -515,7 +515,7 @@ export function createTabs(input: TabsProps = {}): Tabs {
       'aria-busy': () => String(loading()),
       hidden: () => !isActive(name),
       ref: panels.bind(name),
-      children: panelContent,
+      children: () => asRenderable(panelContent()),
     }) as HTMLElement;
   };
 
@@ -528,7 +528,7 @@ export function createTabs(input: TabsProps = {}): Tabs {
       'aria-selected': () => (isActive(name) ? 'true' : 'false'),
       'aria-disabled': () => (isDisabled(name) ? 'true' : 'false'),
       ref: tabs.bind(name),
-      children: item().title,
+      children: () => asRenderable(item().title),
     }) as HTMLElement;
   };
 

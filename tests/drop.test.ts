@@ -156,10 +156,10 @@ describe('Drop', () => {
 
   it('renders async content with loading and reuses cached content within ttl', async () => {
     const button = target();
-    let resolveContent!: (content: ReturnType<typeof jsx>) => void;
+    let resolveContent!: (content: HTMLElement) => void;
     const loader = vi.fn(
       () =>
-        new Promise<ReturnType<typeof jsx>>((resolve) => {
+        new Promise<HTMLElement>((resolve) => {
           resolveContent = resolve;
         })
     );

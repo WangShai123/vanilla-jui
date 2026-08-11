@@ -1,5 +1,6 @@
 import {
   For,
+  type ElementProps,
   createDeepStore,
   createEffect,
   createMemo,
@@ -13,7 +14,7 @@ import {
   defineComponent,
 } from '../core/component.ts';
 import { joinClasses } from '../utilities/class-name.ts';
-import { type RenderableContent, all } from '../utilities/dom.ts';
+import { asRenderable, type RenderableContent, all } from '../utilities/dom.ts';
 import { randomId } from '../utilities/id.ts';
 import { isPlainObject } from '../utilities/object.ts';
 import {
@@ -380,7 +381,21 @@ function stringifyFormValue(
   if (typeof value === 'number' || typeof value === 'boolean') {
     return String(value);
   }
-  return value.name;
+  if (value instanceof File) return value.name;
+  return '';
+}
+
+function stringifyControlValue(value: FormField['value'] | undefined): string {
+  if (value == null || Array.isArray(value)) return '';
+  if (
+    typeof value === 'string' ||
+    typeof value === 'number' ||
+    typeof value === 'boolean'
+  ) {
+    return String(value);
+  }
+  if (value instanceof File) return value.name;
+  return '';
 }
 
 function fieldIsRequired(
@@ -702,11 +717,11 @@ export function createForm(input: FormProps = {}): Form {
     setChainVersion((version: number) => version + 1);
   };
 
-  const controlProps = <TExtra extends Record<string, unknown>>(
+  const controlProps = <TElement extends Element>(
     fieldAccessor: () => FormField,
     id: string,
-    extra: TExtra
-  ): TExtra & Record<string, unknown> => ({
+    extra: ElementProps<TElement>
+  ): ElementProps<TElement> => ({
     ...extra,
     name: () => fieldAccessor().name,
     id,
@@ -779,7 +794,9 @@ export function createForm(input: FormProps = {}): Form {
                 className: () =>
                   type === 'radio' ? state.className.radioText : '',
                 'data-form-choice-text': '',
-                children: item.text ?? item.label ?? item.value ?? '',
+                children: asRenderable(
+                  item.text ?? item.label ?? stringifyFormValue(item.value)
+                ),
               }),
             ],
           });
@@ -797,11 +814,11 @@ export function createForm(input: FormProps = {}): Form {
     if (type === 'textarea') {
       return jsx(
         'textarea',
-        controlProps(fieldAccessor, id, {
+        controlProps<HTMLTextAreaElement>(fieldAccessor, id, {
           className: () =>
             fieldAccessor().className || state.className.textarea,
           autocomplete: () => fieldAccessor().autocomplete,
-          value: () => fieldAccessor().value ?? '',
+          value: () => stringifyControlValue(fieldAccessor().value),
           onInput: (event: Event) => {
             const target = event.currentTarget;
             if (target instanceof HTMLTextAreaElement) {
@@ -814,10 +831,14 @@ export function createForm(input: FormProps = {}): Form {
     if (type === 'select') {
       return jsx(
         'select',
-        controlProps(fieldAccessor, id, {
+        controlProps<HTMLSelectElement>(fieldAccessor, id, {
           className: () => fieldAccessor().className || state.className.select,
           autocomplete: () => fieldAccessor().autocomplete || 'off',
           multiple: () => !!fieldAccessor().multiple,
+          value: () =>
+            fieldAccessor().multiple
+              ? undefined
+              : stringifyControlValue(fieldAccessor().value),
           onChange: (event: Event) => {
             const target = event.currentTarget;
             if (target instanceof HTMLSelectElement) {
@@ -831,7 +852,9 @@ export function createForm(input: FormProps = {}): Form {
                 value: item.value ?? '',
                 disabled: !!item.disabled,
                 selected: () => isSelected(fieldAccessor().value, item.value),
-                children: item.text ?? item.label ?? item.value ?? '',
+                children: asRenderable(
+                  item.text ?? item.label ?? stringifyFormValue(item.value)
+                ),
               });
             }),
         })
@@ -890,7 +913,7 @@ export function createForm(input: FormProps = {}): Form {
     }
     const inputType = type || 'text';
     return jsx('input', {
-      ...controlProps(fieldAccessor, id, {
+      ...controlProps<HTMLInputElement>(fieldAccessor, id, {
         type: inputType,
         className: () => fieldAccessor().className || state.className.input,
         autocomplete: () =>
@@ -938,7 +961,7 @@ export function createForm(input: FormProps = {}): Form {
               ),
             'data-form-label': () => fieldAccessor().name || id,
             for: id,
-            children: () => fieldAccessor().label,
+            children: () => asRenderable(fieldAccessor().label),
           });
         },
         jsx('div', {
@@ -946,7 +969,9 @@ export function createForm(input: FormProps = {}): Form {
           'data-form-control': () =>
             fieldAccessor().name || String(indexAccessor()),
           children: [
-            controlView(itemAccessor, fieldAccessor, id, indexAccessor),
+            asRenderable(
+              controlView(itemAccessor, fieldAccessor, id, indexAccessor)
+            ),
             () => {
               const current = fieldAccessor();
               return current.help
@@ -954,7 +979,7 @@ export function createForm(input: FormProps = {}): Form {
                     className: 'help-block',
                     'data-form-help': () =>
                       fieldAccessor().name || String(indexAccessor()),
-                    children: () => fieldAccessor().help,
+                    children: () => asRenderable(fieldAccessor().help),
                   })
                 : null;
             },
@@ -999,7 +1024,7 @@ export function createForm(input: FormProps = {}): Form {
             disabled: () => state.submitting || !!buttonAccessor().disabled,
             children: () => {
               const button = buttonAccessor();
-              const content = button.text ?? button.label ?? '';
+              const content = asRenderable(button.text ?? button.label ?? '');
               const submitting =
                 state.submitting &&
                 (button.type === 'submit' || button.action === 'submit');

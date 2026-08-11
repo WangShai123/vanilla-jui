@@ -296,6 +296,10 @@
   /* ============================================
     Code - 代码
   ============================================ */
+  code {
+    box-decoration-break: clone;
+  }
+
   .j-content code:not([class*='language-']) {
     font-family:
       'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
@@ -331,7 +335,6 @@
     background: none;
     color: inherit;
     font-size: inherit;
-    white-space: pre;
   }
 
   .j-content pre.j-code-editor {
@@ -345,7 +348,6 @@
   .j-content pre.j-code-editor.hljs {
     color: var(--ui-fg);
     background: var(--content-bg-subtle);
-    white-space: break-spaces;
   }
 
   html.j-radius-round .j-content pre.j-code-editor {
@@ -389,8 +391,11 @@
 
   .j-content pre code[class*='language-'] {
     display: block;
-    overflow-x: auto;
     padding: 1.25em 1.5em;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--ui-border) transparent;
+    white-space: pre-wrap;
   }
 
   .j-content pre.j-code-editor .code-header + code[class*='language-'] {

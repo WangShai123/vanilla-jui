@@ -1,6 +1,6 @@
-import { jsx } from 'vanilla-signal';
+import { type ElementProps, jsx } from 'vanilla-signal';
 
-import { type RenderableContent } from '../utilities/dom.ts';
+import { asRenderable, type RenderableContent } from '../utilities/dom.ts';
 import { type ResolveSchema, resolveProps } from '../utilities/types.ts';
 
 export interface PopupProps extends Record<string, unknown> {
@@ -45,10 +45,10 @@ function normalizeProps(input: PopupProps): ResolvedPopupProps {
 export function createPopup(props: PopupProps = {}): HTMLElement {
   const { className, position, component, labelledby, content } =
     normalizeProps(props);
-  const attrs: Record<string, unknown> = {
+  const attrs: ElementProps<HTMLDivElement> = {
     className: `${className} is-${position}`,
     role: 'dialog',
-    children: content,
+    children: asRenderable(content),
   };
 
   if (component) {

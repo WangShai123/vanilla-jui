@@ -4,7 +4,7 @@ import {
   type FunctionalComponent,
   defineComponent,
 } from '../core/component.ts';
-import { type RenderableContent } from '../utilities/dom.ts';
+import { asRenderable, type RenderableContent } from '../utilities/dom.ts';
 import { randomId } from '../utilities/id.ts';
 import { isPlainObject } from '../utilities/object.ts';
 import {
@@ -906,57 +906,59 @@ export function createFlow(input: FlowProps = {}): Flow {
             jsx('div', {
               className: props.className.header,
               'data-flow-header': '',
-              children: renderSlot('renderHeader', () =>
-                jsx('ol', {
-                  className: props.className.steps,
-                  'data-flow-steps': '',
-                  role: 'list',
-                  'aria-label': 'Flow steps',
-                  children: steps.map((step, index) =>
-                    jsx('li', {
-                      className: () =>
-                        [
-                          props.className.step,
-                          index === state.currentIndex
-                            ? props.className.active
-                            : '',
-                          index < state.currentIndex
-                            ? props.className.complete
-                            : '',
-                        ]
-                          .filter(Boolean)
-                          .join(' '),
-                      'data-flow-step': step.id,
-                      'data-flow-step-index': String(index),
-                      'aria-current': () =>
-                        index === state.currentIndex ? 'step' : null,
-                      children: jsx('button', {
-                        type: 'button',
-                        className: props.className.stepButton,
-                        disabled: () =>
-                          props.linear && index > state.currentIndex,
+              children: asRenderable(
+                renderSlot('renderHeader', () =>
+                  jsx('ol', {
+                    className: props.className.steps,
+                    'data-flow-steps': '',
+                    role: 'list',
+                    'aria-label': 'Flow steps',
+                    children: steps.map((step, index) =>
+                      jsx('li', {
+                        className: () =>
+                          [
+                            props.className.step,
+                            index === state.currentIndex
+                              ? props.className.active
+                              : '',
+                            index < state.currentIndex
+                              ? props.className.complete
+                              : '',
+                          ]
+                            .filter(Boolean)
+                            .join(' '),
+                        'data-flow-step': step.id,
+                        'data-flow-step-index': String(index),
                         'aria-current': () =>
                           index === state.currentIndex ? 'step' : null,
-                        onClick: () => {
-                          if (index !== state.currentIndex)
-                            void flow.goTo(index);
-                        },
-                        children: [
-                          jsx('span', {
-                            className: props.className.stepIndex,
-                            'data-flow-step-number': '',
-                            children: index + 1,
-                          }),
-                          jsx('span', {
-                            className: props.className.stepTitle,
-                            'data-flow-step-title': '',
-                            children: step.title || step.id,
-                          }),
-                        ],
-                      }),
-                    })
-                  ),
-                })
+                        children: jsx('button', {
+                          type: 'button',
+                          className: props.className.stepButton,
+                          disabled: () =>
+                            props.linear && index > state.currentIndex,
+                          'aria-current': () =>
+                            index === state.currentIndex ? 'step' : null,
+                          onClick: () => {
+                            if (index !== state.currentIndex)
+                              void flow.goTo(index);
+                          },
+                          children: [
+                            jsx('span', {
+                              className: props.className.stepIndex,
+                              'data-flow-step-number': '',
+                              children: index + 1,
+                            }),
+                            jsx('span', {
+                              className: props.className.stepTitle,
+                              'data-flow-step-title': '',
+                              children: step.title || step.id,
+                            }),
+                          ],
+                        }),
+                      })
+                    ),
+                  })
+                )
               ),
             }),
             jsx('div', {
@@ -965,53 +967,66 @@ export function createFlow(input: FlowProps = {}): Flow {
               role: 'region',
               'aria-live': 'polite',
               'aria-busy': () => (state.loading ? 'true' : 'false'),
-              children: renderSlot('renderBody', () => () => {
-                const version = state.version;
-                return version >= 0 ? contentView() : null;
-              }),
+              children: asRenderable(
+                renderSlot('renderBody', () => () => {
+                  const version = state.version;
+                  return version >= 0 ? contentView() : null;
+                })
+              ),
             }),
             jsx('div', {
               className: props.className.footer,
               'data-flow-footer': '',
-              children: renderSlot('renderFooter', () => [
-                props.showReset
-                  ? jsx('button', {
-                      type: 'button',
-                      className: [props.className.button, props.className.reset]
-                        .filter(Boolean)
-                        .join(' '),
-                      'data-action': 'reset',
-                      onClick: () => flow.reset(),
-                      disabled: () => state.loading,
-                      children: props.text.reset,
-                    })
-                  : null,
-                props.showBack
-                  ? jsx('button', {
-                      type: 'button',
-                      className: [props.className.button, props.className.back]
-                        .filter(Boolean)
-                        .join(' '),
-                      'data-action': 'back',
-                      onClick: () => void flow.back(),
-                      disabled: () => !flow.canBack,
-                      children: props.text.back,
-                    })
-                  : null,
-                props.showNext
-                  ? jsx('button', {
-                      type: 'button',
-                      className: [props.className.button, props.className.next]
-                        .filter(Boolean)
-                        .join(' '),
-                      'data-action': 'next',
-                      onClick: () => void flow.next(),
-                      disabled: () => state.loading,
-                      children: () =>
-                        flow.isLast ? props.text.finish : props.text.next,
-                    })
-                  : null,
-              ]),
+              children: asRenderable(
+                renderSlot('renderFooter', () => [
+                  props.showReset
+                    ? jsx('button', {
+                        type: 'button',
+                        className: [
+                          props.className.button,
+                          props.className.reset,
+                        ]
+                          .filter(Boolean)
+                          .join(' '),
+                        'data-action': 'reset',
+                        onClick: () => flow.reset(),
+                        disabled: () => state.loading,
+                        children: props.text.reset,
+                      })
+                    : null,
+                  props.showBack
+                    ? jsx('button', {
+                        type: 'button',
+                        className: [
+                          props.className.button,
+                          props.className.back,
+                        ]
+                          .filter(Boolean)
+                          .join(' '),
+                        'data-action': 'back',
+                        onClick: () => void flow.back(),
+                        disabled: () => !flow.canBack,
+                        children: props.text.back,
+                      })
+                    : null,
+                  props.showNext
+                    ? jsx('button', {
+                        type: 'button',
+                        className: [
+                          props.className.button,
+                          props.className.next,
+                        ]
+                          .filter(Boolean)
+                          .join(' '),
+                        'data-action': 'next',
+                        onClick: () => void flow.next(),
+                        disabled: () => state.loading,
+                        children: () =>
+                          flow.isLast ? props.text.finish : props.text.next,
+                      })
+                    : null,
+                ])
+              ),
             }),
           ],
         }) as HTMLElement,

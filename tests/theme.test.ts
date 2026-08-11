@@ -27,13 +27,11 @@ function readThemeCookie(): Record<string, unknown> | null {
   const match = document.cookie.match(/(?:^|; )ui-theme=([^;]*)/);
   if (!match) return null;
   const record = JSON.parse(decodeURIComponent(match[1])) as {
-    value?: string;
+    val?: unknown;
   };
-  if (typeof record.value !== 'string') return null;
-  const payload = JSON.parse(record.value) as {
-    value?: Record<string, unknown>;
-  };
-  return payload.value || null;
+  return record.val && typeof record.val === 'object'
+    ? (record.val as Record<string, unknown>)
+    : null;
 }
 
 beforeEach(() => {

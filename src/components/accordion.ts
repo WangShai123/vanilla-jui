@@ -14,7 +14,7 @@ import {
 } from '../core/component.ts';
 import { createLoading } from '../primitives/loading.ts';
 import { icon } from '../primitives/icons.ts';
-import { type RenderableContent } from '../utilities/dom.ts';
+import { asRenderable, type RenderableContent } from '../utilities/dom.ts';
 import { randomId } from '../utilities/id.ts';
 import {
   type CollapseMotionController,
@@ -599,7 +599,8 @@ export function createAccordion(props: AccordionProps): AccordionInstance {
     const content = createContentRenderer(itemAccessor, indexAccessor, name);
     const headerId = `${resolvedProps.id}_header_${name}`;
     const panelId = `${resolvedProps.id}_panel_${name}`;
-    const handleKeyDown = (event: KeyboardEvent): void => {
+    const handleKeyDown = (event: Event): void => {
+      if (!(event instanceof KeyboardEvent)) return;
       if (event.key !== 'Enter' && event.key !== ' ') return;
       event.preventDefault();
       void activate(name);
@@ -624,7 +625,7 @@ export function createAccordion(props: AccordionProps): AccordionInstance {
             role: 'heading',
             children: () => {
               const item = itemAccessor();
-              return titleView(item.title, item, indexAccessor());
+              return asRenderable(titleView(item.title, item, indexAccessor()));
             },
           }),
           jsx('span', {
@@ -649,7 +650,7 @@ export function createAccordion(props: AccordionProps): AccordionInstance {
         children: jsx('div', {
           className: resolvedProps.className.content,
           'data-accordion-content': name,
-          children: content.render,
+          children: () => asRenderable(content.render()),
         }),
       }),
     ];
