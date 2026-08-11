@@ -32,7 +32,7 @@ document.body.appendChild(themePanel);
 <script>
   (function (d, k) {
     var v = {
-        mode: 'dark',
+        mode: 'light',
         theme: 'indigo',
         radius: 'sm',
         shadow: 'sm',
@@ -43,8 +43,7 @@ document.body.appendChild(themePanel);
     if (m) {
       try {
         var r = JSON.parse(decodeURIComponent(m[1]));
-        if (r && typeof r.val === 'string')
-          o = Object.assign({}, v, JSON.parse(r.val) || {});
+        if (r && typeof r.val === 'object') o = Object.assign({}, v, r.val);
       } catch (e) {
         o = v;
       }
