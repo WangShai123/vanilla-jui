@@ -340,17 +340,16 @@
   .j-content pre.j-code-editor {
     position: relative;
     margin-block: 1rem;
-    overflow: auto;
     border-radius: var(--radius-md);
     border: 1px solid var(--content-border);
-  }
-
-  .j-content pre.j-code-editor.hljs {
+    overflow: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--ui-border) transparent;
     color: var(--ui-fg);
     background: var(--content-bg-subtle);
   }
 
-  html.j-radius-round .j-content pre.j-code-editor {
+  .j-radius-round .j-content pre.j-code-editor {
     border-radius: 1.25rem;
   }
 
@@ -392,10 +391,6 @@
   .j-content pre code[class*='language-'] {
     display: block;
     padding: 1.25em 1.5em;
-    overflow-x: auto;
-    scrollbar-width: thin;
-    scrollbar-color: var(--ui-border) transparent;
-    white-space: pre-wrap;
   }
 
   .j-content pre.j-code-editor .code-header + code[class*='language-'] {
