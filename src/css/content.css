@@ -595,7 +595,7 @@
   }
 
   .j-content tbody tr:hover {
-    background-color: var(--ui-surface-hover);
+    background-color: var(--content-bg-subtle);
   }
 
   .j-content tbody tr:last-child td {
