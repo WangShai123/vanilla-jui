@@ -8,64 +8,91 @@ Toast 的 `duration` 表示消息停留时间，不是动画时长。Toast 是�
 
 ```js
 import { Toast } from 'vanilla-jui';
-import 'vanilla-jui/style.css';
 ```
 
 ## 基础用法
 
 ```js
 Toast.success('保存成功');
-Toast.error('保存失败', 5000);
+Toast.error('保存失败', { duration: 5000 });
 Toast.lite('已更新');
 ```
 
 ## 方法
 
-| 方法                                         | 说明                                 | 默认值                                             |
-| -------------------------------------------- | ------------------------------------ | -------------------------------------------------- |
-| `Toast.show(message, duration, type)`        | 展示指定类型消息，返回 `HTMLElement` | `message = ''`, `duration = 3000`, `type = 'info'` |
-| `Toast.success/info/warning/error/primary()` | 展示快捷类型消息，返回 `HTMLElement` | `message = ''`, `duration = 3000`                  |
-| `Toast.lite(message, duration)`              | 展示单例轻提示，返回 `HTMLElement`   | `message = ''`, `duration = 2000`                  |
-| `Toast.action(message, props)`               | 展示操作型消息                       | `message = ''`, `props = {}`                       |
-| `Toast.configure(options)`                   | 配置默认类名                         | `options = {}`                                     |
-| `Toast.hide(toast)`                          | 隐藏指定节点                         |                                                    |
-| `Toast.clearAll()`                           | 清理所有 Toast 和定时器              |                                                    |
-| `Toast.destroyAll()`                         | `clearAll()` 的别名                  |                                                    |
+| 方法                                         | 说明                                 | 默认值                            |
+| -------------------------------------------- | ------------------------------------ | --------------------------------- |
+| `Toast.show(message, options)`               | 展示指定主题消息，返回 `HTMLElement` | `message = ''`, `options = {}`    |
+| `Toast.success/info/warning/error/primary()` | 展示快捷主题消息，返回 `HTMLElement` | `message = ''`, `options = {}`    |
+| `Toast.lite(message, duration, className)`   | 展示单例轻提示，返回 `HTMLElement`   | `message = ''`, `duration = 2000` |
+| `Toast.confirm(message, props)`              | 展示确认型消息                       | `message = ''`, `props = {}`      |
+| `Toast.configure(options)`                   | 配置默认类名                         | `options = {}`                    |
+| `Toast.hide(toast)`                          | 隐藏指定节点                         |                                   |
+| `Toast.clearAll()`                           | 清理所有 Toast 和定时器              |                                   |
+| `Toast.destroyAll()`                         | `clearAll()` 的别名                  |                                   |
 
-**`type` 枚举值**: `'info'` | `'success'` | `'warning'` | `'error'` | `'primary'`
+**`theme` 枚举值**: `'info'` | `'success'` | `'warning'` | `'error'` | `'primary'`
 
 ## 选项
 
-Toast.action 方法的 `props` 有以下可选项：
+`show()` 和快捷方法的选项有以下可选项：
 
-| 选项          | 说明             | 默认值         |
-| ------------- | ---------------- | -------------- |
-| `text`        | 操作按钮文本     |                |
-| `text.close`  | 关闭按钮文本     | 关闭 / Close   |
-| `text.action` | 确认按钮文本     | 确认 / Confirm |
-| `onAction`    | 点击操作按钮回调 |                |
-| `onClose`     | 点击关闭按钮回调 |                |
+| 选项           | 说明                                                | 默认值     |
+| -------------- | --------------------------------------------------- | ---------- |
+| `loading`      | 响应式加载状态；为 `true` 时显示 loading 图标和文案 | `false`    |
+| `duration`     | 消息停留时间，单位毫秒                              | `3000`     |
+| `theme`        | 消息主题                                            | `info`     |
+| `text`         | 文案配置                                            |            |
+| `text.loading` | 加载中文案                                          | Loading... |
+| `onClose`      | 点击 Toast 常规关闭时触发，随后关闭 Toast           |            |
+| `onCancel`     | 点击关闭且当前 `loading` 仍为 `true` 时触发         |            |
+
+当 `duration > 0` 时，普通 Toast 只会在 `loading` 为 `false` 时启动自动关闭计时。初始 `loading` 为 `true` 的 Toast 会保持显示，直到业务把响应式状态改为 `false` 后再按 `duration` 计时关闭。
+
+```js
+const [loading, setLoading] = createSignal(true);
+
+Toast.info('保存完成', {
+  duration: 3000,
+  loading,
+  text: { loading: '保存中...' },
+  onCancel: () => controller.abort(),
+});
+
+submit().finally(() => setLoading(false));
+```
+
+Toast.confirm 方法的 `props` 有以下可选项：
+
+| 选项           | 说明             | 默认值         |
+| -------------- | ---------------- | -------------- |
+| `theme`        | 操作型消息主题   | `info`         |
+| `text`         | 操作按钮文本     |                |
+| `text.close`   | 关闭按钮文本     | 关闭 / Close   |
+| `text.confirm` | 确认按钮文本     | 确认 / Confirm |
+| `onConfirm`    | 点击确认按钮回调 |                |
+| `onClose`      | 点击关闭按钮回调 |                |
 
 ## className
 
-`Toast.configure({ className })` 可覆盖全局默认类名；`show()`、快捷方法、`lite()`、`action()` 的最后一个参数也支持单次覆盖。
+`Toast.configure({ className })` 可覆盖全局默认类名；`show()`、快捷方法和 `confirm()` 通过选项中的 `className` 单次覆盖。`lite()` 面向最简洁场景，第三个参数直接传入 className 配置。
 
-| 字段        | 默认值              | 说明           |
-| ----------- | ------------------- | -------------- |
-| `container` | `j-toast-container` | 容器           |
-| `toast`     | `j-toast`           | 普通 Toast     |
-| `icon`      | `el-icon`           | 图标           |
-| `message`   | `el-text`           | 文案           |
-| `lite`      | `j-toast-lite`      | 轻提示         |
-| `action`    | `j-toast is-action` | 操作型 Toast   |
-| `actions`   | `toast-actions`     | 操作按钮区域   |
-| `button`    | `j-button is-sm`    | 操作按钮基础类 |
-| `closeBtn`  | `is-ghost`          | 关闭按钮类     |
-| `actionBtn` | `is-outline`        | 确认按钮类     |
-| `info`      | `is-info`           | 信息类型类     |
-| `success`   | `is-success`        | 成功类型类     |
-| `warning`   | `is-warning`        | 警告类型类     |
-| `error`     | `is-error`          | 错误类型类     |
-| `primary`   | `is-primary`        | 主色类型类     |
+| 字段         | 默认值               | 说明           |
+| ------------ | -------------------- | -------------- |
+| `container`  | `j-toast-container`  | 容器           |
+| `toast`      | `j-toast`            | 普通 Toast     |
+| `icon`       | `el-icon`            | 图标           |
+| `message`    | `el-text`            | 文案           |
+| `lite`       | `j-toast-lite`       | 轻提示         |
+| `confirm`    | `j-toast is-confirm` | 确认型 Toast   |
+| `buttons`    | `toast-buttons`      | 按钮区域       |
+| `button`     | `j-button is-sm`     | 操作按钮基础类 |
+| `closeBtn`   | `is-ghost`           | 关闭按钮类     |
+| `confirmBtn` | `is-outline`         | 确认按钮类     |
+| `info`       | `is-info`            | 信息类型类     |
+| `success`    | `is-success`         | 成功类型类     |
+| `warning`    | `is-warning`         | 警告类型类     |
+| `error`      | `is-error`           | 错误类型类     |
+| `primary`    | `is-primary`         | 主色类型类     |
 
-组件内部定位使用 `data-toast-container`、`data-toast-lite`、`data-toast-message`、`data-action` 等稳定属性，不依赖默认 CSS 类。
+组件内部定位使用 `data-toast-container`、`data-toast-lite`、`data-toast-message`、`data-toast-button` 等稳定属性，不依赖默认 CSS 类。

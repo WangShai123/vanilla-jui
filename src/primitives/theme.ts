@@ -289,7 +289,6 @@ export function createTheme(options: ThemeOptions = {}): ThemeInstance {
           children: groups.map((group) =>
             jsx('div', {
               className: className.item,
-              'data-palette': group.type,
               'data-theme-group': group.type,
               children: [
                 jsx('div', {
@@ -308,7 +307,7 @@ export function createTheme(options: ThemeOptions = {}): ThemeInstance {
                         className.button,
                         isActive && className.active
                       ),
-                      'data-palette': value,
+                      'data-action': 'customTheme',
                       'data-theme-button': group.type,
                       'data-theme-value': value,
                       'aria-selected': isActive ? 'true' : null,

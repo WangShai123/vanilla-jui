@@ -37,6 +37,7 @@
   .j-toast .el-icon {
     margin-right: var(--s2);
     width: var(--toast-icon-size);
+    position: relative;
     color: inherit;
   }
 
@@ -58,9 +59,17 @@
     transform: translate(-50%, -50%);
   }
 
-  .j-toast.is-action {
+  .j-toast.is-confirm {
     flex-direction: column;
     align-items: flex-start;
     cursor: default;
+  }
+
+  .j-toast.is-confirm .toast-buttons {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space);
+    position: relative;
   }
 }

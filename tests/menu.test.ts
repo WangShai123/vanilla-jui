@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 
 import { afterEach, beforeEach, describe, expect, it } from 'vite-plus/test';
+import { createDeepStore } from 'vanilla-signal';
 
 import { createMenu, type MenuItem } from '../src/components/menu.ts';
 
@@ -167,6 +168,135 @@ describe('Menu', () => {
     await tick();
 
     expect(menu.element?.querySelectorAll('[data-menu-item]')).toHaveLength(0);
+  });
+
+  it('filters menu items by user login state', () => {
+    const authData: MenuItem[] = [
+      { id: 'public', title: 'Public', url: '#public' },
+      { id: 'account', title: 'Account', type: 1, url: '#account' },
+      { id: 'login', title: 'Login', type: 2, url: '#login' },
+      {
+        id: 'parent',
+        title: 'Parent',
+        children: [
+          { id: 'profile', title: 'Profile', type: 1, url: '#profile' },
+          { id: 'register', title: 'Register', type: 2, url: '#register' },
+        ],
+      },
+    ];
+
+    menu = mount(createMenu({ data: authData }));
+
+    expect(
+      menu.element?.querySelector('[data-menu-item="public"]')
+    ).toBeTruthy();
+    expect(
+      menu.element?.querySelector('[data-menu-item="login"]')
+    ).toBeTruthy();
+    expect(
+      menu.element?.querySelector('[data-menu-item="register"]')
+    ).toBeTruthy();
+    expect(
+      menu.element?.querySelector('[data-menu-item="account"]')
+    ).toBeNull();
+    expect(
+      menu.element?.querySelector('[data-menu-item="profile"]')
+    ).toBeNull();
+    expect(menu.state.data[0]?.type).toBe(0);
+
+    menu.destroy();
+    menu = mount(createMenu({ user: 12, data: authData }));
+
+    expect(
+      menu.element?.querySelector('[data-menu-item="public"]')
+    ).toBeTruthy();
+    expect(
+      menu.element?.querySelector('[data-menu-item="account"]')
+    ).toBeTruthy();
+    expect(
+      menu.element?.querySelector('[data-menu-item="profile"]')
+    ).toBeTruthy();
+    expect(menu.element?.querySelector('[data-menu-item="login"]')).toBeNull();
+    expect(
+      menu.element?.querySelector('[data-menu-item="register"]')
+    ).toBeNull();
+  });
+
+  it('uses visible children when deciding submenu rendering', () => {
+    menu = mount(
+      createMenu({
+        user: 7,
+        data: [
+          {
+            id: 'guest-parent',
+            title: 'Guest Parent',
+            children: [{ id: 'login', title: 'Login', type: 2 }],
+          },
+        ],
+      })
+    );
+
+    const parent = menu.element?.querySelector<HTMLElement>(
+      '[data-menu-item="guest-parent"]'
+    );
+
+    expect(parent?.hasAttribute('data-menu-has-children')).toBe(false);
+    expect(parent?.querySelector('[data-menu-list="sub"]')).toBeNull();
+    expect(parent?.querySelector(':scope > span')).toBeTruthy();
+  });
+
+  it('reacts to external store accessors for user and data', async () => {
+    const business = createDeepStore({
+      userId: 0,
+      menuData: [
+        { id: 'home', title: 'Home', url: '#home' },
+        { id: 'account', title: 'Account', type: 1, url: '#account' },
+        { id: 'login', title: 'Login', type: 2, url: '#login' },
+      ] as MenuItem[],
+    });
+
+    menu = mount(
+      createMenu({
+        user: () => business.userId,
+        data: () => business.menuData,
+      })
+    );
+
+    expect(menu.state.user).toBe(0);
+    expect(
+      menu.element?.querySelector('[data-menu-item="login"]')
+    ).toBeTruthy();
+    expect(
+      menu.element?.querySelector('[data-menu-item="account"]')
+    ).toBeNull();
+
+    business.userId = 9;
+    await tick();
+
+    expect(menu.state.user).toBe(9);
+    expect(
+      menu.element?.querySelector('[data-menu-item="account"]')
+    ).toBeTruthy();
+    expect(menu.element?.querySelector('[data-menu-item="login"]')).toBeNull();
+
+    business.menuData.push({
+      id: 'settings',
+      title: 'Settings',
+      type: 1,
+      url: '#settings',
+    });
+    await tick();
+
+    expect(
+      menu.element?.querySelector('[data-menu-item="settings"]')
+    ).toBeTruthy();
+
+    business.menuData[3].type = 2;
+    await tick();
+
+    expect(
+      menu.element?.querySelector('[data-menu-item="settings"]')
+    ).toBeNull();
   });
 
   it('keeps type fixed from props and uses configured mobile back text', () => {

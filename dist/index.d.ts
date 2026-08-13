@@ -1,4 +1,4 @@
-import { Renderable } from "vanilla-signal";
+import { MaybeAccessor, Renderable } from "vanilla-signal";
 //#region src/utilities/browser.d.ts
 declare global {
   interface Navigator {
@@ -566,18 +566,18 @@ interface TooltipProps extends Record<string, unknown> {
 declare function createTooltip(element: DOMReference, input?: TooltipProps): TooltipInstance;
 //#endregion
 //#region src/primitives/toast.d.ts
-type ToastType = 'info' | 'success' | 'warning' | 'error' | 'primary';
+type ToastTheme = 'info' | 'success' | 'warning' | 'error' | 'primary';
 interface ToastClassNames {
   container: string;
   toast: string;
   icon: string;
   message: string;
   lite: string;
-  action: string;
-  actions: string;
+  confirm: string;
+  buttons: string;
   button: string;
   closeBtn: string;
-  actionBtn: string;
+  confirmBtn: string;
   info: string;
   success: string;
   warning: string;
@@ -585,36 +585,47 @@ interface ToastClassNames {
   primary: string;
 }
 type ToastClassNameConfig = Partial<ToastClassNames>;
-interface ToastOptions {
+interface ToastClassNameOptions {
   className?: ToastClassNameConfig;
 }
-interface ToastActionProps extends ToastOptions {
-  type?: ToastType;
+interface ToastThemeOptions extends ToastClassNameOptions {
+  theme?: ToastTheme;
+}
+interface ToastOptions extends ToastThemeOptions {
+  duration?: number;
+  loading?: MaybeAccessor<boolean>;
+  text?: {
+    loading?: string;
+  };
+  onClose?: () => void | Promise<void>;
+  onCancel?: () => void | Promise<void>;
+}
+interface ToastConfirmProps extends ToastThemeOptions {
   text?: {
     close?: string;
-    action?: string;
+    confirm?: string;
   };
-  onAction?: () => void | Promise<void>;
+  onConfirm?: () => void | Promise<void>;
   onClose?: () => void | Promise<void>;
 }
 declare function hide(toast: HTMLElement | null | undefined): void;
-declare function show(message?: string, duration?: number, type?: ToastType, options?: ToastOptions): HTMLElement;
-declare function lite(message?: string, duration?: number, options?: ToastOptions): HTMLElement;
-declare function action(message?: string, props?: ToastActionProps): HTMLElement;
+declare function show(message?: string, options?: ToastOptions): HTMLElement;
+declare function lite(message?: string, duration?: number, className?: ToastClassNameConfig): HTMLElement;
+declare function confirm(message?: string, props?: ToastConfirmProps): HTMLElement;
 declare function clearAll(): void;
 declare const Toast: {
   timers: Set<string>;
   disposers: Map<HTMLElement, () => void>;
-  configure(options?: ToastOptions): ToastOptions;
+  configure(options?: ToastClassNameOptions): ToastClassNameOptions;
   show: typeof show;
-  success: (message?: string, duration?: number, options?: ToastOptions) => HTMLElement;
-  info: (message?: string, duration?: number, options?: ToastOptions) => HTMLElement;
-  primary: (message?: string, duration?: number, options?: ToastOptions) => HTMLElement;
-  warning: (message?: string, duration?: number, options?: ToastOptions) => HTMLElement;
-  error: (message?: string, duration?: number, options?: ToastOptions) => HTMLElement;
+  success: (message?: string, options?: ToastOptions) => HTMLElement;
+  info: (message?: string, options?: ToastOptions) => HTMLElement;
+  primary: (message?: string, options?: ToastOptions) => HTMLElement;
+  warning: (message?: string, options?: ToastOptions) => HTMLElement;
+  error: (message?: string, options?: ToastOptions) => HTMLElement;
   hide: typeof hide;
   lite: typeof lite;
-  action: typeof action;
+  confirm: typeof confirm;
   clearAll: typeof clearAll;
   destroyAll: typeof clearAll;
 };
@@ -1710,6 +1721,7 @@ declare function createPagination(input?: PaginationProps): Pagination;
 //#region src/components/menu.d.ts
 type MenuType = string | undefined;
 type MenuItemId = string | number;
+type MenuItemRenderType = 0 | 1 | 2;
 interface MenuClassNames {
   root: string;
   list: string;
@@ -1726,6 +1738,7 @@ type MenuClassNameConfig = Partial<MenuClassNames>;
 interface MenuItem extends Record<string, unknown> {
   id?: MenuItemId;
   title: string | number;
+  type?: MenuItemRenderType;
   url?: string;
   target?: string;
   classes?: string | string[];
@@ -1734,22 +1747,25 @@ interface MenuItem extends Record<string, unknown> {
 interface MenuProps extends Record<string, unknown> {
   type?: MenuType;
   id?: string | null;
-  data?: MenuItem[];
+  user?: MaybeAccessor<number>;
+  data?: MaybeAccessor<MenuItem[]>;
   backText?: string;
   className?: MenuClassNameConfig;
 }
 interface ResolvedMenuProps extends Record<string, unknown> {
   type?: MenuType;
   id: string;
-  data: MenuItem[];
+  user: MaybeAccessor<number>;
+  data: MaybeAccessor<MenuItem[]>;
   backText: string;
   className: MenuClassNames;
 }
 interface MenuState extends Record<string, unknown> {
+  user: number;
   data: MenuItem[];
   activeKeys: string[];
 }
 type Menu = FunctionalComponent<ResolvedMenuProps, MenuState, HTMLElement>;
 declare function createMenu(input?: MenuProps): Menu;
 //#endregion
-export { ButtonsPosition, CleanupFunction, CollapseMotionController, CollapseTransitionDefinition, ComponentCleanup, ComponentContext, ComponentController, ComponentDefinition, ComponentLifecycleEvent, ComponentListener, ComponentPlugin, ComponentPluginOptions, ComponentProps, ComponentRuntime, ComponentState, ContainerExpect, DOMReference, DropInstance, ElementRef, FieldOption, Flow, FlowAction, FlowBusyHook, FlowBusyStrategy, FlowChangeHook, FlowClassNameConfig, FlowClassNames, FlowCleanup, FlowContext, FlowData, FlowDirection, FlowErrorHook, FlowFinishHook, FlowGoToOptions, FlowGuardHook, FlowLifecycleHook, FlowMoveHook, FlowPayload, FlowProps, FlowRenderContext, FlowSlot, FlowSlotName, FlowSnapshot, FlowState, FlowStep, FlowStepResult, FlowSubscriber, FlowTarget, FlowText, Form, FormButton, FormClassNameConfig, FormClassNames, FormDataRecord, FormDataValue, FormField, FormItem, FormItemNext, FormItemType, FormOption, FormProps, FormValidatorConfig, FunctionalComponent, IEventManager, IconAttributeValue, IconName, IconPathMap, IconProps, KeyedElementRefs, LazyRenderCallback, LazyRenderOptions, LazyRenderTarget, Menu, MenuClassNameConfig, MenuClassNames, MenuItem, MenuItemId, MenuProps, MenuType, Modal, ModalClassNameConfig, ModalClassNames, ModalProps, ModalText, MotionController, NormalizeContext, Offcanvas, OffcanvasAnimate, OffcanvasClassNameConfig, OffcanvasClassNames, OffcanvasContent, OffcanvasDirection, OffcanvasProps, OwnedView, OwnedViewOptions, Pagination, PaginationClassNameConfig, PaginationClassNames, PaginationCount, PaginationPage, PaginationProps, ParabolaInstance, ParamRule, ParamRuleInput, PopupProps, PresenceController, PresenceOptions, PresencePhase, PublicFlowStep, QueryContext, RenderableContent, RequireContainerResult, ResolveContainerResult, ResolveSchema, ResolvedProps, StateSyncOptions, SupportES2022, Swiper, SwiperClassNameConfig, SwiperClassNames, SwiperDataItem, SwiperDataLoader, SwiperDataSource, SwiperProps, SwiperSlideContext, TabContent, TabItem, Tabs, TabsClassNameConfig, TabsClassNames, TabsDirection, TabsDisabled, TabsPanelContext, TabsProps, TabsValue, ThemeClassNameConfig, ThemeClassNames, ThemeConfigKey, ThemeInstance, ThemeOptions, ThemePanelGroup, ThemeResolvedOptions, Toast, ToastActionProps, ToastClassNameConfig, ToastClassNames, ToastOptions, ToastType, TocCurrent, TocItem, TooltipInstance, TransitionDefinition, TransitionTarget, ValidateCondition, ValidatorInstance, addIcons, all, asRenderable, checkModernBrowser, copy, createAccordion, createCollapseTransition, createDrop, createElementRef, createEventManager, createFlow, createForm, createKeyedElementRefs, createLoading, createMenu, createModal, createMotionGroup, createOffcanvas, createOwnedView, createPagination, createParabola, createPopup, createPresence, createScheduledTask, createStateSync, createSticky, createSwiper, createTabs, createTheme, createToc, createTooltip, createTransition, createValidator, defineComponent, flexPosition, getRegistedIconPath, getStoreVersion, getType, icon, iconHtml, iconMarkup, isDomElementValue, isDomNodeValue, isElement, isHtmlElementValue, isMobile, isModernBrowser, isNilValue, isNode, isPlainObject, isRenderableContent, isRenderablePrimitive, isRenderableValue, lazyRender, listen, postJson, q, randomId, removeComponentPlugin, requireContainer, resolveContainer, resolveElement, resolveNode, resolveNodeList, resolveProps, restUrl, stateSnapshot, timer, trackStoreVersion, useComponentPlugin, uuid, validateParam, waitForMotion };
+export { ButtonsPosition, CleanupFunction, CollapseMotionController, CollapseTransitionDefinition, ComponentCleanup, ComponentContext, ComponentController, ComponentDefinition, ComponentLifecycleEvent, ComponentListener, ComponentPlugin, ComponentPluginOptions, ComponentProps, ComponentRuntime, ComponentState, ContainerExpect, DOMReference, DropInstance, ElementRef, FieldOption, Flow, FlowAction, FlowBusyHook, FlowBusyStrategy, FlowChangeHook, FlowClassNameConfig, FlowClassNames, FlowCleanup, FlowContext, FlowData, FlowDirection, FlowErrorHook, FlowFinishHook, FlowGoToOptions, FlowGuardHook, FlowLifecycleHook, FlowMoveHook, FlowPayload, FlowProps, FlowRenderContext, FlowSlot, FlowSlotName, FlowSnapshot, FlowState, FlowStep, FlowStepResult, FlowSubscriber, FlowTarget, FlowText, Form, FormButton, FormClassNameConfig, FormClassNames, FormDataRecord, FormDataValue, FormField, FormItem, FormItemNext, FormItemType, FormOption, FormProps, FormValidatorConfig, FunctionalComponent, IEventManager, IconAttributeValue, IconName, IconPathMap, IconProps, KeyedElementRefs, LazyRenderCallback, LazyRenderOptions, LazyRenderTarget, Menu, MenuClassNameConfig, MenuClassNames, MenuItem, MenuItemId, MenuItemRenderType, MenuProps, MenuType, Modal, ModalClassNameConfig, ModalClassNames, ModalProps, ModalText, MotionController, NormalizeContext, Offcanvas, OffcanvasAnimate, OffcanvasClassNameConfig, OffcanvasClassNames, OffcanvasContent, OffcanvasDirection, OffcanvasProps, OwnedView, OwnedViewOptions, Pagination, PaginationClassNameConfig, PaginationClassNames, PaginationCount, PaginationPage, PaginationProps, ParabolaInstance, ParamRule, ParamRuleInput, PopupProps, PresenceController, PresenceOptions, PresencePhase, PublicFlowStep, QueryContext, RenderableContent, RequireContainerResult, ResolveContainerResult, ResolveSchema, ResolvedProps, StateSyncOptions, SupportES2022, Swiper, SwiperClassNameConfig, SwiperClassNames, SwiperDataItem, SwiperDataLoader, SwiperDataSource, SwiperProps, SwiperSlideContext, TabContent, TabItem, Tabs, TabsClassNameConfig, TabsClassNames, TabsDirection, TabsDisabled, TabsPanelContext, TabsProps, TabsValue, ThemeClassNameConfig, ThemeClassNames, ThemeConfigKey, ThemeInstance, ThemeOptions, ThemePanelGroup, ThemeResolvedOptions, Toast, ToastClassNameConfig, ToastClassNameOptions, ToastClassNames, ToastConfirmProps, ToastOptions, ToastTheme, ToastThemeOptions, TocCurrent, TocItem, TooltipInstance, TransitionDefinition, TransitionTarget, ValidateCondition, ValidatorInstance, addIcons, all, asRenderable, checkModernBrowser, copy, createAccordion, createCollapseTransition, createDrop, createElementRef, createEventManager, createFlow, createForm, createKeyedElementRefs, createLoading, createMenu, createModal, createMotionGroup, createOffcanvas, createOwnedView, createPagination, createParabola, createPopup, createPresence, createScheduledTask, createStateSync, createSticky, createSwiper, createTabs, createTheme, createToc, createTooltip, createTransition, createValidator, defineComponent, flexPosition, getRegistedIconPath, getStoreVersion, getType, icon, iconHtml, iconMarkup, isDomElementValue, isDomNodeValue, isElement, isHtmlElementValue, isMobile, isModernBrowser, isNilValue, isNode, isPlainObject, isRenderableContent, isRenderablePrimitive, isRenderableValue, lazyRender, listen, postJson, q, randomId, removeComponentPlugin, requireContainer, resolveContainer, resolveElement, resolveNode, resolveNodeList, resolveProps, restUrl, stateSnapshot, timer, trackStoreVersion, useComponentPlugin, uuid, validateParam, waitForMotion };

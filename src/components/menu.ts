@@ -1,4 +1,13 @@
-import { For, createDeepStore, flushSync, jsx } from 'vanilla-signal';
+import {
+  For,
+  type MaybeAccessor,
+  access,
+  createDeepStore,
+  createEffect,
+  createMemo,
+  flushSync,
+  jsx,
+} from 'vanilla-signal';
 import { t } from 'vanilla-signal-i18n';
 
 import {
@@ -18,6 +27,7 @@ import {
 
 export type MenuType = string | undefined;
 export type MenuItemId = string | number;
+export type MenuItemRenderType = 0 | 1 | 2;
 
 export interface MenuClassNames {
   root: string;
@@ -37,6 +47,7 @@ export type MenuClassNameConfig = Partial<MenuClassNames>;
 export interface MenuItem extends Record<string, unknown> {
   id?: MenuItemId;
   title: string | number;
+  type?: MenuItemRenderType;
   url?: string;
   target?: string;
   classes?: string | string[];
@@ -46,7 +57,8 @@ export interface MenuItem extends Record<string, unknown> {
 export interface MenuProps extends Record<string, unknown> {
   type?: MenuType;
   id?: string | null;
-  data?: MenuItem[];
+  user?: MaybeAccessor<number>;
+  data?: MaybeAccessor<MenuItem[]>;
   backText?: string;
   className?: MenuClassNameConfig;
 }
@@ -54,12 +66,14 @@ export interface MenuProps extends Record<string, unknown> {
 interface ResolvedMenuProps extends Record<string, unknown> {
   type?: MenuType;
   id: string;
-  data: MenuItem[];
+  user: MaybeAccessor<number>;
+  data: MaybeAccessor<MenuItem[]>;
   backText: string;
   className: MenuClassNames;
 }
 
 interface MenuState extends Record<string, unknown> {
+  user: number;
   data: MenuItem[];
   activeKeys: string[];
 }
@@ -80,7 +94,7 @@ const DEFAULT_CLASS_NAMES: MenuClassNames = {
 const MENU_ITEM_RULE = {
   type: 'object',
   validate: isMenuItem,
-  message: 'expects { title, id?, url?, target?, classes?, children? }.',
+  message: 'expects { title, id?, type?, url?, target?, classes?, children? }.',
 };
 
 const MENU_DATA_RULE = {
@@ -90,6 +104,7 @@ const MENU_DATA_RULE = {
 
 const MENU_PROPS_SCHEMA = {
   type: { default: undefined, types: ['string', 'undefined'] },
+  user: { default: 0, types: ['number', 'function'] },
   id: {
     default: null,
     types: ['string', 'null'],
@@ -104,9 +119,7 @@ const MENU_PROPS_SCHEMA = {
   },
   data: {
     default: [],
-    type: 'array',
-    normalize: cloneMenuData,
-    items: MENU_ITEM_RULE,
+    types: ['array', 'function'],
   },
   backText: { default: t('b', locales), type: 'string' },
   className: {
@@ -120,6 +133,7 @@ const MENU_PROPS_SCHEMA = {
 } satisfies ResolveSchema<MenuProps>;
 
 const MENU_STATE_SCHEMA = {
+  user: { type: 'number' },
   data: MENU_DATA_RULE,
   activeKeys: { type: 'array', items: 'string' },
 };
@@ -133,7 +147,8 @@ function normalizeProps(input: MenuProps = {}): ResolvedMenuProps {
 
   return {
     ...props,
-    data: cloneMenuData(props.data),
+    user: props.user,
+    data: props.data,
     className: { ...props.className },
   };
 }
@@ -165,6 +180,10 @@ function isMenuItem(value: unknown): value is MenuItem {
     (item.id == null ||
       typeof item.id === 'string' ||
       typeof item.id === 'number') &&
+    (item.type == null ||
+      item.type === 0 ||
+      item.type === 1 ||
+      item.type === 2) &&
     (item.url == null || typeof item.url === 'string') &&
     (item.target == null || typeof item.target === 'string') &&
     (item.classes == null ||
@@ -181,6 +200,7 @@ function cloneMenuData(data: unknown): MenuItem[] {
   return data.map((item) => {
     validateParam('item', item, MENU_ITEM_RULE, 'Menu.data');
     const nextItem = { ...(item as MenuItem) };
+    nextItem.type = nextItem.type ?? 0;
     if (Array.isArray(nextItem.classes)) {
       nextItem.classes = nextItem.classes.slice();
     }
@@ -189,6 +209,20 @@ function cloneMenuData(data: unknown): MenuItem[] {
     }
     return nextItem;
   });
+}
+
+function resolveMenuUser(user: MaybeAccessor<number> | undefined): number {
+  const value = access(user ?? 0);
+  validateParam('user', value, 'number', 'Menu.props');
+  return value;
+}
+
+function resolveMenuData(
+  data: MaybeAccessor<MenuItem[]> | undefined
+): MenuItem[] {
+  const value = access(data ?? []);
+  validateParam('data', value, MENU_DATA_RULE, 'Menu.props');
+  return cloneMenuData(value);
 }
 
 export type Menu = FunctionalComponent<
@@ -200,7 +234,8 @@ export type Menu = FunctionalComponent<
 export function createMenu(input: MenuProps = {}): Menu {
   const props = normalizeProps(input);
   const state = createDeepStore({
-    data: cloneMenuData(props.data),
+    user: resolveMenuUser(props.user),
+    data: resolveMenuData(props.data),
     activeKeys: [],
   }) as MenuState;
   const generatedKeys = new WeakMap<object, string>();
@@ -213,6 +248,16 @@ export function createMenu(input: MenuProps = {}): Menu {
     return generatedKeys.get(item) as string;
   };
   const isActive = (key: string): boolean => state.activeKeys.includes(key);
+  const isLoggedIn = (): boolean => state.user > 0;
+  const shouldRenderItem = (item: MenuItem): boolean => {
+    if (item.type === 1) return isLoggedIn();
+    if (item.type === 2) return !isLoggedIn();
+    return true;
+  };
+  const visibleItems = (items: readonly MenuItem[] | undefined): MenuItem[] => {
+    if (!Array.isArray(items)) return [];
+    return items.filter(shouldRenderItem);
+  };
   const open = (key: string): void => {
     flushSync(() => {
       state.activeKeys =
@@ -282,12 +327,16 @@ export function createMenu(input: MenuProps = {}): Menu {
           key: (item: MenuItem) => itemKey(item),
           children: (itemAccessor: () => MenuItem) => {
             const key = itemKey(itemAccessor());
+            const childrenAccessor = createMemo(() =>
+              visibleItems(itemAccessor().children)
+            );
+            const hasChildren = (): boolean => childrenAccessor().length > 0;
             return jsx('li', {
               className: () => {
                 const item = itemAccessor();
                 return joinClasses(
                   props.className.item,
-                  item.children?.length ? props.className.hasChildren : '',
+                  hasChildren() ? props.className.hasChildren : '',
                   ...normalizeItemClasses(item.classes),
                   isActive(key) ? props.className.active : ''
                 );
@@ -298,13 +347,12 @@ export function createMenu(input: MenuProps = {}): Menu {
                   : itemId(itemAccessor().id),
               'data-menu-item': () =>
                 itemAccessor().id == null ? '' : String(itemAccessor().id),
-              'data-menu-has-children': () =>
-                itemAccessor().children?.length ? '' : null,
+              'data-menu-has-children': () => (hasChildren() ? '' : null),
               onClick: (event: Event) => {
                 if (
                   props.type === 'mobile' &&
                   event.target === event.currentTarget &&
-                  itemAccessor().children?.length
+                  hasChildren()
                 ) {
                   open(key);
                 }
@@ -312,9 +360,9 @@ export function createMenu(input: MenuProps = {}): Menu {
               children: [
                 () => {
                   const item = itemAccessor();
-                  const hasChildren = !!item.children?.length;
+                  const itemHasChildren = hasChildren();
                   const url = itemUrl(item.url);
-                  if (!hasChildren && !url) {
+                  if (!itemHasChildren && !url) {
                     return jsx('span', {
                       className: props.className.link,
                       'data-menu-link': '',
@@ -327,7 +375,7 @@ export function createMenu(input: MenuProps = {}): Menu {
                     target: item.target,
                     'data-menu-link': '',
                     onClick: (event: Event) => {
-                      if (!hasChildren) return;
+                      if (!itemHasChildren) return;
                       if (props.type === 'mobile' || props.type === 'bottom') {
                         event.preventDefault();
                         if (props.type === 'bottom') toggle(key);
@@ -338,13 +386,8 @@ export function createMenu(input: MenuProps = {}): Menu {
                   });
                 },
                 () => {
-                  const children = itemAccessor().children;
-                  if (!children?.length) return null;
-                  return listView(
-                    () => itemAccessor().children || [],
-                    false,
-                    key
-                  );
+                  if (!hasChildren()) return null;
+                  return listView(childrenAccessor, false, key);
                 },
               ],
             });
@@ -359,6 +402,9 @@ export function createMenu(input: MenuProps = {}): Menu {
     state,
     normalizeStatePatch(patch) {
       const next = { ...patch };
+      if (Object.hasOwn(next, 'user')) {
+        next.user = resolveMenuUser(next.user as MaybeAccessor<number>);
+      }
       if (Object.hasOwn(next, 'data')) next.data = cloneMenuData(next.data);
       return next;
     },
@@ -377,12 +423,19 @@ export function createMenu(input: MenuProps = {}): Menu {
       }
     },
     view: () => {
-      validateParam('data', state.data, MENU_DATA_RULE, 'Menu');
+      const renderedData = createMemo(() => visibleItems(state.data));
+      createEffect(() => {
+        state.user = resolveMenuUser(props.user);
+        state.data = resolveMenuData(props.data);
+      });
+      createEffect(() =>
+        validateParam('data', state.data, MENU_DATA_RULE, 'Menu')
+      );
       return jsx('nav', {
         className: props.className.root,
         'data-menu': 'root',
         'data-menu-type': props.type,
-        children: listView(() => state.data, true),
+        children: listView(renderedData, true),
       }) as HTMLElement;
     },
     onBuild(context) {

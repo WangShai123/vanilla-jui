@@ -1,8 +1,16 @@
-import { insert, jsx } from 'vanilla-signal';
+import {
+  type MaybeAccessor,
+  access,
+  createEffect,
+  createRoot,
+  insert,
+  jsx,
+} from 'vanilla-signal';
 import { t } from 'vanilla-signal-i18n';
 
 import locales from '../locales/index.ts';
 import { icon } from '../primitives/icons.ts';
+import { createLoading } from '../primitives/loading.ts';
 import { joinClasses } from '../utilities/class-name.ts';
 import { q } from '../utilities/dom.ts';
 import { listen } from '../utilities/events.ts';
@@ -10,7 +18,9 @@ import { randomId } from '../utilities/id.ts';
 import { timer } from '../utilities/timer.ts';
 import { validateParam } from '../utilities/types.ts';
 
-export type ToastType = 'info' | 'success' | 'warning' | 'error' | 'primary';
+const s = (k: string) => t(k, locales);
+
+export type ToastTheme = 'info' | 'success' | 'warning' | 'error' | 'primary';
 
 export interface ToastClassNames {
   container: string;
@@ -18,11 +28,11 @@ export interface ToastClassNames {
   icon: string;
   message: string;
   lite: string;
-  action: string;
-  actions: string;
+  confirm: string;
+  buttons: string;
   button: string;
   closeBtn: string;
-  actionBtn: string;
+  confirmBtn: string;
   info: string;
   success: string;
   warning: string;
@@ -32,17 +42,30 @@ export interface ToastClassNames {
 
 export type ToastClassNameConfig = Partial<ToastClassNames>;
 
-export interface ToastOptions {
+export interface ToastClassNameOptions {
   className?: ToastClassNameConfig;
 }
 
-export interface ToastActionProps extends ToastOptions {
-  type?: ToastType;
+export interface ToastThemeOptions extends ToastClassNameOptions {
+  theme?: ToastTheme;
+}
+
+export interface ToastOptions extends ToastThemeOptions {
+  duration?: number;
+  loading?: MaybeAccessor<boolean>;
+  text?: {
+    loading?: string;
+  };
+  onClose?: () => void | Promise<void>;
+  onCancel?: () => void | Promise<void>;
+}
+
+export interface ToastConfirmProps extends ToastThemeOptions {
   text?: {
     close?: string;
-    action?: string;
+    confirm?: string;
   };
-  onAction?: () => void | Promise<void>;
+  onConfirm?: () => void | Promise<void>;
   onClose?: () => void | Promise<void>;
 }
 
@@ -52,11 +75,11 @@ const DEFAULT_CLASS_NAMES: ToastClassNames = {
   icon: 'el-icon',
   message: 'el-text',
   lite: 'j-toast-lite',
-  action: 'j-toast is-action',
-  actions: 'toast-actions',
+  confirm: 'j-toast is-confirm',
+  buttons: 'toast-buttons',
   button: 'j-button is-sm',
   closeBtn: 'is-ghost',
-  actionBtn: 'is-outline',
+  confirmBtn: 'is-outline',
   info: 'is-info',
   primary: 'is-primary',
   success: 'is-success',
@@ -64,7 +87,7 @@ const DEFAULT_CLASS_NAMES: ToastClassNames = {
   error: 'is-error',
 };
 
-const TOAST_TYPE_RULE = {
+const TOAST_THEME_RULE = {
   type: 'string',
   enum: ['info', 'success', 'warning', 'error', 'primary'],
 };
@@ -81,8 +104,85 @@ function mergeClassNames(value?: ToastClassNameConfig): ToastClassNames {
   return { ...DEFAULT_CLASS_NAMES, ...value };
 }
 
-function resolveClassNames(options?: ToastOptions): ToastClassNames {
+function resolveClassNames(options?: ToastClassNameOptions): ToastClassNames {
   return mergeClassNames({ ...classNames, ...options?.className });
+}
+
+function addToastDisposer(element: HTMLElement, dispose: () => void): void {
+  const current = disposers.get(element);
+  disposers.set(element, () => {
+    current?.();
+    dispose();
+  });
+}
+
+function isToastLoading(options: ToastOptions): boolean {
+  return !!access(options.loading ?? false);
+}
+
+function toastIconName(theme: ToastTheme): ToastTheme {
+  return theme === 'primary' ? 'info' : theme;
+}
+
+function toastIconStyle(options: ToastOptions): Record<string, string> {
+  return isToastLoading(options)
+    ? {
+        position: 'relative',
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: 'var(--toast-icon-size, 1em)',
+        height: 'var(--toast-icon-size, 1em)',
+        flex: '0 0 auto',
+      }
+    : {};
+}
+
+function toastIconContent(
+  theme: ToastTheme,
+  options: ToastOptions
+): HTMLElement | SVGElement {
+  if (isToastLoading(options)) return createLoading();
+  return icon(toastIconName(theme));
+}
+
+function toastMessage(message: string, options: ToastOptions): string {
+  return isToastLoading(options)
+    ? options.text?.loading || s('Loading...')
+    : message;
+}
+
+async function closeByUser(
+  toast: HTMLElement,
+  options: ToastOptions
+): Promise<void> {
+  if (isToastLoading(options)) await options.onCancel?.();
+  await options.onClose?.();
+  hide(toast);
+}
+
+function bindToastStatus(
+  element: HTMLElement,
+  iconElement: HTMLElement,
+  messageElement: HTMLElement,
+  message: string,
+  theme: ToastTheme,
+  options: ToastOptions,
+  duration = 0
+): void {
+  const id = element.dataset.toast || randomId();
+  const dispose = createRoot((dispose) => {
+    insert(iconElement, () => toastIconContent(theme, options));
+    insert(messageElement, () => toastMessage(message, options));
+    createEffect(() => {
+      cancelToastTimers(id);
+      if (duration > 0 && !isToastLoading(options)) {
+        setToastTimer(id, 'hide', () => hide(element), duration);
+      }
+    });
+    return dispose;
+  });
+  addToastDisposer(element, dispose);
 }
 
 function getOrCreateContainer(names: ToastClassNames): HTMLElement {
@@ -241,45 +341,48 @@ function hide(toast: HTMLElement | null | undefined): void {
   });
 }
 
-function show(
-  message = '',
-  duration = 3000,
-  type: ToastType = 'info',
-  options: ToastOptions = {}
-): HTMLElement {
+function show(message = '', options: ToastOptions = {}): HTMLElement {
   validateParam('message', message, 'string', 'Toast.show');
+  const duration = options.duration ?? 3000;
+  const theme = options.theme || 'info';
   validateParam('duration', duration, TOAST_DURATION_RULE, 'Toast.show');
-  validateParam('type', type, TOAST_TYPE_RULE, 'Toast.show');
+  validateParam('theme', theme, TOAST_THEME_RULE, 'Toast.show');
 
   const names = resolveClassNames(options);
   const id = randomId();
+  const iconElement = jsx('span', {
+    className: names.icon,
+    'data-toast-icon': id,
+    style: () => toastIconStyle(options),
+  }) as HTMLElement;
+  const messageElement = jsx('span', {
+    className: names.message,
+    'data-toast-message': id,
+  }) as HTMLElement;
   const toast = jsx('div', {
-    className: joinClasses(names.toast, names[type]),
+    className: joinClasses(names.toast, names[theme]),
     'data-toast': id,
     role: 'alert',
     'aria-atomic': 'true',
-    children: [
-      jsx('span', {
-        className: names.icon,
-        'data-toast-icon': id,
-        children: icon(type === 'primary' ? 'info' : type),
-      }),
-      jsx('span', {
-        className: names.message,
-        'data-toast-message': id,
-        children: message,
-      }),
-    ],
+    children: [iconElement, messageElement],
   }) as HTMLElement;
+  bindToastStatus(
+    toast,
+    iconElement,
+    messageElement,
+    message,
+    theme,
+    options,
+    duration
+  );
   mountToast(
     toast,
     () => insert(getOrCreateContainer(names), toast),
-    type === 'error' ? 'assertive' : 'polite'
+    theme === 'error' ? 'assertive' : 'polite'
   );
-  if (duration > 0) setToastTimer(id, 'hide', () => hide(toast), duration);
-  disposers.set(
+  addToastDisposer(
     toast,
-    listen(toast, 'click', () => hide(toast))
+    listen(toast, 'click', () => void closeByUser(toast, options))
   );
   return toast;
 }
@@ -287,12 +390,12 @@ function show(
 function lite(
   message = '',
   duration = 2000,
-  options: ToastOptions = {}
+  className?: ToastClassNameConfig
 ): HTMLElement {
   validateParam('message', message, 'string', 'Toast.lite');
   validateParam('duration', duration, LITE_DURATION_RULE, 'Toast.lite');
 
-  const names = resolveClassNames(options);
+  const names = mergeClassNames({ ...classNames, ...className });
   const previous = q<HTMLElement>('[data-toast-lite]');
   if (previous) {
     cancelToastTimers(previous.dataset.toast || '');
@@ -311,16 +414,18 @@ function lite(
   return element;
 }
 
-function action(message = '', props: ToastActionProps = {}): HTMLElement {
-  validateParam('message', message, 'string', 'Toast.action');
-  const closeText = props.text?.close || t('Close', locales);
-  const actionText = props.text?.action || t('Confirm', locales);
+function confirm(message = '', props: ToastConfirmProps = {}): HTMLElement {
+  validateParam('message', message, 'string', 'Toast.confirm');
+  const closeText = props.text?.close || s('Close');
+  const confirmText = props.text?.confirm || s('Confirm');
+  const theme = props.theme || 'info';
+  validateParam('theme', theme, TOAST_THEME_RULE, 'Toast.confirm');
   const names = resolveClassNames(props);
   const id = randomId();
   const element = jsx('div', {
-    className: joinClasses(names.action, names[props.type || 'info']),
+    className: joinClasses(names.confirm, names[theme]),
     'data-toast': id,
-    'data-toast-action': '',
+    'data-toast-confirm': '',
     children: [
       jsx('div', {
         className: names.message,
@@ -328,13 +433,13 @@ function action(message = '', props: ToastActionProps = {}): HTMLElement {
         children: message,
       }),
       jsx('div', {
-        className: names.actions,
-        'data-toast-actions': id,
+        className: names.buttons,
+        'data-toast-buttons': id,
         children: [
           jsx('button', {
             className: joinClasses(names.button, names.closeBtn),
             children: closeText,
-            'data-action': 'close',
+            'data-toast-button': 'close',
             'aria-label': closeText,
             onClick: async () => {
               await props.onClose?.();
@@ -342,12 +447,12 @@ function action(message = '', props: ToastActionProps = {}): HTMLElement {
             },
           }),
           jsx('button', {
-            className: joinClasses(names.button, names.actionBtn),
-            children: actionText,
-            'data-action': 'toast-action',
-            'aria-label': actionText,
+            className: joinClasses(names.button, names.confirmBtn),
+            children: confirmText,
+            'data-toast-button': 'confirm',
+            'aria-label': confirmText,
             onClick: async () => {
-              await props.onAction?.();
+              await props.onConfirm?.();
               hide(element);
             },
           }),
@@ -360,7 +465,7 @@ function action(message = '', props: ToastActionProps = {}): HTMLElement {
     () => insert(getOrCreateContainer(names), element),
     'polite',
     () => {
-      q<HTMLButtonElement>('[data-action="toast-action"]', element)?.focus();
+      q<HTMLButtonElement>('[data-toast-button="confirm"]', element)?.focus();
     }
   );
   return element;
@@ -381,24 +486,24 @@ function clearAll(): void {
 export const Toast = {
   timers,
   disposers,
-  configure(options: ToastOptions = {}): ToastOptions {
+  configure(options: ToastClassNameOptions = {}): ToastClassNameOptions {
     classNames = mergeClassNames(options.className);
     return { className: classNames };
   },
   show,
-  success: (message = '', duration = 3000, options: ToastOptions = {}) =>
-    show(message, duration, 'success', options),
-  info: (message = '', duration = 3000, options: ToastOptions = {}) =>
-    show(message, duration, 'info', options),
-  primary: (message = '', duration = 3000, options: ToastOptions = {}) =>
-    show(message, duration, 'primary', options),
-  warning: (message = '', duration = 3000, options: ToastOptions = {}) =>
-    show(message, duration, 'warning', options),
-  error: (message = '', duration = 3000, options: ToastOptions = {}) =>
-    show(message, duration, 'error', options),
+  success: (message = '', options: ToastOptions = {}) =>
+    show(message, { ...options, theme: 'success' }),
+  info: (message = '', options: ToastOptions = {}) =>
+    show(message, { ...options, theme: 'info' }),
+  primary: (message = '', options: ToastOptions = {}) =>
+    show(message, { ...options, theme: 'primary' }),
+  warning: (message = '', options: ToastOptions = {}) =>
+    show(message, { ...options, theme: 'warning' }),
+  error: (message = '', options: ToastOptions = {}) =>
+    show(message, { ...options, theme: 'error' }),
   hide,
   lite,
-  action,
+  confirm,
   clearAll,
   destroyAll: clearAll,
 };

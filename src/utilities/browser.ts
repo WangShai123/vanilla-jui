@@ -128,13 +128,13 @@ export function isModernBrowser(): SupportES2022 {
 }
 export function checkModernBrowser(): SupportES2022 {
   if (!isModernBrowser()) {
-    Toast.action(t('wn', locales), {
-      type: 'error',
-      onAction: () => {
+    Toast.confirm(t('wn', locales), {
+      theme: 'error',
+      onConfirm: () => {
         window.open('https://www.google.cn/chrome/fallback/', '_blank');
       },
       className: {
-        actionBtn: 'j-button is-sm is-danger',
+        confirmBtn: 'j-button is-sm is-danger',
       },
     });
     return false;

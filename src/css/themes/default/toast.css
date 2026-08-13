@@ -47,16 +47,9 @@
     --toast-border-color: var(--tone-border);
   }
 
-  .j-toast.is-action {
+  .j-toast.is-confirm {
     --toast-gap: calc(var(--space)*4);
     --toast-min-width: 280px;
-  }
-
-  .j-toast.is-action .toast-actions {
-    width: 100%;
-    display: flex;
-    justify-content: flex-end;
-    gap: var(--space);
   }
 
   .j-toast-lite {
