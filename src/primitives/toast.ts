@@ -156,9 +156,10 @@ async function closeByUser(
   toast: HTMLElement,
   options: ToastOptions
 ): Promise<void> {
-  if (isToastLoading(options)) await options.onCancel?.();
-  await options.onClose?.();
+  const shouldCancel = isToastLoading(options);
   hide(toast);
+  if (shouldCancel) await options.onCancel?.();
+  await options.onClose?.();
 }
 
 function bindToastStatus(

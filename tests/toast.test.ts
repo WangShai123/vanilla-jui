@@ -249,12 +249,23 @@ describe('Toast', () => {
     expect(toast.getAttribute('data-mount')).toBe('false');
   });
 
-  it('calls onCancel and onClose when a loading toast is clicked', async () => {
-    const onCancel = vi.fn<() => Promise<void>>(async () => {});
+  it('closes before onCancel when a loading toast is clicked', async () => {
+    const [loading, setLoading] = createSignal(true);
+    let mountDuringCancel: string | null | undefined;
+    let messageDuringCancel: string | null | undefined;
+    const onCancel = vi.fn<() => Promise<void>>(async () => {
+      setLoading(false);
+      await Promise.resolve();
+      mountDuringCancel = toast.getAttribute('data-mount');
+      messageDuringCancel = toast.querySelector(
+        '[data-toast-message]'
+      )?.textContent;
+    });
     const onClose = vi.fn<() => Promise<void>>(async () => {});
     const toast = Toast.info('Queued', {
       duration: 1000,
-      loading: true,
+      loading,
+      text: { loading: 'Cancelling...' },
       onCancel,
       onClose,
     });
@@ -265,6 +276,8 @@ describe('Toast', () => {
     expect(onCancel).toHaveBeenCalledTimes(1);
     expect(onClose).toHaveBeenCalledTimes(1);
     expect(toast.getAttribute('data-mount')).toBe('false');
+    expect(mountDuringCancel).toBe('false');
+    expect(messageDuringCancel).toBe('Cancelling...');
     expect(Toast.timers.size).toBe(0);
   });
 
