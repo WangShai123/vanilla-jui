@@ -1,6 +1,6 @@
 # Popup
 
-Popup 是一个轻量 DOM 工厂，源码位于 `src/components/popup.ts`。它只负责生成通用弹层布局节点，不维护实例状态、不绑定事件，也不提供 `show()` / `hide()`。
+Popup 是一个轻量 DOM 工厂，源码位于 `src/primitives/popup.ts`。它只负责生成通用弹层布局节点，不维护实例状态、不绑定事件，也不提供 `show()` / `hide()`。
 
 ## 导入
 

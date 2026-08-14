@@ -71,9 +71,9 @@ Tabs 创建扁平内容结构。标题直接渲染在 `.tab-item` 内，面板�
 | `cache`   | `boolean`                       | 否   | 函数型 content 是否缓存结果            |
 | `ttl`     | `number`                        | 否   | 缓存有效时间，单位毫秒；`0` 表示不过期 |
 
-`RenderableContent` 支持类型: `访问器`、`数组`、`DocumentFragment`、`Node`、`null`、`boolean` 和普通文本值
+`title` 使用普通可渲染内容，不接受函数型内容。`content` 可以使用普通可渲染内容，也可以使用函数；字符串始终按文本渲染，不解析 HTML。
 
-函数型 `content` 上下文：`tabs`, `item`, `index`, `name`
+函数型 `content` 上下文包含 `tabs`、`item`、`index` 和 `name`。
 
 ## className
 

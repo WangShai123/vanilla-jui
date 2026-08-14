@@ -44,17 +44,20 @@ interface ValidatorRule extends Record<string, unknown> {
 interface ValidatorProps extends Record<string, unknown> {
   rules?: Record<string, ValidatorRule>;
   messages?: ValidatorMessageMap;
+  vanilla?: boolean;
   onSubmit?: ((validator: ValidatorInstance) => void) | null;
 }
 
 interface ResolvedValidatorProps extends Record<string, unknown> {
   rules: Record<string, ValidatorRule>;
   messages: ValidatorMessageMap;
+  vanilla: boolean;
   onSubmit: ((validator: ValidatorInstance) => void) | null;
 }
 
 interface ValidatorRuntime {
   valid: boolean;
+  error: boolean;
   message: string;
   destroyed: boolean;
 }
@@ -75,6 +78,7 @@ export interface ValidatorInstance {
 const VALIDATOR_PROPS_SCHEMA = {
   rules: { default: {}, type: 'object' },
   messages: { default: {}, type: 'object' },
+  vanilla: { default: false, type: 'boolean' },
   onSubmit: { default: null, types: ['function', 'null'] },
 } satisfies ResolveSchema<ValidatorProps>;
 
@@ -83,6 +87,7 @@ function normalizeProps(input: ValidatorProps): ResolvedValidatorProps {
   return {
     rules: props.rules as Record<string, ValidatorRule>,
     messages: props.messages as ValidatorMessageMap,
+    vanilla: props.vanilla as boolean,
     onSubmit: props.onSubmit as ResolvedValidatorProps['onSubmit'],
   };
 }
@@ -111,6 +116,7 @@ function toValidatorElement(
 function createRuntime(): ValidatorRuntime {
   return {
     valid: true,
+    error: false,
     message: '',
     destroyed: false,
   };
@@ -118,7 +124,8 @@ function createRuntime(): ValidatorRuntime {
 
 function getControlContainer(element: ValidatorElement): HTMLElement | null {
   return (
-    element.closest<HTMLElement>('[data-form-control]') || element.parentElement
+    element.closest<HTMLElement>('[data-field-control]') ||
+    element.parentElement
   );
 }
 
@@ -218,18 +225,65 @@ function validateMultiple(
   return element.selectedOptions.length > 0;
 }
 
-function validateSelectMin(element: ValidatorElement, min: unknown): boolean {
-  if (!(element instanceof HTMLSelectElement) || typeof min !== 'number') {
-    return true;
+function checkboxGroup(
+  root: HTMLFormElement | null,
+  element: ValidatorElement
+): HTMLInputElement[] {
+  if (
+    !root ||
+    !(element instanceof HTMLInputElement) ||
+    element.type !== 'checkbox'
+  ) {
+    return [];
   }
-  return element.selectedOptions.length >= min;
+  const controls = Array.from(root.elements).filter(
+    (control): control is HTMLInputElement =>
+      control instanceof HTMLInputElement &&
+      control.type === 'checkbox' &&
+      control.name === element.name &&
+      !control.closest('[data-field-switch]')
+  );
+  const isGrouped =
+    controls.length > 1 ||
+    !!element.closest(
+      '[data-choice-type="checkbox"], [data-field-choice-group]'
+    );
+  return isGrouped ? controls : [];
 }
 
-function validateSelectMax(element: ValidatorElement, max: unknown): boolean {
-  if (!(element instanceof HTMLSelectElement) || typeof max !== 'number') {
-    return true;
+function checkedCount(
+  root: HTMLFormElement | null,
+  element: ValidatorElement
+): number | null {
+  const controls = checkboxGroup(root, element);
+  if (controls.length === 0) return null;
+  return controls.filter((control) => control.checked).length;
+}
+
+function validateChoiceMin(
+  root: HTMLFormElement | null,
+  element: ValidatorElement,
+  min: unknown
+): boolean {
+  if (typeof min !== 'number') return true;
+  if (element instanceof HTMLSelectElement) {
+    return element.selectedOptions.length >= min;
   }
-  return element.selectedOptions.length <= max;
+  const count = checkedCount(root, element);
+  return count === null ? true : count >= min;
+}
+
+function validateChoiceMax(
+  root: HTMLFormElement | null,
+  element: ValidatorElement,
+  max: unknown
+): boolean {
+  if (typeof max !== 'number') return true;
+  if (element instanceof HTMLSelectElement) {
+    return element.selectedOptions.length <= max;
+  }
+  const count = checkedCount(root, element);
+  return count === null ? true : count <= max;
 }
 
 function validateNoSpace(element: ValidatorElement, noSpace: unknown): boolean {
@@ -336,7 +390,6 @@ function showSuccess(element: ValidatorElement): void {
 
   if (!(element instanceof HTMLInputElement) || element.type !== 'checkbox') {
     element.classList.remove('is-invalid');
-    element.classList.add('is-valid');
   }
 }
 
@@ -353,9 +406,16 @@ export function createValidator(
 
   let root: HTMLFormElement | null = resolved;
   let options: ResolvedValidatorProps | null = normalizeProps(props);
+  const initialNoValidate = root.noValidate;
   const runtime = createRuntime();
   const events = createEventManager();
+  const errorNames = new Set<string>();
   let validator: ValidatorInstance;
+
+  const syncNativeValidation = (): void => {
+    if (!root) return;
+    root.noValidate = options?.vanilla === false ? true : false;
+  };
 
   const validateCustom = (
     control: ValidatorElement,
@@ -398,10 +458,10 @@ export function createValidator(
           runtime.valid = validateMultiple(control, value);
           break;
         case 'min':
-          runtime.valid = validateSelectMin(control, value);
+          runtime.valid = validateChoiceMin(root, control, value);
           break;
         case 'max':
-          runtime.valid = validateSelectMax(control, value);
+          runtime.valid = validateChoiceMax(root, control, value);
           break;
         case 'noSpace':
           runtime.valid = validateNoSpace(control, value);
@@ -435,17 +495,33 @@ export function createValidator(
         }
       }
       if (!runtime.valid) {
+        runtime.error = true;
+        errorNames.add(name);
         showError(options, runtime, control, name, rule, customMessage);
         break;
       }
       showSuccess(control);
     }
+    if (runtime.valid) errorNames.delete(name);
     return runtime.valid;
+  };
+  const validateControl = (control: ValidatorElement): boolean => {
+    if (!options || runtime.destroyed || !control.name) return true;
+    if (!options.rules[control.name]) return true;
+    const valid = validateRule(control, control.name);
+    if (valid && errorNames.size === 0) {
+      runtime.valid = true;
+      runtime.error = false;
+      runtime.message = '';
+    }
+    return valid;
   };
   const validate = (): boolean => {
     if (!root || !options || runtime.destroyed) return false;
     runtime.valid = true;
+    runtime.error = false;
     runtime.message = '';
+    errorNames.clear();
     for (const control of Array.from(root.elements)) {
       if (!isValidatorElement(control) || !control.name) continue;
       if (!options.rules[control.name]) continue;
@@ -454,6 +530,13 @@ export function createValidator(
     }
     if (runtime.valid) options.onSubmit?.(validator);
     return runtime.valid;
+  };
+  const handleFieldInput = (event: Event): void => {
+    if (!runtime.error) return;
+    const target = event.target;
+    if (!(target instanceof Element) || !isValidatorElement(target)) return;
+    if (!target.name || !errorNames.has(target.name)) return;
+    validateControl(target);
   };
   const reset = ({ native = true }: ResetOptions = {}): void => {
     if (!root) return;
@@ -467,17 +550,22 @@ export function createValidator(
       help.remove();
     }
     runtime.valid = true;
+    runtime.error = false;
     runtime.message = '';
+    errorNames.clear();
   };
   const destroy = (): void => {
     if (runtime.destroyed) return;
     runtime.destroyed = true;
     events.clear();
     reset({ native: false });
+    if (root) root.noValidate = initialNoValidate;
     root = null;
     options = null;
     runtime.valid = false;
+    runtime.error = false;
     runtime.message = '';
+    errorNames.clear();
   };
 
   validator = {
@@ -489,6 +577,7 @@ export function createValidator(
     },
     set props(value) {
       options = value;
+      syncNativeValidation();
     },
     runtime,
     validate,
@@ -503,5 +592,8 @@ export function createValidator(
     });
     events.on('reset', root, 'reset', () => reset({ native: false }));
   }
+  events.on('input', root, 'input', handleFieldInput);
+  events.on('change', root, 'change', handleFieldInput);
+  syncNativeValidation();
   return validator;
 }

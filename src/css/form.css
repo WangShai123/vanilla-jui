@@ -1,7 +1,7 @@
 @layer components {
   .j-form,
-  .j-form .form-item,
-  .j-form .form-item .item-label {
+  .j-form .form-field,
+  .j-form .form-field .field-legend {
     display: flex;
   }
 
@@ -15,52 +15,62 @@
     gap: var(--form-gap-horizontal, var(--s2));
   }
 
-  .j-form .form-item {
+  .j-form .form-field {
     gap: var(--form-label-gap, var(--space));
     margin: 0;
   }
 
-  .j-form.is-item-vertical .form-item {
+  .j-form fieldset.form-field {
+    border: 0;
+    padding: 0;
+    min-inline-size: 0;
+  }
+
+  .j-form.is-item-vertical .form-field {
     flex-direction: column;
   }
 
-  .j-form.is-item-horizontal .form-item {
+  .j-form.is-item-horizontal .form-field {
     flex-direction: row;
   }
 
-  .j-form .form-item .item-label {
+  .j-form .form-field .field-legend {
     color: var(--form-item-label-color, var(--ui-fg-muted));
     font-size: var(--form-item-label-size, var(--font-size-sm));
   }
 
-  .j-form .form-item .item-label,
-  .j-form .form-item .form-control {
+  .j-form .form-field > legend.field-legend {
+    padding: 0;
+  }
+
+  .j-form .form-field .field-legend,
+  .j-form .form-field .field-control {
     gap: var(--form-label-gap, var(--space));
   }
 
-  .j-form.is-horizontal .form-item .item-label {
+  .j-form.is-horizontal .form-field .field-legend {
     align-items: center;
     height: var(--horizontal-form-label-height, var(--el-height-md));
   }
 
-  label.is-required::after {
+  .j-form .field-legend.is-required::after {
     content: '*';
     color: var(--required-color, var(--state-danger));
   }
 
-  .j-form .form-item .form-control {
+  .j-form .form-field .field-control {
     display: flex;
     flex-direction: column;
     margin: 0;
   }
 
-  .j-form .form-item .form-control .help-block {
+  .j-form .form-field .field-control .help-block {
     font-size: var(--form-help-block-font-size, var(--font-size-sm));
     color: var(--form-help-block-color, var(--ui-fg-soft));
     margin: 0;
   }
 
-  .j-form .form-item .form-control .help-block.is-invalid {
+  .j-form .form-field .field-control .help-block.is-invalid {
     color: var(--state-danger);
   }
 
@@ -70,7 +80,7 @@
     margin-top: 1rem;
   }
 
-  .j-form [data-form-buttons] button {
+  .j-form [data-field-buttons] button {
     position: relative;
   }
 
@@ -178,31 +188,31 @@
   }
 
   /* input validate */
-  .j-input.is-valid,
-  .j-input.is-invalid,
+  /* .j-input.is-valid,
   .j-select.is-valid,
-  .j-select.is-invalid,
   .j-textarea.is-valid,
+  .j-input.is-invalid,
+  .j-select.is-invalid,
   .j-textarea.is-invalid {
     padding-right: calc(1.4285714286em + 0.875rem);
     background-repeat: no-repeat;
     background-position: right calc(0.3571428572em + 0.21875rem) center;
     background-size: calc(0.7142857143em + 0.4375rem)
       calc(0.7142857143em + 0.4375rem);
-  }
+  } */
 
-  .j-input.is-valid,
+  /* .j-input.is-valid,
   .j-select.is-valid,
   .j-textarea.is-valid {
     border-color: var(--form-valid-border-color, var(--state-success));
     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%232fb344' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='20 6 9 17 4 12'%3e%3c/polyline%3e%3c/svg%3e");
-  }
+  } */
 
   .j-input.is-invalid,
   .j-select.is-invalid,
   .j-textarea.is-invalid {
     border-color: var(--form-invalid-border-color, var(--state-danger));
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23d63939' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cline x1='18' y1='6' x2='6' y2='18'%3e%3c/line%3e%3cline x1='6' y1='6' x2='18' y2='18'%3e%3c/line%3e%3c/svg%3e");
+    /* background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23d63939' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cline x1='18' y1='6' x2='6' y2='18'%3e%3c/line%3e%3cline x1='6' y1='6' x2='18' y2='18'%3e%3c/line%3e%3c/svg%3e"); */
   }
 
   /* type color */
@@ -851,11 +861,11 @@
     box-shadow: var(--input-focus-shadow, none);
   }
 
-  .j-input.is-valid:focus-within,
+  /* .j-input.is-valid:focus-within,
   .j-select.is-valid:focus-within {
     border-color: transparent;
     outline-color: var(--form-valid-border-color, var(--state-success));
-  }
+  } */
 
   .j-input.is-invalid:focus-within,
   .j-select.is-invalid:focus-within {

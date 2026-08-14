@@ -86,13 +86,24 @@ describe('Form', () => {
     expect(form.element?.classList.contains('j-form')).toBe(true);
     expect(form.element?.classList.contains('is-vertical')).toBe(true);
     expect(form.element?.dataset.form).toBe('root');
-    expect(form.element?.querySelectorAll('[data-form-item]')).toHaveLength(2);
+    expect(form.element?.querySelector('.form-field')).toBeTruthy();
+    expect(form.element?.querySelector('.field-legend')).toBeTruthy();
+    expect(form.element?.querySelector('.field-control')).toBeTruthy();
+    expect(form.element?.querySelector('.form-item')).toBeNull();
+    expect(form.element?.querySelector('.item-label')).toBeNull();
+    expect(form.element?.querySelector('.form-control')).toBeNull();
+    expect(form.element?.querySelectorAll('[data-form-field]')).toHaveLength(2);
     expect(
-      form.element?.querySelector('[data-form-control="email"]')
+      Array.from(
+        form.element?.querySelectorAll('[data-form-field]') || []
+      ).every((element) => element instanceof HTMLFieldSetElement)
+    ).toBe(true);
+    expect(
+      form.element?.querySelector('[data-field-control="email"]')
     ).toBeTruthy();
-    expect(form.element?.querySelector('[data-form-help="bio"]')).toBeTruthy();
+    expect(form.element?.querySelector('[data-field-help="bio"]')).toBeTruthy();
     expect(
-      form.element?.querySelectorAll('[data-form-buttons] button')
+      form.element?.querySelectorAll('[data-field-buttons] button')
     ).toHaveLength(2);
   });
 
@@ -120,13 +131,15 @@ describe('Form', () => {
     expect(form.element?.classList.contains('profile-stack')).toBe(true);
     expect(form.element?.classList.contains('j-form')).toBe(false);
     expect(form.element?.querySelector('.profile-field')).toBeTruthy();
-    expect(form.element?.querySelector('[data-form-item="name"]')).toBeTruthy();
     expect(
-      form.element?.querySelector('[data-form-control="name"]')
+      form.element?.querySelector('[data-form-field="name"]')
+    ).toBeTruthy();
+    expect(
+      form.element?.querySelector('[data-field-control="name"]')
     ).toBeTruthy();
     expect(form.element?.querySelector('.help-block')).toBeTruthy();
     expect(form.element?.querySelector('.profile-help')).toBeNull();
-    expect(form.element?.querySelector('[data-form-buttons]')).toBeTruthy();
+    expect(form.element?.querySelector('[data-field-buttons]')).toBeTruthy();
   });
 
   it('resolves button position from props into inline style', () => {
@@ -134,7 +147,7 @@ describe('Form', () => {
     mountForm();
 
     const buttons = form.element?.querySelector<HTMLElement>(
-      '[data-form-buttons]'
+      '[data-field-buttons]'
     );
     expect(buttons?.style.justifyContent).toBe('center');
 
@@ -143,7 +156,7 @@ describe('Form', () => {
     mountForm();
 
     const nextButtons = form.element?.querySelector<HTMLElement>(
-      '[data-form-buttons]'
+      '[data-field-buttons]'
     );
     expect(nextButtons?.style.justifyContent).toBe('flex-start');
   });
@@ -161,10 +174,120 @@ describe('Form', () => {
       { type: 'textarea', payload: { label: 'Bio', name: 'bio' } },
     ]);
 
-    expect(form.element?.querySelectorAll('[data-form-item]')).toHaveLength(2);
+    expect(form.element?.querySelectorAll('[data-form-field]')).toHaveLength(2);
     expect(
-      form.element?.querySelector('[data-form-field="bio"]')
+      form.element?.querySelector('[data-field-item="bio"]')
     ).toBeInstanceOf(HTMLTextAreaElement);
+  });
+
+  it('applies autocomplete only where the form control should own it', () => {
+    form = createForm({
+      id: 'autocomplete-form',
+      fields: [
+        {
+          type: 'textarea',
+          payload: {
+            label: 'Default Bio',
+            name: 'defaultBio',
+          },
+        },
+        {
+          type: 'textarea',
+          payload: {
+            label: 'Address',
+            name: 'address',
+            autocomplete: 'street-address',
+            placeholder: 'Street address',
+            readonly: true,
+          },
+        },
+        {
+          type: 'select',
+          payload: {
+            label: 'Default Country',
+            name: 'defaultCountry',
+            placeholder: 'Choose a country',
+            readonly: true,
+            options: [{ value: 'cn', text: 'China' }],
+          },
+        },
+        {
+          type: 'select',
+          payload: {
+            label: 'Country',
+            name: 'country',
+            autocomplete: 'country',
+            options: [{ value: 'cn', text: 'China' }],
+          },
+        },
+        {
+          type: 'radio',
+          payload: {
+            label: 'Contact',
+            name: 'contact',
+            autocomplete: 'email',
+            options: [{ value: 'email', text: 'Email' }],
+          },
+        },
+        {
+          type: 'checkbox',
+          payload: {
+            label: 'Features',
+            name: 'features',
+            autocomplete: 'off',
+            options: [{ value: 'audit', text: 'Audit' }],
+          },
+        },
+        {
+          type: 'switch',
+          payload: {
+            label: 'Enabled',
+            name: 'enabled',
+            autocomplete: 'off',
+          },
+        },
+      ],
+      buttons: false,
+    }).build();
+    mountForm();
+
+    const defaultBio = form.element?.querySelector<HTMLTextAreaElement>(
+      'textarea[name="defaultBio"]'
+    );
+    const address = form.element?.querySelector<HTMLTextAreaElement>(
+      'textarea[name="address"]'
+    );
+    const defaultCountry = form.element?.querySelector<HTMLSelectElement>(
+      'select[name="defaultCountry"]'
+    );
+    const country = form.element?.querySelector<HTMLSelectElement>(
+      'select[name="country"]'
+    );
+    const radio = form.element?.querySelector<HTMLInputElement>(
+      'input[name="contact"]'
+    );
+    const checkbox = form.element?.querySelector<HTMLInputElement>(
+      'input[name="features"]'
+    );
+    const enabled = form.element?.querySelector<HTMLInputElement>(
+      'input[name="enabled"]'
+    );
+
+    expect(defaultBio).toBeInstanceOf(HTMLTextAreaElement);
+    expect(defaultBio?.hasAttribute('autocomplete')).toBe(false);
+    expect(address).toBeInstanceOf(HTMLTextAreaElement);
+    expect(address?.getAttribute('autocomplete')).toBe('street-address');
+    expect(address?.getAttribute('placeholder')).toBe('Street address');
+    expect(address?.hasAttribute('readonly')).toBe(true);
+    expect(defaultCountry).toBeInstanceOf(HTMLSelectElement);
+    expect(defaultCountry?.hasAttribute('autocomplete')).toBe(false);
+    expect(defaultCountry?.hasAttribute('placeholder')).toBe(false);
+    expect(defaultCountry?.hasAttribute('readonly')).toBe(false);
+    expect(country).toBeInstanceOf(HTMLSelectElement);
+    expect(country?.getAttribute('autocomplete')).toBe('country');
+    expect(radio?.hasAttribute('autocomplete')).toBe(false);
+    expect(checkbox?.hasAttribute('autocomplete')).toBe(false);
+    expect(enabled?.hasAttribute('autocomplete')).toBe(false);
   });
 
   it('updates reused field control values from setFields payloads', () => {
@@ -248,6 +371,96 @@ describe('Form', () => {
 
     expect(form.element?.elements.namedItem('name')).toBe(nameInput);
     expect(nameInput?.value).toBe('Updated');
+  });
+
+  it('uses semantic group titles for radio, checkbox group, and custom items', () => {
+    form = createForm({
+      id: 'choice-label-form',
+      fields: [
+        {
+          type: 'text',
+          payload: { label: 'Name', name: 'name' },
+        },
+        {
+          type: 'radio',
+          payload: {
+            label: 'Priority',
+            name: 'priority',
+            options: [
+              { value: 'low', text: 'Low' },
+              { value: 'high', text: 'High' },
+            ],
+          },
+        },
+        {
+          type: 'checkbox',
+          payload: {
+            label: 'Features',
+            name: 'features',
+            options: [
+              { value: 'audit', text: 'Audit' },
+              { value: 'export', text: 'Export' },
+            ],
+          },
+        },
+        {
+          type: 'custom',
+          payload: {
+            label: 'Custom Content',
+            name: 'customNote',
+            content: 'Custom form item renderable content.',
+          },
+        },
+      ],
+      buttons: false,
+    }).build();
+    mountForm();
+
+    const textLabel = form.element?.querySelector<HTMLLabelElement>(
+      '[data-field-label="name"]'
+    );
+    const radioLabel = form.element?.querySelector<HTMLLabelElement>(
+      '[data-field-label="priority"]'
+    );
+    const checkboxLabel = form.element?.querySelector<HTMLLabelElement>(
+      '[data-field-label="features"]'
+    );
+    const customLabel = form.element?.querySelector<HTMLLabelElement>(
+      '[data-field-label="customNote"]'
+    );
+    const customControl = form.element?.querySelector<HTMLElement>(
+      '[data-field-control="customNote"]'
+    );
+
+    expect(textLabel?.hasAttribute('for')).toBe(true);
+    expect(textLabel?.tagName).toBe('LABEL');
+    expect(radioLabel?.tagName).toBe('LEGEND');
+    expect(checkboxLabel?.tagName).toBe('LEGEND');
+    expect(customLabel?.tagName).toBe('LEGEND');
+    expect(radioLabel?.hasAttribute('for')).toBe(false);
+    expect(checkboxLabel?.hasAttribute('for')).toBe(false);
+    expect(customLabel?.hasAttribute('for')).toBe(false);
+    expect(radioLabel?.closest('fieldset')).toBe(
+      form.element?.querySelector('[data-form-field="priority"]')
+    );
+    expect(checkboxLabel?.closest('fieldset')).toBe(
+      form.element?.querySelector('[data-form-field="features"]')
+    );
+    expect(customLabel?.closest('fieldset')).toBe(
+      form.element?.querySelector('[data-form-field="customNote"]')
+    );
+    expect(customControl?.hasAttribute('role')).toBe(false);
+    expect(customControl?.hasAttribute('aria-labelledby')).toBe(false);
+    expect(
+      form.element
+        ?.querySelector('[data-field-choice="priority"]')
+        ?.hasAttribute('for')
+    ).toBe(true);
+    expect(
+      form.element
+        ?.querySelector('[data-field-choice="features"]')
+        ?.hasAttribute('for')
+    ).toBe(true);
   });
 
   it('collects submitted form data', async () => {
@@ -421,19 +634,19 @@ describe('Form', () => {
     mountForm();
 
     const root = form.element;
-    const nameItem = form.element?.querySelector('[data-form-item="name"]');
+    const nameItem = form.element?.querySelector('[data-form-field="name"]');
 
     (form.state.fields[0].payload as { showEmail: boolean }).showEmail = true;
     await tick();
 
     expect(form.element).toBe(root);
     expect(form.element?.parentNode).toBe(app());
-    expect(form.element?.querySelectorAll('[data-form-item]')).toHaveLength(2);
-    expect(form.element?.querySelector('[data-form-item="name"]')).toBe(
+    expect(form.element?.querySelectorAll('[data-form-field]')).toHaveLength(2);
+    expect(form.element?.querySelector('[data-form-field="name"]')).toBe(
       nameItem
     );
     expect(
-      form.element?.querySelector('[data-form-field="email"]')
+      form.element?.querySelector('[data-field-item="email"]')
     ).toBeInstanceOf(HTMLInputElement);
   });
 
@@ -478,7 +691,7 @@ describe('Form', () => {
     mountForm();
 
     expect(
-      form.element?.querySelector('[data-form-item="details"]')
+      form.element?.querySelector('[data-form-field="details"]')
     ).toBeNull();
     expect(form.validate()).toBe(true);
 
@@ -486,13 +699,43 @@ describe('Form', () => {
     await tick();
 
     expect(
-      form.element?.querySelector('[data-form-item="details"]')
+      form.element?.querySelector('[data-form-field="details"]')
     ).toBeTruthy();
     expect(form.validate()).toBe(false);
     expect(
       form.element?.querySelector('[data-validator-help="details"]')
         ?.textContent
     ).toBe('Details are required.');
+  });
+
+  it('renders novalidate when validator vanilla mode is false', () => {
+    form = createForm({
+      id: 'vanilla-validator-form',
+      fields: [
+        {
+          type: 'text',
+          payload: { label: 'Name', name: 'name', required: true },
+        },
+      ],
+      buttons: false,
+      validator: {
+        vanilla: false,
+        rules: {
+          name: { required: true },
+        },
+        messages: {
+          name: { required: 'Name is required.' },
+        },
+      },
+    }).build();
+    mountForm();
+
+    expect(form.element?.noValidate).toBe(true);
+    expect(form.element?.hasAttribute('novalidate')).toBe(true);
+    expect(form.validate()).toBe(false);
+    expect(
+      form.element?.querySelector('[data-validator-help="name"]')?.textContent
+    ).toBe('Name is required.');
   });
 
   it('uses select changes to choose the next dynamic form item', async () => {
@@ -538,7 +781,7 @@ describe('Form', () => {
     mountForm();
 
     expect(
-      form.element?.querySelector('[data-form-field="dynamicValue"]')
+      form.element?.querySelector('[data-field-item="dynamicValue"]')
     ).toBeInstanceOf(HTMLInputElement);
 
     const select = form.element?.elements.namedItem('fieldType');
@@ -551,7 +794,7 @@ describe('Form', () => {
     await tick();
 
     expect(
-      form.element?.querySelector('[data-form-field="dynamicValue"]')
+      form.element?.querySelector('[data-field-item="dynamicValue"]')
     ).toBeInstanceOf(HTMLTextAreaElement);
     expect((form.state.fields[0].payload as { value: string }).value).toBe(
       'textarea'
@@ -603,7 +846,7 @@ describe('Form', () => {
     mountForm();
 
     expect(
-      form.element?.querySelector('[data-form-field="dynamicValue"]')
+      form.element?.querySelector('[data-field-item="dynamicValue"]')
     ).toBeInstanceOf(HTMLInputElement);
 
     const radio = form.element?.querySelector<HTMLInputElement>(
@@ -616,7 +859,7 @@ describe('Form', () => {
     await tick();
 
     expect(
-      form.element?.querySelector('[data-form-field="dynamicValue"]')
+      form.element?.querySelector('[data-field-item="dynamicValue"]')
     ).toBeInstanceOf(HTMLTextAreaElement);
     expect((form.state.fields[0].payload as { value: string }).value).toBe(
       'textarea'

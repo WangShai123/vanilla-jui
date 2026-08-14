@@ -1,7 +1,12 @@
 # Browser Utilities
 
 ```ts
-import { copy, isMobile } from 'vanilla-jui';
+import {
+  checkModernBrowser,
+  copy,
+  isMobile,
+  isModernBrowser,
+} from 'vanilla-jui';
 ```
 
 ## `isMobile()`
@@ -18,6 +23,26 @@ SSR、无 `navigator` 或缺少必要 media query 能力时返回 `false`。该�
 ```ts
 if (isMobile()) enableTouchNavigation();
 ```
+
+## `isModernBrowser()`
+
+检测当前运行环境是否支持 vanilla-jui 当前目标所需的现代浏览器能力。当前源码检查 `Object.hasOwn()` 和 `Array.prototype.at()`，全部可用时返回 `true`；检测过程出现异常时返回 `false`。
+
+```ts
+if (!isModernBrowser()) {
+  showLegacyBrowserWarning();
+}
+```
+
+## `checkModernBrowser()`
+
+调用 `isModernBrowser()`，如果当前环境不满足要求，会通过 `Toast.confirm()` 弹出升级浏览器提示，并把确认按钮指向 Chrome 下载页；满足要求时返回 `true`。
+
+```ts
+const supported = checkModernBrowser();
+```
+
+该函数会访问 `window` 和 Toast UI，只适合浏览器运行时，不适合 SSR 初始化阶段。
 
 ## `copy(text)`
 

@@ -1,6 +1,6 @@
 # Class Name Utility
 
-源码：`src/utilities/class-name.ts`。该模块当前仅供库内部使用，未从包根入口导出。
+源码：`src/utilities/class-name.ts`。该模块由包根入口导出，可在业务需要按条件拼接 class token 时使用。
 
 ## `joinClasses(...tokens)`
 

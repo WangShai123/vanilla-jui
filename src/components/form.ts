@@ -1,6 +1,7 @@
 import {
   For,
   type ElementProps,
+  bindAttr,
   createDeepStore,
   createEffect,
   createMemo,
@@ -135,6 +136,7 @@ export interface FormButton {
 export interface FormValidatorConfig {
   rules?: Record<string, Record<string, unknown>>;
   messages?: Record<string, Record<string, string>>;
+  vanilla?: boolean;
   onSubmit?: (() => void) | null;
   [key: string]: unknown;
 }
@@ -212,10 +214,10 @@ const DEFAULT_CLASS_NAMES: FormClassNames = {
   horizontal: 'is-horizontal',
   itemVertical: 'is-item-vertical',
   itemHorizontal: 'is-item-horizontal',
-  item: 'form-item',
-  label: 'item-label',
+  item: 'form-field',
+  label: 'field-legend',
   required: 'is-required',
-  control: 'form-control',
+  control: 'field-control',
   helpInvalid: 'is-invalid',
   buttons: 'form-buttons',
   button: 'j-button',
@@ -442,6 +444,7 @@ function cloneValidator(validator: unknown): FormValidatorConfig {
   ) as Partial<FormValidatorConfig> & Record<string, unknown>;
   return {
     ...source,
+    vanilla: source.vanilla === true,
     rules: isPlainObject(source.rules)
       ? (source.rules as FormValidatorConfig['rules'])
       : {},
@@ -508,6 +511,20 @@ function autoComplete(type: string): string {
   if (type === 'password') return 'current-password';
   if (type === 'email') return 'email';
   return 'on';
+}
+
+function nonEmptyAttribute(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+  const attribute = value.trim();
+  return attribute.length > 0 ? attribute : null;
+}
+
+function bindNonEmptyAttribute(
+  element: Element,
+  name: string,
+  value: () => unknown
+): void {
+  bindAttr(element, name, () => nonEmptyAttribute(value()));
 }
 
 function isSelected(
@@ -625,7 +642,7 @@ export function createForm(input: FormProps = {}): Form {
       control.classList.remove('is-valid', 'is-invalid');
     }
     for (const help of all<HTMLElement>(
-      '[data-form-help], [data-validator-help]',
+      '[data-field-help], [data-validator-help]',
       element
     )) {
       if (help.dataset.validatorHelp || help.classList.contains('is-invalid')) {
@@ -725,11 +742,9 @@ export function createForm(input: FormProps = {}): Form {
     ...extra,
     name: () => fieldAccessor().name,
     id,
-    placeholder: () => fieldAccessor().placeholder || '',
     required: () => !!fieldAccessor().required,
     disabled: () => state.submitting || !!fieldAccessor().disabled,
-    readonly: () => !!fieldAccessor().readonly,
-    'data-form-field': () => fieldAccessor().name || id,
+    'data-field-item': () => fieldAccessor().name || id,
   });
 
   const choiceGroupView = (
@@ -751,7 +766,7 @@ export function createForm(input: FormProps = {}): Form {
           field.size ? `is-${field.size}` : ''
         );
       },
-      'data-form-choice-group': () => fieldAccessor().name || id,
+      'data-field-choice-group': () => fieldAccessor().name || id,
       'data-choice-type': type,
       'data-choice-layout': () =>
         fieldAccessor().vertical ? 'vertical' : 'horizontal',
@@ -762,7 +777,7 @@ export function createForm(input: FormProps = {}): Form {
           return jsx('label', {
             className: () =>
               type === 'radio' ? state.className.radioLabel : '',
-            'data-form-choice': () => fieldAccessor().name || id,
+            'data-field-choice': () => fieldAccessor().name || id,
             for: optionId,
             children: [
               jsx('input', {
@@ -793,7 +808,7 @@ export function createForm(input: FormProps = {}): Form {
               jsx('span', {
                 className: () =>
                   type === 'radio' ? state.className.radioText : '',
-                'data-form-choice-text': '',
+                'data-field-choice-text': '',
                 children: asRenderable(
                   item.text ?? item.label ?? stringifyFormValue(item.value)
                 ),
@@ -817,7 +832,14 @@ export function createForm(input: FormProps = {}): Form {
         controlProps<HTMLTextAreaElement>(fieldAccessor, id, {
           className: () =>
             fieldAccessor().className || state.className.textarea,
-          autocomplete: () => fieldAccessor().autocomplete,
+          placeholder: () => fieldAccessor().placeholder || '',
+          readonly: () => !!fieldAccessor().readonly,
+          ref: (element: HTMLTextAreaElement) =>
+            bindNonEmptyAttribute(
+              element,
+              'autocomplete',
+              () => fieldAccessor().autocomplete
+            ),
           value: () => stringifyControlValue(fieldAccessor().value),
           onInput: (event: Event) => {
             const target = event.currentTarget;
@@ -833,7 +855,12 @@ export function createForm(input: FormProps = {}): Form {
         'select',
         controlProps<HTMLSelectElement>(fieldAccessor, id, {
           className: () => fieldAccessor().className || state.className.select,
-          autocomplete: () => fieldAccessor().autocomplete || 'off',
+          ref: (element: HTMLSelectElement) =>
+            bindNonEmptyAttribute(
+              element,
+              'autocomplete',
+              () => fieldAccessor().autocomplete
+            ),
           multiple: () => !!fieldAccessor().multiple,
           value: () =>
             fieldAccessor().multiple
@@ -875,7 +902,7 @@ export function createForm(input: FormProps = {}): Form {
             field.size ? `is-${field.size}` : names.switchSizeMd
           );
         },
-        'data-form-switch': () => fieldAccessor().name || id,
+        'data-field-switch': () => fieldAccessor().name || id,
         for: id,
         children: [
           jsx('input', {
@@ -895,7 +922,7 @@ export function createForm(input: FormProps = {}): Form {
           }),
           jsx('span', {
             className: () => state.className.switchSlider,
-            'data-form-switch-slider': '',
+            'data-field-switch-slider': '',
           }),
         ],
       }) as HTMLLabelElement;
@@ -916,6 +943,8 @@ export function createForm(input: FormProps = {}): Form {
       ...controlProps<HTMLInputElement>(fieldAccessor, id, {
         type: inputType,
         className: () => fieldAccessor().className || state.className.input,
+        placeholder: () => fieldAccessor().placeholder || '',
+        readonly: () => !!fieldAccessor().readonly,
         autocomplete: () =>
           fieldAccessor().autocomplete || autoComplete(inputType),
         value: () => fieldAccessor().value ?? '',
@@ -939,54 +968,67 @@ export function createForm(input: FormProps = {}): Form {
   ): HTMLElement => {
     const fieldAccessor = (): FormField => itemAccessor().payload;
     const id = resolveFieldId(fieldAccessor(), indexAccessor());
-    return jsx('div', {
+    const isGroupedControl = (): boolean => {
+      const type = itemAccessor().type;
+      return (
+        type === 'custom' ||
+        type === 'radio' ||
+        (type === 'checkbox' && Array.isArray(fieldAccessor().options))
+      );
+    };
+    const hasFieldLabel = (): boolean => {
+      const label = fieldAccessor().label;
+      return label !== false && label !== undefined;
+    };
+    const fieldTitle = (): HTMLElement | null => {
+      if (!hasFieldLabel()) return null;
+      const props = {
+        className: () =>
+          joinClasses(
+            state.className.label,
+            fieldIsRequired(fieldAccessor(), state.validator.rules)
+              ? state.className.required
+              : ''
+          ),
+        'data-field-label': () => fieldAccessor().name || id,
+        children: () => asRenderable(fieldAccessor().label),
+      };
+      if (isGroupedControl()) return jsx('legend', props) as HTMLElement;
+      return jsx('label', { ...props, for: id }) as HTMLElement;
+    };
+    const controlContainer = (): HTMLElement =>
+      jsx('div', {
+        className: () => state.className.control,
+        'data-field-control': () =>
+          fieldAccessor().name || String(indexAccessor()),
+        children: [
+          asRenderable(
+            controlView(itemAccessor, fieldAccessor, id, indexAccessor)
+          ),
+          () => {
+            const current = fieldAccessor();
+            return current.help
+              ? jsx('div', {
+                  className: 'help-block',
+                  'data-field-help': () =>
+                    fieldAccessor().name || String(indexAccessor()),
+                  children: () => asRenderable(fieldAccessor().help),
+                })
+              : null;
+          },
+        ],
+      }) as HTMLElement;
+    const rootProps = {
       className: () => state.className.item,
-      'data-form-item': () => fieldAccessor().name || String(indexAccessor()),
+      'data-form-field': () => fieldAccessor().name || String(indexAccessor()),
       style: () => ({
         display: itemAccessor().type === 'hidden' ? 'none' : '',
       }),
-      children: [
-        () => {
-          const current = fieldAccessor();
-          if (current.label === false || current.label === undefined) {
-            return null;
-          }
-          return jsx('label', {
-            className: () =>
-              joinClasses(
-                state.className.label,
-                fieldIsRequired(fieldAccessor(), state.validator.rules)
-                  ? state.className.required
-                  : ''
-              ),
-            'data-form-label': () => fieldAccessor().name || id,
-            for: id,
-            children: () => asRenderable(fieldAccessor().label),
-          });
-        },
-        jsx('div', {
-          className: () => state.className.control,
-          'data-form-control': () =>
-            fieldAccessor().name || String(indexAccessor()),
-          children: [
-            asRenderable(
-              controlView(itemAccessor, fieldAccessor, id, indexAccessor)
-            ),
-            () => {
-              const current = fieldAccessor();
-              return current.help
-                ? jsx('div', {
-                    className: 'help-block',
-                    'data-form-help': () =>
-                      fieldAccessor().name || String(indexAccessor()),
-                    children: () => asRenderable(fieldAccessor().help),
-                  })
-                : null;
-            },
-          ],
-        }),
-      ],
-    }) as HTMLElement;
+    };
+    return jsx('fieldset', {
+      ...rootProps,
+      children: [fieldTitle, controlContainer],
+    }) as HTMLFieldSetElement;
   };
 
   const itemView = (
@@ -1000,7 +1042,7 @@ export function createForm(input: FormProps = {}): Form {
       style: {
         justifyContent: buttonsJustifyContent,
       },
-      'data-form-buttons': '',
+      'data-field-buttons': '',
       hidden: () => state.buttons.length === 0,
       children: For({
         each: () => state.buttons,
@@ -1112,9 +1154,10 @@ export function createForm(input: FormProps = {}): Form {
               : state.className.itemHorizontal
           ),
         id: () => state.id,
+        novalidate: () => state.validator.vanilla === false,
         'data-form': 'root',
         'data-form-layout': () => (state.vertical ? 'vertical' : 'horizontal'),
-        'data-form-item-layout': () =>
+        'data-form-field-layout': () =>
           state.itemVertical ? 'vertical' : 'horizontal',
         onSubmit: (event: Event) => void handleSubmit(event),
         onReset: (event: Event) => {

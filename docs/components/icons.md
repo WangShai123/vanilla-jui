@@ -1,6 +1,6 @@
 # Icons
 
-Icons 是内置 SVG 图标工具，源码位于 `src/components/icons.ts`。提供函数式 API 获取图标节点或字符串，支持自定义扩展。
+Icons 是内置 SVG 图标工具，源码位于 `src/primitives/icons.ts`，内置图标 path 位于 `src/icons/index.ts`。它提供函数式 API 获取图标节点或字符串，支持自定义扩展。
 
 ## 导入
 
@@ -35,6 +35,10 @@ container.innerHTML = html;
 | `loader`      | 加载中         |
 | `menu`        | 菜单（三横线） |
 | `palette`     | 调色板         |
+| `more`        | 更多（三点）   |
+| `message`     | 消息           |
+| `chat`        | 会话           |
+| `discuss`     | 讨论           |
 
 ## 方法
 

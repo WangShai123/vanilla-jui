@@ -1,4 +1,4 @@
-import { createDeepStore, flushSync, jsx } from 'vanilla-signal';
+import { createDeepStore, createMemo, flushSync, jsx } from 'vanilla-signal';
 
 import {
   type FunctionalComponent,
@@ -101,6 +101,9 @@ export interface FlowState extends Record<string, unknown> {
 
 export interface FlowGoToOptions {
   direction?: FlowDirection;
+}
+
+interface InternalFlowGoToOptions extends FlowGoToOptions {
   internal?: boolean;
 }
 
@@ -312,6 +315,8 @@ interface FlowError extends Error {
   code?: string;
 }
 
+type ActionToken = number | null;
+
 const DEFAULT_CLASS_NAMES: FlowClassNames = {
   root: 'j-flow',
   header: 'flow-header',
@@ -339,6 +344,27 @@ const FLOW_PAYLOAD_RULE = { types: ['plainObject', 'null', 'undefined'] };
 
 function clonePlainObject(value: unknown): FlowData {
   return isPlainObject(value) ? { ...(value as FlowData) } : {};
+}
+
+function cloneStepData(
+  value: Record<string, FlowData>
+): Record<string, FlowData> {
+  const result: Record<string, FlowData> = {};
+  for (const key of Object.keys(value)) {
+    result[key] = clonePlainObject(value[key]);
+  }
+  return result;
+}
+
+function cloneSnapshot(value: FlowSnapshot): FlowSnapshot {
+  return {
+    ...value,
+    history: [...value.history],
+    data: clonePlainObject(value.data),
+    stepData: cloneStepData(value.stepData),
+    currentData: clonePlainObject(value.currentData),
+    currentStep: value.currentStep ? { ...value.currentStep } : null,
+  };
 }
 
 function cloneSteps(steps: unknown): FlowStep[] {
@@ -378,7 +404,9 @@ function normalizeStepResult(
   if (typeof result === 'string') return { id: result };
   if (!isPlainObject(result)) return { id: fallbackId };
   const source = result as { id?: unknown; data?: unknown };
-  if (typeof source.id !== 'string') return { id: fallbackId };
+  if (typeof source.id !== 'string') {
+    return { id: fallbackId, data: result as FlowPayload };
+  }
   return {
     id: source.id,
     data:
@@ -526,7 +554,7 @@ export function createFlow(input: FlowProps = {}): Flow {
     direction: null,
     history: [initialStepId],
     data: clonePlainObject(initialGlobal),
-    stepData: clonePlainObject(initialStepData) as Record<string, FlowData>,
+    stepData: cloneStepData(initialStepData),
     loading: false,
     error: null,
     busyAction: null,
@@ -541,6 +569,9 @@ export function createFlow(input: FlowProps = {}): Flow {
   };
   const subscribers = new Set<FlowSubscriber>();
   const cleanupTasks = new Set<FlowCleanup>();
+  const cancelledActions = new Set<number>();
+  let actionToken = 0;
+  let activeActionToken: number | null = null;
   let ui: FunctionalComponent<
     Record<string, unknown>,
     FlowState,
@@ -554,9 +585,6 @@ export function createFlow(input: FlowProps = {}): Flow {
       throw new Error(`Flow.${method}: instance has been destroyed.`);
     }
   };
-  const currentStep = (): FlowStep => steps[state.currentIndex];
-  const getStepData = (stepId: string): FlowData =>
-    clonePlainObject(state.stepData[stepId]);
   const publicStep = (
     step: FlowStep | null | undefined
   ): PublicFlowStep | null => {
@@ -572,7 +600,23 @@ export function createFlow(input: FlowProps = {}): Flow {
     } = step;
     return result;
   };
-  const snapshot = (): FlowSnapshot => ({
+  const currentStepMemo = createMemo(() => steps[state.currentIndex]);
+  const currentDataMemo = createMemo(() => {
+    const version = state.version;
+    return version >= 0
+      ? clonePlainObject(state.stepData[state.currentId])
+      : {};
+  });
+  const publicCurrentStepMemo = createMemo(() => publicStep(currentStepMemo()));
+  const publicStepsMemo = createMemo(() => steps.map(publicStep));
+  const canBackMemo = createMemo(
+    () => state.currentIndex > 0 && !state.loading
+  );
+  const canNextMemo = createMemo(
+    () => state.currentIndex < steps.length - 1 && !state.loading
+  );
+  const isLastMemo = createMemo(() => state.currentIndex === steps.length - 1);
+  const snapshotMemo = createMemo<FlowSnapshot>(() => ({
     id: state.id,
     currentId: state.currentId,
     currentIndex: state.currentIndex,
@@ -581,16 +625,20 @@ export function createFlow(input: FlowProps = {}): Flow {
     direction: state.direction,
     history: [...state.history],
     data: clonePlainObject(state.data),
-    stepData: clonePlainObject(state.stepData) as Record<string, FlowData>,
-    currentData: getStepData(state.currentId),
-    currentStep: publicStep(currentStep()),
-    canBack: state.currentIndex > 0 && !state.loading,
-    canNext: state.currentIndex < steps.length - 1 && !state.loading,
-    isLast: state.currentIndex === steps.length - 1,
+    stepData: cloneStepData(state.stepData),
+    currentData: currentDataMemo(),
+    currentStep: publicCurrentStepMemo(),
+    canBack: canBackMemo(),
+    canNext: canNextMemo(),
+    isLast: isLastMemo(),
     loading: state.loading,
     busyAction: state.busyAction,
     error: state.error,
-  });
+  }));
+  const currentStep = (): FlowStep => currentStepMemo();
+  const getStepData = (stepId: string): FlowData =>
+    clonePlainObject(state.stepData[stepId]);
+  const snapshot = (): FlowSnapshot => cloneSnapshot(snapshotMemo());
   const emitChange = (previous: FlowSnapshot | null = null): void => {
     const next = snapshot();
     for (const subscriber of subscribers) subscriber(next, flow, previous);
@@ -608,7 +656,10 @@ export function createFlow(input: FlowProps = {}): Flow {
     assertActive('setStepData');
     validateParam('stepId', stepId, { type: 'string' }, 'Flow.setStepData');
     validateParam('data', data, FLOW_PAYLOAD_RULE, 'Flow.setStepData');
-    if (!data || !stepMap.has(stepId)) return flow;
+    if (!stepMap.has(stepId)) {
+      throw new Error(`Flow.setStepData: step "${stepId}" does not exist.`);
+    }
+    if (!data) return flow;
     flushSync(() => {
       state.stepData[stepId] = {
         ...clonePlainObject(state.stepData[stepId]),
@@ -647,15 +698,32 @@ export function createFlow(input: FlowProps = {}): Flow {
     error.code = 'FLOW_ABORTED';
     return error;
   };
+  const isAbortError = (error: unknown): error is FlowError =>
+    error instanceof Error && (error as FlowError).code === 'FLOW_ABORTED';
+  const assertActionCurrent = (token: ActionToken): void => {
+    if (runtime.destroyed) throw createAbortError();
+    if (token != null && cancelledActions.has(token)) {
+      throw createAbortError();
+    }
+  };
+  const cancelActiveAction = (): void => {
+    const token = activeActionToken;
+    if (token != null) cancelledActions.add(token);
+    runtime.actionController?.abort();
+    runtime.actionController = null;
+    runtime.activeAction = null;
+    activeActionToken = null;
+  };
   const callHook = async <TResult>(
     hook: ((...args: never[]) => TResult | Promise<TResult>) | null | undefined,
-    args: unknown[]
+    args: unknown[],
+    token: ActionToken = activeActionToken
   ): Promise<TResult | undefined> => {
     if (typeof hook !== 'function') return undefined;
     const result = await (
       hook as (...values: unknown[]) => TResult | Promise<TResult>
     )(...args);
-    if (runtime.destroyed) throw createAbortError();
+    assertActionCurrent(token);
     return result;
   };
   const createContext = (
@@ -717,26 +785,33 @@ export function createFlow(input: FlowProps = {}): Flow {
   };
   const runAction = async (
     action: FlowAction,
-    task: () => Promise<FlowSnapshot | null>,
+    task: (token: ActionToken) => Promise<FlowSnapshot | null>,
     internal = false
   ): Promise<FlowSnapshot | null> => {
     const outer = !internal && !state.loading;
+    const token = outer ? ++actionToken : activeActionToken;
     if (outer) {
       runtime.actionController = new AbortController();
       runtime.activeAction = action;
+      activeActionToken = token;
       setLoading(true, action);
     }
     try {
-      return await task();
+      assertActionCurrent(token);
+      const result = await task(token);
+      assertActionCurrent(token);
+      return result;
     } catch (error) {
-      if (runtime.destroyed) return null;
+      if (runtime.destroyed || isAbortError(error)) return null;
       if (state.error !== error) handleError(error);
       throw error;
     } finally {
-      if (outer && !runtime.destroyed) {
+      if (token != null) cancelledActions.delete(token);
+      if (outer && !runtime.destroyed && activeActionToken === token) {
         setLoading(false, null);
         runtime.activeAction = null;
         runtime.actionController = null;
+        activeActionToken = null;
       }
     }
   };
@@ -748,7 +823,7 @@ export function createFlow(input: FlowProps = {}): Flow {
     direction: state.direction,
     history: [...state.history],
     data: clonePlainObject(state.data),
-    stepData: clonePlainObject(state.stepData) as Record<string, FlowData>,
+    stepData: cloneStepData(state.stepData),
     loading: state.loading,
     busyAction: state.busyAction,
     error: state.error,
@@ -764,7 +839,7 @@ export function createFlow(input: FlowProps = {}): Flow {
       state.history.splice(0, state.history.length, ...captured.history);
       replaceObject(state.data, captured.data);
       replaceObject(state.stepData, captured.stepData);
-      state.loading = true;
+      state.loading = captured.loading;
       state.busyAction = captured.busyAction;
       state.error = captured.error;
       state.version = captured.version + 1;
@@ -784,31 +859,39 @@ export function createFlow(input: FlowProps = {}): Flow {
     toStep: FlowStep,
     direction: FlowDirection,
     payload: FlowPayload,
-    fromStep: FlowStep
+    fromStep: FlowStep,
+    token: ActionToken
   ): Promise<void> => {
     const previous = snapshot();
     const rollback = captureState();
     try {
       if (payload) setStepData(fromStep.id, payload, { silent: true });
       if (fromStep.canLeave) {
-        const allowed = await callHook(fromStep.canLeave, [
-          createContext({ direction, targetId: toStep.id }),
-        ]);
+        const allowed = await callHook(
+          fromStep.canLeave,
+          [createContext({ direction, targetId: toStep.id })],
+          token
+        );
         if (allowed === false) {
           throw new Error(`Flow: step "${fromStep.id}" blocked leaving.`);
         }
       }
       if (toStep.canEnter) {
-        const allowed = await callHook(toStep.canEnter, [
-          createContext({ direction, fromId: fromStep.id, step: toStep }),
-        ]);
+        const allowed = await callHook(
+          toStep.canEnter,
+          [createContext({ direction, fromId: fromStep.id, step: toStep })],
+          token
+        );
         if (allowed === false) {
           throw new Error(`Flow: step "${toStep.id}" blocked entering.`);
         }
       }
-      await callHook(fromStep.onLeave, [
-        createContext({ direction, step: fromStep, targetId: toStep.id }),
-      ]);
+      await callHook(
+        fromStep.onLeave,
+        [createContext({ direction, step: fromStep, targetId: toStep.id })],
+        token
+      );
+      assertActionCurrent(token);
       const previousId = state.currentId;
       const previousIndex = state.currentIndex;
       flushSync(() => {
@@ -822,12 +905,16 @@ export function createFlow(input: FlowProps = {}): Flow {
         state.error = null;
         state.version += 1;
       });
-      await callHook(toStep.onEnter, [
-        createContext({ direction, fromId: previousId, step: toStep }),
-      ]);
+      await callHook(
+        toStep.onEnter,
+        [createContext({ direction, fromId: previousId, step: toStep })],
+        token
+      );
+      assertActionCurrent(token);
       emitChange(previous);
     } catch (error) {
       if (runtime.destroyed) throw error;
+      if (isAbortError(error)) throw error;
       if (props.rollbackOnError) restoreState(rollback);
       handleError(error, previous);
       throw error;
@@ -837,16 +924,38 @@ export function createFlow(input: FlowProps = {}): Flow {
     type: 'next' | 'back',
     step: FlowStep,
     payload: FlowPayload,
-    fallbackId: string
+    fallbackId: string,
+    token: ActionToken
   ): Promise<FlowStepResult | FlowPayload | void> => {
     const stepHook = type === 'back' ? step.onBack : step.onNext;
     const globalHook = type === 'back' ? props.onBack : props.onNext;
     const context = createContext({ payload, targetId: fallbackId });
-    const stepResult = await callHook(stepHook, [context]);
+    const stepResult = await callHook(stepHook, [context], token);
     if (stepResult != null) return stepResult;
-    const globalResult = await callHook(globalHook, [context]);
+    const globalResult = await callHook(globalHook, [context], token);
     return globalResult ?? fallbackId;
   };
+
+  const goToInternal = async (
+    target: FlowTarget,
+    payload: FlowPayload,
+    options: InternalFlowGoToOptions = {}
+  ): Promise<FlowSnapshot | null> =>
+    runAction(
+      'goTo',
+      async (token) => {
+        const index = resolveStepIndex(target);
+        const to = steps[index];
+        const from = currentStep();
+        if (to.id === state.currentId) {
+          if (payload) setStepData(state.currentId, payload);
+          return snapshot();
+        }
+        await transitionTo(to, options.direction || 'go', payload, from, token);
+        return snapshot();
+      },
+      !!options.internal
+    );
 
   const createRenderContext = (
     fallback: () => RenderableContent<FlowRenderContext>
@@ -856,7 +965,7 @@ export function createFlow(input: FlowProps = {}): Flow {
       flow,
       snapshot: current,
       state,
-      steps: steps.map(publicStep),
+      steps: publicStepsMemo(),
       currentStep: current.currentStep,
       currentData: current.currentData,
       data: current.data,
@@ -1044,16 +1153,16 @@ export function createFlow(input: FlowProps = {}): Flow {
       return currentStep();
     },
     get currentData() {
-      return getStepData(state.currentId);
+      return clonePlainObject(currentDataMemo());
     },
     get canBack() {
-      return state.currentIndex > 0 && !state.loading;
+      return canBackMemo();
     },
     get canNext() {
-      return state.currentIndex < steps.length - 1 && !state.loading;
+      return canNextMemo();
     },
     get isLast() {
-      return state.currentIndex === steps.length - 1;
+      return isLastMemo();
     },
     build() {
       assertActive('build');
@@ -1093,17 +1202,23 @@ export function createFlow(input: FlowProps = {}): Flow {
       validateParam('payload', payload, FLOW_PAYLOAD_RULE, 'Flow.next');
       const busy = handleBusy('next');
       if (busy) return busy;
-      return runAction('next', async () => {
+      return runAction('next', async (token) => {
         if (flow.isLast) {
           if (payload) setStepData(state.currentId, payload);
-          await callHook(props.onFinish, [snapshot(), flow]);
+          await callHook(props.onFinish, [snapshot(), flow], token);
           return snapshot();
         }
         const from = currentStep();
         const fallback = steps[state.currentIndex + 1]?.id;
-        const result = await runMoveHook('next', from, payload, fallback);
+        const result = await runMoveHook(
+          'next',
+          from,
+          payload,
+          fallback,
+          token
+        );
         const target = normalizeStepResult(result, fallback);
-        return flow.goTo(target.id, target.data ?? payload, {
+        return goToInternal(target.id, target.data ?? payload, {
           direction: 'next',
           internal: true,
         });
@@ -1115,12 +1230,18 @@ export function createFlow(input: FlowProps = {}): Flow {
       const busy = handleBusy('back');
       if (busy) return busy;
       if (!flow.canBack) return snapshot();
-      return runAction('back', async () => {
+      return runAction('back', async (token) => {
         const from = currentStep();
         const fallback = steps[state.currentIndex - 1]?.id;
-        const result = await runMoveHook('back', from, payload, fallback);
+        const result = await runMoveHook(
+          'back',
+          from,
+          payload,
+          fallback,
+          token
+        );
         const target = normalizeStepResult(result, fallback);
-        return flow.goTo(target.id, target.data ?? payload, {
+        return goToInternal(target.id, target.data ?? payload, {
           direction: 'back',
           internal: true,
         });
@@ -1129,29 +1250,17 @@ export function createFlow(input: FlowProps = {}): Flow {
     async goTo(target, payload = null, options = {}) {
       assertActive('goTo');
       validateParam('payload', payload, FLOW_PAYLOAD_RULE, 'Flow.goTo');
-      const busy = options.internal ? null : handleBusy('goTo');
+      const busy = handleBusy('goTo');
       if (busy) return busy;
-      return runAction(
-        'goTo',
-        async () => {
-          const index = resolveStepIndex(target);
-          const to = steps[index];
-          const from = currentStep();
-          if (to.id === state.currentId) {
-            if (payload) setStepData(state.currentId, payload);
-            return snapshot();
-          }
-          await transitionTo(to, options.direction || 'go', payload, from);
-          return snapshot();
-        },
-        !!options.internal
-      );
+      return goToInternal(target, payload, { direction: options.direction });
     },
     setData,
     setStepData,
     getStepData,
     reset() {
       assertActive('reset');
+      const previous = snapshot();
+      cancelActiveAction();
       flushSync(() => {
         state.currentId = initialStepId;
         state.currentIndex = stepMap.get(initialStepId) ?? 0;
@@ -1160,16 +1269,13 @@ export function createFlow(input: FlowProps = {}): Flow {
         state.direction = null;
         state.history.splice(0, state.history.length, initialStepId);
         replaceObject(state.data, clonePlainObject(initialGlobal));
-        replaceObject(
-          state.stepData,
-          clonePlainObject(initialStepData) as Record<string, FlowData>
-        );
+        replaceObject(state.stepData, cloneStepData(initialStepData));
         state.loading = false;
         state.busyAction = null;
         state.error = null;
         state.version += 1;
       });
-      emitChange();
+      emitChange(previous);
       return flow;
     },
     async finish(payload = null) {
@@ -1177,18 +1283,16 @@ export function createFlow(input: FlowProps = {}): Flow {
       validateParam('payload', payload, FLOW_PAYLOAD_RULE, 'Flow.finish');
       const busy = handleBusy('finish');
       if (busy) return busy;
-      return runAction('finish', async () => {
+      return runAction('finish', async (token) => {
         if (payload) setStepData(state.currentId, payload);
-        await callHook(props.onFinish, [snapshot(), flow]);
+        await callHook(props.onFinish, [snapshot(), flow], token);
         return snapshot();
       });
     },
     destroy() {
       if (runtime.destroyed) return;
       runtime.destroyed = true;
-      runtime.actionController?.abort();
-      runtime.actionController = null;
-      runtime.activeAction = null;
+      cancelActiveAction();
       ui?.destroy();
       ui = null;
       for (const cleanup of cleanupTasks) cleanup();

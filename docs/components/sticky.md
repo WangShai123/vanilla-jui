@@ -145,7 +145,7 @@ Sticky 的 parent、targets 和原始 style 快照保存在闭包内，不作为
 
 ### `runtime`
 
-`runtime` 包含 `built` 和 `destroyed`。
+`runtime` 包含 `built`、`destroyed`、`reBuilding` 和 `reBuildFrameId`。其中 `reBuilding` / `reBuildFrameId` 用于合并 DOM 变化触发的重新计算，不应作为业务状态来源。
 
 ## 实例方法
 

@@ -141,19 +141,19 @@ Form 通过 `createMemo()` 从 `fields` 入口派生渲染列表，并交给 key
 
 ## 参数
 
-| 参数              | 类型                           | 默认值         | 说明                                                             |
-| ----------------- | ------------------------------ | -------------- | ---------------------------------------------------------------- |
-| `id`              | `string \| null`               | 自动生成       | 表单根节点 id                                                    |
-| `vertical`        | `boolean`                      | `true`         | 根表单使用 `is-vertical` 或 `is-horizontal`                      |
-| `itemVertical`    | `boolean`                      | `true`         | 字段项使用 `is-item-vertical` 或横向布局                         |
-| `style`           | `string \| object`             | `''`           | 表单根节点内联样式                                               |
-| `fields`          | `Array<FormItem>`              | `[]`           | 表单项配置，也是动态表单责任链入口                               |
-| `buttons`         | `boolean \| Array`             | Submit / Reset | `false` 隐藏按钮，`true` 使用默认按钮                            |
-| `buttonsPosition` | `'start' \| 'center' \| 'end'` | `'end'`        | 按钮区 `justify-content`，`center` 原样使用，其它映射为 `flex-*` |
-| `className`       | `object`                       | 内置样式类     | 覆盖根节点、布局、字段、控件、按钮等默认类名                     |
-| `validator`       | `object`                       | `{}`           | 传给 `Validator` 验证模块的 `rules`、`messages` 等配置           |
-| `onSubmit`        | `Function \| null`             | `null`         | 校验通过后触发，参数为 `(data, form)`                            |
-| `onReset`         | `Function \| null`             | `null`         | 重置时触发，参数为 `(event, form)`                               |
+| 参数              | 类型                           | 默认值         | 说明                                                              |
+| ----------------- | ------------------------------ | -------------- | ----------------------------------------------------------------- |
+| `id`              | `string \| null`               | 自动生成       | 表单根节点 id                                                     |
+| `vertical`        | `boolean`                      | `true`         | 根表单使用 `is-vertical` 或 `is-horizontal`                       |
+| `itemVertical`    | `boolean`                      | `true`         | 字段项使用 `is-item-vertical` 或横向布局                          |
+| `style`           | `string \| object`             | `''`           | 表单根节点内联样式                                                |
+| `fields`          | `Array<FormItem>`              | `[]`           | 表单项配置，也是动态表单责任链入口                                |
+| `buttons`         | `boolean \| Array`             | Submit / Reset | `false` 隐藏按钮，`true` 使用默认按钮                             |
+| `buttonsPosition` | `'start' \| 'center' \| 'end'` | `'end'`        | 按钮区 `justify-content`，`center` 原样使用，其它映射为 `flex-*`  |
+| `className`       | `object`                       | 内置样式类     | 覆盖根节点、布局、字段、控件、按钮等默认类名                      |
+| `validator`       | `object`                       | `{}`           | 传给 `Validator` 验证模块的 `rules`、`messages`、`vanilla` 等配置 |
+| `onSubmit`        | `Function \| null`             | `null`         | 校验通过后触发，参数为 `(data, form)`                             |
+| `onReset`         | `Function \| null`             | `null`         | 重置时触发，参数为 `(event, form)`                                |
 
 ## 样式类覆盖
 
@@ -174,23 +174,186 @@ const form = createForm({
 
 每个字段项使用 `{ type, payload, next? }`。常用 `payload` 属性：
 
-| 属性          | 说明                                              |
-| ------------- | ------------------------------------------------- |
-| `label`       | 字段标签；传 `false` 或省略时不渲染标签           |
-| `name`        | 表单字段名，用于 `FormData` 和 Validator 规则匹配 |
-| `options`     | `select`、`radio`、多选 `checkbox` 的选项数组     |
-| `value`       | 默认值；多选 checkbox 可传数组                    |
-| `checked`     | 单个 checkbox 或 switch 的默认选中状态            |
-| `required`    | 渲染原生 `required`，并让标签显示必填标记         |
-| `placeholder` | 输入提示                                          |
-| `help`        | 字段下方帮助文本                                  |
-| `disabled`    | 禁用控件                                          |
-| `readonly`    | 只读控件                                          |
-| `content`     | `type: 'custom'` 时渲染的自定义内容               |
+| 属性           | 说明                                                     |
+| -------------- | -------------------------------------------------------- |
+| `label`        | 字段标签；传 `false` 或省略时不渲染标签                  |
+| `name`         | 表单字段名，用于 `FormData` 和 Validator 规则匹配        |
+| `options`      | `select`、`radio`、多选 `checkbox` 的选项数组            |
+| `value`        | 默认值；多选 checkbox 可传数组                           |
+| `checked`      | 单个 checkbox 或 switch 的默认选中状态                   |
+| `required`     | 渲染原生 `required`，并让标签显示必填标记                |
+| `placeholder`  | 输入提示                                                 |
+| `autocomplete` | 仅适用于支持该属性的具体控件，如 input、textarea、select |
+| `help`         | 字段下方帮助文本                                         |
+| `disabled`     | 禁用控件                                                 |
+| `readonly`     | 只读控件                                                 |
+| `content`      | `type: 'custom'` 时渲染的自定义内容                      |
 
 `type: 'radio'` 和带 `options` 的 `type: 'checkbox'` 会渲染 `.j-radio` / `.j-checkbox` 组。`type: 'switch'` 会渲染 `.j-switch`。
 
+radio、checkbox、switch 和 custom 属于分组或包装控件时，Form 不会把 `payload.autocomplete` 写入内部 input；需要自动填充语义时，应在业务层为具体可填字段显式声明。
+
 `options` 的每一项类型为 `FieldOption`，可以直接传字符串、数字、布尔值，或传 `{ value, text, label, checked, disabled }` 对象。
+
+## 字段分组规范 DOM 示例
+
+Form 每一个字段根节点都会渲染为 `fieldset.form-field`，并通过 `data-form-field` 标识字段容器。单个可标记控件使用 `label[for]` 关联具体控件；选项组和自定义内容使用 `legend` 作为分组标题。radio / checkbox 的选项级标签仍使用各自的 `label[for]` 关联具体 input。
+
+```html
+<form class="j-form is-vertical" data-form="root">
+  <fieldset class="form-field" data-form-field="email">
+    <label
+      class="field-legend is-required"
+      data-field-label="email"
+      for="form_email"
+    >
+      Email
+    </label>
+    <div class="field-control" data-field-control="email">
+      <input
+        class="j-input"
+        id="form_email"
+        data-field-item="email"
+        type="email"
+        name="email"
+        required
+        autocomplete="email"
+      />
+      <div class="help-block" data-field-help="email">Work email only.</div>
+    </div>
+  </fieldset>
+
+  <fieldset class="form-field" data-form-field="bio">
+    <label class="field-legend" data-field-label="bio" for="form_bio"
+      >Bio</label
+    >
+    <div class="field-control" data-field-control="bio">
+      <textarea
+        class="j-textarea"
+        id="form_bio"
+        data-field-item="bio"
+        name="bio"
+        autocomplete="on"
+      ></textarea>
+    </div>
+  </fieldset>
+
+  <fieldset class="form-field" data-form-field="role">
+    <label class="field-legend" data-field-label="role" for="form_role"
+      >Role</label
+    >
+    <div class="field-control" data-field-control="role">
+      <select
+        class="j-select"
+        id="form_role"
+        data-field-item="role"
+        name="role"
+        autocomplete="organization-title"
+      >
+        <option value="admin">Admin</option>
+        <option value="editor">Editor</option>
+      </select>
+    </div>
+  </fieldset>
+
+  <fieldset class="form-field" data-form-field="priority">
+    <legend class="field-legend" data-field-label="priority">Priority</legend>
+    <div class="field-control" data-field-control="priority">
+      <div
+        class="j-radio is-horizontal"
+        data-field-choice-group="priority"
+        data-choice-type="radio"
+        data-choice-layout="horizontal"
+      >
+        <label
+          class="radio-label"
+          data-field-choice="priority"
+          for="form_priority_0"
+        >
+          <input
+            id="form_priority_0"
+            type="radio"
+            name="priority"
+            value="low"
+          />
+          <span class="radio-text" data-field-choice-text>Low</span>
+        </label>
+        <label
+          class="radio-label"
+          data-field-choice="priority"
+          for="form_priority_1"
+        >
+          <input
+            id="form_priority_1"
+            type="radio"
+            name="priority"
+            value="high"
+          />
+          <span class="radio-text" data-field-choice-text>High</span>
+        </label>
+      </div>
+    </div>
+  </fieldset>
+
+  <fieldset class="form-field" data-form-field="features">
+    <legend class="field-legend" data-field-label="features">Features</legend>
+    <div class="field-control" data-field-control="features">
+      <div
+        class="j-checkbox is-horizontal"
+        data-field-choice-group="features"
+        data-choice-type="checkbox"
+        data-choice-layout="horizontal"
+      >
+        <label data-field-choice="features" for="form_features_0">
+          <input
+            id="form_features_0"
+            type="checkbox"
+            name="features"
+            value="audit"
+          />
+          <span data-field-choice-text>Audit</span>
+        </label>
+        <label data-field-choice="features" for="form_features_1">
+          <input
+            id="form_features_1"
+            type="checkbox"
+            name="features"
+            value="export"
+          />
+          <span data-field-choice-text>Export</span>
+        </label>
+      </div>
+    </div>
+  </fieldset>
+
+  <fieldset class="form-field" data-form-field="enabled">
+    <label class="field-legend" data-field-label="enabled" for="form_enabled">
+      Enabled
+    </label>
+    <div class="field-control" data-field-control="enabled">
+      <label
+        class="j-switch is-default is-md"
+        data-field-switch="enabled"
+        for="form_enabled"
+      >
+        <input id="form_enabled" type="checkbox" name="enabled" value="1" />
+        <span class="switch-slider" data-field-switch-slider></span>
+      </label>
+    </div>
+  </fieldset>
+
+  <fieldset class="form-field" data-form-field="customNote">
+    <legend class="field-legend" data-field-label="customNote">
+      Custom Content
+    </legend>
+    <div class="field-control" data-field-control="customNote">
+      <p class="help-block">Custom form item renderable content.</p>
+    </div>
+  </fieldset>
+</form>
+```
+
+当 `validator.vanilla` 为 `false` 时，Form 会在根表单元素上渲染 `novalidate`，内部 Validator 也会把 `noValidate` 设置为 `true`，从而禁用浏览器原生表单验证，仅使用 Validator 自己的规则。`validator.vanilla` 默认值为 `false`；需要启用浏览器原生表单验证能力时，设置 `validator.vanilla: true`。
 
 ## 实例方法
 
@@ -233,5 +396,5 @@ document.querySelector('#demo').appendChild(form.element);
 ## 注意事项
 
 - Form 只负责通用表单 DOM、校验和数据收集，复杂业务交互放在 `onSubmit` 或外层组件中。
-- 校验规则复用 `Validator` 验证模块的规则与消息格式。
+- 校验规则复用 `Validator` 验证模块的规则与消息格式；默认禁用浏览器原生 required/type 校验，仅使用 Validator 自己的规则。需要启用浏览器原生表单验证能力时，设置 `validator.vanilla: true`。
 - `build()` 不接收容器参数；销毁时会释放实例资源，并移除组件创建的 `element`。

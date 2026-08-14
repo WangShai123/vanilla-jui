@@ -2,49 +2,74 @@
 
 ## 概述
 
-vanilla-jui 提供一套基础默认样式，包含设计令牌和组件样式。
+vanilla-jui 提供一套基础默认样式，包含设计令牌、基础 DOM 样式、组件结构样式和默认主题风格。包根入口默认导入 `src/css/index.css`，该文件当前导入 `tokens.css`、`layout.css`、`icon.css`、`font.css`、`content.css`、`components.css`、`themes/index.css`、`animation.css` 和 `status.css`。
+
+`src/css/color.css` 和 `src/css/color_p3.css` 是可选色彩系统文件，不会被 `src/css/index.css` 直接导入；需要这套颜色变量时，由业务侧按需引入。
+
+CSS 目录按职责拆分：
+
+- `src/css/*.css`：元素、布局、内容和组件的基础 DOM 样式描述，提供结构、尺寸、布局、可访问状态和组件必要外观。
+- `src/css/themes/`：风格目录。默认入口 `src/css/themes/index.css` 当前导入 `default/index.css`。
+- `src/css/themes/default/`：基础样式风格，按组件拆分默认视觉实现。
+- 自定义风格应新建在 `src/css/themes/` 下，并通过自己的主题入口按需导入。
 
 ### 文件结构
 
 ```
 src/css/
-├── tokens.css        # 设计令牌 (布局、颜色、主题)
-├── layout.css        # 布局系统 (flex、grid、容器)
-├── content.css       # 文章/阅读模式样式
-├── font.css          # 字体样式
-├── icon.css          # 图标样式
-├── animation.css     # 动画样式
-├── status.css        # 状态指示器样式
-├── components.css    # 基础组件样式
-├── form.css          # 表单元素样式
-├── button.css        # 按钮样式
-├── badge.css         # 徽章样式
-├── tag.css           # 标签样式
-├── card.css          # 卡片样式
-├── modal.css         # 模态框样式
-├── toast.css         # 提示框样式
-├── tabs.css          # 标签页样式
-├── menu.css          # 菜单样式
-├── accordion.css     # 手风琴样式
-├── breadcrumb.css    # 面包屑样式
-├── table.css         # 表格样式
-├── pagination.css    # 分页样式
-├── drop.css          # 下拉菜单样式
-├── tooltip.css       # 工具提示样式
-├── popup.css         # 弹窗样式
-├── offcanvas.css     # 侧边栏样式
-├── flow.css          # 步骤条样式
-├── swiper.css        # 轮播样式
-├── skeleton.css      # 骨架屏样式
-├── loading.css       # 加载动画样式
-├── divider.css       # 分割线样式
-├── avatar.css        # 头像样式
-├── tip.css           # 提示样式
-├── toolbar.css       # 工具栏样式
-└── theme-palette.css # 主题面板样式
+├── index.css             # 默认样式入口
+├── tokens.css            # 设计令牌 (布局、颜色、主题)
+├── layout.css            # 布局系统 (reset、flex、grid、容器)
+├── content.css           # 文章/阅读模式基础样式
+├── icon.css              # 图标基础样式
+├── font.css              # 字体工具类
+├── components.css        # 基础组件样式聚合入口
+├── animation.css         # 动画工具类
+├── status.css            # 状态指示器样式
+├── color.css             # 可选色彩系统，默认入口不直接导入
+├── color_p3.css          # 可选 P3 色域增强，默认入口不直接导入
+├── button.css            # 组件基础 DOM 样式
+├── modal.css
+├── toast.css
+├── tabs.css
+├── menu.css
+├── accordion.css
+├── form.css
+├── flow.css
+├── ...
+└── themes/
+    ├── index.css         # 风格入口，当前导入 default/index.css
+    └── default/
+        ├── index.css     # 默认风格聚合入口
+        ├── button.css    # 默认按钮风格
+        ├── modal.css
+        ├── toast.css
+        └── ...
 ```
 
 ---
+
+## 可选色彩系统 (`color.css` / `color_p3.css`)
+
+`color.css` 和 `color_p3.css` 提供一套建议色彩系统，当前不属于默认 `style.css` 入口的强制依赖。它们适合需要更完整色阶、透明变体和广色域表现的业务主题使用。
+
+这套色彩系统的设计目标：
+
+- **自动深色模式**：每个颜色会根据 `.light` / `.dark` 或根主题模式切换对应变体。
+- **透明变体**：每个颜色提供 `-a*` 透明变体，可用于半透明按钮、卡片、混合色和渐变。
+- **P3 色域支持**：`color_p3.css` 在 `@supports` 与 `@media (color-gamut: p3)` 条件内提供 display-p3/OKLCH 版本，让广色域设备获得更好的色彩表现。
+- **APCA 文本对比**：色阶设计考虑现代 APCA 感知对比，确保文本和背景组合具有更稳定的可读性。
+- **无障碍**：文本颜色与对应背景颜色保持合理对比，目标符合 WCAG 2.1 AA 的可读性要求。
+- **色彩搭配**：提供 gray、olive、tomato、ruby、pink、violet、indigo、blue、teal、grass、mint、lime、yellow、orange、gold 等完整建议色彩搭配。
+
+使用示例：
+
+```css
+@import url('vanilla-jui/src/css/color.css');
+@import url('vanilla-jui/src/css/color_p3.css');
+```
+
+如果业务只使用默认主题风格，不需要额外引入这两个文件。
 
 ## 1. 设计令牌 (`tokens.css`)
 

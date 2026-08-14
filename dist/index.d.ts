@@ -794,15 +794,18 @@ interface ValidatorRule extends Record<string, unknown> {
 interface ValidatorProps extends Record<string, unknown> {
   rules?: Record<string, ValidatorRule>;
   messages?: ValidatorMessageMap;
+  vanilla?: boolean;
   onSubmit?: ((validator: ValidatorInstance) => void) | null;
 }
 interface ResolvedValidatorProps extends Record<string, unknown> {
   rules: Record<string, ValidatorRule>;
   messages: ValidatorMessageMap;
+  vanilla: boolean;
   onSubmit: ((validator: ValidatorInstance) => void) | null;
 }
 interface ValidatorRuntime {
   valid: boolean;
+  error: boolean;
   message: string;
   destroyed: boolean;
 }
@@ -1076,6 +1079,7 @@ interface FormButton {
 interface FormValidatorConfig {
   rules?: Record<string, Record<string, unknown>>;
   messages?: Record<string, Record<string, string>>;
+  vanilla?: boolean;
   onSubmit?: (() => void) | null;
   [key: string]: unknown;
 }
@@ -1219,7 +1223,6 @@ interface FlowState extends Record<string, unknown> {
 }
 interface FlowGoToOptions {
   direction?: FlowDirection;
-  internal?: boolean;
 }
 interface FlowContext {
   flow: Flow;

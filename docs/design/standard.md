@@ -42,6 +42,71 @@ state watcher -> 清空并重建整个组件 DOM
 
 正确做法是从 `state.data`、稳定 key 和派生状态计算 active、index、count、disabled 等业务值。DOM 引用只用于无法声明化的浏览器能力。
 
+## 业务组件组织建议
+
+业务侧使用 `vanilla-signal` 组织 UI 时，推荐采用结构化开发方式，把业务逻辑、派生计算和视图渲染解耦。这样更容易把筛选、排序、提交、权限和错误处理等逻辑写成可测试的纯函数或 action，也更容易维护视图模板。
+
+推荐组织顺序：
+
+1. **定义状态**：使用 `createDeepStore` 创建包含业务数据的响应式存储，例如列表数据、筛选条件、分页、当前用户和提交状态。
+2. **派生计算**：使用 `createMemo` 创建基于状态派生出的新数据，例如筛选后的可见列表、分页窗口、当前选中项和按钮禁用状态。`createMemo` 会按依赖自动缓存，避免把派生结果重复写回 state。
+3. **渲染视图**：使用 `render()` 结合 `jsx` 模板把 state 和 memo 绑定到 DOM，通过 `For` 处理列表，通过 `Show` 或局部动态 child 处理条件渲染。
+
+```js
+import {
+  For,
+  Show,
+  createDeepStore,
+  createMemo,
+  jsx,
+  render,
+} from 'vanilla-signal';
+
+const state = createDeepStore({
+  keyword: '',
+  items: [
+    { id: 1, title: 'Intro', enabled: true },
+    { id: 2, title: 'API', enabled: false },
+  ],
+});
+
+const visibleItems = createMemo(() =>
+  state.items.filter((item) => item.title.includes(state.keyword))
+);
+
+render(
+  () =>
+    jsx('section', {
+      children: [
+        jsx('input', {
+          value: () => state.keyword,
+          onInput: (event) => {
+            state.keyword = event.currentTarget.value;
+          },
+        }),
+        Show({
+          when: () => visibleItems().length > 0,
+          children: () =>
+            jsx('ul', {
+              children: For({
+                each: visibleItems,
+                key: (item) => item.id,
+                children: (item) =>
+                  jsx('li', {
+                    children: () => item().title,
+                  }),
+              }),
+            }),
+          fallback: () => jsx('p', { children: 'No data' }),
+        }),
+      ],
+    }),
+  document.querySelector('#app')
+);
+```
+
+不要为了“同步视图”把筛选结果、当前 DOM 数量或 CSS class 再写成第二份业务状态。需要共享业务规则时，优先提取 action、memo 或纯函数，而不是从 DOM 反查。
+
 ## 组件职责
 
 ### props

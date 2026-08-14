@@ -2,7 +2,7 @@
 
 Validator 是表单校验模块，源码位于 `src/validation/validator.ts`。
 
-它只负责读取表单字段、执行规则校验、写入校验状态类名和错误提示节点。
+它只负责读取表单字段、执行规则校验、写入失败状态类名和错误提示节点。
 
 ## 导入
 
@@ -27,6 +27,7 @@ const validator = createValidator(
       password: { minLength: 'Password too short' },
       plan: { selected: 'Plan required' },
     },
+    vanilla: false,
     onSubmit: (validator) => {
       console.log(validator.runtime.valid);
     },
@@ -56,29 +57,33 @@ const validator = createValidator(
 
 ### Props
 
-| 字段       | 类型               | 默认值 | 说明                                      |
-| ---------- | ------------------ | ------ | ----------------------------------------- |
-| `rules`    | `object`           | `{}`   | 字段校验规则，key 必须匹配表单字段 `name` |
-| `messages` | `object`           | `{}`   | 自定义错误提示，按字段名和规则名索引      |
-| `onSubmit` | `Function \| null` | `null` | 所有字段通过校验后调用                    |
+| 字段       | 类型               | 默认值  | 说明                                      |
+| ---------- | ------------------ | ------- | ----------------------------------------- |
+| `rules`    | `object`           | `{}`    | 字段校验规则，key 必须匹配表单字段 `name` |
+| `messages` | `object`           | `{}`    | 自定义错误提示，按字段名和规则名索引      |
+| `vanilla`  | `boolean`          | `false` | 是否启用浏览器原生校验能力                |
+| `onSubmit` | `Function \| null` | `null`  | 所有字段通过校验后调用                    |
+
+`vanilla: false` 是默认行为，会把表单的 `noValidate` 设置为 `true`。即使字段上渲染了 `required`、`type="email"` 等原生约束，也不会触发浏览器原生校验气泡；提交时只执行 Validator 自己的 `rules`。需要启用浏览器原生表单验证能力时，设置 `vanilla: true`。`destroy()` 会恢复创建实例前的 `noValidate` 状态。
 
 ## 实例结构
 
 | 属性              | 说明                          |
 | ----------------- | ----------------------------- |
-| `dom.root`        | 当前表单元素，销毁后为 `null` |
+| `element`         | 当前表单元素，销毁后为 `null` |
 | `props`           | 归一化后的校验配置            |
 | `runtime.valid`   | 最近一次校验是否通过          |
+| `runtime.error`   | 当前是否存在已报告的错误字段  |
 | `runtime.message` | 最近一次失败消息              |
 
-`destroy()` 后，`dom.root` 和 `props` 都会被置为 `null`，事件监听和校验提示会被清理。
+`destroy()` 后，`element` 和 `props` 都会变为 `null`，事件监听和校验提示会被清理。
 
 ## 错误提示 DOM
 
-Validator 优先使用最近的 `[data-form-control]` 作为字段容器；如果找不到，则使用字段的直接父元素。错误提示节点会写入当前字段容器：
+Validator 优先使用最近的 `[data-field-control]` 作为字段容器；如果找不到，则使用字段的直接父元素。错误提示节点会写入当前字段容器：
 
 ```html
-<div data-form-control="email">
+<div data-field-control="email">
   <input name="email" />
   <div class="help-block is-invalid" data-validator-help="email">
     Email required
@@ -86,9 +91,11 @@ Validator 优先使用最近的 `[data-form-control]` 作为字段容器；如�
 </div>
 ```
 
-Validator 依赖属性名作为交互选择器。已有的 `[data-form-help]` 静态帮助文案不会被覆盖，动态错误提示只通过 `[data-validator-help]` 创建和删除。
+Validator 依赖属性名作为交互选择器。已有的 `[data-field-help]` 静态帮助文案不会被覆盖，动态错误提示只通过 `[data-validator-help]` 创建和删除。
 
-校验失败时，非 checkbox 字段会添加 `is-invalid` 并移除 `is-valid`。校验通过时，会移除当前字段对应的 `[data-validator-help]`，并添加 `is-valid`。
+校验失败时，非 checkbox 字段会添加 `is-invalid` 并移除 `is-valid`。校验通过时，只会移除当前字段对应的 `[data-validator-help]` 和 `is-invalid`，不会再添加 `is-valid`。
+
+提交或手动调用 `validate()` 后，如果字段校验失败，Validator 会把字段名记录为当前错误字段，并把 `runtime.error` 设置为 `true`。此后只有这些已报错字段的 `input` / `change` 会触发字段级自动重验；字段通过后会移除对应错误提示，全部已报错字段都通过或调用 `reset()` 后，`runtime.error` 会恢复为 `false`。未进入错误状态前，普通输入不会触发自动校验。
 
 ## 内置规则
 
@@ -106,15 +113,46 @@ Validator 依赖属性名作为交互选择器。已有的 `[data-form-help]` �
 | `noSpecial` | `boolean`        | 禁止 `@#$%^&*` 等特殊字符    |
 | `pattern`   | `string\|RegExp` | 自定义正则                   |
 
-### 选择字段
+### Select
 
-| 规则       | 类型      | 说明                            |
-| ---------- | --------- | ------------------------------- |
-| `checked`  | `boolean` | checkbox 是否处于指定选中状态   |
-| `selected` | `boolean` | select 是否选择了至少一个非空值 |
-| `multiple` | `boolean` | 多选 select 是否至少选择了一项  |
-| `min`      | `number`  | 多选 select 最少选择项数        |
-| `max`      | `number`  | 多选 select 最多选择项数        |
+| 规则       | 类型      | 说明                   |
+| ---------- | --------- | ---------------------- |
+| `selected` | `boolean` | 至少选择一个非空值     |
+| `multiple` | `boolean` | 多选模式下至少选择一项 |
+| `min`      | `number`  | 多选模式下最少选择项数 |
+| `max`      | `number`  | 多选模式下最多选择项数 |
+
+### Radio
+
+Validator 当前没有 radio 专用内置规则。需要校验 radio 分组时，可以在 `vanilla: true` 模式下使用浏览器原生 `required`，或使用 `validate` 自定义规则读取同名 radio 的选中状态。
+
+### Checkbox
+
+| 规则      | 类型      | 说明                                       |
+| --------- | --------- | ------------------------------------------ |
+| `checked` | `boolean` | 单个 checkbox 是否处于指定选中状态         |
+| `min`     | `number`  | checkbox 分组最少选中项数，不作用于 switch |
+| `max`     | `number`  | checkbox 分组最多选中项数，不作用于 switch |
+
+```js
+const validator = createValidator('#form', {
+  rules: {
+    features: { min: 2, max: 3 },
+  },
+  messages: {
+    features: {
+      min: '至少选择 2 项',
+      max: '最多选择 3 项',
+    },
+  },
+});
+```
+
+### Switch
+
+| 规则      | 类型      | 说明                        |
+| --------- | --------- | --------------------------- |
+| `checked` | `boolean` | switch 是否处于指定选中状态 |
 
 ### 文件字段
 
@@ -183,4 +221,4 @@ validator.destroy();
 
 ## 与 Form 集成
 
-`Form` 内部会使用 `createValidator()` 创建校验实例。`Form` 的 `validator.rules` 和 `validator.messages` 与本模块格式一致。
+`Form` 内部会使用 `createValidator()` 创建校验实例。`Form` 的 `validator.rules`、`validator.messages` 和 `validator.vanilla` 与本模块格式一致。

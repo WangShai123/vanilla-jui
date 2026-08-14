@@ -164,6 +164,7 @@ const modal = createModal({
 | `showCancel` | `boolean`                                                          | `true`     | 是否显示取消按钮                         |
 | `showClose`  | `boolean`                                                          | `true`     | 是否显示右上角关闭按钮                   |
 | `fullscreen` | `boolean`                                                          | `false`    | 是否全屏                                 |
+| `style`      | `string \| object \| null`                                         | `null`     | 弹窗主体内联样式                         |
 | `text`       | `object`                                                           | 见下表     | 初始化文案配置                           |
 | `header`     | `boolean`                                                          | `true`     | 是否渲染头部节点                         |
 | `footer`     | `boolean`                                                          | `true`     | 是否渲染底部节点                         |

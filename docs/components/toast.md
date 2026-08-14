@@ -44,10 +44,12 @@ Toast.lite('已更新');
 | `theme`        | 消息主题                                            | `info`     |
 | `text`         | 文案配置                                            |            |
 | `text.loading` | 加载中文案                                          | Loading... |
-| `onClose`      | 点击 Toast 常规关闭时触发，随后关闭 Toast           |            |
-| `onCancel`     | 点击关闭且当前 `loading` 仍为 `true` 时触发         |            |
+| `onClose`      | 用户点击 Toast 关闭后触发                           |            |
+| `onCancel`     | 用户点击关闭且关闭瞬间 `loading` 仍为 `true` 时触发 |            |
 
 当 `duration > 0` 时，普通 Toast 只会在 `loading` 为 `false` 时启动自动关闭计时。初始 `loading` 为 `true` 的 Toast 会保持显示，直到业务把响应式状态改为 `false` 后再按 `duration` 计时关闭。
+
+用户点击关闭时，Toast 会先进入关闭流程并释放响应式绑定，再按关闭瞬间的 `loading` 状态决定是否执行 `onCancel`，最后执行 `onClose`。因此即使 `onCancel` 中取消请求并把 `loading` 改为 `false`，也不会在关闭中的 Toast 上短暂暴露普通 message。`duration` 自动关闭不会触发 `onCancel` 或 `onClose`。
 
 ```js
 const [loading, setLoading] = createSignal(true);

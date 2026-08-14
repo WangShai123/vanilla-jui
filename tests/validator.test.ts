@@ -13,13 +13,16 @@ import { createValidator } from '../src/validation/validator.ts';
 
 let validator: ReturnType<typeof createValidator> | null = null;
 
-function mount(html: string): HTMLFormElement {
+function mount(
+  html: string,
+  { noValidate = true }: { noValidate?: boolean } = {}
+): HTMLFormElement {
   document.body.innerHTML = html;
   const form = document.querySelector('form');
   if (!(form instanceof HTMLFormElement)) {
     throw new Error('Missing form fixture.');
   }
-  form.noValidate = true;
+  form.noValidate = noValidate;
   return form;
 }
 
@@ -42,12 +45,12 @@ afterEach(() => {
 });
 
 describe('Validator', () => {
-  it('uses data-form-control for error help and preserves static help', () => {
+  it('uses data-field-control for error help and preserves static help', () => {
     const form = mount(`
       <form>
-        <div data-form-control="email">
+        <div data-field-control="email">
           <input name="email" type="text" value="">
-          <div class="help-block" data-form-help="email">Static help</div>
+          <div class="help-block" data-field-help="email">Static help</div>
         </div>
       </form>
     `);
@@ -62,16 +65,79 @@ describe('Validator', () => {
     expect(
       form.querySelector('[data-validator-help="email"]')?.textContent
     ).toBe('Email required');
-    expect(form.querySelector('[data-form-help="email"]')?.textContent).toBe(
+    expect(form.querySelector('[data-field-help="email"]')?.textContent).toBe(
       'Static help'
     );
 
     input(form, 'email').value = 'demo@example.com';
     expect(validator.validate()).toBe(true);
+    expect(input(form, 'email').classList.contains('is-valid')).toBe(false);
+    expect(input(form, 'email').classList.contains('is-invalid')).toBe(false);
     expect(form.querySelector('[data-validator-help="email"]')).toBeNull();
-    expect(form.querySelector('[data-form-help="email"]')?.textContent).toBe(
+    expect(form.querySelector('[data-field-help="email"]')?.textContent).toBe(
       'Static help'
     );
+  });
+
+  it('does not add is-valid when validation passes', () => {
+    const form = mount(`
+      <form>
+        <div data-field-control="email">
+          <input name="email" type="text" value="demo@example.com">
+        </div>
+      </form>
+    `);
+
+    validator = createValidator(form, {
+      rules: { email: { required: true, email: true } },
+    });
+
+    expect(validator.validate()).toBe(true);
+    expect(input(form, 'email').classList.contains('is-valid')).toBe(false);
+    expect(input(form, 'email').classList.contains('is-invalid')).toBe(false);
+  });
+
+  it('disables native form validation by default', () => {
+    const form = mount(
+      `
+      <form>
+        <div data-field-control="email">
+          <input name="email" type="text" required value="">
+        </div>
+      </form>
+    `,
+      { noValidate: false }
+    );
+
+    validator = createValidator(form, {
+      rules: { email: { required: true } },
+    });
+
+    expect(form.noValidate).toBe(true);
+    expect(validator.validate()).toBe(false);
+
+    validator.destroy();
+    validator = null;
+
+    expect(form.noValidate).toBe(false);
+  });
+
+  it('enables native form validation when vanilla is true', () => {
+    const form = mount(
+      `
+      <form>
+        <input name="email" type="text" required value="">
+      </form>
+    `,
+      { noValidate: false }
+    );
+
+    validator = createValidator(form, {
+      vanilla: true,
+      rules: { email: { required: true } },
+    });
+
+    expect(form.noValidate).toBe(false);
   });
 
   it('does not use legacy form-control as an interaction selector', () => {
@@ -102,7 +168,7 @@ describe('Validator', () => {
   it('applies configured rules when a control also has native validation attributes', () => {
     const form = mount(`
       <form>
-        <div data-form-control="message">
+        <div data-field-control="message">
           <input name="message" type="text" required value="1">
         </div>
       </form>
@@ -127,12 +193,160 @@ describe('Validator', () => {
     expect(validator.validate()).toBe(true);
   });
 
+  it('automatically revalidates an invalid text field after user input', () => {
+    const form = mount(`
+      <form>
+        <div data-field-control="message">
+          <input name="message" type="text" value="1">
+        </div>
+      </form>
+    `);
+    const message = input(form, 'message');
+
+    validator = createValidator(form, {
+      rules: { message: { minLength: 5 } },
+      messages: {
+        message: {
+          minLength: 'Message must contain at least 5 characters',
+        },
+      },
+    });
+
+    expect(validator.validate()).toBe(false);
+    expect(validator.runtime.error).toBe(true);
+    expect(message.classList.contains('is-invalid')).toBe(true);
+
+    message.value = '12345';
+    message.dispatchEvent(new Event('input', { bubbles: true }));
+
+    expect(validator.runtime.error).toBe(false);
+    expect(validator.runtime.valid).toBe(true);
+    expect(message.classList.contains('is-invalid')).toBe(false);
+    expect(form.querySelector('[data-validator-help="message"]')).toBeNull();
+  });
+
+  it('does not automatically validate fields before an error has been reported', () => {
+    const form = mount(`
+      <form>
+        <div data-field-control="message">
+          <input name="message" type="text" value="1">
+        </div>
+      </form>
+    `);
+    const message = input(form, 'message');
+
+    validator = createValidator(form, {
+      rules: { message: { minLength: 5 } },
+      messages: {
+        message: {
+          minLength: 'Message must contain at least 5 characters',
+        },
+      },
+    });
+
+    message.dispatchEvent(new Event('input', { bubbles: true }));
+
+    expect(validator.runtime.error).toBe(false);
+    expect(message.classList.contains('is-invalid')).toBe(false);
+    expect(form.querySelector('[data-validator-help="message"]')).toBeNull();
+  });
+
+  it('stops automatic revalidation after reset clears the error state', () => {
+    const form = mount(`
+      <form>
+        <div data-field-control="message">
+          <input name="message" type="text" value="1">
+        </div>
+      </form>
+    `);
+    const message = input(form, 'message');
+
+    validator = createValidator(form, {
+      rules: { message: { minLength: 5 } },
+      messages: {
+        message: {
+          minLength: 'Message must contain at least 5 characters',
+        },
+      },
+    });
+
+    expect(validator.validate()).toBe(false);
+    validator.reset({ native: false });
+    message.dispatchEvent(new Event('input', { bubbles: true }));
+
+    expect(validator.runtime.error).toBe(false);
+    expect(message.classList.contains('is-invalid')).toBe(false);
+    expect(form.querySelector('[data-validator-help="message"]')).toBeNull();
+  });
+
+  it('validates checkbox group min and max checked counts', () => {
+    const form = mount(`
+      <form>
+        <div data-field-control="features">
+          <label><input name="features" type="checkbox" value="audit" checked>Audit</label>
+          <label><input name="features" type="checkbox" value="export">Export</label>
+          <label><input name="features" type="checkbox" value="report">Report</label>
+          <label><input name="features" type="checkbox" value="alert">Alert</label>
+        </div>
+      </form>
+    `);
+    const boxes = Array.from(
+      form.querySelectorAll<HTMLInputElement>('input[name="features"]')
+    );
+
+    validator = createValidator(form, {
+      rules: { features: { min: 2, max: 3 } },
+      messages: {
+        features: {
+          min: 'Select at least 2 features',
+          max: 'Select at most 3 features',
+        },
+      },
+    });
+
+    expect(validator.validate()).toBe(false);
+    expect(
+      form.querySelector('[data-validator-help="features"]')?.textContent
+    ).toBe('Select at least 2 features');
+
+    boxes[1]!.checked = true;
+    boxes[1]!.dispatchEvent(new Event('change', { bubbles: true }));
+    expect(validator.runtime.error).toBe(false);
+    expect(form.querySelector('[data-validator-help="features"]')).toBeNull();
+
+    boxes[2]!.checked = true;
+    boxes[3]!.checked = true;
+    expect(validator.validate()).toBe(false);
+    expect(
+      form.querySelector('[data-validator-help="features"]')?.textContent
+    ).toBe('Select at most 3 features');
+  });
+
+  it('does not treat a switch checkbox as a checkbox group for min and max', () => {
+    const form = mount(`
+      <form>
+        <div data-field-control="enabled">
+          <label data-field-switch="enabled">
+            <input name="enabled" type="checkbox" value="1">
+            <span data-field-switch-slider></span>
+          </label>
+        </div>
+      </form>
+    `);
+
+    validator = createValidator(form, {
+      rules: { enabled: { min: 1, max: 1 } },
+    });
+
+    expect(validator.validate()).toBe(true);
+  });
+
   it('binds submit and reset without recursively resetting', () => {
     const form = mount(`
       <form>
-        <div data-form-control="email">
+        <div data-field-control="email">
           <input name="email" type="text" value="">
-          <div class="help-block" data-form-help="email">Static help</div>
+          <div class="help-block" data-field-help="email">Static help</div>
         </div>
       </form>
     `);
@@ -153,7 +367,7 @@ describe('Validator', () => {
 
     form.dispatchEvent(new Event('reset', { bubbles: true }));
     expect(form.querySelector('[data-validator-help="email"]')).toBeNull();
-    expect(form.querySelector('[data-form-help="email"]')).toBeTruthy();
+    expect(form.querySelector('[data-field-help="email"]')).toBeTruthy();
   });
 
   it('uses custom validator string as the error message', () => {
@@ -161,7 +375,7 @@ describe('Validator', () => {
       vi.fn<(validator: ReturnType<typeof createValidator>) => void>();
     const form = mount(`
       <form>
-        <div data-form-control="username">
+        <div data-field-control="username">
           <input name="username" type="text" value="admin-user">
         </div>
       </form>

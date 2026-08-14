@@ -126,6 +126,26 @@ describe('Flow', () => {
     expect(onChange).toHaveBeenCalled();
   });
 
+  it('uses plain object move hook results as the transition payload', async () => {
+    const instance = createFlow({
+      render: false,
+      steps: [
+        {
+          id: 'account',
+          onNext: () => ({ normalized: true }),
+        },
+        { id: 'profile' },
+      ],
+    });
+    flow = instance;
+
+    await instance.next({ raw: true });
+
+    expect(instance.state.currentId).toBe('profile');
+    expect(instance.getStepData('account')).toEqual({ normalized: true });
+    expect(instance.state.data).toEqual({ normalized: true });
+  });
+
   it('preserves functional modal step config while cloning steps', () => {
     const modal = vi.fn(() => ({ content: 'Modal content' }));
     const instance = createFlow({
@@ -203,6 +223,28 @@ describe('Flow', () => {
     expect(instance.state.loading).toBe(false);
   });
 
+  it('treats public goTo options as external options only', async () => {
+    const instance = createFlow({
+      id: 'guarded-public',
+      render: false,
+      steps: [
+        { id: 'one' },
+        {
+          id: 'two',
+          canEnter: () => false,
+        },
+      ],
+    });
+    flow = instance;
+
+    await expect(
+      instance.goTo('two', null, { internal: true } as never)
+    ).rejects.toThrow('blocked entering');
+
+    expect(instance.state.currentId).toBe('one');
+    expect(instance.state.loading).toBe(false);
+  });
+
   it('notifies subscribers for async loading and handles repeated actions', async () => {
     let release = () => {};
     const onBusy = vi.fn();
@@ -249,5 +291,41 @@ describe('Flow', () => {
         { id: 'two', loading: false },
       ])
     );
+  });
+
+  it('cancels stale pending transitions when reset is called headlessly', async () => {
+    let release = () => {};
+    const instance = createFlow({
+      id: 'reset-pending',
+      render: false,
+      steps: [
+        {
+          id: 'one',
+          onLeave: () =>
+            new Promise<void>((resolve) => {
+              release = resolve;
+            }),
+        },
+        { id: 'two' },
+      ],
+    });
+    flow = instance;
+
+    const pending = instance.next({ draft: true });
+    await tick();
+
+    expect(instance.state.loading).toBe(true);
+
+    instance.reset();
+    expect(instance.state.currentId).toBe('one');
+    expect(instance.state.loading).toBe(false);
+    expect(instance.state.data).toEqual({});
+
+    release();
+
+    await expect(pending).resolves.toBeNull();
+    expect(instance.state.currentId).toBe('one');
+    expect(instance.state.loading).toBe(false);
+    expect(instance.state.data).toEqual({});
   });
 });

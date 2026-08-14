@@ -19,7 +19,7 @@ await panel.show();
 await panel.hide();
 ```
 
-`content` 支持字符串、DOM 节点、节点数组、函数和 `null`。函数型 `content` 会在 `show()` 时执行，可返回普通内容或 Promise；Promise resolve 前会在内容区显示 `createLoading()`。
+`content` 支持字符串、数字、布尔值、DOM 节点、节点数组、函数和空值。函数型 `content` 会在 `show()` 时执行，可返回普通内容或 Promise；Promise resolve 前会在内容区显示 `createLoading()`。
 
 ## 内容状态
 
@@ -111,32 +111,33 @@ const panel = createOffcanvas({
 
 ## Props
 
-| 参数           | 类型                                           | 默认值    | 说明                                  |
-| -------------- | ---------------------------------------------- | --------- | ------------------------------------- |
-| `content`      | `string \| Node \| Node[] \| Function \| null` | `""`      | 面板内容。函数型 content 支持异步返回 |
-| `overlay`      | `boolean`                                      | `true`    | 是否显示遮罩                          |
-| `filter`       | `boolean`                                      | `true`    | 遮罩层是否启用模糊滤镜                |
-| `bodyOverflow` | `boolean`                                      | `true`    | 展示时是否控制 body overflow          |
-| `cache`        | `boolean`                                      | `false`   | 是否缓存函数型 content 的结果         |
-| `ttl`          | `number`                                       | `0`       | 缓存有效时间，单位毫秒                |
-| `direction`    | `"top" \| "right" \| "bottom" \| "left"`       | `"left"`  | 滑出方向，写入 `data-direction`       |
-| `animate`      | `string`                                       | `"slide"` | 动效名称，写入 `data-animate`         |
-| `bgClose`      | `boolean`                                      | `true`    | 点击遮罩关闭                          |
-| `escClose`     | `boolean`                                      | `true`    | Escape 关闭                           |
-| `id`           | `string \| null`                               | 自动生成  | 面板 id                               |
-| `className`    | `object`                                       | 默认类名  | 覆盖组件结构类名                      |
-| `onShow`       | `Function \| null`                             | `null`    | 展示前回调，支持 Promise              |
-| `onShown`      | `Function \| null`                             | `null`    | 展示后回调                            |
-| `onHide`       | `Function \| null`                             | `null`    | 隐藏前回调，支持 Promise              |
-| `onHidden`     | `Function \| null`                             | `null`    | 隐藏后回调                            |
+| 参数           | 类型                                     | 默认值    | 说明                                  |
+| -------------- | ---------------------------------------- | --------- | ------------------------------------- |
+| `content`      | `RenderableContent \| Function`          | `""`      | 面板内容。函数型 content 支持异步返回 |
+| `overlay`      | `boolean`                                | `true`    | 是否显示遮罩                          |
+| `filter`       | `boolean`                                | `true`    | 遮罩层是否启用模糊滤镜                |
+| `bodyOverflow` | `boolean`                                | `true`    | 展示时是否控制 body overflow          |
+| `cache`        | `boolean`                                | `false`   | 是否缓存函数型 content 的结果         |
+| `ttl`          | `number`                                 | `0`       | 缓存有效时间，单位毫秒                |
+| `direction`    | `"top" \| "right" \| "bottom" \| "left"` | `"left"`  | 滑出方向，写入 `data-direction`       |
+| `animate`      | `string`                                 | `"slide"` | 动效名称，写入 `data-animate`         |
+| `bgClose`      | `boolean`                                | `true`    | 点击遮罩关闭                          |
+| `escClose`     | `boolean`                                | `true`    | Escape 关闭                           |
+| `id`           | `string \| null`                         | 自动生成  | 面板 id                               |
+| `className`    | `object`                                 | 默认类名  | 覆盖组件结构类名                      |
+| `onShow`       | `Function \| null`                       | `null`    | 展示前回调，支持 Promise              |
+| `onShown`      | `Function \| null`                       | `null`    | 展示后回调                            |
+| `onHide`       | `Function \| null`                       | `null`    | 隐藏前回调，支持 Promise              |
+| `onHidden`     | `Function \| null`                       | `null`    | 隐藏后回调                            |
 
 ## State
 
-| 字段      | 类型               | 说明                        |
-| --------- | ------------------ | --------------------------- |
-| `content` | `OffcanvasContent` | 当前内容，更新后自动渲染    |
-| `visible` | `boolean`          | 面板当前是否可见            |
-| `loading` | `boolean`          | 函数型 content 是否正在加载 |
+| 字段              | 类型                | 说明                        |
+| ----------------- | ------------------- | --------------------------- |
+| `content`         | `OffcanvasContent`  | 当前内容，更新后自动渲染    |
+| `resolvedContent` | `RenderableContent` | 函数型内容解析后的渲染结果  |
+| `visible`         | `boolean`           | 面板当前是否可见            |
+| `loading`         | `boolean`           | 函数型 content 是否正在加载 |
 
 ## className
 
