@@ -75,6 +75,12 @@ interface TrackItem {
   key: string;
 }
 
+interface NormalizedItemCacheEntry {
+  item: NormalizedSwiperDataItem;
+  keys: string[];
+  values: unknown[];
+}
+
 export interface SwiperSlideContext {
   swiper: Swiper;
   item: NormalizedSwiperDataItem;
@@ -291,6 +297,8 @@ export function createSwiper(input: SwiperProps = {}): Swiper {
   }) as SwiperState;
   const events = createEventManager();
   const itemKeys = new WeakMap<object, string>();
+  const normalizedCache = new Map<string, NormalizedItemCacheEntry>();
+  const trackItemCache = new Map<string, TrackItem>();
   const imageCleanups = new Set<() => void>();
   let swiper!: Swiper;
   let wrapper: HTMLElement | null = null;
@@ -311,9 +319,31 @@ export function createSwiper(input: SwiperProps = {}): Swiper {
     if (!itemKeys.has(item)) itemKeys.set(item, randomId());
     return itemKeys.get(item) as string;
   };
+  const readItemEntries = (
+    item: SwiperDataItem
+  ): { keys: string[]; values: unknown[] } => {
+    const keys = Object.keys(item);
+    return {
+      keys,
+      values: keys.map((key) => item[key]),
+    };
+  };
+  const sameItemEntries = (
+    entry: NormalizedItemCacheEntry | undefined,
+    keys: string[],
+    values: unknown[]
+  ): boolean => {
+    if (!entry || entry.keys.length !== keys.length) return false;
+    for (let index = 0; index < keys.length; index += 1) {
+      if (entry.keys[index] !== keys[index]) return false;
+      if (!Object.is(entry.values[index], values[index])) return false;
+    }
+    return true;
+  };
   const normalizeData = (
     data: SwiperDataItem[]
   ): NormalizedSwiperDataItem[] => {
+    const activeKeys = new Set<string>();
     const items = data.map((item, index) => {
       validateParam(
         String(index),
@@ -321,13 +351,26 @@ export function createSwiper(input: SwiperProps = {}): Swiper {
         SWIPER_DATA_ITEM_RULE,
         'Swiper.state.data'
       );
-      return {
+      const key = itemKey(item);
+      activeKeys.add(key);
+      const { keys, values } = readItemEntries(item);
+      const cached = normalizedCache.get(key);
+      if (cached && sameItemEntries(cached, keys, values)) {
+        cached.item.index = index;
+        return cached.item;
+      }
+      const normalized = {
         ...item,
         blank: item.blank !== false,
         index,
-        key: itemKey(item),
+        key,
       };
+      normalizedCache.set(key, { item: normalized, keys, values });
+      return normalized;
     });
+    for (const key of normalizedCache.keys()) {
+      if (!activeKeys.has(key)) normalizedCache.delete(key);
+    }
     if (!items.some((item) => item.sort != null)) return items;
     return items.sort((a, b) => {
       if (a.sort == null && b.sort == null) return a.index - b.index;
@@ -336,31 +379,47 @@ export function createSwiper(input: SwiperProps = {}): Swiper {
       return a.sort - b.sort || a.index - b.index;
     });
   };
+  const trackItem = (
+    item: NormalizedSwiperDataItem,
+    index: number,
+    clone: TrackItem['clone']
+  ): TrackItem => {
+    const key =
+      clone === null
+        ? `real:${item.key}:${Boolean(item.url)}`
+        : `clone:${clone}:${item.key}:${Boolean(item.url)}`;
+    const cached = trackItemCache.get(key);
+    if (cached && cached.item === item && cached.clone === clone) {
+      cached.index = index;
+      return cached;
+    }
+    const next = { item, index, clone, key } satisfies TrackItem;
+    trackItemCache.set(key, next);
+    return next;
+  };
   const createTrackItems = (items: NormalizedSwiperDataItem[]): TrackItem[] => {
-    const real = items.map((item, index) => ({
-      item,
-      index,
-      clone: null,
-      key: `real:${item.key}:${Boolean(item.url)}`,
-    })) satisfies TrackItem[];
-    if (!props.loop || items.length <= 1) return real;
+    const activeKeys = new Set<string>();
+    const real = items.map((item, index) => {
+      const current = trackItem(item, index, null);
+      activeKeys.add(current.key);
+      return current;
+    });
+    if (!props.loop || items.length <= 1) {
+      for (const key of trackItemCache.keys()) {
+        if (!activeKeys.has(key)) trackItemCache.delete(key);
+      }
+      return real;
+    }
     const first = items[0];
     const last = items[items.length - 1];
-    return [
-      {
-        item: last,
-        index: items.length - 1,
-        clone: 'last',
-        key: `clone:last:${last.key}:${Boolean(last.url)}`,
-      },
-      ...real,
-      {
-        item: first,
-        index: 0,
-        clone: 'first',
-        key: `clone:first:${first.key}:${Boolean(first.url)}`,
-      },
-    ];
+    const lastClone = trackItem(last, items.length - 1, 'last');
+    const firstClone = trackItem(first, 0, 'first');
+    activeKeys.add(lastClone.key);
+    activeKeys.add(firstClone.key);
+    for (const key of trackItemCache.keys()) {
+      if (!activeKeys.has(key)) trackItemCache.delete(key);
+    }
+    return [lastClone, ...real, firstClone];
   };
   const realCount = (): number => normalizedItems().length;
   const trackCount = (): number => trackItems().length;
@@ -372,6 +431,10 @@ export function createSwiper(input: SwiperProps = {}): Swiper {
     if (index === 0) return count - 1;
     if (index === trackCount() - 1) return 0;
     return index - 1;
+  };
+  const toRealIndexFromTrackPosition = (index: number): number => {
+    if (!props.loop) return Math.max(0, index);
+    return toRealIndex(index);
   };
   const trackIndexForRealIndex = (index: number): number => {
     const count = realCount();
@@ -710,11 +773,22 @@ export function createSwiper(input: SwiperProps = {}): Swiper {
     });
   };
 
-  const slideView = (itemAccessor: () => TrackItem): HTMLElement => {
+  const slideView = (
+    itemAccessor: () => TrackItem,
+    trackIndexAccessor: () => number
+  ): HTMLElement => {
+    const realIndex = (): number =>
+      toRealIndexFromTrackPosition(trackIndexAccessor());
     const slideContent = () => {
-      const { item, index } = itemAccessor();
-      const context = { swiper, item, index };
+      const { item } = itemAccessor();
       if (item.children != null) {
+        const context = {
+          swiper,
+          item,
+          get index() {
+            return realIndex();
+          },
+        } as SwiperSlideContext;
         return asRenderable(
           typeof item.children === 'function'
             ? item.children(context)
@@ -742,12 +816,12 @@ export function createSwiper(input: SwiperProps = {}): Swiper {
     };
     const commonProps = {
       className: props.className.slide,
-      'data-swiper-slide': () => String(itemAccessor().index),
+      'data-swiper-slide': () => String(realIndex()),
       'data-swiper-index': () =>
-        itemAccessor().clone ? null : String(itemAccessor().index),
+        itemAccessor().clone ? null : String(realIndex()),
       'data-clone': () => itemAccessor().clone,
       role: 'group',
-      'aria-label': () => `Slide ${itemAccessor().index + 1}`,
+      'aria-label': () => `Slide ${realIndex() + 1}`,
       children: slideContent,
     };
     return itemAccessor().item.url

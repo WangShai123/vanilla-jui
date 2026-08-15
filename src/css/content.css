@@ -581,6 +581,7 @@
     padding: 0.75em 1em;
     border-bottom: 1px solid var(--content-border-subtle);
     text-align: left;
+    vertical-align: top;
   }
 
   .j-content th {

@@ -288,6 +288,102 @@ describe('Swiper', () => {
     expect(swiper.element?.textContent).toContain('Direct 2');
   });
 
+  it('reuses unchanged slide nodes and content when state data is pushed or spliced', async () => {
+    const calls = new Map<string, number>();
+    const item = (name: string) => ({
+      children: () => {
+        calls.set(name, (calls.get(name) || 0) + 1);
+        return name;
+      },
+    });
+    swiper = mount(
+      createSwiper({
+        data: [item('one'), item('two'), item('three')],
+        autoplay: false,
+        loop: false,
+      })
+    );
+
+    const before = slides(swiper);
+    expect(Object.fromEntries(calls)).toEqual({
+      one: 1,
+      two: 1,
+      three: 1,
+    });
+
+    swiper.state.data.push(item('four'));
+    await tick();
+
+    const afterPush = slides(swiper);
+    expect(afterPush).toHaveLength(4);
+    expect(afterPush[0]).toBe(before[0]);
+    expect(afterPush[1]).toBe(before[1]);
+    expect(afterPush[2]).toBe(before[2]);
+    expect(Object.fromEntries(calls)).toEqual({
+      one: 1,
+      two: 1,
+      three: 1,
+      four: 1,
+    });
+
+    swiper.state.data.splice(1, 1);
+    await tick();
+
+    const afterRemove = slides(swiper);
+    expect(afterRemove).toHaveLength(3);
+    expect(afterRemove[0]).toBe(before[0]);
+    expect(afterRemove[1]).toBe(before[2]);
+    expect(afterRemove[2]).toBe(afterPush[3]);
+    expect(Object.fromEntries(calls)).toEqual({
+      one: 1,
+      two: 1,
+      three: 1,
+      four: 1,
+    });
+  });
+
+  it('keeps unchanged loop slide content stable when state data is pushed or spliced', async () => {
+    const calls = new Map<string, number>();
+    const item = (name: string) => ({
+      children: () => {
+        calls.set(name, (calls.get(name) || 0) + 1);
+        return name;
+      },
+    });
+    swiper = mount(
+      createSwiper({
+        data: [item('one'), item('two'), item('three')],
+        autoplay: false,
+      })
+    );
+
+    expect(Object.fromEntries(calls)).toEqual({
+      one: 2,
+      two: 1,
+      three: 2,
+    });
+
+    swiper.state.data.push(item('four'));
+    await tick();
+
+    expect(Object.fromEntries(calls)).toEqual({
+      one: 2,
+      two: 1,
+      three: 2,
+      four: 2,
+    });
+
+    swiper.state.data.splice(1, 1);
+    await tick();
+
+    expect(Object.fromEntries(calls)).toEqual({
+      one: 2,
+      two: 1,
+      three: 2,
+      four: 2,
+    });
+  });
+
   it('loads data from a function and shows loading while pending', async () => {
     const loadData = vi.fn(
       () =>

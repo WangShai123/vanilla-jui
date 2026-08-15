@@ -10,6 +10,7 @@
     --table-border-color: var(--ui-border);
     --table-cell-padding: 0.5em 0.75em;
     --table-cell-text-align: left;
+    --table-cell-vertical-align: top;
     --table-link-fg: var(--tone-solid);
     --table-striped-bg: var(--tone-soft);
     --table-hover-bg: var(--tone-soft);

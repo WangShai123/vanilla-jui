@@ -29,6 +29,7 @@
   table.j-table th:not([align]),
   table.j-table td:not([align]) {
     text-align: var(--table-cell-text-align);
+    vertical-align: var(--table-cell-vertical-align);
   }
 
   table.j-table a {

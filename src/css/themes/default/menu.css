@@ -49,6 +49,7 @@
     --sub-menu-border-width: 0;
     --sub-menu-item-hover-outline-width: 0;
     --menu-link-gap: var(--s2);
+    --sub-menu-box-shadow: none;
   }
 
   .j-menu[data-menu-type='bottom'] {
