@@ -1,6 +1,7 @@
 import {
   createDeepStore,
   createEffect,
+  createSignal,
   flushSync,
   insert,
   jsx,
@@ -79,9 +80,12 @@ interface ResolvedOffcanvasProps extends Record<string, unknown> {
 
 interface OffcanvasState extends Record<string, unknown> {
   content: OffcanvasContent;
-  resolvedContent: RenderableContent<Offcanvas>;
   visible: boolean;
   loading: boolean;
+}
+
+interface ResolvedOffcanvasContent {
+  value: RenderableContent<Offcanvas>;
 }
 
 interface OffcanvasCache {
@@ -157,7 +161,6 @@ const OFFCANVAS_PROPS_SCHEMA = {
 
 const OFFCANVAS_STATE_SCHEMA = {
   content: OFFCANVAS_PROPS_SCHEMA.content,
-  resolvedContent: { type: 'renderable' },
   visible: { type: 'boolean' },
   loading: { type: 'boolean' },
 };
@@ -225,10 +228,13 @@ export function createOffcanvas(input: OffcanvasProps = {}): Offcanvas {
   const props = normalizeProps(input);
   const state = createDeepStore({
     content: props.content,
-    resolvedContent: typeof props.content === 'function' ? null : props.content,
     visible: false,
     loading: false,
   }) as OffcanvasState;
+  const [resolvedContent, setResolvedContent] =
+    createSignal<ResolvedOffcanvasContent>({
+      value: typeof props.content === 'function' ? null : props.content,
+    });
   const runtime: OffcanvasRuntimeExtras = {
     cache: { content: null, hasContent: false, updatedAt: 0 },
     contentLoadId: 0,
@@ -303,13 +309,17 @@ export function createOffcanvas(input: OffcanvasProps = {}): Offcanvas {
     const ttl = normalizeTtl(props.ttl);
     return !ttl || Date.now() - runtime.cache.updatedAt <= ttl;
   };
+  const renderResolvedContent = (): RenderableContent<Offcanvas> => {
+    const content = resolvedContent().value;
+    return typeof content === 'function' ? content(offcanvas) : content;
+  };
 
   const loadContent = async (): Promise<void> => {
     const content = state.content;
     if (typeof content !== 'function') {
       runtime.contentLoadId += 1;
       flushSync(() => {
-        state.resolvedContent = content;
+        setResolvedContent({ value: content });
         state.loading = false;
       });
       return;
@@ -317,7 +327,7 @@ export function createOffcanvas(input: OffcanvasProps = {}): Offcanvas {
     if (isCacheValid()) {
       runtime.contentLoadId += 1;
       flushSync(() => {
-        state.resolvedContent = runtime.cache.content;
+        setResolvedContent({ value: runtime.cache.content });
         state.loading = false;
       });
       return;
@@ -326,7 +336,7 @@ export function createOffcanvas(input: OffcanvasProps = {}): Offcanvas {
     const loadId = ++runtime.contentLoadId;
     flushSync(() => {
       state.loading = true;
-      state.resolvedContent = null;
+      setResolvedContent({ value: null });
     });
     try {
       const result = await Promise.resolve(content(offcanvas));
@@ -340,7 +350,7 @@ export function createOffcanvas(input: OffcanvasProps = {}): Offcanvas {
         };
       }
       flushSync(() => {
-        state.resolvedContent = result;
+        setResolvedContent({ value: result });
       });
     } finally {
       if (!offcanvas.runtime.destroyed && loadId === runtime.contentLoadId) {
@@ -415,11 +425,11 @@ export function createOffcanvas(input: OffcanvasProps = {}): Offcanvas {
         );
         clearCache();
         if (typeof content === 'function') {
-          state.resolvedContent = null;
+          setResolvedContent({ value: null });
           if (untrack(() => state.visible)) void loadContent();
         } else {
           runtime.contentLoadId += 1;
-          state.resolvedContent = content;
+          setResolvedContent({ value: content });
           state.loading = false;
         }
       });
@@ -449,11 +459,7 @@ export function createOffcanvas(input: OffcanvasProps = {}): Offcanvas {
           'data-offcanvas-content': props.id,
           children: () =>
             asRenderable(
-              state.loading
-                ? createLoading()
-                : typeof state.resolvedContent === 'function'
-                  ? state.resolvedContent(offcanvas)
-                  : state.resolvedContent
+              state.loading ? createLoading() : renderResolvedContent()
             ),
         }),
       }) as HTMLElement;

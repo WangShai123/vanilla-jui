@@ -1658,7 +1658,6 @@ interface ResolvedOffcanvasProps extends Record<string, unknown> {
 }
 interface OffcanvasState extends Record<string, unknown> {
   content: OffcanvasContent;
-  resolvedContent: RenderableContent<Offcanvas>;
   visible: boolean;
   loading: boolean;
 }

@@ -120,6 +120,7 @@ describe('Offcanvas', () => {
     expect(document.body.contains(offcanvas.element)).toBe(false);
     if (!offcanvas.element) throw new Error('Expected Offcanvas root.');
 
+    expect(Object.hasOwn(offcanvas.state, 'resolvedContent')).toBe(false);
     expect(offcanvas.element.getAttribute('data-offcanvas')).toBe('root');
     expect(offcanvas.element.classList.contains('j-offcanvas')).toBe(true);
     expect(offcanvas.element.getAttribute('data-direction')).toBe('right');
