@@ -3,17 +3,19 @@
     --table-container-max-width: 100%;
   }
 
-  .j-table {
+  table {
+    --table-min-width: 280px;
+    --table-header-font-weight: 600;
     --table-selected-bg: var(--tone-soft);
     --table-border-width: 0 0 1px;
     --table-border-style: solid;
     --table-border-color: var(--ui-border);
-    --table-cell-padding: 0.5em 0.75em;
+    --table-cell-padding: 0.5rem;
     --table-cell-text-align: left;
     --table-cell-vertical-align: top;
     --table-link-fg: var(--tone-solid);
-    --table-striped-bg: var(--tone-soft);
-    --table-hover-bg: var(--tone-soft);
+    --table-striped-bg: var(--ui-bg-subtle);
+    --table-hover-bg: var(--ui-bg-subtle);
     --table-bordered-width: 1px;
   }
 }

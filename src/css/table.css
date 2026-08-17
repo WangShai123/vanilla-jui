@@ -7,47 +7,51 @@
     scrollbar-color: var(--ui-border) transparent;
   }
 
-  table.j-table {
+  table {
+    min-width: var(--table-min-width);
+    max-width: 100%;
     text-indent: 0;
     border-color: inherit;
     border-collapse: collapse;
     border-spacing: 0;
   }
 
-  table.j-table tr.is-selected {
+  table tr.is-selected {
     background: var(--table-selected-bg);
   }
 
-  table.j-table td,
-  table.j-table th {
+  table td,
+  table th {
     border-width: var(--table-border-width);
     border-style: var(--table-border-style);
     border-color: var(--table-border-color);
     padding: var(--table-cell-padding);
-  }
-
-  table.j-table th:not([align]),
-  table.j-table td:not([align]) {
     text-align: var(--table-cell-text-align);
     vertical-align: var(--table-cell-vertical-align);
   }
 
-  table.j-table a {
+  table thead th {
+    background: var(--table-striped-bg);
+    font-weight: var(--table-header-font-weight);
+    white-space: nowrap;
+  }
+
+  table a {
     text-decoration: inherit;
     color: var(--table-link-fg);
   }
 
-  table.j-table.is-striped thead tr,
-  table.j-table.is-striped tbody tr:not(.is-selected):nth-child(2n) {
+  table.is-striped thead tr,
+  table.is-striped tbody tr:not(.is-selected):nth-child(2n) {
     background: var(--table-striped-bg);
   }
 
-  table.j-table.is-hoverable tbody tr:hover {
+  table tbody tr:hover {
     background: var(--table-hover-bg);
   }
 
-  table.j-table.is-bordered td,
-  table.j-table.is-bordered th {
+  table.is-bordered td,
+  table.is-bordered th {
     border-width: var(--table-bordered-width);
   }
 }

@@ -572,41 +572,7 @@
      ============================================ */
 
   .j-content table {
-    min-width: 280px;
-    max-width: 100%;
-    margin: var(--content-block-space) 0;
-    border-collapse: collapse;
-    font-size: 0.9375em;
     display: block;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .j-content th,
-  .j-content td {
-    padding: 0.75em 1em;
-    border-bottom: 1px solid var(--content-border-subtle);
-    text-align: left;
-    vertical-align: top;
-  }
-
-  .j-content th {
-    background-color: var(--content-bg-subtle);
-    font-weight: 600;
-    color: var(--content-heading-fg);
-    white-space: nowrap;
-  }
-
-  .j-content thead th {
-    border-bottom: 2px solid var(--content-border);
-  }
-
-  .j-content tbody tr:hover {
-    background-color: var(--content-bg-subtle);
-  }
-
-  .j-content tbody tr:last-child td {
-    border-bottom: none;
   }
 
   /* ============================================

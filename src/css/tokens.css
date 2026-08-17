@@ -93,9 +93,9 @@
     --radius-full: 9999px;
 
     /* --- Opacity --- */
-    --opacity-hover: 0.8;
+    --opacity-hover: 0.85;
     --opacity-active: 0.95;
-    --opacity-disabled: 0.5;
+    --opacity-disabled: 0.75;
   }
 
   /* ============================================
