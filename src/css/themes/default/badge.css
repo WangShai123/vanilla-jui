@@ -20,7 +20,7 @@
     --badge-font-size: 0.625rem;
   }
 
-  .j-badge.is-contrast {
+  .j-badge.is-reverse {
     --badge-bg: var(--ui-fg);
     --badge-fg: var(--ui-bg);
   }
