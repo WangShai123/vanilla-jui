@@ -720,6 +720,7 @@ describe('Form', () => {
       buttons: false,
       validator: {
         vanilla: false,
+        className: { help: 'form-validator-help' },
         rules: {
           name: { required: true },
         },
@@ -736,6 +737,11 @@ describe('Form', () => {
     expect(
       form.element?.querySelector('[data-validator-help="name"]')?.textContent
     ).toBe('Name is required.');
+    expect(
+      form.element
+        ?.querySelector('[data-validator-help="name"]')
+        ?.classList.contains('form-validator-help')
+    ).toBe(true);
   });
 
   it('uses select changes to choose the next dynamic form item', async () => {

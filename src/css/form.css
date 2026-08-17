@@ -70,7 +70,7 @@
     margin: 0;
   }
 
-  .j-form .form-field .field-control .help-block.is-invalid {
+  .j-form .form-field .field-control .help-block[data-valid='false'] {
     color: var(--state-danger);
   }
 
@@ -188,12 +188,12 @@
   }
 
   /* input validate */
-  /* .j-input.is-valid,
-  .j-select.is-valid,
-  .j-textarea.is-valid,
-  .j-input.is-invalid,
-  .j-select.is-invalid,
-  .j-textarea.is-invalid {
+  /* .j-input[data-valid='true'],
+  .j-select[data-valid='true'],
+  .j-textarea[data-valid='true'],
+  .j-input[data-valid='false'],
+  .j-select[data-valid='false'],
+  .j-textarea[data-valid='false'] {
     padding-right: calc(1.4285714286em + 0.875rem);
     background-repeat: no-repeat;
     background-position: right calc(0.3571428572em + 0.21875rem) center;
@@ -201,16 +201,16 @@
       calc(0.7142857143em + 0.4375rem);
   } */
 
-  /* .j-input.is-valid,
-  .j-select.is-valid,
-  .j-textarea.is-valid {
+  /* .j-input[data-valid='true'],
+  .j-select[data-valid='true'],
+  .j-textarea[data-valid='true'] {
     border-color: var(--form-valid-border-color, var(--state-success));
     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%232fb344' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='20 6 9 17 4 12'%3e%3c/polyline%3e%3c/svg%3e");
   } */
 
-  .j-input.is-invalid,
-  .j-select.is-invalid,
-  .j-textarea.is-invalid {
+  .j-input[data-valid='false'],
+  .j-select[data-valid='false'],
+  .j-textarea[data-valid='false'] {
     border-color: var(--form-invalid-border-color, var(--state-danger));
     /* background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23d63939' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cline x1='18' y1='6' x2='6' y2='18'%3e%3c/line%3e%3cline x1='6' y1='6' x2='18' y2='18'%3e%3c/line%3e%3c/svg%3e"); */
   }
@@ -861,14 +861,14 @@
     box-shadow: var(--input-focus-shadow, none);
   }
 
-  /* .j-input.is-valid:focus-within,
-  .j-select.is-valid:focus-within {
+  /* .j-input[data-valid='true']:focus-within,
+  .j-select[data-valid='true']:focus-within {
     border-color: transparent;
     outline-color: var(--form-valid-border-color, var(--state-success));
   } */
 
-  .j-input.is-invalid:focus-within,
-  .j-select.is-invalid:focus-within {
+  .j-input[data-valid='false']:focus-within,
+  .j-select[data-valid='false']:focus-within {
     border-color: transparent;
     outline-color: var(--form-invalid-border-color, var(--state-danger));
   }

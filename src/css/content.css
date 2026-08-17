@@ -31,7 +31,7 @@
     margin: var(--content-heading-space) 0
       calc(var(--content-heading-space) * 0.75);
     font-weight: 600;
-    line-height: 1.3;
+    /* line-height: 1.3; */
     color: var(--content-heading-fg);
     letter-spacing: -0.02em;
   }
@@ -46,7 +46,7 @@
   .j-content h2 {
     font-size: 1.625em;
     font-weight: 650;
-    padding-bottom: 0.5em;
+    padding-bottom: 0.25em;
     border-bottom: 1px solid var(--content-border-subtle);
   }
 
@@ -458,8 +458,14 @@
   .hljs-comment,
   .hljs-code,
   .hljs-formula {
-    color: var(--ui-gray-shade);
+    color: var(--ui-fg-soft);
   }
+
+  /* .dark .hljs-comment,
+  .dark .hljs-code,
+  .dark .hljs-formula {
+    color: var(--ui-gray-shade);
+  } */
 
   /* prettylights-syntax-entity-tag */
   .hljs-name,

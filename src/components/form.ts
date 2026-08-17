@@ -23,7 +23,10 @@ import {
   resolveProps,
   validateParam,
 } from '../utilities/types.ts';
-import { createValidator } from '../validation/validator.ts';
+import {
+  createValidator,
+  type ValidatorClassNameConfig,
+} from '../validation/validator.ts';
 import { createLoading } from '../primitives/loading.ts';
 import { t } from 'vanilla-signal-i18n';
 import locales from '../locales/index.ts';
@@ -137,6 +140,7 @@ export interface FormValidatorConfig {
   rules?: Record<string, Record<string, unknown>>;
   messages?: Record<string, Record<string, string>>;
   vanilla?: boolean;
+  className?: ValidatorClassNameConfig;
   onSubmit?: (() => void) | null;
   [key: string]: unknown;
 }
@@ -640,6 +644,7 @@ export function createForm(input: FormProps = {}): Form {
     if (!element) return;
     for (const control of Array.from(element.elements)) {
       control.classList.remove('is-valid', 'is-invalid');
+      control.removeAttribute('data-valid');
     }
     for (const help of all<HTMLElement>(
       '[data-field-help], [data-validator-help]',

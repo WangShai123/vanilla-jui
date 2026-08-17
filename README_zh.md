@@ -1,43 +1,47 @@
 # JUI 库
 
-一个基于原生 JavaScript 的轻量级、响应式、可完全自定义样式的用户 UI 库。
+Vanilla-JUI 是一个将响应式 UI、设计令牌 和 CSS 工程解耦的 Web UI 基础设施。无需框架锁定，帮助快速构建高质量的交互网页。
 
 [English](README.md)
 
 ## 特点
 
-- 轻量级
-- 响应式数据管理
-- 自定义UI：支持使用 `tailwindcss` 或自定义层叠样式表来完全自定义组件UI，不使用默认的 `style.css`。
+- 框架无关：不依赖于任何前端框架，直接在任意网页中挂载。
+- 细粒度响应式：基于信号的细粒度响应式系统，通过数据驱动组件状态更新。定义状态、派生计算、渲染视图。
+- 可组合组件：组件之间可以自由组合，通过状态引用传递数据，构建复杂交互。
+- 100% 自定义样式：支持丢弃内置样式，利用 className 机制，消费 tailwind 等 CSS 工具，实现完全自定义样式。
+- 多维主题：基于设计令牌和根节点状态的多维主题 CSS 架构，轻松实现千人千面的主题模式。
+- 常用工具：附带 ID、Events、Timer 等常用工具和 DOM 语法糖。
 
-## 安装
+## 安装与使用
 
-NPM
+### NPM
 
 ```bash
 npm install vanilla-jui
 ```
 
-UMD, 全局变量名: `jui`
+```js
+import { createModal } from 'vanilla-jui';
+```
+
+### CDN
+
+UMD 全局变量 `jui`
 
 ```html
 <script src="https://unpkg.com/vanilla-jui/dist/index.umd.js"></script>
+<script>
+  const { createModal } = jui;
+</script>
 ```
 
-## 使用
-
-ESM
-
-```javascript
-import { createToast, createModal } from 'vanilla-jui';
+```html
+<script type="module">
+  import { createModal } from 'https://unpkg.com/vanilla-jui/dist/index.js';
+</script>
 ```
 
-UMD, 全局变量名: `jui`
+## 文档与预览
 
-```javascript
-const { createToast, createModal } = jui;
-```
-
-## 文档
-
-[在线文档](https://app.jealer.com/vanilla-jui/)
+[文档与预览](https://app.jealer.com/vanilla-jui/)

@@ -1,6 +1,8 @@
 .DS_Store
 node_modules
 .vscode
+assets/
+docs/
 demo/
 demo*.html
 index.html

@@ -15,11 +15,11 @@
     --z-badge: 2;
     --z-toolbar: 2;
     --z-submenu: 5;
+    --z-overlay: 9500;
+    --z-offcanvas: 9600;
+    --z-popup: 9700;
+    --z-toast: 9800;
     --z-drop: 9900;
-    --z-overlay: 9950;
-    --z-offcanvas: 9960;
-    --z-popup: 9970;
-    --z-toast: 9980;
 
     /* --- Spacing --- */
     --space: 0.25rem;
@@ -317,7 +317,7 @@
     --ui-disabled-fg: #64748b;
     --ui-overlay: rgba(2, 6, 23, 0.7);
     --ui-overlay-muted: rgba(2, 6, 23, 0.45);
-    --ui-popup-bg: rgba(17, 24, 39, 0.82);
+    --ui-popup-bg: rgba(17, 24, 39, 0.45);
     --ui-input-color: #f9fafb;
     --ui-input-border: rgba(148, 163, 184, 0.2);
     --ui-input-focus-border: #a78bfa;

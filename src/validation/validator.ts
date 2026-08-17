@@ -1,7 +1,9 @@
 import { jsx } from 'vanilla-signal';
 
+import { joinClasses } from '../utilities/class-name.ts';
 import { type DOMReference, all, resolveElement } from '../utilities/dom.ts';
 import { createEventManager } from '../utilities/events.ts';
+import { isPlainObject } from '../utilities/object.ts';
 import {
   type ResolveSchema,
   resolveProps,
@@ -45,13 +47,21 @@ interface ValidatorProps extends Record<string, unknown> {
   rules?: Record<string, ValidatorRule>;
   messages?: ValidatorMessageMap;
   vanilla?: boolean;
+  className?: ValidatorClassNameConfig;
   onSubmit?: ((validator: ValidatorInstance) => void) | null;
 }
+
+export interface ValidatorClassNames {
+  help: string;
+}
+
+export type ValidatorClassNameConfig = Partial<ValidatorClassNames>;
 
 interface ResolvedValidatorProps extends Record<string, unknown> {
   rules: Record<string, ValidatorRule>;
   messages: ValidatorMessageMap;
   vanilla: boolean;
+  className: ValidatorClassNames;
   onSubmit: ((validator: ValidatorInstance) => void) | null;
 }
 
@@ -75,12 +85,28 @@ export interface ValidatorInstance {
   destroy(): void;
 }
 
+const DEFAULT_CLASS_NAMES: ValidatorClassNames = {
+  help: 'help-block',
+};
+
 const VALIDATOR_PROPS_SCHEMA = {
   rules: { default: {}, type: 'object' },
   messages: { default: {}, type: 'object' },
   vanilla: { default: false, type: 'boolean' },
+  className: {
+    default: DEFAULT_CLASS_NAMES,
+    type: 'object',
+    normalize: (value: unknown) => resolveClassNames(value),
+  },
   onSubmit: { default: null, types: ['function', 'null'] },
 } satisfies ResolveSchema<ValidatorProps>;
+
+function resolveClassNames(value: unknown): ValidatorClassNames {
+  return {
+    ...DEFAULT_CLASS_NAMES,
+    ...(isPlainObject(value) ? (value as ValidatorClassNameConfig) : {}),
+  } as ValidatorClassNames;
+}
 
 function normalizeProps(input: ValidatorProps): ResolvedValidatorProps {
   const props = resolveProps(input, VALIDATOR_PROPS_SCHEMA, 'Validator.props');
@@ -88,6 +114,7 @@ function normalizeProps(input: ValidatorProps): ResolvedValidatorProps {
     rules: props.rules as Record<string, ValidatorRule>,
     messages: props.messages as ValidatorMessageMap,
     vanilla: props.vanilla as boolean,
+    className: props.className as ValidatorClassNames,
     onSubmit: props.onSubmit as ResolvedValidatorProps['onSubmit'],
   };
 }
@@ -353,10 +380,7 @@ function showError(
   rule: string,
   customMessage = ''
 ): void {
-  if (!(element instanceof HTMLInputElement) || element.type !== 'checkbox') {
-    element.classList.remove('is-valid');
-    element.classList.add('is-invalid');
-  }
+  element.dataset.valid = 'false';
 
   const error = customMessage || props?.messages[name]?.[rule] || '';
   if (!error) return;
@@ -372,11 +396,13 @@ function showError(
     ) || null;
   if (!help) {
     help = jsx('div', {
-      className: 'help-block is-invalid',
+      'data-valid': 'false',
       'data-validator-help': name,
     }) as HTMLElement;
     formControl.appendChild(help);
   }
+  help.className = joinClasses(props?.className.help);
+  help.dataset.valid = 'false';
   help.textContent = error;
 }
 
@@ -388,9 +414,7 @@ function showSuccess(element: ValidatorElement): void {
     }
   }
 
-  if (!(element instanceof HTMLInputElement) || element.type !== 'checkbox') {
-    element.classList.remove('is-invalid');
-  }
+  element.removeAttribute('data-valid');
 }
 
 export function createValidator(
@@ -543,7 +567,7 @@ export function createValidator(
     if (native) root.reset();
     for (const control of Array.from(root.elements)) {
       if (isValidatorElement(control)) {
-        control.classList.remove('is-valid', 'is-invalid');
+        control.removeAttribute('data-valid');
       }
     }
     for (const help of all<HTMLElement>('[data-validator-help]', root)) {

@@ -61,7 +61,17 @@ describe('Validator', () => {
     });
 
     expect(validator.validate()).toBe(false);
-    expect(input(form, 'email').classList.contains('is-invalid')).toBe(true);
+    expect(input(form, 'email').dataset.valid).toBe('false');
+    expect(
+      form
+        .querySelector('[data-validator-help="email"]')
+        ?.getAttribute('data-valid')
+    ).toBe('false');
+    expect(
+      form
+        .querySelector('[data-validator-help="email"]')
+        ?.classList.contains('help-block')
+    ).toBe(true);
     expect(
       form.querySelector('[data-validator-help="email"]')?.textContent
     ).toBe('Email required');
@@ -73,6 +83,7 @@ describe('Validator', () => {
     expect(validator.validate()).toBe(true);
     expect(input(form, 'email').classList.contains('is-valid')).toBe(false);
     expect(input(form, 'email').classList.contains('is-invalid')).toBe(false);
+    expect(input(form, 'email').hasAttribute('data-valid')).toBe(false);
     expect(form.querySelector('[data-validator-help="email"]')).toBeNull();
     expect(form.querySelector('[data-field-help="email"]')?.textContent).toBe(
       'Static help'
@@ -95,6 +106,36 @@ describe('Validator', () => {
     expect(validator.validate()).toBe(true);
     expect(input(form, 'email').classList.contains('is-valid')).toBe(false);
     expect(input(form, 'email').classList.contains('is-invalid')).toBe(false);
+    expect(input(form, 'email').hasAttribute('data-valid')).toBe(false);
+  });
+
+  it('allows validator help className override', () => {
+    const form = mount(`
+      <form>
+        <div data-field-control="email">
+          <input name="email" type="text" value="">
+        </div>
+      </form>
+    `);
+
+    validator = createValidator(form, {
+      className: { help: 'profile-help' },
+      rules: { email: { required: true } },
+      messages: { email: { required: 'Email required' } },
+    });
+
+    expect(validator.validate()).toBe(false);
+    const help = form.querySelector('[data-validator-help="email"]');
+    expect(help?.classList.contains('profile-help')).toBe(true);
+    expect(help?.classList.contains('help-block')).toBe(false);
+
+    validator.props = {
+      ...validator.props!,
+      className: { help: 'updated-help' },
+    };
+    expect(validator.validate()).toBe(false);
+    expect(help?.classList.contains('updated-help')).toBe(true);
+    expect(help?.classList.contains('profile-help')).toBe(false);
   });
 
   it('disables native form validation by default', () => {
@@ -214,7 +255,7 @@ describe('Validator', () => {
 
     expect(validator.validate()).toBe(false);
     expect(validator.runtime.error).toBe(true);
-    expect(message.classList.contains('is-invalid')).toBe(true);
+    expect(message.dataset.valid).toBe('false');
 
     message.value = '12345';
     message.dispatchEvent(new Event('input', { bubbles: true }));
@@ -222,6 +263,7 @@ describe('Validator', () => {
     expect(validator.runtime.error).toBe(false);
     expect(validator.runtime.valid).toBe(true);
     expect(message.classList.contains('is-invalid')).toBe(false);
+    expect(message.hasAttribute('data-valid')).toBe(false);
     expect(form.querySelector('[data-validator-help="message"]')).toBeNull();
   });
 
@@ -248,6 +290,7 @@ describe('Validator', () => {
 
     expect(validator.runtime.error).toBe(false);
     expect(message.classList.contains('is-invalid')).toBe(false);
+    expect(message.hasAttribute('data-valid')).toBe(false);
     expect(form.querySelector('[data-validator-help="message"]')).toBeNull();
   });
 
@@ -276,6 +319,7 @@ describe('Validator', () => {
 
     expect(validator.runtime.error).toBe(false);
     expect(message.classList.contains('is-invalid')).toBe(false);
+    expect(message.hasAttribute('data-valid')).toBe(false);
     expect(form.querySelector('[data-validator-help="message"]')).toBeNull();
   });
 
