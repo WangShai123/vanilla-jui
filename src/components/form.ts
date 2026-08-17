@@ -3,7 +3,6 @@ import {
   type ElementProps,
   bindAttr,
   createDeepStore,
-  createEffect,
   createMemo,
   createSignal,
   flushSync,
@@ -62,6 +61,8 @@ export interface FormClassNames {
   helpInvalid: string;
   buttons: string;
   button: string;
+  submitBtn: string;
+  resetBtn: string;
   input: string;
   textarea: string;
   select: string;
@@ -73,8 +74,6 @@ export interface FormClassNames {
   radioLabel: string;
   radioText: string;
   switch: string;
-  switchDefault: string;
-  switchSizeMd: string;
   switchSlider: string;
 }
 
@@ -126,16 +125,6 @@ export interface FormField {
   content?: RenderableContent<FormControlContext>;
 }
 
-export interface FormButton {
-  type?: string;
-  text?: RenderableContent<Form>;
-  label?: RenderableContent<Form>;
-  theme?: string;
-  action?: string;
-  disabled?: boolean;
-  className?: string;
-}
-
 export interface FormValidatorConfig {
   rules?: Record<string, Record<string, unknown>>;
   messages?: Record<string, Record<string, string>>;
@@ -145,16 +134,25 @@ export interface FormValidatorConfig {
   [key: string]: unknown;
 }
 
-export type ButtonsPosition = 'start' | 'center' | 'end';
+export type FormButtons = boolean | string;
+
+export interface FormText {
+  submit: RenderableContent<Form>;
+  reset: RenderableContent<Form>;
+}
+
+export type FormTextConfig = Partial<FormText>;
 
 export interface FormProps extends Record<string, unknown> {
   id?: string | null;
   vertical?: boolean;
   itemVertical?: boolean;
+  size?: string;
   style?: FormStyle;
   fields?: readonly FormItem<FormField>[];
-  buttons?: boolean | readonly FormButton[];
-  buttonsPosition?: ButtonsPosition;
+  buttons?: FormButtons;
+  buttonsPosition?: string;
+  text?: FormTextConfig;
   className?: FormClassNameConfig;
   validator?: FormValidatorConfig;
   onSubmit?:
@@ -167,10 +165,12 @@ interface ResolvedFormProps extends Record<string, unknown> {
   id: string;
   vertical: boolean;
   itemVertical: boolean;
+  size: string;
   style: FormStyle;
   fields: FormItem<FormField>[];
-  buttons: FormButton[];
-  buttonsPosition: ButtonsPosition;
+  buttons: FormButtons;
+  buttonsPosition: string;
+  text: FormText;
   className: FormClassNames;
   validator: FormValidatorConfig;
   onSubmit: ((data: FormDataRecord, form: Form) => void | Promise<void>) | null;
@@ -178,22 +178,11 @@ interface ResolvedFormProps extends Record<string, unknown> {
 }
 
 interface FormState extends Record<string, unknown> {
-  id: string;
-  vertical: boolean;
-  itemVertical: boolean;
-  style: FormStyle;
   fields: FormItem<FormField>[];
-  buttons: FormButton[];
-  className: FormClassNames;
-  validator: FormValidatorConfig;
-  onSubmit: ((data: FormDataRecord, form: Form) => void | Promise<void>) | null;
-  onReset: ((event: Event, form: Form) => void) | null;
   submitting: boolean;
-  data: FormDataRecord | null;
 }
 
 interface FormCache {
-  initial: ResolvedFormProps;
   fieldIds: Map<string | number, string>;
 }
 
@@ -225,6 +214,8 @@ const DEFAULT_CLASS_NAMES: FormClassNames = {
   helpInvalid: 'is-invalid',
   buttons: 'form-buttons',
   button: 'j-button',
+  submitBtn: 'is-primary',
+  resetBtn: 'is-ghost',
   input: 'j-input',
   textarea: 'j-textarea',
   select: 'j-select',
@@ -235,26 +226,14 @@ const DEFAULT_CLASS_NAMES: FormClassNames = {
   choiceGroup: 'is-group',
   radioLabel: 'radio-label',
   radioText: 'radio-text',
-  switch: 'j-switch',
-  switchDefault: 'is-default',
-  switchSizeMd: 'is-md',
+  switch: 'j-switch is-default',
   switchSlider: 'switch-slider',
 };
 
-const DEFAULT_BUTTONS: FormButton[] = [
-  {
-    type: 'submit',
-    text: t('Submit', locales),
-    theme: 'primary',
-    action: 'submit',
-  },
-  {
-    type: 'reset',
-    text: t('Reset', locales),
-    theme: 'ghost',
-    action: 'reset',
-  },
-];
+const DEFAULT_TEXT: FormText = {
+  submit: t('Submit', locales),
+  reset: t('Reset', locales),
+};
 
 // Guard against malformed dynamic chains that never terminate.
 const FORM_ITEM_LIMIT = 1000;
@@ -272,22 +251,15 @@ const FORM_PROPS_SCHEMA = {
   },
   vertical: { default: true, type: 'boolean' },
   itemVertical: { default: true, type: 'boolean' },
+  size: { default: 'md', type: 'string' },
   style: { default: '', types: ['string', 'object', 'null'] },
   fields: { default: [], type: 'array' },
-  buttons: {
-    default: DEFAULT_BUTTONS,
-    types: ['boolean', 'array'],
-    normalize: (value: unknown) => {
-      if (value === false) return [];
-      if (value === true) return cloneButtons(DEFAULT_BUTTONS);
-      if (Array.isArray(value)) return cloneButtons(value);
-      return value;
-    },
-  },
-  buttonsPosition: {
-    default: 'end',
-    type: 'string',
-    enum: ['start', 'center', 'end'],
+  buttons: { default: true, types: ['boolean', 'string'] },
+  buttonsPosition: { default: 'start', type: 'string' },
+  text: {
+    default: DEFAULT_TEXT,
+    type: 'object',
+    normalize: (value: unknown) => resolveText(value),
   },
   className: {
     default: DEFAULT_CLASS_NAMES,
@@ -329,13 +301,6 @@ function cloneFields(
 ): FormItem<FormField>[] {
   if (!Array.isArray(fields)) return [];
   return fields.map((item) => cloneFormItem(item));
-}
-
-function cloneButtons(
-  buttons: readonly FormButton[] | undefined
-): FormButton[] {
-  if (!Array.isArray(buttons)) return [];
-  return buttons.map((button) => ({ ...button }));
 }
 
 function flattenFormItems(
@@ -419,6 +384,20 @@ function resolveClassNames(value: unknown): FormClassNames {
   } as FormClassNames;
 }
 
+function resolveText(value: unknown): FormText {
+  return {
+    ...DEFAULT_TEXT,
+    ...(isPlainObject(value) ? (value as FormTextConfig) : {}),
+  } as FormText;
+}
+
+function renderFormText(
+  content: RenderableContent<Form>,
+  form: Form
+): RenderableContent<Form> {
+  return typeof content === 'function' ? content(form) : content;
+}
+
 function setElementStyle(element: HTMLElement, style: FormStyle): void {
   element.removeAttribute('style');
   if (!style) return;
@@ -438,8 +417,8 @@ function setElementStyle(element: HTMLElement, style: FormStyle): void {
   }
 }
 
-function resolveButtonsJustifyContent(position: ButtonsPosition): string {
-  return position === 'center' ? 'center' : `flex-${position}`;
+function resolveButtonsJustifyContent(position: string): string {
+  return position === 'center' ? position : `flex-${position}`;
 }
 
 function cloneValidator(validator: unknown): FormValidatorConfig {
@@ -466,10 +445,12 @@ function normalizeProps(input: FormProps): ResolvedFormProps {
     id: String(props.id),
     vertical: Boolean(props.vertical),
     itemVertical: Boolean(props.itemVertical),
+    size: props.size as string,
     style: props.style as FormStyle,
     fields,
-    buttons: cloneButtons(props.buttons as readonly FormButton[]),
-    buttonsPosition: props.buttonsPosition as ButtonsPosition,
+    buttons: props.buttons as FormButtons,
+    buttonsPosition: props.buttonsPosition as string,
+    text: resolveText(props.text),
     className: resolveClassNames(props.className),
     validator: cloneValidator(props.validator),
     onSubmit: props.onSubmit as ResolvedFormProps['onSubmit'],
@@ -492,24 +473,6 @@ export type Form = FunctionalComponent<
   HTMLFormElement,
   FormActions
 >;
-
-function cloneResolvedProps(props: ResolvedFormProps): ResolvedFormProps {
-  return {
-    ...props,
-    fields: cloneFields(props.fields),
-    buttons: cloneButtons(props.buttons),
-    className: resolveClassNames(props.className),
-    validator: cloneValidator(props.validator),
-  };
-}
-
-function cloneStateProps(
-  props: ResolvedFormProps
-): Omit<FormState, 'submitting' | 'data'> {
-  const stateProps: Partial<ResolvedFormProps> = cloneResolvedProps(props);
-  delete stateProps.buttonsPosition;
-  return stateProps as Omit<FormState, 'submitting' | 'data'>;
-}
 
 function autoComplete(type: string): string {
   if (type === 'password') return 'current-password';
@@ -574,16 +537,11 @@ function radioNodeListItems(value: RadioNodeList | Element): Element[] {
 
 export function createForm(input: FormProps = {}): Form {
   const props = normalizeProps(input);
-  const initial = cloneResolvedProps(props);
-  const buttonsJustifyContent = resolveButtonsJustifyContent(
-    props.buttonsPosition
-  );
   const state = createDeepStore({
-    ...cloneStateProps(props),
+    fields: cloneFields(props.fields),
     submitting: false,
-    data: null,
   }) as FormState;
-  const cache: FormCache = { initial, fieldIds: new Map() };
+  const cache: FormCache = { fieldIds: new Map() };
   const fieldKeys = new WeakMap<object, string>();
   const [chainVersion, setChainVersion] = createSignal(0);
   let runtimeItems = new WeakMap<FormItem<FormField>, FormItem<FormField>>();
@@ -623,14 +581,14 @@ export function createForm(input: FormProps = {}): Form {
     if (field.id) return field.id;
     const key = field.name || index;
     if (!cache.fieldIds.has(key)) {
-      cache.fieldIds.set(key, `${state.id}_field_${index}`);
+      cache.fieldIds.set(key, `${props.id}_field_${index}`);
     }
     return cache.fieldIds.get(key) as string;
   };
   const syncValidator = (): void => {
     const element = form.element;
     if (!element) return;
-    const options = { ...state.validator, onSubmit: null };
+    const options = { ...props.validator, onSubmit: null };
     if (validator?.element === element) {
       validator.props = options;
       return;
@@ -673,10 +631,9 @@ export function createForm(input: FormProps = {}): Form {
     const data = collectData();
     flushSync(() => {
       state.submitting = true;
-      state.data = data;
     });
     try {
-      await Promise.resolve(state.onSubmit?.(data, form));
+      await Promise.resolve(props.onSubmit?.(data, form));
     } finally {
       if (!form.runtime.destroyed) {
         flushSync(() => {
@@ -752,6 +709,16 @@ export function createForm(input: FormProps = {}): Form {
     'data-field-item': () => fieldAccessor().name || id,
   });
 
+  const formSizeClass = (): string => (props.size ? `is-${props.size}` : '');
+
+  const controlSizeClass = (field: FormField): string => {
+    const size = field.size || props.size;
+    return size ? `is-${size}` : '';
+  };
+
+  const controlClassName = (field: FormField, base: string): string =>
+    joinClasses(field.className || base, controlSizeClass(field));
+
   const choiceGroupView = (
     fieldAccessor: () => FormField,
     id: string,
@@ -761,7 +728,7 @@ export function createForm(input: FormProps = {}): Form {
       className: () => {
         const field = fieldAccessor();
         const direction = field.vertical ? 'vertical' : 'horizontal';
-        const names = state.className;
+        const names = props.className;
         return joinClasses(
           type === 'radio' ? names.radio : names.checkbox,
           direction === 'vertical'
@@ -781,7 +748,7 @@ export function createForm(input: FormProps = {}): Form {
           const optionId = `${id}_${optionIndex}`;
           return jsx('label', {
             className: () =>
-              type === 'radio' ? state.className.radioLabel : '',
+              type === 'radio' ? props.className.radioLabel : '',
             'data-field-choice': () => fieldAccessor().name || id,
             for: optionId,
             children: [
@@ -812,7 +779,7 @@ export function createForm(input: FormProps = {}): Form {
               }),
               jsx('span', {
                 className: () =>
-                  type === 'radio' ? state.className.radioText : '',
+                  type === 'radio' ? props.className.radioText : '',
                 'data-field-choice-text': '',
                 children: asRenderable(
                   item.text ?? item.label ?? stringifyFormValue(item.value)
@@ -836,7 +803,7 @@ export function createForm(input: FormProps = {}): Form {
         'textarea',
         controlProps<HTMLTextAreaElement>(fieldAccessor, id, {
           className: () =>
-            fieldAccessor().className || state.className.textarea,
+            fieldAccessor().className || props.className.textarea,
           placeholder: () => fieldAccessor().placeholder || '',
           readonly: () => !!fieldAccessor().readonly,
           ref: (element: HTMLTextAreaElement) =>
@@ -859,7 +826,8 @@ export function createForm(input: FormProps = {}): Form {
       return jsx(
         'select',
         controlProps<HTMLSelectElement>(fieldAccessor, id, {
-          className: () => fieldAccessor().className || state.className.select,
+          className: () =>
+            controlClassName(fieldAccessor(), props.className.select),
           ref: (element: HTMLSelectElement) =>
             bindNonEmptyAttribute(
               element,
@@ -899,13 +867,8 @@ export function createForm(input: FormProps = {}): Form {
     if (type === 'switch') {
       return jsx('label', {
         className: () => {
-          const field = fieldAccessor();
-          const names = state.className;
-          return joinClasses(
-            names.switch,
-            field.variant ? `is-${field.variant}` : names.switchDefault,
-            field.size ? `is-${field.size}` : names.switchSizeMd
-          );
+          const names = props.className;
+          return joinClasses(names.switch, controlSizeClass(fieldAccessor()));
         },
         'data-field-switch': () => fieldAccessor().name || id,
         for: id,
@@ -926,7 +889,7 @@ export function createForm(input: FormProps = {}): Form {
             },
           }),
           jsx('span', {
-            className: () => state.className.switchSlider,
+            className: () => props.className.switchSlider,
             'data-field-switch-slider': '',
           }),
         ],
@@ -947,7 +910,8 @@ export function createForm(input: FormProps = {}): Form {
     return jsx('input', {
       ...controlProps<HTMLInputElement>(fieldAccessor, id, {
         type: inputType,
-        className: () => fieldAccessor().className || state.className.input,
+        className: () =>
+          controlClassName(fieldAccessor(), props.className.input),
         placeholder: () => fieldAccessor().placeholder || '',
         readonly: () => !!fieldAccessor().readonly,
         autocomplete: () =>
@@ -987,23 +951,23 @@ export function createForm(input: FormProps = {}): Form {
     };
     const fieldTitle = (): HTMLElement | null => {
       if (!hasFieldLabel()) return null;
-      const props = {
+      const labelProps = {
         className: () =>
           joinClasses(
-            state.className.label,
-            fieldIsRequired(fieldAccessor(), state.validator.rules)
-              ? state.className.required
+            props.className.label,
+            fieldIsRequired(fieldAccessor(), props.validator.rules)
+              ? props.className.required
               : ''
           ),
         'data-field-label': () => fieldAccessor().name || id,
         children: () => asRenderable(fieldAccessor().label),
       };
-      if (isGroupedControl()) return jsx('legend', props) as HTMLElement;
-      return jsx('label', { ...props, for: id }) as HTMLElement;
+      if (isGroupedControl()) return jsx('legend', labelProps) as HTMLElement;
+      return jsx('label', { ...labelProps, for: id }) as HTMLElement;
     };
     const controlContainer = (): HTMLElement =>
       jsx('div', {
-        className: () => state.className.control,
+        className: () => props.className.control,
         'data-field-control': () =>
           fieldAccessor().name || String(indexAccessor()),
         children: [
@@ -1024,7 +988,7 @@ export function createForm(input: FormProps = {}): Form {
         ],
       }) as HTMLElement;
     const rootProps = {
-      className: () => state.className.item,
+      className: () => props.className.item,
       'data-form-field': () => fieldAccessor().name || String(indexAccessor()),
       style: () => ({
         display: itemAccessor().type === 'hidden' ? 'none' : '',
@@ -1041,44 +1005,48 @@ export function createForm(input: FormProps = {}): Form {
     indexAccessor: () => number
   ): HTMLElement => fieldView(itemAccessor, indexAccessor);
 
+  const submitButtonView = (): HTMLButtonElement =>
+    jsx('button', {
+      type: 'submit',
+      className: () =>
+        joinClasses(
+          props.className.button,
+          props.className.submitBtn,
+          formSizeClass()
+        ),
+      'data-action': 'submit',
+      disabled: () => state.submitting,
+      children: () => {
+        const content = asRenderable(renderFormText(props.text.submit, form));
+        return state.submitting ? [createLoading(), content] : content;
+      },
+    }) as HTMLButtonElement;
+
+  const resetButtonView = (): HTMLButtonElement =>
+    jsx('button', {
+      type: 'reset',
+      className: () =>
+        joinClasses(
+          props.className.button,
+          props.className.resetBtn,
+          formSizeClass()
+        ),
+      'data-action': 'reset',
+      disabled: () => state.submitting,
+      children: () => asRenderable(renderFormText(props.text.reset, form)),
+    }) as HTMLButtonElement;
+
   const buttonsView = (): HTMLElement =>
     jsx('div', {
-      className: () => state.className.buttons,
+      className: props.className.buttons,
       style: {
-        justifyContent: buttonsJustifyContent,
+        justifyContent: resolveButtonsJustifyContent(props.buttonsPosition),
       },
       'data-field-buttons': '',
-      hidden: () => state.buttons.length === 0,
-      children: For({
-        each: () => state.buttons,
-        key: (button: FormButton, index: number) =>
-          `${button.action || button.type || 'button'}:${index}`,
-        children: (buttonAccessor: () => FormButton) =>
-          jsx('button', {
-            type: () => buttonAccessor().type || 'button',
-            className: () => {
-              const button = buttonAccessor();
-              return joinClasses(
-                state.className.button,
-                button.theme ? `is-${button.theme}` : '',
-                button.className || ''
-              );
-            },
-            'data-action': () => {
-              const button = buttonAccessor();
-              return button.action || button.type || 'button';
-            },
-            disabled: () => state.submitting || !!buttonAccessor().disabled,
-            children: () => {
-              const button = buttonAccessor();
-              const content = asRenderable(button.text ?? button.label ?? '');
-              const submitting =
-                state.submitting &&
-                (button.type === 'submit' || button.action === 'submit');
-              return submitting ? [createLoading(), content] : content;
-            },
-          }),
-      }),
+      children:
+        props.buttons === 'reverse'
+          ? [resetButtonView(), submitButtonView()]
+          : [submitButtonView(), resetButtonView()],
     }) as HTMLElement;
 
   form = defineComponent<
@@ -1094,9 +1062,6 @@ export function createForm(input: FormProps = {}): Form {
       validate,
       reset() {
         validator?.reset();
-        flushSync(() => {
-          state.data = null;
-        });
         return form;
       },
       collectData,
@@ -1124,7 +1089,7 @@ export function createForm(input: FormProps = {}): Form {
         cache.fieldIds.clear();
         runtimeItems = new WeakMap();
         flushSync(() => {
-          state.fields = cloneFields(initial.fields);
+          state.fields = cloneFields(props.fields);
         });
         return form;
       },
@@ -1135,42 +1100,31 @@ export function createForm(input: FormProps = {}): Form {
         ...(Object.hasOwn(patch, 'fields')
           ? { fields: cloneFields(patch.fields) }
           : {}),
-        ...(Object.hasOwn(patch, 'buttons')
-          ? { buttons: cloneButtons(patch.buttons) }
-          : {}),
-        ...(Object.hasOwn(patch, 'className')
-          ? { className: resolveClassNames(patch.className) }
-          : {}),
-        ...(Object.hasOwn(patch, 'validator')
-          ? { validator: cloneValidator(patch.validator) }
-          : {}),
       };
     },
     view: () => {
       const element = jsx('form', {
-        className: () =>
-          joinClasses(
-            state.className.form,
-            state.vertical
-              ? state.className.vertical
-              : state.className.horizontal,
-            state.itemVertical
-              ? state.className.itemVertical
-              : state.className.itemHorizontal
-          ),
-        id: () => state.id,
-        novalidate: () => state.validator.vanilla === false,
+        className: joinClasses(
+          props.className.form,
+          props.vertical
+            ? props.className.vertical
+            : props.className.horizontal,
+          props.itemVertical
+            ? props.className.itemVertical
+            : props.className.itemHorizontal,
+          formSizeClass()
+        ),
+        id: props.id,
+        novalidate: props.validator.vanilla === false,
         'data-form': 'root',
-        'data-form-layout': () => (state.vertical ? 'vertical' : 'horizontal'),
-        'data-form-field-layout': () =>
-          state.itemVertical ? 'vertical' : 'horizontal',
+        'data-form-layout': props.vertical ? 'vertical' : 'horizontal',
+        'data-form-field-layout': props.itemVertical
+          ? 'vertical'
+          : 'horizontal',
         onSubmit: (event: Event) => void handleSubmit(event),
         onReset: (event: Event) => {
           resetValidationState();
-          flushSync(() => {
-            state.data = null;
-          });
-          state.onReset?.(event, form);
+          props.onReset?.(event, form);
         },
         children: [
           For({
@@ -1178,13 +1132,10 @@ export function createForm(input: FormProps = {}): Form {
             key: itemKey,
             children: itemView,
           }),
-          buttonsView(),
+          props.buttons !== false ? buttonsView() : null,
         ],
       }) as HTMLFormElement;
-      createEffect(() => setElementStyle(element, state.style));
-      createEffect(() => {
-        if (validator) validator.props = { ...state.validator, onSubmit: null };
-      });
+      setElementStyle(element, props.style);
       return element;
     },
     onBuild() {

@@ -83,8 +83,11 @@ describe('Form', () => {
 
     expect(form.element).toBeInstanceOf(HTMLFormElement);
     expect(app().contains(form.element)).toBe(true);
+    expect(Object.keys(form.state)).toEqual(['fields', 'submitting']);
+    expect(Object.hasOwn(form.state, 'data')).toBe(false);
     expect(form.element?.classList.contains('j-form')).toBe(true);
     expect(form.element?.classList.contains('is-vertical')).toBe(true);
+    expect(form.element?.classList.contains('is-md')).toBe(true);
     expect(form.element?.dataset.form).toBe('root');
     expect(form.element?.querySelector('.form-field')).toBeTruthy();
     expect(form.element?.querySelector('.field-legend')).toBeTruthy();
@@ -142,23 +145,170 @@ describe('Form', () => {
     expect(form.element?.querySelector('[data-field-buttons]')).toBeTruthy();
   });
 
-  it('resolves button position from props into inline style', () => {
-    form = createForm({ buttonsPosition: 'center' }).build();
+  it('renders hardcoded buttons with text, class names, reverse order, and false', () => {
+    form = createForm({
+      text: { submit: 'Save', reset: 'Clear' },
+      className: {
+        submitBtn: 'save-action',
+        resetBtn: 'clear-action',
+      },
+    }).build();
     mountForm();
 
-    const buttons = form.element?.querySelector<HTMLElement>(
-      '[data-field-buttons]'
+    const buttons = Array.from(
+      form.element?.querySelectorAll<HTMLButtonElement>(
+        '[data-field-buttons] button'
+      ) || []
     );
-    expect(buttons?.style.justifyContent).toBe('center');
+    expect(buttons.map((button) => button.dataset.action)).toEqual([
+      'submit',
+      'reset',
+    ]);
+    expect(buttons[0]?.textContent).toBe('Save');
+    expect(buttons[1]?.textContent).toBe('Clear');
+    expect(buttons[0]?.classList.contains('save-action')).toBe(true);
+    expect(buttons[1]?.classList.contains('clear-action')).toBe(true);
+    expect(buttons[0]?.classList.contains('is-md')).toBe(true);
+    expect(buttons[1]?.classList.contains('is-md')).toBe(true);
+    expect(
+      form.element?.querySelector<HTMLElement>('[data-field-buttons]')?.style
+        .justifyContent
+    ).toBe('flex-start');
+
+    form.destroy();
+    form = createForm({
+      buttons: 'reverse',
+      buttonsPosition: 'center',
+      size: 'xl',
+    }).build();
+    mountForm();
+
+    expect(form.element?.classList.contains('is-xl')).toBe(true);
+    expect(
+      form.element?.querySelector<HTMLElement>('[data-field-buttons]')?.style
+        .justifyContent
+    ).toBe('center');
+    const reversed = Array.from(
+      form.element?.querySelectorAll<HTMLButtonElement>(
+        '[data-field-buttons] button'
+      ) || []
+    );
+    expect(reversed.map((button) => button.dataset.action)).toEqual([
+      'reset',
+      'submit',
+    ]);
+    expect(reversed.every((button) => button.classList.contains('is-xl'))).toBe(
+      true
+    );
 
     form.destroy();
     form = createForm({ buttonsPosition: 'start' }).build();
     mountForm();
 
-    const nextButtons = form.element?.querySelector<HTMLElement>(
-      '[data-field-buttons]'
+    expect(
+      form.element?.querySelector<HTMLElement>('[data-field-buttons]')?.style
+        .justifyContent
+    ).toBe('flex-start');
+
+    form.destroy();
+    form = createForm({ buttons: false }).build();
+    mountForm();
+
+    expect(form.element?.querySelector('[data-field-buttons]')).toBeNull();
+  });
+
+  it('adds size classes to input, select, and switch controls', () => {
+    form = createForm({
+      fields: [
+        { type: 'text', payload: { label: 'Name', name: 'name' } },
+        { type: 'textarea', payload: { label: 'Bio', name: 'bio' } },
+        {
+          type: 'select',
+          payload: {
+            label: 'Role',
+            name: 'role',
+            options: [{ value: 'admin', text: 'Admin' }],
+          },
+        },
+        {
+          type: 'radio',
+          payload: {
+            label: 'Mode',
+            name: 'mode',
+            options: [{ value: 'basic', text: 'Basic' }],
+          },
+        },
+        {
+          type: 'checkbox',
+          payload: {
+            label: 'Tags',
+            name: 'tags',
+            options: [{ value: 'ui', text: 'UI' }],
+          },
+        },
+        {
+          type: 'switch',
+          payload: { label: 'Publish', name: 'publish' },
+        },
+      ],
+      buttons: false,
+    }).build();
+    mountForm();
+
+    expect(
+      form.element?.querySelector<HTMLInputElement>('[name="name"]')?.className
+    ).toBe('j-input is-md');
+    expect(
+      form.element?.querySelector<HTMLTextAreaElement>('[name="bio"]')
+        ?.className
+    ).toBe('j-textarea');
+    expect(
+      form.element?.querySelector<HTMLSelectElement>('[name="role"]')?.className
+    ).toBe('j-select is-md');
+    expect(
+      form.element?.querySelector<HTMLElement>('[data-choice-type="radio"]')
+        ?.className
+    ).toBe('j-radio is-horizontal');
+    expect(
+      form.element?.querySelector<HTMLElement>('[data-choice-type="checkbox"]')
+        ?.className
+    ).toBe('j-checkbox is-horizontal');
+
+    const defaultSwitch = form.element?.querySelector<HTMLElement>(
+      '[data-field-switch="publish"]'
     );
-    expect(nextButtons?.style.justifyContent).toBe('flex-start');
+    expect(defaultSwitch?.className).toBe('j-switch is-default is-md');
+
+    form.destroy();
+    form = createForm({
+      size: 'xl',
+      className: { switch: 'j-switch is-line' },
+      fields: [
+        {
+          type: 'text',
+          payload: {
+            label: 'Name',
+            name: 'name',
+            size: 'sm',
+            className: 'profile-input',
+          },
+        },
+        {
+          type: 'switch',
+          payload: { label: 'Publish', name: 'publish' },
+        },
+      ],
+      buttons: false,
+    }).build();
+    mountForm();
+
+    expect(
+      form.element?.querySelector<HTMLInputElement>('[name="name"]')?.className
+    ).toBe('profile-input is-sm');
+    const customSwitch = form.element?.querySelector<HTMLElement>(
+      '[data-field-switch="publish"]'
+    );
+    expect(customSwitch?.className).toBe('j-switch is-line is-xl');
   });
 
   it('reactively updates fields and preserves stable data selectors', () => {
@@ -556,10 +706,7 @@ describe('Form', () => {
           },
         },
       ],
-      buttons: [
-        { type: 'submit', text: 'Save', theme: 'primary', action: 'submit' },
-        { type: 'reset', text: 'Reset', theme: 'ghost', action: 'reset' },
-      ],
+      text: { submit: 'Save', reset: 'Reset' },
       onSubmit: () => pending.promise,
     }).build();
     mountForm();

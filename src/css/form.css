@@ -15,6 +15,11 @@
     gap: var(--form-gap-horizontal, var(--s2));
   }
 
+  .j-form.is-lg {
+    --form-gap-vertical: var(--s3);
+    --form-gap-horizontal: var(--s3);
+  }
+
   .j-form .form-field {
     gap: var(--form-label-gap, var(--space));
     margin: 0;
