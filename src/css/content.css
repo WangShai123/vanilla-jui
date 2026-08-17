@@ -461,6 +461,10 @@
     color: var(--ui-fg-soft);
   }
 
+  .language-markdown .hljs-code {
+    color: inherit;
+  }
+
   /* .dark .hljs-comment,
   .dark .hljs-code,
   .dark .hljs-formula {
