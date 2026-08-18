@@ -14,8 +14,11 @@ import {
   defineComponent,
 } from '../core/component.ts';
 import { createLoading } from '../primitives/loading.ts';
-import { joinClasses } from '../utilities/class-name.ts';
-import { asRenderable, type RenderableContent } from '../utilities/dom.ts';
+import {
+  asRenderable,
+  joinClasses,
+  type RenderableContent,
+} from '../utilities/dom.ts';
 import { createEventManager } from '../utilities/events.ts';
 import { randomId } from '../utilities/id.ts';
 import { createElementRef, createKeyedElementRefs } from '../utilities/refs.ts';
@@ -58,7 +61,7 @@ export type TabContent =
 
 export interface TabItem extends Record<string, unknown> {
   name?: string;
-  title: Exclude<RenderableContent, (...args: never[]) => unknown>;
+  title: RenderableContent<TabsPanelContext>;
   content: TabContent;
   cache?: boolean;
   ttl?: number;
@@ -123,8 +126,6 @@ type TabsBase = FunctionalComponent<
 
 export type Tabs = TabsBase & {
   readonly current: TabsCurrent;
-  readonly activeIndex: number;
-  readonly disabledNames: string[];
 };
 
 type PointerDragEvent = MouseEvent | TouchEvent;
@@ -519,8 +520,18 @@ export function createTabs(input: TabsProps = {}): Tabs {
     }) as HTMLElement;
   };
 
-  const tabView = (item: () => TabItem, _index: () => number): HTMLElement => {
+  const tabView = (item: () => TabItem, index: () => number): HTMLElement => {
     const name = item().name as string;
+    const title = (): RenderableContent<TabsPanelContext> => {
+      const value = item().title;
+      const context: TabsPanelContext = {
+        tabs: instance,
+        item: item(),
+        index: index(),
+        name,
+      };
+      return typeof value === 'function' ? value(context) : value;
+    };
     return jsx('div', {
       className: props.className.tab,
       'data-tabs-tab': name,
@@ -528,7 +539,7 @@ export function createTabs(input: TabsProps = {}): Tabs {
       'aria-selected': () => (isActive(name) ? 'true' : 'false'),
       'aria-disabled': () => (isDisabled(name) ? 'true' : 'false'),
       ref: tabs.bind(name),
-      children: () => asRenderable(item().title),
+      children: () => asRenderable(title()),
     }) as HTMLElement;
   };
 
@@ -652,8 +663,6 @@ export function createTabs(input: TabsProps = {}): Tabs {
 
   Object.defineProperties(instance, {
     current: { enumerable: true, get: current },
-    activeIndex: { enumerable: true, get: () => current().index },
-    disabledNames: { enumerable: true, get: disabledNames },
   });
 
   return instance;

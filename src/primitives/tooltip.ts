@@ -1,7 +1,6 @@
 import { jsx } from 'vanilla-signal';
 
-import { joinClasses } from '../utilities/class-name.ts';
-import { type DOMReference } from '../utilities/dom.ts';
+import { type DOMReference, joinClasses } from '../utilities/dom.ts';
 import { type ResolveSchema, resolveProps } from '../utilities/types.ts';
 import { createDrop } from './drop.ts';
 

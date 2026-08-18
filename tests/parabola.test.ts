@@ -81,14 +81,13 @@ afterEach(() => {
 });
 
 describe('Parabola', () => {
-  it('creates a root without producing a ball during instantiation', () => {
+  it('does not create DOM during instantiation', () => {
     const { from, to } = mount();
     const parabola = createParabola({ from, to });
     instances.push(parabola);
 
-    expect(parabola.element).toBe(
-      document.querySelector('[data-parabola="root"]')
-    );
+    expect(parabola.element).toBeNull();
+    expect(document.querySelector('[data-parabola="root"]')).toBeNull();
     expect(balls()).toHaveLength(0);
     expect(parabola.runtime.destroyed).toBe(false);
   });
@@ -167,9 +166,8 @@ describe('Parabola', () => {
     await expect(started).resolves.toBe(false);
 
     expect(parabola.runtime.destroyed).toBe(false);
-    expect(parabola.element).toBe(
-      document.querySelector('[data-parabola="root"]')
-    );
+    expect(parabola.element).toBeNull();
+    expect(document.querySelector('[data-parabola="root"]')).toBeNull();
     expect(balls()).toHaveLength(0);
     expect(onHidden).not.toHaveBeenCalled();
   });
@@ -232,9 +230,8 @@ describe('Parabola', () => {
     raf(900);
 
     expect(parabola.runtime.destroyed).toBe(false);
-    expect(parabola.element).toBe(
-      document.querySelector('[data-parabola="root"]')
-    );
+    expect(parabola.element).toBeNull();
+    expect(document.querySelector('[data-parabola="root"]')).toBeNull();
     expect(balls()).toHaveLength(0);
     expect(onHidden).toHaveBeenCalledWith(parabola);
 

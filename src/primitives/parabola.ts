@@ -153,14 +153,14 @@ export function createParabola(input: ParabolaProps = {}): ParabolaInstance {
     insert(document.body, root);
   };
   const removeRootIfIdle = (): void => {
-    if (!runtime.destroyed || balls.size > 0) return;
+    if (balls.size > 0) return;
     root?.remove();
     root = null;
   };
   const removeBall = (ball: HTMLElement, notify: boolean): void => {
     if (!balls.has(ball)) return;
     const frame = frames.get(ball);
-    if (frame) cancelAnimationFrame(frame);
+    if (frame !== undefined) cancelAnimationFrame(frame);
     frames.delete(ball);
     ball.remove();
     balls.delete(ball);
@@ -342,6 +342,5 @@ export function createParabola(input: ParabolaProps = {}): ParabolaInstance {
       removeRootIfIdle();
     },
   };
-  createRoot();
   return parabola;
 }

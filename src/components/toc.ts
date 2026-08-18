@@ -1,7 +1,7 @@
 import {
   For,
-  createMemo,
   createDeepStore,
+  createMemo,
   flushSync,
   jsx,
 } from 'vanilla-signal';
@@ -10,8 +10,12 @@ import {
   type FunctionalComponent,
   defineComponent,
 } from '../core/component.ts';
-import { joinClasses } from '../utilities/class-name.ts';
-import { type DOMReference, all, requireContainer } from '../utilities/dom.ts';
+import {
+  type DOMReference,
+  all,
+  joinClasses,
+  requireContainer,
+} from '../utilities/dom.ts';
 import { createEventManager } from '../utilities/events.ts';
 import { randomId } from '../utilities/id.ts';
 import { type ResolveSchema, resolveProps } from '../utilities/types.ts';

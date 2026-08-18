@@ -92,6 +92,43 @@ describe('Tabs', () => {
     expect(tabElements(tabs)[1]?.getAttribute('aria-selected')).toBe('true');
     expect(panelElements(tabs)[1]?.getAttribute('aria-hidden')).toBe('false');
     expect(tabs.current.name).toBe('usage');
+    expect(Object.hasOwn(tabs, 'activeIndex')).toBe(false);
+    expect(Object.hasOwn(tabs, 'disabledNames')).toBe(false);
+  });
+
+  it('renders tab titles from renderable functions with context', async () => {
+    tabs = mount(
+      createTabs({
+        active: 'chart',
+        data: [
+          {
+            name: 'chart',
+            count: 1,
+            title: ({ item, index, name }) => [
+              jsx('strong', {
+                children: `${name}:${index}`,
+              }),
+              ` ${String(item.count)}`,
+              jsx('button', {
+                type: 'button',
+                children: 'Action',
+              }),
+            ],
+            content: 'Chart panel',
+          },
+        ],
+      })
+    );
+
+    const tab = tabs.element?.querySelector<HTMLElement>(
+      '[data-tabs-tab="chart"]'
+    );
+    expect(tab?.textContent).toBe('chart:0 1Action');
+
+    tabs.state.data[0]!.count = 2;
+    await tick();
+
+    expect(tab?.textContent).toBe('chart:0 2Action');
   });
 
   it('uses data markers for interaction when className is customized', async () => {

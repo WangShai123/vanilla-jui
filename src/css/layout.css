@@ -159,6 +159,12 @@
     height: fit-content;
   }
 
+  .group {
+    display: flex;
+    gap: var(--group-gap, 0.5rem);
+    flex-wrap: wrap;
+  }
+
   /* 行容器 */
   .flex-container {
     display: flex;

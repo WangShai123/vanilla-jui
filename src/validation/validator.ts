@@ -1,7 +1,11 @@
 import { jsx } from 'vanilla-signal';
 
-import { joinClasses } from '../utilities/class-name.ts';
-import { type DOMReference, all, resolveElement } from '../utilities/dom.ts';
+import {
+  type DOMReference,
+  all,
+  joinClasses,
+  resolveElement,
+} from '../utilities/dom.ts';
 import { createEventManager } from '../utilities/events.ts';
 import { isPlainObject } from '../utilities/object.ts';
 import {

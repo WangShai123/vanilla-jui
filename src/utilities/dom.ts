@@ -23,6 +23,7 @@ export type QueryContext = Document | DocumentFragment | Element;
 export type CleanupFunction = () => void;
 export type LazyRenderTarget = string | Element;
 export type LazyRenderCallback = () => void;
+export type ClassNameToken = string | false | null | undefined;
 export type RenderableContent<TContext = unknown> =
   | Node
   | string
@@ -37,6 +38,10 @@ export function asRenderable<TContext>(
   value: RenderableContent<TContext>
 ): Renderable {
   return value as Renderable;
+}
+
+export function joinClasses(...tokens: ClassNameToken[]): string {
+  return tokens.filter(Boolean).join(' ');
 }
 
 export interface LazyRenderOptions {
@@ -298,11 +303,6 @@ export function all<TElement extends Element = Element>(
  */
 export function lazyRender(
   target: LazyRenderTarget,
-  renderCallback: LazyRenderCallback,
-  options?: LazyRenderOptions
-): CleanupFunction;
-export function lazyRender(
-  target: unknown,
   renderCallback: LazyRenderCallback,
   options: LazyRenderOptions = {}
 ): CleanupFunction {

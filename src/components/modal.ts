@@ -16,10 +16,10 @@ import locales from '../locales/index.ts';
 import { icon } from '../primitives/icons.ts';
 import { createLoading } from '../primitives/loading.ts';
 import { createPopup } from '../primitives/popup.ts';
-import { joinClasses } from '../utilities/class-name.ts';
 import {
   all,
   asRenderable,
+  joinClasses,
   q,
   type RenderableContent,
 } from '../utilities/dom.ts';

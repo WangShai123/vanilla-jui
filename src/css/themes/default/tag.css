@@ -1,7 +1,7 @@
 @layer themes {
   .j-tag {
     --tag-gap: var(--space);
-    --tag-fg: var(--ui-fg);
+    --tag-fg: var(--ui-fg-muted);
     --tag-bg: var(--ui-bg);
     --tag-font-size: var(--font-size-sm);
     --tag-font-weight: var(--font-normal);
@@ -19,7 +19,7 @@
     --tag-padding: 0 var(--s2);
   }
 
-  .j-tag.is-contrast {
+  .j-tag.is-reverse {
     --tag-fg: var(--ui-bg);
     --tag-bg: var(--ui-fg);
   }
@@ -73,7 +73,7 @@
     color: var(--ui-bg-subtle);
   }
 
-  .j-tag.is-contrast .el-icon[data-action='close']:hover {
+  .j-tag.is-reverse .el-icon[data-action='close']:hover {
     color: var(--ui-fg);
     background: var(--ui-bg);
   }

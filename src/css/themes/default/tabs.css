@@ -4,7 +4,7 @@
     --tab-list-item-margin: 0;
     --tab-list-font-weight: var(--font-medium);
     --tab-wrap-border: 1px solid var(--ui-border-subtle);
-    --panel-list-padding: var(--s2) var(--s3);
+    --panel-list-padding: var(--s3);
     --panel-list-margin: 0;
     --panel-list-item-margin: 0;
   }

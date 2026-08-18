@@ -16,7 +16,7 @@ import {
 } from '../core/component.ts';
 import locales from '../locales/index.ts';
 import { icon } from '../primitives/icons.ts';
-import { joinClasses } from '../utilities/class-name.ts';
+import { joinClasses } from '../utilities/dom.ts';
 import { createEventManager } from '../utilities/events.ts';
 import { randomId } from '../utilities/id.ts';
 import {

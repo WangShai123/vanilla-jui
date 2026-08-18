@@ -56,7 +56,7 @@
     display: none;
     margin: var(--panel-list-item-margin);
     position: relative;
-    min-height: inherit;
+    min-height: 22px;
   }
 
   .j-tabs .panel-list .panel-item[aria-hidden='false'] {

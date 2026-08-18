@@ -13,8 +13,12 @@ import {
   type FunctionalComponent,
   defineComponent,
 } from '../core/component.ts';
-import { joinClasses } from '../utilities/class-name.ts';
-import { asRenderable, type RenderableContent, all } from '../utilities/dom.ts';
+import {
+  all,
+  asRenderable,
+  joinClasses,
+  type RenderableContent,
+} from '../utilities/dom.ts';
 import { randomId } from '../utilities/id.ts';
 import { isPlainObject } from '../utilities/object.ts';
 import {

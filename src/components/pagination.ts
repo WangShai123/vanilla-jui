@@ -12,7 +12,7 @@ import {
   defineComponent,
 } from '../core/component.ts';
 import { icon } from '../primitives/icons.ts';
-import { joinClasses } from '../utilities/class-name.ts';
+import { joinClasses } from '../utilities/dom.ts';
 import { isPlainObject } from '../utilities/object.ts';
 import {
   type ResolveSchema,

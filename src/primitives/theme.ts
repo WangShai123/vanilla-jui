@@ -10,8 +10,7 @@ import {
 import { t } from 'vanilla-signal-i18n';
 
 import locales from '../locales/index.ts';
-import { joinClasses } from '../utilities/class-name.ts';
-import { all } from '../utilities/dom.ts';
+import { all, joinClasses } from '../utilities/dom.ts';
 import { createEventManager } from '../utilities/events.ts';
 import { isPlainObject } from '../utilities/object.ts';
 
