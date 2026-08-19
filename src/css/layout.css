@@ -166,10 +166,16 @@
   }
 
   /* 行容器 */
+  :root {
+    --flex-container-gap: 1rem;
+    /* 总列数 */
+    --cols: 12;
+  }
+
   .flex-container {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--flex-container-gap, 1rem);
+    gap: var(--flex-container-gap);
   }
 
   /* 默认列：弹性填充 */
@@ -186,52 +192,118 @@
 
   /* 基础列宽（1～12）*/
   .flex-col-1 {
-    width: calc((100% - 0 * var(--flex-container-gap, 1rem)) / 1);
+    --span: 1;
   }
 
   .flex-col-2 {
-    width: calc((100% - 1 * var(--flex-container-gap, 1rem)) / 2);
+    --span: 2;
   }
 
   .flex-col-3 {
-    width: calc((100% - 2 * var(--flex-container-gap, 1rem)) / 3);
+    --span: 3;
   }
 
   .flex-col-4 {
-    width: calc((100% - 3 * var(--flex-container-gap, 1rem)) / 4);
+    --span: 4;
   }
 
   .flex-col-5 {
-    width: calc((100% - 4 * var(--flex-container-gap, 1rem)) / 5);
+    --span: 5;
   }
 
   .flex-col-6 {
-    width: calc((100% - 5 * var(--flex-container-gap, 1rem)) / 6);
+    --span: 6;
   }
 
   .flex-col-7 {
-    width: calc((100% - 6 * var(--flex-container-gap, 1rem)) / 7);
+    --span: 7;
   }
 
   .flex-col-8 {
-    width: calc((100% - 7 * var(--flex-container-gap, 1rem)) / 8);
+    --span: 8;
   }
 
   .flex-col-9 {
-    width: calc((100% - 8 * var(--flex-container-gap, 1rem)) / 9);
+    --span: 9;
   }
 
   .flex-col-10 {
-    width: calc((100% - 9 * var(--flex-container-gap, 1rem)) / 10);
+    --span: 10;
   }
 
   .flex-col-11 {
-    width: calc((100% - 10 * var(--flex-container-gap, 1rem)) / 11);
+    --span: 11;
   }
 
   .flex-col-12 {
-    width: calc((100% - 11 * var(--flex-container-gap, 1rem)) / 12);
+    --span: 12;
   }
+
+  .flex-col-1,
+  .flex-col-2,
+  .flex-col-3,
+  .flex-col-4,
+  .flex-col-5,
+  .flex-col-6,
+  .flex-col-7,
+  .flex-col-8,
+  .flex-col-9,
+  .flex-col-10,
+  .flex-col-11,
+  .flex-col-12 {
+    width: calc(
+      (100% - (var(--cols) - 1) * var(--flex-container-gap, 1rem)) /
+        var(--cols) * var(--span)
+    );
+  }
+
+  /* .flex-col-1 {
+    width: calc((100% - 11 * var(--flex-container-gap)) / 12 * 1);
+  }
+
+  .flex-col-2 {
+    width: calc((100% - 11 * var(--flex-container-gap)) / 12 * 2);
+  }
+
+  .flex-col-3 {
+    width: calc((100% - 11 * var(--flex-container-gap)) / 12 * 3);
+  }
+
+  .flex-col-4 {
+    width: calc((100% - 11 * var(--flex-container-gap)) / 12 * 4);
+  }
+
+  .flex-col-5 {
+    width: calc((100% - 11 * var(--flex-container-gap)) / 12 * 5);
+  }
+
+  .flex-col-6 {
+    width: calc((100% - 11 * var(--flex-container-gap)) / 12 * 6);
+  }
+
+  .flex-col-7 {
+    width: calc((100% - 11 * var(--flex-container-gap)) / 12 * 7);
+  }
+
+  .flex-col-8 {
+    width: calc((100% - 11 * var(--flex-container-gap)) / 12 * 8);
+  }
+
+  .flex-col-9 {
+    width: calc((100% - 11 * var(--flex-container-gap)) / 12 * 9);
+  }
+
+  .flex-col-10 {
+    width: calc((100% - 11 * var(--flex-container-gap)) / 12 * 10);
+  }
+
+  .flex-col-11 {
+    width: calc((100% - 11 * var(--flex-container-gap)) / 12 * 11);
+  }
+
+  .flex-col-12 {
+    width: 100%;
+  } */
 
   /* 关键：禁用 flex-basis 的自动收缩/拉伸，仅用 width 控制 */
   [class*='flex-col-'] {
@@ -239,203 +311,358 @@
     /* 必须设为 auto，否则 width 被忽略 */
   }
 
+  /* ============================================
+     小屏幕 sm (≥576px)
+     ============================================ */
   @media (min-width: 576px) {
     .flex-col-sm-1 {
-      width: calc((100% - 0 * var(--flex-container-gap, 1rem)) / 1);
+      --span: 1;
     }
 
     .flex-col-sm-2 {
-      width: calc((100% - 1 * var(--flex-container-gap, 1rem)) / 2);
+      --span: 2;
     }
 
     .flex-col-sm-3 {
-      width: calc((100% - 2 * var(--flex-container-gap, 1rem)) / 3);
+      --span: 3;
     }
 
     .flex-col-sm-4 {
-      width: calc((100% - 3 * var(--flex-container-gap, 1rem)) / 4);
+      --span: 4;
     }
 
     .flex-col-sm-5 {
-      width: calc((100% - 4 * var(--flex-container-gap, 1rem)) / 5);
+      --span: 5;
     }
 
     .flex-col-sm-6 {
-      width: calc((100% - 5 * var(--flex-container-gap, 1rem)) / 6);
+      --span: 6;
     }
 
     .flex-col-sm-7 {
-      width: calc((100% - 6 * var(--flex-container-gap, 1rem)) / 7);
+      --span: 7;
     }
 
     .flex-col-sm-8 {
-      width: calc((100% - 7 * var(--flex-container-gap, 1rem)) / 8);
+      --span: 8;
     }
 
     .flex-col-sm-9 {
-      width: calc((100% - 8 * var(--flex-container-gap, 1rem)) / 9);
+      --span: 9;
     }
 
     .flex-col-sm-10 {
-      width: calc((100% - 9 * var(--flex-container-gap, 1rem)) / 10);
+      --span: 10;
     }
 
     .flex-col-sm-11 {
-      width: calc((100% - 10 * var(--flex-container-gap, 1rem)) / 11);
+      --span: 11;
     }
 
     .flex-col-sm-12 {
-      width: calc((100% - 11 * var(--flex-container-gap, 1rem)) / 12);
+      --span: 12;
+    }
+
+    .flex-col-sm-1,
+    .flex-col-sm-2,
+    .flex-col-sm-3,
+    .flex-col-sm-4,
+    .flex-col-sm-5,
+    .flex-col-sm-6,
+    .flex-col-sm-7,
+    .flex-col-sm-8,
+    .flex-col-sm-9,
+    .flex-col-sm-10,
+    .flex-col-sm-11,
+    .flex-col-sm-12 {
+      width: calc(
+        (100% - var(--gap-count) * var(--flex-container-gap, 1rem)) /
+          var(--cols) * var(--span)
+      );
     }
   }
 
+  /* ============================================
+       中屏幕 md (≥768px)
+       ============================================ */
   @media (min-width: 768px) {
     .flex-col-md-1 {
-      width: calc((100% - 0 * var(--flex-container-gap, 1rem)) / 1);
+      --span: 1;
     }
 
     .flex-col-md-2 {
-      width: calc((100% - 1 * var(--flex-container-gap, 1rem)) / 2);
+      --span: 2;
     }
 
     .flex-col-md-3 {
-      width: calc((100% - 2 * var(--flex-container-gap, 1rem)) / 3);
+      --span: 3;
     }
 
     .flex-col-md-4 {
-      width: calc((100% - 3 * var(--flex-container-gap, 1rem)) / 4);
+      --span: 4;
     }
 
     .flex-col-md-5 {
-      width: calc((100% - 4 * var(--flex-container-gap, 1rem)) / 5);
+      --span: 5;
     }
 
     .flex-col-md-6 {
-      width: calc((100% - 5 * var(--flex-container-gap, 1rem)) / 6);
+      --span: 6;
     }
 
     .flex-col-md-7 {
-      width: calc((100% - 6 * var(--flex-container-gap, 1rem)) / 7);
+      --span: 7;
     }
 
     .flex-col-md-8 {
-      width: calc((100% - 7 * var(--flex-container-gap, 1rem)) / 8);
+      --span: 8;
     }
 
     .flex-col-md-9 {
-      width: calc((100% - 8 * var(--flex-container-gap, 1rem)) / 9);
+      --span: 9;
     }
 
     .flex-col-md-10 {
-      width: calc((100% - 9 * var(--flex-container-gap, 1rem)) / 10);
+      --span: 10;
     }
 
     .flex-col-md-11 {
-      width: calc((100% - 10 * var(--flex-container-gap, 1rem)) / 11);
+      --span: 11;
     }
 
     .flex-col-md-12 {
-      width: calc((100% - 11 * var(--flex-container-gap, 1rem)) / 12);
+      --span: 12;
+    }
+
+    .flex-col-md-1,
+    .flex-col-md-2,
+    .flex-col-md-3,
+    .flex-col-md-4,
+    .flex-col-md-5,
+    .flex-col-md-6,
+    .flex-col-md-7,
+    .flex-col-md-8,
+    .flex-col-md-9,
+    .flex-col-md-10,
+    .flex-col-md-11,
+    .flex-col-md-12 {
+      width: calc(
+        (100% - var(--gap-count) * var(--flex-container-gap, 1rem)) /
+          var(--cols) * var(--span)
+      );
     }
   }
 
+  /* ============================================
+           大屏幕 lg (≥992px)
+           ============================================ */
   @media (min-width: 992px) {
     .flex-col-lg-1 {
-      width: calc((100% - 0 * var(--flex-container-gap, 1rem)) / 1);
+      --span: 1;
     }
 
     .flex-col-lg-2 {
-      width: calc((100% - 1 * var(--flex-container-gap, 1rem)) / 2);
+      --span: 2;
     }
 
     .flex-col-lg-3 {
-      width: calc((100% - 2 * var(--flex-container-gap, 1rem)) / 3);
+      --span: 3;
     }
 
     .flex-col-lg-4 {
-      width: calc((100% - 3 * var(--flex-container-gap, 1rem)) / 4);
+      --span: 4;
     }
 
     .flex-col-lg-5 {
-      width: calc((100% - 4 * var(--flex-container-gap, 1rem)) / 5);
+      --span: 5;
     }
 
     .flex-col-lg-6 {
-      width: calc((100% - 5 * var(--flex-container-gap, 1rem)) / 6);
+      --span: 6;
     }
 
     .flex-col-lg-7 {
-      width: calc((100% - 6 * var(--flex-container-gap, 1rem)) / 7);
+      --span: 7;
     }
 
     .flex-col-lg-8 {
-      width: calc((100% - 7 * var(--flex-container-gap, 1rem)) / 8);
+      --span: 8;
     }
 
     .flex-col-lg-9 {
-      width: calc((100% - 8 * var(--flex-container-gap, 1rem)) / 9);
+      --span: 9;
     }
 
     .flex-col-lg-10 {
-      width: calc((100% - 9 * var(--flex-container-gap, 1rem)) / 10);
+      --span: 10;
     }
 
     .flex-col-lg-11 {
-      width: calc((100% - 10 * var(--flex-container-gap, 1rem)) / 11);
+      --span: 11;
     }
 
     .flex-col-lg-12 {
-      width: calc((100% - 11 * var(--flex-container-gap, 1rem)) / 12);
+      --span: 12;
+    }
+
+    .flex-col-lg-1,
+    .flex-col-lg-2,
+    .flex-col-lg-3,
+    .flex-col-lg-4,
+    .flex-col-lg-5,
+    .flex-col-lg-6,
+    .flex-col-lg-7,
+    .flex-col-lg-8,
+    .flex-col-lg-9,
+    .flex-col-lg-10,
+    .flex-col-lg-11,
+    .flex-col-lg-12 {
+      width: calc(
+        (100% - var(--gap-count) * var(--flex-container-gap, 1rem)) /
+          var(--cols) * var(--span)
+      );
     }
   }
 
+  /* ============================================
+           超大屏幕 xl (≥1200px)
+           ============================================ */
   @media (min-width: 1200px) {
     .flex-col-xl-1 {
-      width: calc((100% - 0 * var(--flex-container-gap, 1rem)) / 1);
+      --span: 1;
     }
 
     .flex-col-xl-2 {
-      width: calc((100% - 1 * var(--flex-container-gap, 1rem)) / 2);
+      --span: 2;
     }
 
     .flex-col-xl-3 {
-      width: calc((100% - 2 * var(--flex-container-gap, 1rem)) / 3);
+      --span: 3;
     }
 
     .flex-col-xl-4 {
-      width: calc((100% - 3 * var(--flex-container-gap, 1rem)) / 4);
+      --span: 4;
     }
 
     .flex-col-xl-5 {
-      width: calc((100% - 4 * var(--flex-container-gap, 1rem)) / 5);
+      --span: 5;
     }
 
     .flex-col-xl-6 {
-      width: calc((100% - 5 * var(--flex-container-gap, 1rem)) / 6);
+      --span: 6;
     }
 
     .flex-col-xl-7 {
-      width: calc((100% - 6 * var(--flex-container-gap, 1rem)) / 7);
+      --span: 7;
     }
 
     .flex-col-xl-8 {
-      width: calc((100% - 7 * var(--flex-container-gap, 1rem)) / 8);
+      --span: 8;
     }
 
     .flex-col-xl-9 {
-      width: calc((100% - 8 * var(--flex-container-gap, 1rem)) / 9);
+      --span: 9;
     }
 
     .flex-col-xl-10 {
-      width: calc((100% - 9 * var(--flex-container-gap, 1rem)) / 10);
+      --span: 10;
     }
 
     .flex-col-xl-11 {
-      width: calc((100% - 10 * var(--flex-container-gap, 1rem)) / 11);
+      --span: 11;
     }
 
     .flex-col-xl-12 {
-      width: calc((100% - 11 * var(--flex-container-gap, 1rem)) / 12);
+      --span: 12;
+    }
+
+    .flex-col-xl-1,
+    .flex-col-xl-2,
+    .flex-col-xl-3,
+    .flex-col-xl-4,
+    .flex-col-xl-5,
+    .flex-col-xl-6,
+    .flex-col-xl-7,
+    .flex-col-xl-8,
+    .flex-col-xl-9,
+    .flex-col-xl-10,
+    .flex-col-xl-11,
+    .flex-col-xl-12 {
+      width: calc(
+        (100% - var(--gap-count) * var(--flex-container-gap, 1rem)) /
+          var(--cols) * var(--span)
+      );
+    }
+  }
+
+  /* ============================================
+           超大屏幕 xxl (≥1400px) - 可选
+           ============================================ */
+  @media (min-width: 1400px) {
+    .flex-col-xxl-1 {
+      --span: 1;
+    }
+
+    .flex-col-xxl-2 {
+      --span: 2;
+    }
+
+    .flex-col-xxl-3 {
+      --span: 3;
+    }
+
+    .flex-col-xxl-4 {
+      --span: 4;
+    }
+
+    .flex-col-xxl-5 {
+      --span: 5;
+    }
+
+    .flex-col-xxl-6 {
+      --span: 6;
+    }
+
+    .flex-col-xxl-7 {
+      --span: 7;
+    }
+
+    .flex-col-xxl-8 {
+      --span: 8;
+    }
+
+    .flex-col-xxl-9 {
+      --span: 9;
+    }
+
+    .flex-col-xxl-10 {
+      --span: 10;
+    }
+
+    .flex-col-xxl-11 {
+      --span: 11;
+    }
+
+    .flex-col-xxl-12 {
+      --span: 12;
+    }
+
+    .flex-col-xxl-1,
+    .flex-col-xxl-2,
+    .flex-col-xxl-3,
+    .flex-col-xxl-4,
+    .flex-col-xxl-5,
+    .flex-col-xxl-6,
+    .flex-col-xxl-7,
+    .flex-col-xxl-8,
+    .flex-col-xxl-9,
+    .flex-col-xxl-10,
+    .flex-col-xxl-11,
+    .flex-col-xxl-12 {
+      width: calc(
+        (100% - var(--gap-count) * var(--flex-container-gap, 1rem)) /
+          var(--cols) * var(--span)
+      );
     }
   }
 
@@ -698,72 +925,58 @@
 
   /* columns */
   .columns-auto {
-    -moz-columns: auto;
     columns: auto;
   }
 
   .columns-3xs {
-    -moz-columns: var(--columns-3xs);
     columns: var(--columns-3xs);
   }
 
   .columns-2xs {
-    -moz-columns: var(--columns-2xs);
     columns: var(--columns-2xs);
   }
 
   .columns-xs {
-    -moz-columns: var(--columns-xs);
     columns: var(--columns-xs);
   }
 
   .columns-sm {
-    -moz-columns: var(--columns-sm);
     columns: var(--columns-sm);
   }
 
   .columns-md {
-    -moz-columns: var(--columns-md);
     columns: var(--columns-md);
   }
 
   .columns-lg {
-    -moz-columns: var(--columns-lg);
     columns: var(--columns-lg);
   }
 
   .columns-xl {
-    -moz-columns: var(--columns-xl);
     columns: var(--columns-xl);
   }
 
   .columns-2xl {
-    -moz-columns: var(--columns-2xl);
     columns: var(--columns-2xl);
   }
 
   .columns-3xl {
-    -moz-columns: var(--columns-3xl);
     columns: var(--columns-3xl);
   }
 
   .columns-4xl {
-    -moz-columns: var(--columns-4xl);
     columns: var(--columns-4xl);
   }
 
   .columns-5xl {
-    -moz-columns: var(--columns-5xl);
     columns: var(--columns-5xl);
   }
 
   .columns-6xl {
-    -moz-columns: var(--columns-6xl);
     columns: var(--columns-6xl);
   }
 
   .columns-7xl {
-    -moz-columns: var(--columns-7xl);
     columns: var(--columns-7xl);
   }
 
