@@ -182,6 +182,29 @@ describe('Toast', () => {
     );
   });
 
+  it('keeps show calls separate by default and locks when once is true', async () => {
+    const first = Toast.info('First', { duration: 0 });
+    const second = Toast.info('Second', { duration: 0 });
+
+    expect(second).not.toBe(first);
+    expect(document.querySelectorAll('[data-toast]')).toHaveLength(2);
+
+    Toast.clearAll();
+
+    const onceFirst = Toast.info('Once', { duration: 0, once: true });
+    const onceSecond = Toast.info('Ignored', { duration: 0, once: true });
+
+    expect(onceSecond).toBe(onceFirst);
+    expect(document.querySelectorAll('[data-toast]')).toHaveLength(1);
+
+    Toast.hide(onceFirst);
+    await flushAnimation();
+
+    const onceThird = Toast.info('Again', { duration: 0, once: true });
+    expect(onceThird).not.toBe(onceFirst);
+    expect(document.querySelectorAll('[data-toast]')).toHaveLength(1);
+  });
+
   it('supports confirm toast callbacks and clearAll', async () => {
     const onConfirm = vi.fn<() => Promise<void>>(async () => {});
     const toast = Toast.confirm('Confirm?', {
@@ -191,9 +214,12 @@ describe('Toast', () => {
     });
 
     vi.advanceTimersByTime(11);
+    const duplicate = Toast.confirm('Ignored duplicate?', { theme: 'error' });
     expect(toast.getAttribute('aria-live')).toBe('polite');
     expect(toast.classList.contains('is-warning')).toBe(true);
     expect(toast.classList.contains('is-confirm')).toBe(true);
+    expect(duplicate).toBe(toast);
+    expect(document.querySelectorAll('[data-toast-confirm]')).toHaveLength(1);
     expect(
       toast.querySelector('[data-toast-button="close"]')?.textContent
     ).toBe('No');
@@ -204,10 +230,18 @@ describe('Toast', () => {
     );
     confirm?.click();
     await Promise.resolve();
+    await flushAnimation();
 
     expect(onConfirm).toHaveBeenCalledTimes(1);
     expect(toast.hasAttribute('aria-hidden')).toBe(false);
-    expect(toast.getAttribute('data-mount')).toBe('false');
+    expect(document.body.contains(toast)).toBe(false);
+
+    const fresh = Toast.confirm('Confirm again?', {
+      theme: 'primary',
+      onConfirm: vi.fn(),
+    });
+    expect(fresh).not.toBe(toast);
+    expect(document.querySelectorAll('[data-toast-confirm]')).toHaveLength(1);
 
     Toast.warning('Warning', { duration: 1000 });
     Toast.lite('Lite', 1000);

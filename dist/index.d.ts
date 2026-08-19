@@ -595,6 +595,7 @@ interface ToastThemeOptions extends ToastClassNameOptions {
 }
 interface ToastOptions extends ToastThemeOptions {
   duration?: number;
+  once?: boolean;
   loading?: MaybeAccessor<boolean>;
   text?: {
     loading?: string;
@@ -603,6 +604,7 @@ interface ToastOptions extends ToastThemeOptions {
   onCancel?: () => void | Promise<void>;
 }
 interface ToastConfirmProps extends ToastThemeOptions {
+  once?: boolean;
   text?: {
     close?: string;
     confirm?: string;

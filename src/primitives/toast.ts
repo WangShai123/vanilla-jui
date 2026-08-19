@@ -51,6 +51,7 @@ export interface ToastThemeOptions extends ToastClassNameOptions {
 
 export interface ToastOptions extends ToastThemeOptions {
   duration?: number;
+  once?: boolean;
   loading?: MaybeAccessor<boolean>;
   text?: {
     loading?: string;
@@ -60,6 +61,7 @@ export interface ToastOptions extends ToastThemeOptions {
 }
 
 export interface ToastConfirmProps extends ToastThemeOptions {
+  once?: boolean;
   text?: {
     close?: string;
     confirm?: string;
@@ -97,6 +99,7 @@ const timers = new Set<string>();
 const disposers = new Map<HTMLElement, () => void>();
 const animations = new Map<HTMLElement, Animation>();
 const operations = new Map<HTMLElement, number>();
+const singletonToasts = new Map<'show' | 'confirm', HTMLElement>();
 let classNames = DEFAULT_CLASS_NAMES;
 
 function mergeClassNames(value?: ToastClassNameConfig): ToastClassNames {
@@ -113,6 +116,30 @@ function addToastDisposer(element: HTMLElement, dispose: () => void): void {
     current?.();
     dispose();
   });
+}
+
+function getSingletonToast(kind: 'show' | 'confirm'): HTMLElement | null {
+  const toast = singletonToasts.get(kind);
+  if (!toast) return null;
+  if (!toast.isConnected || toast.getAttribute('data-mount') === 'false') {
+    singletonToasts.delete(kind);
+    return null;
+  }
+  return toast;
+}
+
+function setSingletonToast(
+  kind: 'show' | 'confirm',
+  toast: HTMLElement,
+  once: boolean
+): void {
+  if (once) singletonToasts.set(kind, toast);
+}
+
+function clearSingletonToast(toast: HTMLElement): void {
+  for (const [kind, current] of singletonToasts) {
+    if (current === toast) singletonToasts.delete(kind);
+  }
 }
 
 function isToastLoading(options: ToastOptions): boolean {
@@ -229,6 +256,7 @@ function removeToastElement(element: HTMLElement): void {
   element.remove();
   disposers.get(element)?.();
   disposers.delete(element);
+  clearSingletonToast(element);
   const container = q<HTMLElement>('[data-toast-container]');
   if (container && container.children.length === 0) container.remove();
 }
@@ -342,9 +370,15 @@ function hide(toast: HTMLElement | null | undefined): void {
 }
 
 function show(message = '', options: ToastOptions = {}): HTMLElement {
+  const once = options.once ?? false;
+  if (once) {
+    const toast = getSingletonToast('show');
+    if (toast) return toast;
+  }
   validateParam('message', message, 'string', 'Toast.show');
   const duration = options.duration ?? 3000;
   const theme = options.theme || 'info';
+  validateParam('once', once, 'boolean', 'Toast.show');
   validateParam('duration', duration, TOAST_DURATION_RULE, 'Toast.show');
   validateParam('theme', theme, TOAST_THEME_RULE, 'Toast.show');
 
@@ -380,6 +414,7 @@ function show(message = '', options: ToastOptions = {}): HTMLElement {
     () => insert(getOrCreateContainer(names), toast),
     theme === 'error' ? 'assertive' : 'polite'
   );
+  setSingletonToast('show', toast, once);
   addToastDisposer(
     toast,
     listen(toast, 'click', () => void closeByUser(toast, options))
@@ -415,10 +450,16 @@ function lite(
 }
 
 function confirm(message = '', props: ToastConfirmProps = {}): HTMLElement {
+  const once = props.once ?? true;
+  if (once) {
+    const toast = getSingletonToast('confirm');
+    if (toast) return toast;
+  }
   validateParam('message', message, 'string', 'Toast.confirm');
   const closeText = props.text?.close || s('Close');
   const confirmText = props.text?.confirm || s('Confirm');
   const theme = props.theme || 'info';
+  validateParam('once', once, 'boolean', 'Toast.confirm');
   validateParam('theme', theme, TOAST_THEME_RULE, 'Toast.confirm');
   const names = resolveClassNames(props);
   const id = randomId();
@@ -468,6 +509,7 @@ function confirm(message = '', props: ToastConfirmProps = {}): HTMLElement {
       q<HTMLButtonElement>('[data-toast-button="confirm"]', element)?.focus();
     }
   );
+  setSingletonToast('confirm', element, once);
   return element;
 }
 
@@ -479,6 +521,7 @@ function clearAll(): void {
   for (const animation of animations.values()) animation.cancel();
   animations.clear();
   operations.clear();
+  singletonToasts.clear();
   q<HTMLElement>('[data-toast-container]')?.remove();
   q<HTMLElement>('[data-toast-lite]')?.remove();
 }
