@@ -88,6 +88,7 @@
     --columns-4xl: 56rem;
     --columns-5xl: 64rem;
     --columns-6xl: 72rem;
+    --columns-7xl: 80rem;
 
     /* --- Border Radius --- */
     --radius-full: 9999px;

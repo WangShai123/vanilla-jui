@@ -790,6 +790,18 @@
     columns: auto;
   }
 
+  .columns-6xs {
+    columns: var(--columns-6xs);
+  }
+
+  .columns-5xs {
+    columns: var(--columns-5xs);
+  }
+
+  .columns-4xs {
+    columns: var(--columns-4xs);
+  }
+
   .columns-3xs {
     columns: var(--columns-3xs);
   }
