@@ -31,8 +31,7 @@ import {
   type ValidatorClassNameConfig,
 } from '../validation/validator.ts';
 import { createLoading } from '../primitives/loading.ts';
-import { t } from 'vanilla-signal-i18n';
-import locales from '../locales/index.ts';
+import { translate } from '../utilities/locale.ts';
 
 type FormValue = string | number | boolean;
 export type FieldOption = FormValue | FormOption;
@@ -235,8 +234,8 @@ const DEFAULT_CLASS_NAMES: FormClassNames = {
 };
 
 const DEFAULT_TEXT: FormText = {
-  submit: t('Submit', locales),
-  reset: t('Reset', locales),
+  submit: translate('Submit'),
+  reset: translate('Reset'),
 };
 
 // Guard against malformed dynamic chains that never terminate.

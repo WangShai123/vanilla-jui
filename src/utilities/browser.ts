@@ -1,6 +1,5 @@
-import { t } from 'vanilla-signal-i18n';
 import { Toast } from '../primitives/toast';
-import locales from '../locales';
+import { translate } from '../utilities/locale.ts';
 
 declare global {
   interface Navigator {
@@ -128,7 +127,7 @@ export function isModernBrowser(): SupportES2022 {
 }
 export function checkModernBrowser(): SupportES2022 {
   if (!isModernBrowser()) {
-    Toast.confirm(t('wn', locales), {
+    Toast.confirm(translate('wn'), {
       theme: 'error',
       onConfirm: () => {
         window.open('https://www.google.cn/chrome/fallback/', '_blank');

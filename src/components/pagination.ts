@@ -12,13 +12,14 @@ import {
   defineComponent,
 } from '../core/component.ts';
 import { icon } from '../primitives/icons.ts';
-import { joinClasses } from '../utilities/dom.ts';
 import { isPlainObject } from '../utilities/object.ts';
 import {
   type ResolveSchema,
   resolveProps,
   validateParam,
 } from '../utilities/types.ts';
+import { translate } from '../utilities/locale.ts';
+import { createLoading } from '../primitives/loading.ts';
 
 export interface PaginationPage {
   size: number;
@@ -34,9 +35,9 @@ export interface PaginationClassNames {
   root: string;
   list: string;
   item: string;
-  more: string;
   button: string;
-  current: string;
+  moreBtn: string;
+  currentBtn: string;
   loading: string;
 }
 
@@ -102,9 +103,9 @@ const DEFAULT_CLASS_NAMES: PaginationClassNames = {
   root: 'j-pagination',
   list: 'pagination',
   item: 'item',
-  more: 'more',
-  button: 'j-button is-icon is-ghost',
-  current: 'j-button is-icon is-active',
+  button: 'j-button is-default is-icon',
+  currentBtn: 'j-button is-ghost is-icon is-active',
+  moreBtn: 'j-button is-ghost is-icon',
   loading: 'animate-spin',
 };
 
@@ -362,7 +363,9 @@ export function createPagination(input: PaginationProps = {}): Pagination {
         type: 'button',
         'data-page-action': type,
         'aria-label':
-          type === 'prev' ? 'Go to previous page' : 'Go to next page',
+          type === 'prev'
+            ? translate('Go to previous page')
+            : translate('Go to next page'),
         'aria-disabled': () => (disabled() ? 'true' : 'false'),
         tabindex: () => (disabled() ? '-1' : null),
         disabled,
@@ -379,15 +382,13 @@ export function createPagination(input: PaginationProps = {}): Pagination {
   const itemView = (itemAccessor: () => PaginationItem): HTMLElement => {
     if (itemAccessor().type === 'more') {
       return jsx('li', {
-        className: () =>
-          joinClasses(
-            props.className.item,
-            itemAccessor().type === 'more' ? props.className.more : ''
-          ),
+        className: props.className.item,
         'data-pagination-more': () =>
           itemAccessor().type === 'more' ? itemAccessor().key : null,
         children: jsx('span', {
-          className: props.className.button,
+          className: props.className.moreBtn,
+          'aria-disabled': true,
+          disabled: '',
           children: icon('more'),
         }),
       }) as HTMLElement;
@@ -397,11 +398,7 @@ export function createPagination(input: PaginationProps = {}): Pagination {
     const isCurrentPage = (): boolean => page() === state.page.current;
 
     return jsx('li', {
-      className: () =>
-        joinClasses(
-          props.className.item,
-          itemAccessor().type === 'more' ? props.className.more : ''
-        ),
+      className: props.className.item,
       'data-pagination-more': () =>
         itemAccessor().type === 'more' ? itemAccessor().key : null,
       'data-pagination-item': () => {
@@ -410,7 +407,7 @@ export function createPagination(input: PaginationProps = {}): Pagination {
       },
       children: jsx('button', {
         className: () =>
-          isCurrentPage() ? props.className.current : props.className.button,
+          isCurrentPage() ? props.className.currentBtn : props.className.button,
         type: 'button',
         'data-page': () => String(page()),
         'data-current-page': () => (isCurrentPage() ? String(page()) : null),
@@ -428,12 +425,7 @@ export function createPagination(input: PaginationProps = {}): Pagination {
           if (!isLocked() && !isCurrentPage()) go(current);
         },
         children: () =>
-          isLocked() && isCurrentPage()
-            ? jsx('i', {
-                className: props.className.loading,
-                children: icon('loader'),
-              })
-            : String(page()),
+          isLocked() && isCurrentPage() ? createLoading() : String(page()),
       }),
     }) as HTMLElement;
   };

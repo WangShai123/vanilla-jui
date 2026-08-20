@@ -6,13 +6,11 @@ import {
   jsx,
   untrack,
 } from 'vanilla-signal';
-import { t } from 'vanilla-signal-i18n';
-
+import { translate } from '../utilities/locale.ts';
 import {
   type FunctionalComponent,
   defineComponent,
 } from '../core/component.ts';
-import locales from '../locales/index.ts';
 import { icon } from '../primitives/icons.ts';
 import { createLoading } from '../primitives/loading.ts';
 import { createPopup } from '../primitives/popup.ts';
@@ -711,7 +709,7 @@ export function createModal(input: ModalProps = {}): Modal {
                                 props.className.closeBtn
                               ),
                               'data-action': 'close',
-                              'aria-label': t('Close', locales),
+                              'aria-label': translate('Close'),
                               disabled: isBusy,
                               children: icon('close'),
                             })

@@ -18,12 +18,8 @@
     padding: 0;
   }
 
-  .j-pagination .more span,
-  .j-pagination .is-active {
-    cursor: default;
-  }
-
   .j-pagination ul.pagination li {
     margin: 0;
+    padding: 0;
   }
 }

@@ -46,5 +46,7 @@ export default {
     Submit: '提交',
     Reset: '重置',
     'Loading...': '加载中...',
+    'Go to previous page': '访问上一页',
+    'Go to next page': '访问下一页',
   },
 };

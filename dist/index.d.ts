@@ -229,30 +229,8 @@ declare const restUrl: string;
  */
 declare function postJson<T = unknown>(url: string, body: unknown, options?: Omit<RequestInit, 'method' | 'body'>): Promise<T>;
 //#endregion
-//#region src/core/motion.d.ts
-type TransitionTarget = () => Element | null | undefined;
-interface TransitionDefinition {
-  keyframes: Keyframe[] | PropertyIndexedKeyframes;
-  options?: KeyframeAnimationOptions;
-  respectReducedMotion?: boolean;
-}
-interface MotionController {
-  enter: (signal?: AbortSignal) => Promise<void>;
-  leave: (signal?: AbortSignal) => Promise<void>;
-  cancel: () => void;
-}
-interface CollapseTransitionDefinition {
-  axis?: 'vertical' | 'horizontal';
-  options?: KeyframeAnimationOptions;
-  fade?: boolean;
-  respectReducedMotion?: boolean;
-}
-interface CollapseMotionController extends MotionController {
-  setExpanded: (expanded: boolean) => void;
-}
-declare function createMotionGroup(...motions: readonly MotionController[]): MotionController;
-declare function createTransition(target: TransitionTarget, definition: TransitionDefinition): MotionController;
-declare function createCollapseTransition(target: () => HTMLElement | null | undefined, definition?: CollapseTransitionDefinition): CollapseMotionController;
+//#region src/utilities/locale.d.ts
+declare function translate(key: string): string;
 //#endregion
 //#region src/utilities/object.d.ts
 declare function isPlainObject(value: unknown): boolean;
@@ -316,15 +294,6 @@ type ResolvedProps<TSchema extends object> = LooseRecord & { [Key in keyof TSche
 declare function validateParam<TInput extends LooseRecord = LooseRecord>(name: string, value: unknown, rule?: ParamRuleInput<TInput>, namespace?: string): unknown;
 declare function resolveProps<TInput extends LooseRecord, TSchema extends ResolveSchema<TInput>>(input?: TInput | null | undefined, schema?: TSchema, namespace?: string): TInput & ResolvedProps<TSchema>;
 //#endregion
-//#region src/core/scheduler.d.ts
-interface ScheduledTask {
-  schedule: () => void;
-  flush: () => void;
-  cancel: () => void;
-  dispose: () => void;
-}
-declare function createScheduledTask(run: () => void): ScheduledTask;
-//#endregion
 //#region src/utilities/state.d.ts
 interface StateSyncOptions {
   deferInitial?: boolean;
@@ -356,6 +325,15 @@ interface KeyedElementRefs<TKey, TElement extends Element> {
 }
 declare function createKeyedElementRefs<TKey, TElement extends Element>(): KeyedElementRefs<TKey, TElement>;
 //#endregion
+//#region src/core/scheduler.d.ts
+interface ScheduledTask {
+  schedule: () => void;
+  flush: () => void;
+  cancel: () => void;
+  dispose: () => void;
+}
+declare function createScheduledTask(run: () => void): ScheduledTask;
+//#endregion
 //#region src/core/view.d.ts
 interface OwnedView<TElement extends Element> {
   element: TElement;
@@ -370,6 +348,31 @@ interface OwnedViewOptions {
  * factory itself is not turned into a replaceable dynamic region.
  */
 declare function createOwnedView<TElement extends Element>(factory: () => TElement, options?: OwnedViewOptions): OwnedView<TElement>;
+//#endregion
+//#region src/core/motion.d.ts
+type TransitionTarget = () => Element | null | undefined;
+interface TransitionDefinition {
+  keyframes: Keyframe[] | PropertyIndexedKeyframes;
+  options?: KeyframeAnimationOptions;
+  respectReducedMotion?: boolean;
+}
+interface MotionController {
+  enter: (signal?: AbortSignal) => Promise<void>;
+  leave: (signal?: AbortSignal) => Promise<void>;
+  cancel: () => void;
+}
+interface CollapseTransitionDefinition {
+  axis?: 'vertical' | 'horizontal';
+  options?: KeyframeAnimationOptions;
+  fade?: boolean;
+  respectReducedMotion?: boolean;
+}
+interface CollapseMotionController extends MotionController {
+  setExpanded: (expanded: boolean) => void;
+}
+declare function createMotionGroup(...motions: readonly MotionController[]): MotionController;
+declare function createTransition(target: TransitionTarget, definition: TransitionDefinition): MotionController;
+declare function createCollapseTransition(target: () => HTMLElement | null | undefined, definition?: CollapseTransitionDefinition): CollapseMotionController;
 //#endregion
 //#region src/core/presence.d.ts
 type PresencePhase = 'hidden' | 'entering' | 'visible' | 'leaving';
@@ -1683,9 +1686,9 @@ interface PaginationClassNames {
   root: string;
   list: string;
   item: string;
-  more: string;
   button: string;
-  current: string;
+  moreBtn: string;
+  currentBtn: string;
   loading: string;
 }
 type PaginationClassNameConfig = Partial<PaginationClassNames>;
@@ -1769,4 +1772,4 @@ interface MenuState extends Record<string, unknown> {
 type Menu = FunctionalComponent<ResolvedMenuProps, MenuState, HTMLElement>;
 declare function createMenu(input?: MenuProps): Menu;
 //#endregion
-export { ClassNameToken, CleanupFunction, CollapseMotionController, CollapseTransitionDefinition, ComponentCleanup, ComponentContext, ComponentController, ComponentDefinition, ComponentLifecycleEvent, ComponentListener, ComponentPlugin, ComponentPluginOptions, ComponentProps, ComponentRuntime, ComponentState, ContainerExpect, DOMReference, DropInstance, ElementRef, FieldOption, Flow, FlowAction, FlowBusyHook, FlowBusyStrategy, FlowChangeHook, FlowClassNameConfig, FlowClassNames, FlowCleanup, FlowContext, FlowData, FlowDirection, FlowErrorHook, FlowFinishHook, FlowGoToOptions, FlowGuardHook, FlowLifecycleHook, FlowMoveHook, FlowPayload, FlowProps, FlowRenderContext, FlowSlot, FlowSlotName, FlowSnapshot, FlowState, FlowStep, FlowStepResult, FlowSubscriber, FlowTarget, FlowText, Form, FormButtons, FormClassNameConfig, FormClassNames, FormDataRecord, FormDataValue, FormField, FormItem, FormItemNext, FormItemType, FormOption, FormProps, FormText, FormTextConfig, FormValidatorConfig, FunctionalComponent, IEventManager, IconAttributeValue, IconName, IconPathMap, IconProps, KeyedElementRefs, LazyRenderCallback, LazyRenderOptions, LazyRenderTarget, Menu, MenuClassNameConfig, MenuClassNames, MenuItem, MenuItemId, MenuItemRenderType, MenuProps, MenuType, Modal, ModalClassNameConfig, ModalClassNames, ModalProps, ModalText, MotionController, NormalizeContext, Offcanvas, OffcanvasAnimate, OffcanvasClassNameConfig, OffcanvasClassNames, OffcanvasContent, OffcanvasDirection, OffcanvasProps, OwnedView, OwnedViewOptions, Pagination, PaginationClassNameConfig, PaginationClassNames, PaginationCount, PaginationPage, PaginationProps, ParabolaInstance, ParamRule, ParamRuleInput, PopupProps, PresenceController, PresenceOptions, PresencePhase, PublicFlowStep, QueryContext, RenderableContent, RequireContainerResult, ResolveContainerResult, ResolveSchema, ResolvedProps, StateSyncOptions, SupportES2022, Swiper, SwiperClassNameConfig, SwiperClassNames, SwiperDataItem, SwiperDataLoader, SwiperDataSource, SwiperProps, SwiperSlideContext, TabContent, TabItem, Tabs, TabsClassNameConfig, TabsClassNames, TabsDirection, TabsDisabled, TabsPanelContext, TabsProps, TabsValue, ThemeClassNameConfig, ThemeClassNames, ThemeConfigKey, ThemeInstance, ThemeOptions, ThemePanelGroup, ThemeResolvedOptions, Toast, ToastClassNameConfig, ToastClassNameOptions, ToastClassNames, ToastConfirmProps, ToastOptions, ToastTheme, ToastThemeOptions, TocCurrent, TocItem, TooltipInstance, TransitionDefinition, TransitionTarget, ValidateCondition, ValidatorClassNameConfig, ValidatorClassNames, ValidatorInstance, addIcons, all, asRenderable, checkModernBrowser, copy, createAccordion, createCollapseTransition, createDrop, createElementRef, createEventManager, createFlow, createForm, createKeyedElementRefs, createLoading, createMenu, createModal, createMotionGroup, createOffcanvas, createOwnedView, createPagination, createParabola, createPopup, createPresence, createScheduledTask, createStateSync, createSticky, createSwiper, createTabs, createTheme, createToc, createTooltip, createTransition, createValidator, defineComponent, flexPosition, getRegistedIconPath, getStoreVersion, getType, icon, iconHtml, iconMarkup, isDomElementValue, isDomNodeValue, isElement, isHtmlElementValue, isMobile, isModernBrowser, isNilValue, isNode, isPlainObject, isRenderableContent, isRenderablePrimitive, isRenderableValue, joinClasses, lazyRender, listen, postJson, q, randomId, removeComponentPlugin, requireContainer, resolveContainer, resolveElement, resolveNode, resolveNodeList, resolveProps, restUrl, stateSnapshot, timer, trackStoreVersion, useComponentPlugin, uuid, validateParam, waitForMotion };
+export { ClassNameToken, CleanupFunction, CollapseMotionController, CollapseTransitionDefinition, ComponentCleanup, ComponentContext, ComponentController, ComponentDefinition, ComponentLifecycleEvent, ComponentListener, ComponentPlugin, ComponentPluginOptions, ComponentProps, ComponentRuntime, ComponentState, ContainerExpect, DOMReference, DropInstance, ElementRef, FieldOption, Flow, FlowAction, FlowBusyHook, FlowBusyStrategy, FlowChangeHook, FlowClassNameConfig, FlowClassNames, FlowCleanup, FlowContext, FlowData, FlowDirection, FlowErrorHook, FlowFinishHook, FlowGoToOptions, FlowGuardHook, FlowLifecycleHook, FlowMoveHook, FlowPayload, FlowProps, FlowRenderContext, FlowSlot, FlowSlotName, FlowSnapshot, FlowState, FlowStep, FlowStepResult, FlowSubscriber, FlowTarget, FlowText, Form, FormButtons, FormClassNameConfig, FormClassNames, FormDataRecord, FormDataValue, FormField, FormItem, FormItemNext, FormItemType, FormOption, FormProps, FormText, FormTextConfig, FormValidatorConfig, FunctionalComponent, IEventManager, IconAttributeValue, IconName, IconPathMap, IconProps, KeyedElementRefs, LazyRenderCallback, LazyRenderOptions, LazyRenderTarget, Menu, MenuClassNameConfig, MenuClassNames, MenuItem, MenuItemId, MenuItemRenderType, MenuProps, MenuType, Modal, ModalClassNameConfig, ModalClassNames, ModalProps, ModalText, MotionController, NormalizeContext, Offcanvas, OffcanvasAnimate, OffcanvasClassNameConfig, OffcanvasClassNames, OffcanvasContent, OffcanvasDirection, OffcanvasProps, OwnedView, OwnedViewOptions, Pagination, PaginationClassNameConfig, PaginationClassNames, PaginationCount, PaginationPage, PaginationProps, ParabolaInstance, ParamRule, ParamRuleInput, PopupProps, PresenceController, PresenceOptions, PresencePhase, PublicFlowStep, QueryContext, RenderableContent, RequireContainerResult, ResolveContainerResult, ResolveSchema, ResolvedProps, StateSyncOptions, SupportES2022, Swiper, SwiperClassNameConfig, SwiperClassNames, SwiperDataItem, SwiperDataLoader, SwiperDataSource, SwiperProps, SwiperSlideContext, TabContent, TabItem, Tabs, TabsClassNameConfig, TabsClassNames, TabsDirection, TabsDisabled, TabsPanelContext, TabsProps, TabsValue, ThemeClassNameConfig, ThemeClassNames, ThemeConfigKey, ThemeInstance, ThemeOptions, ThemePanelGroup, ThemeResolvedOptions, Toast, ToastClassNameConfig, ToastClassNameOptions, ToastClassNames, ToastConfirmProps, ToastOptions, ToastTheme, ToastThemeOptions, TocCurrent, TocItem, TooltipInstance, TransitionDefinition, TransitionTarget, ValidateCondition, ValidatorClassNameConfig, ValidatorClassNames, ValidatorInstance, addIcons, all, asRenderable, checkModernBrowser, copy, createAccordion, createCollapseTransition, createDrop, createElementRef, createEventManager, createFlow, createForm, createKeyedElementRefs, createLoading, createMenu, createModal, createMotionGroup, createOffcanvas, createOwnedView, createPagination, createParabola, createPopup, createPresence, createScheduledTask, createStateSync, createSticky, createSwiper, createTabs, createTheme, createToc, createTooltip, createTransition, createValidator, defineComponent, flexPosition, getRegistedIconPath, getStoreVersion, getType, icon, iconHtml, iconMarkup, isDomElementValue, isDomNodeValue, isElement, isHtmlElementValue, isMobile, isModernBrowser, isNilValue, isNode, isPlainObject, isRenderableContent, isRenderablePrimitive, isRenderableValue, joinClasses, lazyRender, listen, postJson, q, randomId, removeComponentPlugin, requireContainer, resolveContainer, resolveElement, resolveNode, resolveNodeList, resolveProps, restUrl, stateSnapshot, timer, trackStoreVersion, translate, useComponentPlugin, uuid, validateParam, waitForMotion };

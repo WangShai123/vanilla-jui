@@ -6,7 +6,6 @@
   .j-toc .toc-list {
     display: flex;
     flex-direction: column;
-    gap: 0;
   }
 
   .j-toc .toc-link {
@@ -15,9 +14,6 @@
     color: var(--tone-caption);
     font-size: var(--font-size-sm);
     text-decoration: none;
-    transition:
-      color 0.15s,
-      border-color 0.15s;
   }
 
   .j-toc .toc-link:hover,

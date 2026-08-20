@@ -1,10 +1,68 @@
 @layer themes {
-  #j-editor {
+  #j-editor-container {
     --editor-max-width: 880px;
     --editor-min-height: calc(100vh - 51px);
     --editor-padding: 1.5rem 1.5rem 4rem;
     --editor-border-width: 1px;
     --editor-border-style: solid;
     --editor-border-color: var(--ui-border);
+  }
+
+  .j-editor {
+    --editor-outline: 0;
+    --editor-font-size: var(--font-size-lg);
+    --editor-line-height: 1.75;
+    --editor-letter-space: 0.01em;
+    --editor-word-space: 0.02em;
+    --editor-paragraph-space: 1.25em;
+    --editor-heading-space: 1.5em;
+    --editor-block-space: 1.5em;
+    --editor-list-space: 0.5em;
+
+    --editor-heading-fg: var(--tone-heading);
+    --editor-caption-fg: var(--tone-caption);
+    --editor-ring: var(--tone-ring);
+    --editor-border-tone: var(--tone-border);
+    --editor-border-subtle: var(--ui-border-subtle);
+    --editor-blockquote-bg: var(--tone-wash);
+    --editor-blockquote-fg: var(--tone-subtitle);
+    --editor-link: var(--tone-link);
+    --editor-link-hover: var(--tone-link-hover);
+    --editor-link-visited: var(--tone-link-visited);
+    --editor-link-active: var(--tone-link-active);
+    --editor-border: var(--ui-border);
+    --editor-code-bg: var(--tone-code-bg);
+    --editor-code-fg: var(--tone-code-fg);
+    --editor-bg-subtle: var(--ui-bg-subtle);
+  }
+
+  .j-editor.is-sm {
+    --editor-font-size: var(--font-size-md);
+    --editor-line-height: 1.65;
+    --editor-paragraph-space: 1em;
+    --editor-heading-space: 1.25em;
+    --editor-block-space: 1.25em;
+  }
+
+  .j-editor.is-lg {
+    --editor-font-size: var(--font-size-xl);
+    --editor-line-height: 1.8;
+    --editor-paragraph-space: 1.5em;
+    --editor-heading-space: 1.75em;
+    --editor-block-space: 1.75em;
+  }
+
+  .j-editor.is-xl {
+    --editor-font-size: var(--font-size-2xl);
+    --editor-line-height: 1.85;
+    --editor-paragraph-space: 1.75em;
+    --editor-heading-space: 2em;
+    --editor-block-space: 2em;
+  }
+
+  .j-radius-round .j-editor {
+    --radius-sm: 0.75rem;
+    --radius-md: 1rem;
+    --radius-lg: 1.5rem;
   }
 }

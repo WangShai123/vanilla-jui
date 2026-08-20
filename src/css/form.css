@@ -384,20 +384,17 @@
   /* type checkbox */
   .j-checkbox {
     display: flex;
-    /* gap: var(--checkbox-gap); */
     flex-wrap: wrap;
     margin: 0;
   }
 
   .j-checkbox.is-vertical {
     flex-direction: column;
-    /* --checkbox-gap: var(--s3); */
   }
 
   .j-checkbox,
   .j-checkbox.is-horizontal {
     flex-direction: row;
-    /* --checkbox-gap: var(--s4); */
   }
 
   .j-checkbox label {
@@ -938,14 +935,12 @@
   .j-radio.is-group label input[type='radio']:disabled + .radio-text {
     cursor: not-allowed;
     background-color: var(--ui-disabled-bg);
-    /* opacity: var(--opacity-disabled); */
     color: var(--ui-disabled-fg);
   }
 
   /* checkbox disabled */
   .j-checkbox label:has(input[type='checkbox']:disabled) {
     cursor: not-allowed;
-    /* opacity: var(--opacity-disabled); */
     color: var(--ui-disabled-fg);
   }
 

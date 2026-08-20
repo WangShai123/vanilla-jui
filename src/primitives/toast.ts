@@ -6,9 +6,7 @@ import {
   insert,
   jsx,
 } from 'vanilla-signal';
-import { t } from 'vanilla-signal-i18n';
-
-import locales from '../locales/index.ts';
+import { translate } from '../utilities/locale.ts';
 import { icon } from '../primitives/icons.ts';
 import { createLoading } from '../primitives/loading.ts';
 import { joinClasses, q } from '../utilities/dom.ts';
@@ -16,8 +14,6 @@ import { listen } from '../utilities/events.ts';
 import { randomId } from '../utilities/id.ts';
 import { timer } from '../utilities/timer.ts';
 import { validateParam } from '../utilities/types.ts';
-
-const s = (k: string) => t(k, locales);
 
 export type ToastTheme = 'info' | 'success' | 'warning' | 'error' | 'primary';
 
@@ -174,7 +170,7 @@ function toastIconContent(
 
 function toastMessage(message: string, options: ToastOptions): string {
   return isToastLoading(options)
-    ? options.text?.loading || s('Loading...')
+    ? options.text?.loading || translate('Loading...')
     : message;
 }
 
@@ -456,8 +452,8 @@ function confirm(message = '', props: ToastConfirmProps = {}): HTMLElement {
     if (toast) return toast;
   }
   validateParam('message', message, 'string', 'Toast.confirm');
-  const closeText = props.text?.close || s('Close');
-  const confirmText = props.text?.confirm || s('Confirm');
+  const closeText = props.text?.close || translate('Close');
+  const confirmText = props.text?.confirm || translate('Confirm');
   const theme = props.theme || 'info';
   validateParam('once', once, 'boolean', 'Toast.confirm');
   validateParam('theme', theme, TOAST_THEME_RULE, 'Toast.confirm');

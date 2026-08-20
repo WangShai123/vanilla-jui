@@ -118,7 +118,7 @@ describe('Pagination', () => {
           list: 'qa-pagination-list',
           item: 'qa-pagination-item',
           button: 'qa-button',
-          current: 'qa-current',
+          currentBtn: 'qa-current',
         },
         onChange,
       })

@@ -8,13 +8,12 @@ import {
   flushSync,
   jsx,
 } from 'vanilla-signal';
-import { t } from 'vanilla-signal-i18n';
+import { translate } from '../utilities/locale.ts';
 
 import {
   type FunctionalComponent,
   defineComponent,
 } from '../core/component.ts';
-import locales from '../locales/index.ts';
 import { icon } from '../primitives/icons.ts';
 import { joinClasses } from '../utilities/dom.ts';
 import { createEventManager } from '../utilities/events.ts';
@@ -121,7 +120,7 @@ const MENU_PROPS_SCHEMA = {
     default: [],
     types: ['array', 'function'],
   },
-  backText: { default: t('b', locales), type: 'string' },
+  backText: { default: translate('b'), type: 'string' },
   className: {
     default: DEFAULT_CLASS_NAMES,
     type: 'object',

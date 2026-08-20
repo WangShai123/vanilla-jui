@@ -7,9 +7,7 @@ import {
   flushSync,
   jsx,
 } from 'vanilla-signal';
-import { t } from 'vanilla-signal-i18n';
-
-import locales from '../locales/index.ts';
+import { translate } from '../utilities/locale.ts';
 import { all, joinClasses } from '../utilities/dom.ts';
 import { createEventManager } from '../utilities/events.ts';
 import { isPlainObject } from '../utilities/object.ts';
@@ -228,7 +226,6 @@ export function createTheme(options: ThemeOptions = {}): ThemeInstance {
   const storage = createThemeStorage();
   const bindings = new Set<() => void>();
   const events = createEventManager();
-  const translate = (key: string): string => t(key, locales);
   const scheme = (): string =>
     window.matchMedia?.('(prefers-color-scheme: dark)').matches
       ? 'dark'

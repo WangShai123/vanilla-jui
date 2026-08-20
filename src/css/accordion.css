@@ -34,7 +34,7 @@
   }
 
   .j-accordion .accordion-header[aria-expanded='false']:hover {
-    --accordion-bg: var(--ui-surface-hover);
+    --accordion-bg: var(--ui-bg-subtle);
   }
 
   .j-accordion[data-direction='horizontal']
