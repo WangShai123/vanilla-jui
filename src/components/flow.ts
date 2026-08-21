@@ -12,6 +12,7 @@ import {
   resolveProps,
   validateParam,
 } from '../utilities/types.ts';
+import { translate } from '../utilities/locale.ts';
 
 export type FlowData = Record<string, unknown>;
 export type FlowPayload = FlowData | null;
@@ -443,10 +444,11 @@ const FLOW_PROPS_SCHEMA = {
     normalize: (value: unknown) => {
       const text = isPlainObject(value) ? (value as Partial<FlowText>) : {};
       return {
-        back: typeof text.back === 'string' ? text.back : 'Back',
-        next: typeof text.next === 'string' ? text.next : 'Next',
-        finish: typeof text.finish === 'string' ? text.finish : 'Finish',
-        reset: typeof text.reset === 'string' ? text.reset : 'Reset',
+        back: typeof text.back === 'string' ? text.back : translate('b'),
+        next: typeof text.next === 'string' ? text.next : translate('Next'),
+        finish:
+          typeof text.finish === 'string' ? text.finish : translate('Finish'),
+        reset: typeof text.reset === 'string' ? text.reset : translate('Reset'),
       };
     },
   },

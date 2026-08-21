@@ -48,5 +48,7 @@ export default {
     'Loading...': '加载中...',
     'Go to previous page': '访问上一页',
     'Go to next page': '访问下一页',
+    Next: '下一步',
+    Finish: '完成',
   },
 };
