@@ -33,11 +33,11 @@
   /* ============================================
       Typography - 段落与标题
     ============================================ */
-  .j-editor p:first-child {
+  .j-editor > p:first-of-type {
     margin-bottom: var(--editor-paragraph-space);
   }
 
-  .j-editor p:not(:first-child) {
+  .j-editor > p:not(:first-of-type) {
     margin-block: var(--editor-paragraph-space);
   }
 
@@ -48,9 +48,8 @@
   .j-editor h5,
   .j-editor h6 {
     margin: var(--editor-heading-space) 0
-      calc(var(--editor-heading-space) * 0.75);
+      calc(var(--editor-heading-space) * 0.8);
     font-weight: 600;
-    /* line-height: 1.3; */
     color: var(--editor-heading-fg);
     letter-spacing: -0.02em;
   }
@@ -268,10 +267,6 @@
     color: var(--tone-body);
   }
 
-  .j-editor dd + dt {
-    margin-top: 1em;
-  }
-
   /* checkbox - 任务列表 */
   .j-editor .j-checkbox {
     margin-block: var(--editor-paragraph-space);
@@ -293,11 +288,11 @@
   }
 
   .j-editor blockquote p {
-    margin: 0;
+    margin-block: 0;
   }
 
   .j-editor blockquote p + p {
-    margin-top: 0.75em;
+    margin-top: 0.625em;
   }
 
   .j-editor cite {
@@ -649,10 +644,6 @@
     margin-bottom: 1em;
   }
 
-  /* .j-editor details[open]>summary {
-      margin-bottom: 0.75em;
-    } */
-
   .j-editor details[open] > summary + * {
     margin-top: 0;
   }
@@ -685,7 +676,7 @@
 
   .j-editor address {
     font-style: normal;
-    margin: 0 0 var(--editor-block-space);
+    margin-block: var(--editor-block-space);
     padding: 1em 1.25em;
     background-color: var(--editor-bg-subtle);
     border-radius: var(--radius-lg);
