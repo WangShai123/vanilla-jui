@@ -1,6 +1,6 @@
 @layer themes {
   .j-swiper {
-    --swiper-min-height: 180px;
+    --swiper-min-height: 120px;
     --swiper-title-inset: var(--s3);
     --swiper-title-padding: calc(var(--space) * 1.5) var(--s2);
     --swiper-title-color: #fff;

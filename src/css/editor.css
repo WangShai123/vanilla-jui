@@ -33,8 +33,12 @@
   /* ============================================
       Typography - 段落与标题
     ============================================ */
-  .j-editor p {
-    margin: 0 0 var(--editor-paragraph-space);
+  .j-editor p:first-child {
+    margin-bottom: var(--editor-paragraph-space);
+  }
+
+  .j-editor p:not(:first-child) {
+    margin-block: var(--editor-paragraph-space);
   }
 
   .j-editor h1,
@@ -591,6 +595,7 @@
 
   .j-editor table {
     display: block;
+    margin-block: var(--editor-block-space);
   }
 
   /* ============================================
