@@ -585,6 +585,7 @@
 
   .j-editor table {
     display: block;
+    margin-block: var(--editor-block-space);
   }
 
   .j-editor table th,
