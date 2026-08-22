@@ -535,7 +535,6 @@
   .j-editor img {
     max-width: 100%;
     height: auto;
-    border-radius: var(--radius-lg);
   }
 
   .j-editor figure {

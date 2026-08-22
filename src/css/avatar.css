@@ -16,6 +16,10 @@
     font-weight: var(--avatar-font-weight);
   }
 
+  .j-avatar img {
+    border-radius: var(--avatar-border-radius);
+  }
+
   .j-avatar img,
   .j-avatar svg {
     margin: 0;

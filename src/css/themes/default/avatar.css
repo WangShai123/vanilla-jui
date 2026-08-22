@@ -1,7 +1,7 @@
 @layer themes {
   .j-avatar {
     --avatar-size: var(--el-height-md);
-    --avatar-border-radius: var(--radius-md);
+    --avatar-border-radius: var(--radius-sm);
     --avatar-box-shadow: var(--shadow-sm);
   }
 
@@ -30,7 +30,7 @@
   }
 
   .j-avatar.is-round {
-    --avatar-border-radius: 0.5rem;
+    --avatar-border-radius: var(--radius-lg);
   }
 
   .j-avatar.is-text {

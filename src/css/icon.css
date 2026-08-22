@@ -11,8 +11,6 @@
     transform: scale(1);
     width: var(--font-size-xl);
     height: var(--font-size-xl);
-    /* border: 1px solid; */
-    /* border-radius: 50%; */
     color: inherit;
     cursor: pointer;
   }
@@ -47,12 +45,12 @@
     background-color: var(--tone-subtle);
   }
 
-  /* icon element status */
-  .el-icon[data-action-close] {
+  /* icon status */
+  .el-icon[data-action='close'] {
     cursor: pointer;
   }
 
-  .el-icon[data-action-close]:active {
+  .el-icon[data-action='close']:active {
     transform: scale(0.85);
   }
 }
