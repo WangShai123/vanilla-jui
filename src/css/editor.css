@@ -580,17 +580,21 @@
   }
 
   /* ============================================
-       Table - 表格
-       ============================================ */
+    Table - 表格
+  ============================================ */
 
   .j-editor table {
     display: block;
-    margin-block: var(--editor-block-space);
+  }
+
+  .j-editor table th,
+  .j-editor table td {
+    --table-cell-padding: 0.5rem 1rem;
   }
 
   /* ============================================
-       Horizontal Rule - 分割线
-       ============================================ */
+    Horizontal Rule - 分割线
+  ============================================ */
 
   .j-editor hr {
     margin: var(--editor-block-space) 0;

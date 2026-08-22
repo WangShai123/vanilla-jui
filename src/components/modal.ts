@@ -179,9 +179,11 @@ const MODAL_TEXT_RULE = {
     const text = (isPlainObject(value) ? value : {}) as ModalTextInput;
     return {
       ...text,
-      title: typeof text.title === 'string' ? text.title : 'Tip',
-      confirm: typeof text.confirm === 'string' ? text.confirm : 'Confirm',
-      cancel: typeof text.cancel === 'string' ? text.cancel : 'Cancel',
+      title: typeof text.title === 'string' ? text.title : translate('Tip'),
+      confirm:
+        typeof text.confirm === 'string' ? text.confirm : translate('Confirm'),
+      cancel:
+        typeof text.cancel === 'string' ? text.cancel : translate('Cancel'),
     };
   },
 };
