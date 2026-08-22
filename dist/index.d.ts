@@ -1181,7 +1181,6 @@ interface FlowStep {
   title?: string;
   content?: RenderableContent<FlowContext>;
   data?: FlowData;
-  modal?: FlowData | ((context: FlowContext) => FlowData | null) | null;
   onEnter?: FlowLifecycleHook;
   onLeave?: FlowLifecycleHook;
   onNext?: FlowMoveHook;

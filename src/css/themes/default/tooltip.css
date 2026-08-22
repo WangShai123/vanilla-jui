@@ -7,7 +7,7 @@
     --tooltip-border-color: var(--ui-border-strong);
     --tooltip-border-radius: var(--radius-md);
     --tooltip-max-width: 260px;
-    --tooltip-padding: calc(var(--space) * 1.5) var(--s2);
+    --tooltip-padding: 2px var(--s2);
     --tooltip-font-size: var(--font-size-md);
     --tooltip-line-height: var(--line-height);
   }

@@ -3,11 +3,9 @@
     --flow-gap: var(--s2);
     --flow-step-size: 28px;
     --flow-border: 1px solid var(--ui-border-subtle);
-
-    display: grid;
-    gap: var(--flow-gap);
   }
 
+  .j-flow,
   .j-flow .flow-header {
     display: grid;
     gap: var(--flow-gap);

@@ -49,7 +49,6 @@ export interface FlowStep {
   title?: string;
   content?: RenderableContent<FlowContext>;
   data?: FlowData;
-  modal?: FlowData | ((context: FlowContext) => FlowData | null) | null;
   onEnter?: FlowLifecycleHook;
   onLeave?: FlowLifecycleHook;
   onNext?: FlowMoveHook;
@@ -377,10 +376,6 @@ function cloneSteps(steps: unknown): FlowStep[] {
     return {
       ...source,
       data: clonePlainObject(source.data),
-      modal:
-        typeof source.modal === 'function' || source.modal == null
-          ? source.modal
-          : clonePlainObject(source.modal),
     };
   });
 }

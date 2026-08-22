@@ -95,7 +95,7 @@
 
   /* input */
   .j-input:not([type='checkbox']) {
-    display: block;
+    /* display: block; */
     padding: var(--input-padding, calc(var(--space) * 1.5) var(--s2));
     border-width: var(--input-border-width, 1px);
     border-style: var(--input-border-style, solid);
@@ -896,10 +896,7 @@
 
   /* status readonly */
   .j-input:not([type='file']):not(.is-line):not(.is-blank)[readonly] {
-    background-color: var(
-      --input-readonly-background,
-      var(--ui-surface-active)
-    );
+    background-color: var(--input-readonly-bg, var(--ui-surface-active));
   }
 
   .j-textarea[readonly] {

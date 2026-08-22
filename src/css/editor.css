@@ -15,29 +15,29 @@
   }
 
   /* ============================================
-      Editor - 文章阅读/编辑器预览样式
-    ============================================ */
+    Editor - 文章阅读/编辑器预览样式
+  ============================================ */
   .j-editor {
     font-size: var(--editor-font-size);
     line-height: var(--editor-line-height);
     letter-spacing: var(--editor-letter-space);
     word-spacing: var(--editor-word-space);
     word-break: break-word;
-    text-rendering: optimizeLegibility;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    outline: var(--editor-outline);
+    outline: 0;
     position: relative;
+  }
+
+  /* ============================================
+    reset - 重置样式
+  ============================================ */
+  .j-editor p {
+    margin: 0;
   }
 
   /* ============================================
       Typography - 段落与标题
     ============================================ */
-  .j-editor > p:first-of-type {
-    margin-bottom: var(--editor-paragraph-space);
-  }
-
-  .j-editor > p:not(:first-of-type) {
+  .j-editor > p {
     margin-block: var(--editor-paragraph-space);
   }
 
@@ -48,7 +48,7 @@
   .j-editor h5,
   .j-editor h6 {
     margin: var(--editor-heading-space) 0
-      calc(var(--editor-heading-space) * 0.8);
+      calc(var(--editor-heading-space) * 0.625);
     font-weight: 600;
     color: var(--editor-heading-fg);
     letter-spacing: -0.02em;
@@ -56,24 +56,22 @@
 
   .j-editor h1 {
     font-size: 2em;
-    font-weight: 700;
     letter-spacing: -0.03em;
     margin-top: 0;
   }
 
   .j-editor h2 {
-    font-size: 1.625em;
-    font-weight: 650;
-    padding-bottom: 0.25em;
+    font-size: 1.75em;
+    padding-bottom: 2px;
     border-bottom: 1px solid var(--editor-border-subtle);
   }
 
   .j-editor h3 {
-    font-size: 1.375em;
+    font-size: 1.5em;
   }
 
   .j-editor h4 {
-    font-size: 1.125em;
+    font-size: 1.25em;
   }
 
   .j-editor h5,
@@ -82,21 +80,21 @@
   }
 
   /* 标题后的段落减少间距 */
-  .j-editor h1 + p,
-  .j-editor h2 + p,
-  .j-editor h3 + p,
-  .j-editor h4 + p,
-  .j-editor h5 + p,
-  .j-editor h6 + p {
+  /* .j-editor h1+p,
+  .j-editor h2+p,
+  .j-editor h3+p,
+  .j-editor h4+p,
+  .j-editor h5+p,
+  .j-editor h6+p {
     margin-top: calc(var(--editor-paragraph-space) * -0.5);
-  }
+  } */
 
   /* ============================================
       Inline Elements - 内联元素
     ============================================ */
   .j-editor strong,
   .j-editor b {
-    font-weight: 650;
+    font-weight: 600;
     color: var(--editor-heading-fg);
   }
 
@@ -247,30 +245,27 @@
 
   /* Definition List */
   .j-editor dl {
-    margin: 0 0 var(--editor-block-space);
+    margin-block: var(--editor-block-space);
   }
 
   .j-editor dt {
     font-weight: 600;
-    margin-top: 0.75em;
-    margin-bottom: 0.125em;
+    margin-top: 0.75rem;
+    margin-bottom: var(--editor-dot-space);
     color: var(--editor-heading-fg);
   }
 
-  .j-editor dt:first-child {
+  .j-editor dl dt:first-child {
     margin-top: 0;
   }
 
   .j-editor dd {
-    margin: 0 0 0.75em;
-    padding-left: 1em;
+    margin: 0 0 0.75rem;
+    padding-left: var(--editor-paragraph-space);
     color: var(--tone-body);
   }
 
-  /* checkbox - 任务列表 */
-  .j-editor .j-checkbox {
-    margin-block: var(--editor-paragraph-space);
-  }
+  /* 任务列表 */
 
   /* ============================================
       Blockquote - 引用
@@ -279,7 +274,7 @@
     margin: var(--editor-block-space) 0;
     margin-left: 0;
     margin-right: 0;
-    padding: 1em 1.5em;
+    padding: 0.75rem 1.25rem;
     border-left: 3px solid var(--editor-border-tone);
     border-radius: 0 var(--radius-md) var(--radius-md) 0;
     background-color: var(--editor-blockquote-bg);
@@ -292,12 +287,12 @@
   }
 
   .j-editor blockquote p + p {
-    margin-top: 0.625em;
+    margin-top: 0.5rem;
   }
 
   .j-editor cite {
     display: block;
-    margin-top: 0.75em;
+    margin-block: 0.5rem;
     font-style: normal;
     font-size: 0.875em;
     color: var(--editor-caption-fg);
@@ -315,13 +310,14 @@
   }
 
   .j-editor code:not([class*='language-']) {
-    font-family:
-      'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+    /* font-family:
+      'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace; */
+    font-family: Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
     font-size: 0.875em;
     border: 1px solid var(--editor-border-subtle);
     border-radius: var(--radius-sm);
     word-break: break-word;
-    padding: 0.15em 0.4em;
+    padding: 2px 4px;
     background: var(--editor-code-bg);
     color: var(--editor-code-fg);
   }
@@ -333,7 +329,7 @@
     border: 1px solid var(--editor-border);
     border-bottom-width: 2px;
     border-radius: var(--radius-sm);
-    padding: 0.1em 0.4em;
+    padding: 2px 8px;
     color: var(--tone-body);
   }
 
@@ -554,8 +550,8 @@
   }
 
   .j-editor figcaption {
-    margin-top: 0.75em;
-    font-size: 0.875em;
+    margin-top: 0.75rem;
+    font-size: var(--font-size-md);
     color: var(--editor-caption-fg);
     text-align: center;
     line-height: 1.5;
@@ -671,9 +667,8 @@
   }
 
   /* ============================================
-       Address
-       ============================================ */
-
+    Address
+  ============================================ */
   .j-editor address {
     font-style: normal;
     margin-block: var(--editor-block-space);
@@ -685,19 +680,17 @@
   }
 
   /* ============================================
-       Block Item - 通用块级元素
-       ============================================ */
-
-  .j-editor .block-item {
-    margin: var(--editor-block-space) 0;
-  }
-
-  /* First/Last child margin reset */
+    Block Item - 通用块级元素
+  ============================================ */
   .j-editor > *:first-child {
     margin-top: 0;
   }
 
   .j-editor > *:last-child {
     margin-bottom: 0;
+  }
+
+  .j-editor .block {
+    margin: var(--editor-block-space) 0;
   }
 }

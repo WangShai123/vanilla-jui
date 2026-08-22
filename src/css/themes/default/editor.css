@@ -9,15 +9,15 @@
   }
 
   .j-editor {
-    --editor-outline: 0;
     --editor-font-size: var(--font-size-lg);
     --editor-line-height: 1.75;
     --editor-letter-space: 0.01em;
     --editor-word-space: 0.02em;
-    --editor-paragraph-space: 1.25em;
-    --editor-heading-space: 1.5em;
-    --editor-block-space: 1.5em;
-    --editor-list-space: 0.5em;
+    --editor-heading-space: 2rem;
+    --editor-block-space: 1.5rem;
+    --editor-paragraph-space: 1.25rem;
+    --editor-list-space: 0.25rem;
+    --editor-dot-space: 0.125rem;
 
     --editor-heading-fg: var(--tone-heading);
     --editor-caption-fg: var(--tone-caption);
@@ -30,7 +30,7 @@
     --editor-link-hover: var(--tone-link-hover);
     --editor-link-visited: var(--tone-link-visited);
     --editor-link-active: var(--tone-link-active);
-    --editor-border: var(--ui-border);
+    --editor-border: var(--ui-border-subtle);
     --editor-code-bg: var(--tone-code-bg);
     --editor-code-fg: var(--tone-code-fg);
     --editor-bg-subtle: var(--ui-bg-subtle);
@@ -39,25 +39,16 @@
   .j-editor.is-sm {
     --editor-font-size: var(--font-size-md);
     --editor-line-height: 1.65;
-    --editor-paragraph-space: 1em;
-    --editor-heading-space: 1.25em;
-    --editor-block-space: 1.25em;
   }
 
   .j-editor.is-lg {
     --editor-font-size: var(--font-size-xl);
     --editor-line-height: 1.8;
-    --editor-paragraph-space: 1.5em;
-    --editor-heading-space: 1.75em;
-    --editor-block-space: 1.75em;
   }
 
   .j-editor.is-xl {
     --editor-font-size: var(--font-size-2xl);
     --editor-line-height: 1.85;
-    --editor-paragraph-space: 1.75em;
-    --editor-heading-space: 2em;
-    --editor-block-space: 2em;
   }
 
   .j-radius-round .j-editor {

@@ -32,7 +32,7 @@
   .j-button.is-lg {
     --btn-font-size: var(--font-size-lg);
     --btn-height: var(--el-height-lg);
-    --btn-padding: var(--s3) var(--s4);
+    --btn-padding: 0 var(--s3);
   }
 
   .j-button.is-default {
