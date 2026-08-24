@@ -5,7 +5,7 @@
 
   .j-button {
     --btn-gap: var(--space) calc(var(--space) * 1.5);
-    --btn-font-weight: var(--font-medium);
+    /* --btn-font-weight: var(--font-medium); */
     --btn-font-size: var(--font-size-md);
     --btn-height: var(--el-height-md);
     --btn-line-height: var(--line-height-self);

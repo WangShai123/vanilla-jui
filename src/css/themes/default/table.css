@@ -1,10 +1,6 @@
 @layer themes {
-  .j-table-container {
-    --table-container-max-width: 100%;
-  }
-
   table {
-    --table-min-width: 280px;
+    --table-width: 100%;
     --table-header-font-weight: 600;
     --table-selected-bg: var(--tone-soft);
     --table-border-width: 0 0 1px;

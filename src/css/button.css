@@ -7,7 +7,7 @@
     gap: var(--btn-gap);
     position: relative;
     white-space: nowrap;
-    font-weight: var(--btn-font-weight);
+    /* font-weight: var(--btn-font-weight); */
     font-size: var(--btn-font-size);
     height: var(--btn-height);
     line-height: var(--btn-line-height);
