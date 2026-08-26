@@ -380,8 +380,8 @@
     --tone-muted: rgba(129, 140, 248, 0.2);
     --tone-weak: #151b23;
     --tone-wash: rgba(129, 140, 248, 0.05);
-    --tone-border: rgba(129, 140, 248, 0.25);
-    --tone-border-strong: rgba(129, 140, 248, 0.4);
+    --tone-border: rgba(129, 140, 248, 0.2);
+    --tone-border-strong: rgba(129, 140, 248, 0.35);
     --tone-solid: #818cf8;
     --tone-tint: #c7d2fe;
     --tone-shade: #818cf8;
@@ -390,7 +390,7 @@
     --tone-text: #a5b4fc;
     --tone-text-hover: #c7d2fe;
     --tone-fg: #1e1b4b;
-    --tone-ring: rgba(129, 140, 248, 0.5);
+    --tone-ring: rgba(129, 140, 248, 0.4);
     --tone-highlight: #fbbf24;
     --tone-highlight-fg: #78350f;
 
@@ -488,8 +488,8 @@
     --tone-soft: rgba(0, 0, 0, 0.06);
     --tone-muted: rgba(0, 0, 0, 0.1);
     --tone-wash: rgba(0, 0, 0, 0.02);
-    --tone-border: rgba(0, 0, 0, 0.12);
-    --tone-border-strong: rgba(0, 0, 0, 0.2);
+    --tone-border: rgba(0, 0, 0, 0.2);
+    --tone-border-strong: rgba(0, 0, 0, 0.35);
     --tone-solid: var(--ui-gray);
     --tone-tint: var(--ui-gray-tint);
     --tone-shade: var(--ui-gray-shade);
@@ -498,7 +498,7 @@
     --tone-text: #374151;
     --tone-text-hover: #4b5563;
     --tone-fg: #ffffff;
-    --tone-ring: rgba(55, 65, 81, 0.3);
+    --tone-ring: rgba(55, 65, 81, 0.4);
     --tone-link: #374151;
     --tone-link-hover: #4b5563;
     --tone-link-visited: #6b7280;
@@ -542,7 +542,7 @@
     --tone-text: #dc2626;
     --tone-text-hover: #b91c1c;
     --tone-fg: #ffffff;
-    --tone-ring: rgba(239, 68, 68, 0.4);
+    --tone-ring: rgba(239, 68, 68, 0.35);
     --tone-link: #dc2626;
     --tone-link-hover: #b91c1c;
     --tone-link-visited: #991b1b;
@@ -821,8 +821,8 @@
     --tone-soft: rgba(255, 255, 255, 0.1);
     --tone-muted: rgba(255, 255, 255, 0.15);
     --tone-wash: rgba(255, 255, 255, 0.03);
-    --tone-border: rgba(255, 255, 255, 0.12);
-    --tone-border-strong: rgba(255, 255, 255, 0.2);
+    --tone-border: rgba(255, 255, 255, 0.2);
+    --tone-border-strong: rgba(255, 255, 255, 0.35);
     /* --tone-solid: #e5e7eb; */
     --tone-solid-hover: #d1d5db;
     --tone-solid-active: #9ca3af;
@@ -840,8 +840,8 @@
     --tone-soft: rgba(180, 188, 162, 0.15);
     --tone-muted: rgba(180, 188, 162, 0.2);
     --tone-wash: rgba(180, 188, 162, 0.05);
-    --tone-border: rgba(180, 188, 162, 0.25);
-    --tone-border-strong: rgba(180, 188, 162, 0.4);
+    --tone-border: rgba(180, 188, 162, 0.2);
+    --tone-border-strong: rgba(180, 188, 162, 0.35);
     /* --tone-solid: #b4bc9e; */
     --tone-solid-hover: #c8cfb5;
     --tone-solid-active: #dce2cc;
@@ -859,8 +859,8 @@
     --tone-soft: rgba(248, 113, 113, 0.15);
     --tone-muted: rgba(248, 113, 113, 0.2);
     --tone-wash: rgba(248, 113, 113, 0.05);
-    --tone-border: rgba(248, 113, 113, 0.25);
-    --tone-border-strong: rgba(248, 113, 113, 0.4);
+    --tone-border: rgba(248, 113, 113, 0.2);
+    --tone-border-strong: rgba(248, 113, 113, 0.35);
     /* --tone-solid: #f87171; */
     --tone-solid-hover: #fca5a5;
     --tone-solid-active: #fecaca;
@@ -878,8 +878,8 @@
     --tone-soft: rgba(251, 113, 133, 0.15);
     --tone-muted: rgba(251, 113, 133, 0.2);
     --tone-wash: rgba(251, 113, 133, 0.05);
-    --tone-border: rgba(251, 113, 133, 0.25);
-    --tone-border-strong: rgba(251, 113, 133, 0.4);
+    --tone-border: rgba(251, 113, 133, 0.2);
+    --tone-border-strong: rgba(251, 113, 133, 0.35);
     /* --tone-solid: #fb7185; */
     --tone-solid-hover: #fda4af;
     --tone-solid-active: #fecdd3;
@@ -897,8 +897,8 @@
     --tone-soft: rgba(244, 114, 182, 0.15);
     --tone-muted: rgba(244, 114, 182, 0.2);
     --tone-wash: rgba(244, 114, 182, 0.05);
-    --tone-border: rgba(244, 114, 182, 0.25);
-    --tone-border-strong: rgba(244, 114, 182, 0.4);
+    --tone-border: rgba(244, 114, 182, 0.2);
+    --tone-border-strong: rgba(244, 114, 182, 0.35);
     /* --tone-solid: #f472b6; */
     --tone-solid-hover: #f9a8d4;
     --tone-solid-active: #fbcfe8;
@@ -916,8 +916,8 @@
     --tone-soft: rgba(167, 139, 250, 0.15);
     --tone-muted: rgba(167, 139, 250, 0.2);
     --tone-wash: rgba(167, 139, 250, 0.05);
-    --tone-border: rgba(167, 139, 250, 0.25);
-    --tone-border-strong: rgba(167, 139, 250, 0.4);
+    --tone-border: rgba(167, 139, 250, 0.2);
+    --tone-border-strong: rgba(167, 139, 250, 0.35);
     /* --tone-solid: #a78bfa; */
     --tone-solid-hover: #c4b5fd;
     --tone-solid-active: #ddd6fe;
@@ -935,8 +935,8 @@
     --tone-soft: rgba(129, 140, 248, 0.15);
     --tone-muted: rgba(129, 140, 248, 0.2);
     --tone-wash: rgba(129, 140, 248, 0.05);
-    --tone-border: rgba(129, 140, 248, 0.25);
-    --tone-border-strong: rgba(129, 140, 248, 0.4);
+    --tone-border: rgba(129, 140, 248, 0.2);
+    --tone-border-strong: rgba(129, 140, 248, 0.35);
     /* --tone-solid: #818cf8; */
     --tone-solid-hover: #a5b4fc;
     --tone-solid-active: #c7d2fe;
@@ -954,8 +954,8 @@
     --tone-soft: rgba(96, 165, 250, 0.15);
     --tone-muted: rgba(96, 165, 250, 0.2);
     --tone-wash: rgba(96, 165, 250, 0.05);
-    --tone-border: rgba(96, 165, 250, 0.25);
-    --tone-border-strong: rgba(96, 165, 250, 0.4);
+    --tone-border: rgba(96, 165, 250, 0.2);
+    --tone-border-strong: rgba(96, 165, 250, 0.35);
     /* --tone-solid: #60a5fa; */
     --tone-solid-hover: #93bbfd;
     --tone-solid-active: #bfdbfe;
@@ -973,8 +973,8 @@
     --tone-soft: rgba(45, 212, 191, 0.15);
     --tone-muted: rgba(45, 212, 191, 0.2);
     --tone-wash: rgba(45, 212, 191, 0.05);
-    --tone-border: rgba(45, 212, 191, 0.25);
-    --tone-border-strong: rgba(45, 212, 191, 0.4);
+    --tone-border: rgba(45, 212, 191, 0.2);
+    --tone-border-strong: rgba(45, 212, 191, 0.35);
     /* --tone-solid: #2dd4bf; */
     --tone-solid-hover: #5eead4;
     --tone-solid-active: #99f6e4;
@@ -992,8 +992,8 @@
     --tone-soft: rgba(74, 222, 128, 0.15);
     --tone-muted: rgba(74, 222, 128, 0.2);
     --tone-wash: rgba(74, 222, 128, 0.05);
-    --tone-border: rgba(74, 222, 128, 0.25);
-    --tone-border-strong: rgba(74, 222, 128, 0.4);
+    --tone-border: rgba(74, 222, 128, 0.2);
+    --tone-border-strong: rgba(74, 222, 128, 0.35);
     /* --tone-solid: #4ade80; */
     --tone-solid-hover: #86efac;
     --tone-solid-active: #bbf7d0;
@@ -1011,8 +1011,8 @@
     --tone-soft: rgba(34, 211, 238, 0.15);
     --tone-muted: rgba(34, 211, 238, 0.2);
     --tone-wash: rgba(34, 211, 238, 0.05);
-    --tone-border: rgba(34, 211, 238, 0.25);
-    --tone-border-strong: rgba(34, 211, 238, 0.4);
+    --tone-border: rgba(34, 211, 238, 0.2);
+    --tone-border-strong: rgba(34, 211, 238, 0.35);
     /* --tone-solid: #22d3ee; */
     --tone-solid-hover: #67e8f9;
     --tone-solid-active: #a5f3fc;
@@ -1030,8 +1030,8 @@
     --tone-soft: rgba(163, 230, 53, 0.15);
     --tone-muted: rgba(163, 230, 53, 0.2);
     --tone-wash: rgba(163, 230, 53, 0.05);
-    --tone-border: rgba(163, 230, 53, 0.25);
-    --tone-border-strong: rgba(163, 230, 53, 0.4);
+    --tone-border: rgba(163, 230, 53, 0.2);
+    --tone-border-strong: rgba(163, 230, 53, 0.35);
     /* --tone-solid: #a3e635; */
     --tone-solid-hover: #bef264;
     --tone-solid-active: #d9f99d;
@@ -1049,8 +1049,8 @@
     --tone-soft: rgba(250, 204, 21, 0.15);
     --tone-muted: rgba(250, 204, 21, 0.2);
     --tone-wash: rgba(250, 204, 21, 0.05);
-    --tone-border: rgba(250, 204, 21, 0.25);
-    --tone-border-strong: rgba(250, 204, 21, 0.4);
+    --tone-border: rgba(250, 204, 21, 0.2);
+    --tone-border-strong: rgba(250, 204, 21, 0.35);
     /* --tone-solid: #facc15; */
     --tone-solid-hover: #fde047;
     --tone-solid-active: #fef08a;
@@ -1068,8 +1068,8 @@
     --tone-soft: rgba(251, 146, 60, 0.15);
     --tone-muted: rgba(251, 146, 60, 0.2);
     --tone-wash: rgba(251, 146, 60, 0.05);
-    --tone-border: rgba(251, 146, 60, 0.25);
-    --tone-border-strong: rgba(251, 146, 60, 0.4);
+    --tone-border: rgba(251, 146, 60, 0.2);
+    --tone-border-strong: rgba(251, 146, 60, 0.35);
     /* --tone-solid: #fb923c; */
     --tone-solid-hover: #fdba74;
     --tone-solid-active: #fed7aa;
@@ -1087,8 +1087,8 @@
     --tone-soft: rgba(217, 119, 6, 0.15);
     --tone-muted: rgba(217, 119, 6, 0.2);
     --tone-wash: rgba(217, 119, 6, 0.05);
-    --tone-border: rgba(217, 119, 6, 0.25);
-    --tone-border-strong: rgba(217, 119, 6, 0.4);
+    --tone-border: rgba(217, 119, 6, 0.2);
+    --tone-border-strong: rgba(217, 119, 6, 0.35);
     /* --tone-solid: #d97706; */
     --tone-solid-hover: #f59e0b;
     --tone-solid-active: #fbbf24;

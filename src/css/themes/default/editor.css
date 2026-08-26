@@ -10,13 +10,13 @@
 
   .j-editor {
     --editor-font-size: var(--font-size-lg);
-    --editor-line-height: 1.75;
-    --editor-letter-space: 0.01em;
+    --editor-line-height: 1.85;
     --editor-word-space: 0.02em;
+    --editor-letter-space: 0.01em;
     --editor-heading-space: 2rem;
     --editor-block-space: 1.5rem;
-    --editor-paragraph-space: 1.25rem;
-    --editor-list-space: 0.25rem;
+    --editor-list-space: 1.25rem;
+    --editor-space: 0.25rem;
     --editor-dot-space: 0.125rem;
 
     --editor-heading-fg: var(--tone-heading);

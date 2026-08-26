@@ -38,7 +38,7 @@
       Typography - 段落与标题
     ============================================ */
   .j-editor > p {
-    margin-block: var(--editor-paragraph-space);
+    margin-block: var(--editor-block-space);
   }
 
   .j-editor h1,
@@ -86,7 +86,7 @@
   .j-editor h4+p,
   .j-editor h5+p,
   .j-editor h6+p {
-    margin-top: calc(var(--editor-paragraph-space) * -0.5);
+    margin-top: calc(var(--editor-block-space) * -0.5);
   } */
 
   /* ============================================
@@ -191,13 +191,13 @@
     ============================================ */
   .j-editor ul,
   .j-editor ol {
-    margin: 0 0 var(--editor-paragraph-space);
+    margin: 0 0 var(--editor-list-space);
     padding-left: 1.75em;
   }
 
   .j-editor ul li,
   .j-editor ol li {
-    margin-bottom: var(--editor-list-space);
+    margin-bottom: var(--editor-space);
     padding-left: 0.25em;
   }
 
@@ -218,7 +218,7 @@
   .j-editor ol ol,
   .j-editor ol ul,
   .j-editor ul ol {
-    margin-top: var(--editor-list-space);
+    margin-top: var(--editor-space);
     margin-bottom: 0;
   }
 
@@ -261,7 +261,7 @@
 
   .j-editor dd {
     margin: 0 0 0.75rem;
-    padding-left: var(--editor-paragraph-space);
+    padding-left: var(--editor-list-space);
     color: var(--tone-body);
   }
 
