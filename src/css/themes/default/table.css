@@ -1,17 +1,17 @@
 @layer themes {
   table {
-    --table-width: 100%;
+    /* --table-width: 100%; */
     --table-header-font-weight: 600;
-    --table-selected-bg: var(--tone-soft);
-    --table-border-width: 0 0 1px;
+    /* --table-border-width: 0 0 1px; */
+    --table-border-width: 1px;
     --table-border-style: solid;
-    --table-border-color: var(--ui-border);
-    --table-cell-padding: 0.5rem;
+    --table-border-color: var(--ui-border-subtle);
+    --table-cell-min-width: 100px;
+    --table-cell-padding: 0.5rem 1rem;
     --table-cell-text-align: left;
     --table-cell-vertical-align: top;
-    --table-link-fg: var(--tone-solid);
+    /* --table-link-fg: var(--tone-solid); */
     --table-striped-bg: var(--ui-bg-subtle);
     --table-hover-bg: var(--ui-bg-subtle);
-    --table-bordered-width: 1px;
   }
 }

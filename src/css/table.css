@@ -8,15 +8,11 @@
   }
 
   table {
-    width: var(--table-width);
+    /* width: var(--table-width); */
     text-indent: 0;
     border-color: inherit;
     border-collapse: collapse;
-    border-spacing: 0;
-  }
-
-  table tr.is-selected {
-    background: var(--table-selected-bg);
+    /* border-spacing: 0; */
   }
 
   table td,
@@ -35,22 +31,11 @@
     white-space: nowrap;
   }
 
-  table a {
-    text-decoration: inherit;
-    color: var(--table-link-fg);
-  }
-
-  table.is-striped thead tr,
-  table.is-striped tbody tr:not(.is-selected):nth-child(2n) {
-    background: var(--table-striped-bg);
+  table tbody td {
+    min-width: var(--table-cell-min-width);
   }
 
   table tbody tr:hover {
     background: var(--table-hover-bg);
-  }
-
-  table.is-bordered td,
-  table.is-bordered th {
-    border-width: var(--table-bordered-width);
   }
 }

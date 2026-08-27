@@ -585,11 +585,10 @@
 
   .j-editor table {
     margin-block: var(--editor-block-space);
-  }
-
-  .j-editor table th,
-  .j-editor table td {
-    --table-cell-padding: 0.5rem 1rem;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--ui-border) transparent;
+    display: block;
   }
 
   /* ============================================
