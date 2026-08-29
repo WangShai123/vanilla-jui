@@ -1,12 +1,9 @@
 @layer components {
   .j-toast-container {
     position: fixed;
-    top: var(--toast-container-offset);
-    right: var(--toast-container-offset);
     z-index: var(--z-toast);
     display: flex;
     flex-direction: column;
-    gap: var(--toast-container-gap);
     align-items: center;
     left: 50%;
     transform: translateX(-50%);
@@ -16,27 +13,12 @@
   .j-toast {
     display: flex;
     align-items: center;
-    gap: var(--toast-gap);
-    padding: var(--toast-padding);
-    box-shadow: var(--toast-box-shadow);
-    font-size: var(--toast-font-size);
-    font-weight: var(--toast-font-weight);
-    color: var(--toast-fg);
-    background: var(--toast-bg);
-    border-width: var(--toast-border-width);
-    border-style: var(--toast-border-style);
-    border-color: var(--toast-border-color);
-    border-radius: var(--toast-border-radius);
-    min-width: var(--toast-min-width);
-    max-width: var(--toast-max-width);
     word-break: break-all;
     cursor: pointer;
     pointer-events: auto;
   }
 
   .j-toast .el-icon {
-    margin-right: var(--s2);
-    width: var(--toast-icon-size);
     position: relative;
     color: inherit;
   }
@@ -51,9 +33,13 @@
     top: 45%;
     left: 50%;
     z-index: var(--z-toast);
+    width: -webkit-fit-content;
+    width: -moz-fit-content;
     width: fit-content;
-    max-width: 240px;
     text-align: center;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
     user-select: none;
     pointer-events: none;
     transform: translate(-50%, -50%);
@@ -66,10 +52,8 @@
   }
 
   .j-toast.is-confirm .toast-buttons {
-    width: 100%;
     display: flex;
     justify-content: flex-end;
-    gap: var(--space);
     position: relative;
   }
 }

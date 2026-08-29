@@ -4,38 +4,17 @@
     display: grid;
     grid-template-columns: 0 1fr;
     align-items: flex-start;
-    row-gap: var(--tip-gap);
-    width: var(--tip-width);
-    border-width: var(--tip-border-width);
-    border-style: var(--tip-border-style);
-    border-color: var(--tip-border-color);
-    border-radius: var(--tip-border-radius);
-    padding: var(--tip-padding);
-    font-size: var(--tip-font-size);
-    color: var(--tip-fg);
-    background: var(--tip-bg);
-    box-shadow: var(--tip-box-shadow);
   }
 
   .j-tip:has(.tip-icon) {
+    -moz-column-gap: var(--s3);
     column-gap: var(--s3);
     grid-template-columns: var(--s4) 1fr;
   }
 
   .j-font-md .j-tip:has(.tip-icon) {
+    -moz-column-gap: var(--s5);
     column-gap: var(--s5);
-  }
-
-  .j-tip .tip-icon,
-  .j-tip .tip-icon svg {
-    width: var(--tip-icon-size);
-    height: var(--tip-icon-size);
-  }
-
-  .j-tip .tip-icon {
-    color: var(--tip-icon-fg);
-    transform: translateY(calc(var(--space, 0.25rem) * 0.5));
-    margin: 0;
   }
 
   .j-tip .tip-title {
@@ -45,8 +24,6 @@
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 1;
     line-clamp: 1;
-    line-height: var(--tip-title-line-height);
-    font-weight: var(--tip-title-font-weight);
     margin: 0;
   }
 
@@ -54,8 +31,6 @@
     grid-column-start: 2;
     display: grid;
     justify-items: start;
-    gap: var(--tip-content-gap);
-    line-height: var(--tip-content-line-height);
     margin: 0;
   }
 

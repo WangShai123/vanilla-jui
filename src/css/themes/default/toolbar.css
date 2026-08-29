@@ -1,21 +1,66 @@
 @layer themes {
   .j-toolbar-container {
-    --toolbar-container-position: sticky;
-    --toolbar-container-bg: var(--ui-bg);
-    --toolbar-container-border: 1px solid var(--ui-border);
+    background: var(--ui-bg);
+    border-bottom: 1px solid var(--ui-border);
   }
 
   .j-toolbar {
-    --toolbar-gap: 0;
-    --toolbar-padding: var(--s2);
-    --toolbar-box-shadow: var(--shadow-sm);
-    --toolbar-divider-width: 1px;
-    --toolbar-divider-height: 16px;
-    --toolbar-divider-bg: var(--ui-fg);
+    gap: 0;
+    padding: var(--s2);
+    box-shadow: var(--shadow-sm);
   }
 
   .j-toolbar button svg {
     --toolbar-icon-size: var(--font-size-xl);
+
+    width: var(--toolbar-icon-size);
+    height: var(--toolbar-icon-size);
+  }
+
+  .j-toolbar .divider {
+    width: 1px;
+    height: 16px;
+    background: var(--ui-fg);
+    align-self: center;
+  }
+
+  .heading-drop-menu,
+  .editor-size-menu,
+  .color-drop-menu,
+  .editor-drop-heading,
+  .editor-drop-size,
+  .editor-drop-color {
+    background: var(--ui-bg-subtle);
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--ui-border);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-md);
+  }
+
+  .editor-drop-color {
+    padding: var(--space);
+  }
+
+  .editor-drop-color .color-panel {
+    padding: 0.5rem;
+    gap: 0.5rem;
+  }
+
+  .editor-drop-color .color-panel button.color-btn {
+    padding: 0;
+    margin: 0;
+    outline: none;
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--ui-border);
+  }
+
+  .editor-drop-color .color-panel button.color-btn.color-btn-clear::after {
+    content: '🚫';
+    height: 30px;
+    background: var(--ui-bg-subtle);
+    border-radius: var(--radius-sm);
   }
 
   .j-toolbar button.is-sm svg {

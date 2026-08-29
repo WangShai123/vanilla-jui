@@ -10,9 +10,15 @@ const externalPackages = [
 ];
 
 export default defineConfig({
+  server: {
+    host: '0.0.0.0',
+    port: 5173,
+  },
+
   optimizeDeps: {
     force: true,
   },
+
   pack: [
     {
       entry: 'src/index.ts',

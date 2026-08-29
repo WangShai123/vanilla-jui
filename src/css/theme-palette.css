@@ -1,65 +1,31 @@
 @layer components {
-  .j-theme-palette {
-    padding: var(--palette-padding);
-  }
-
   .j-theme-palette .palette-container {
     display: flex;
     flex-direction: column;
-    gap: var(--palette-container-gap);
   }
 
-  .j-theme-palette .palette-container .palette-item {
+  .j-theme-palette .palette-item {
     display: flex;
     flex-direction: column;
-    gap: var(--palette-item-gap);
   }
 
-  .j-theme-palette .palette-container .palette-item .item-title {
-    font-size: var(--palette-item-title-font-size);
-    font-weight: var(--palette-item-title-font-weight);
-  }
-
-  .j-theme-palette .palette-container .palette-item .items {
+  .j-theme-palette .items {
     display: grid;
-    grid-template-columns: var(--palette-items-columns);
-    gap: var(--palette-items-gap);
+    grid-template-columns: repeat(3, 1fr);
   }
 
-  .j-theme-palette .palette-container .palette-item .items > button {
-    padding-inline: var(--s2);
+  .j-theme-palette .j-button {
     min-width: 0;
     overflow: hidden;
   }
 
-  .j-theme-palette
-    .palette-container
-    .palette-item[data-palette='theme']
-    .items
-    > button {
-    justify-content: flex-start;
-  }
-
-  .j-theme-palette
-    .palette-container
-    .palette-item
-    .items
-    > button
-    span.item-hex {
+  .j-theme-palette .j-button .item-hex {
     display: inline-block;
-    width: var(--palette-items-icon-size);
-    height: var(--palette-items-icon-size);
     border-radius: 50%;
     flex-shrink: 0;
-    margin-right: var(--space);
   }
 
-  .j-theme-palette
-    .palette-container
-    .palette-item
-    .items
-    > button
-    span.button-text {
+  .j-theme-palette .j-button .button-text {
     overflow: hidden;
     text-overflow: ellipsis;
   }

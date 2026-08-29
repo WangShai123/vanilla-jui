@@ -7,21 +7,16 @@
 
   .j-form.is-vertical {
     flex-direction: column;
-    gap: var(--form-gap-vertical, var(--s2));
+    gap: var(--s2);
   }
 
   .j-form.is-horizontal {
     flex-direction: row;
-    gap: var(--form-gap-horizontal, var(--s2));
-  }
-
-  .j-form.is-lg {
-    --form-gap-vertical: var(--s3);
-    --form-gap-horizontal: var(--s3);
+    gap: var(--s2);
   }
 
   .j-form .form-field {
-    gap: var(--form-label-gap, var(--space));
+    gap: var(--space);
     margin: 0;
   }
 
@@ -40,8 +35,8 @@
   }
 
   .j-form .form-field .field-legend {
-    color: var(--form-item-label-color, var(--ui-fg-muted));
-    font-size: var(--form-item-label-size, var(--font-size-sm));
+    color: var(--ui-fg-muted);
+    font-size: var(--font-size-sm);
   }
 
   .j-form .form-field > legend.field-legend {
@@ -50,17 +45,17 @@
 
   .j-form .form-field .field-legend,
   .j-form .form-field .field-control {
-    gap: var(--form-label-gap, var(--space));
+    gap: var(--space);
   }
 
   .j-form.is-horizontal .form-field .field-legend {
     align-items: center;
-    height: var(--horizontal-form-label-height, var(--el-height-md));
+    height: var(--el-height-md);
   }
 
   .j-form .field-legend.is-required::after {
     content: '*';
-    color: var(--required-color, var(--state-danger));
+    color: var(--state-danger);
   }
 
   .j-form .form-field .field-control {
@@ -70,8 +65,8 @@
   }
 
   .j-form .form-field .field-control .help-block {
-    font-size: var(--form-help-block-font-size, var(--font-size-sm));
-    color: var(--form-help-block-fg, var(--ui-fg-soft));
+    font-size: var(--font-size-sm);
+    color: var(--ui-fg-soft);
     margin: 0;
   }
 
@@ -81,7 +76,7 @@
 
   .j-form .form-buttons {
     display: flex;
-    gap: var(--form-buttons-gap, var(--s2));
+    gap: var(--s2);
     margin-top: 1rem;
   }
 
@@ -95,97 +90,58 @@
 
   /* input */
   .j-input {
-    font-size: var(--input-font-size, var(--font-size-md));
-    background-color: var(--input-bg, inherit);
-    color: var(--input-fg, inherit);
+    font-size: var(--input-font-size);
+    background-color: var(--input-bg);
+    color: var(--input-fg);
   }
 
   .j-input:not([type='checkbox']) {
     /* display: block; */
-    padding: var(--input-padding, calc(var(--space) * 1.5) var(--s2));
     border-width: 1px;
     border-style: solid;
     border-color: var(--ui-border);
     border-radius: var(--radius-md);
-    height: var(--input-height, var(--el-height-md));
-    line-height: var(--input-line-height, var(--line-height));
+    padding: var(--input-padding);
+    height: var(--input-height);
+    line-height: var(--input-line-height);
     letter-spacing: 0.5px;
-  }
-
-  .j-input.is-sm {
-    --input-height: var(--el-height-sm);
-    --input-line-height: var(--line-height-self);
-    --input-font-size: var(--font-size-sm);
-  }
-
-  .j-input.is-lg {
-    --input-height: var(--el-height-lg);
-    --input-line-height: var(--line-height);
-    --input-font-size: var(--font-size-lg);
-  }
-
-  .j-input[type='password'].is-sm {
-    letter-spacing: 1px;
-  }
-
-  .j-input[type='password'] {
-    letter-spacing: 2px;
-  }
-
-  .j-input[type='password'].is-lg {
-    letter-spacing: 3px;
-  }
-
-  .j-input[type='password']:placeholder-shown {
-    letter-spacing: 0.5px;
-  }
-
-  .j-input[type='date'],
-  .j-input[type='datetime'],
-  .j-input[type='datetime-local'],
-  .j-input[type='time'],
-  .j-input[type='week'],
-  .j-input[type='month'],
-  .j-input[type='file'],
-  .j-input[type='color'] {
-    --input-font-size: var(--font-size-sm);
-    --input-fg: var(--ui-fg-muted);
-  }
-
-  .j-input[type='color'] {
-    --input-padding: var(--space);
-  }
-
-  .j-input[type='color']::-webkit-color-swatch {
-    border: 0;
   }
 
   /* type file */
   .j-input[type='file'] {
+    -webkit-appearance: none;
+    -moz-appearance: none;
     appearance: none;
     background-clip: padding-box;
     overflow: hidden;
     cursor: pointer;
+    background-color: var(--ui-surface-subtle);
   }
 
   .j-input[type='file']::file-selector-button {
     color: var(--ui-fg-muted);
+    -webkit-appearance: none;
+    -moz-appearance: none;
     appearance: none;
     border-width: 0;
     border-inline-end-width: 1px;
     border-radius: 0;
     border-color: var(--ui-border);
-    background-color: var(--ui-surface-subtle);
+    /* background-color: var(--ui-surface-subtle); */
+    background-color: transparent;
     margin: calc(var(--space) * -2);
+    font-size: var(--input-font-size);
   }
 
   .j-input[type='file']::file-selector-button,
   html.j-font-sm .j-input[type='file']::file-selector-button {
+    -webkit-margin-end: var(--s2);
     margin-inline-end: var(--s2);
     padding: var(--s2);
   }
 
   html.j-font-md .j-input[type='file']::file-selector-button {
+    -webkit-margin-end: calc(var(--space) * 2.75);
     margin-inline-end: calc(var(--space) * 2.75);
     padding: calc(var(--space) * 2.75);
   }
@@ -209,27 +165,6 @@
     padding-left: 0;
     padding-right: 0;
   }
-
-  /* input validate */
-  /* .j-input[data-valid='true'],
-  .j-select[data-valid='true'],
-  .j-textarea[data-valid='true'],
-  .j-input[data-valid='false'],
-  .j-select[data-valid='false'],
-  .j-textarea[data-valid='false'] {
-    padding-right: calc(1.4285714286em + 0.875rem);
-    background-repeat: no-repeat;
-    background-position: right calc(0.3571428572em + 0.21875rem) center;
-    background-size: calc(0.7142857143em + 0.4375rem)
-      calc(0.7142857143em + 0.4375rem);
-  } */
-
-  /* .j-input[data-valid='true'],
-  .j-select[data-valid='true'],
-  .j-textarea[data-valid='true'] {
-    border-color: var(--form-valid-border-color, var(--state-success));
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%232fb344' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='20 6 9 17 4 12'%3e%3c/polyline%3e%3c/svg%3e");
-  } */
 
   .j-input[data-valid='false'],
   .j-select[data-valid='false'],
@@ -267,6 +202,8 @@
   }
 
   .j-radio label input[type='radio'] {
+    -webkit-appearance: none;
+    -moz-appearance: none;
     appearance: none;
     width: 1rem;
     height: 1rem;
@@ -326,6 +263,7 @@
   /* radio group */
   .j-radio.is-group input[type='radio'] {
     clip: rect(0 0 0 0);
+    -webkit-clip-path: inset(100%);
     clip-path: inset(100%);
     height: 1px;
     overflow: hidden;
@@ -347,6 +285,9 @@
     justify-content: center;
     align-items: center;
     text-align: center;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
     user-select: none;
     letter-spacing: 0.5px;
   }
@@ -420,6 +361,8 @@
 
   .j-radio label,
   .j-checkbox label {
+    width: -webkit-fit-content;
+    width: -moz-fit-content;
     width: fit-content;
   }
 
@@ -428,6 +371,8 @@
   }
 
   .j-checkbox input[type='checkbox'] {
+    -webkit-appearance: none;
+    -moz-appearance: none;
     appearance: none;
     width: 1rem;
     height: 1rem;
@@ -558,28 +503,16 @@
 
   /* select */
   select.j-select {
-    padding: var(--input-padding, calc(var(--space) * 1.5));
+    padding: var(--input-padding);
     border-width: 1px;
     border-style: solid;
     border-color: var(--ui-border);
     border-radius: var(--radius-md);
-    height: var(--input-height, var(--el-height-md));
+    height: var(--input-height);
     line-height: var(--input-line-height, var(--line-height));
     background-color: var(--input-background-color, inherit);
-    font-size: var(--input-font-size, var(--font-size-md));
+    font-size: var(--input-font-size);
     letter-spacing: 0.5px;
-  }
-
-  select.j-select.is-sm {
-    --input-padding: var(--space);
-    --input-height: var(--el-height-sm);
-    --input-font-size: var(--font-size-sm);
-  }
-
-  select.j-select.is-lg {
-    --input-padding: var(--s2);
-    --input-height: var(--el-height-lg);
-    --input-font-size: var(--font-size-lg);
   }
 
   /* textarea */
@@ -612,103 +545,39 @@
 
   /* input group */
   .input-group {
-    position: relative;
     display: flex;
-    flex-wrap: wrap;
     align-items: stretch;
-    width: 100%;
-  }
-
-  .input-group .j-button {
-    box-shadow: none;
   }
 
   .input-group input.j-input,
   .input-group select.j-select {
     position: relative;
     flex: 1 1 auto;
-    /* width: 1%; */
     min-width: 0;
-    /* letter-spacing: 0.4px; */
-  }
-
-  .input-group .el-addon .j-button {
-    position: relative;
-    border-color: var(--ui-border);
-    color: var(--ui-fg-muted);
-    background: var(--ui-bg-muted);
   }
 
   .input-group > .el-addon > .is-text {
     display: flex;
     align-items: center;
     white-space: nowrap;
-    font-size: var(--font-size-md);
-    line-height: var(--line-height);
-    color: var(--ui-fg-muted);
-    background-color: var(--ui-bg-muted);
-    padding: var(--s2);
-    height: var(--el-height-md);
     border-width: 1px;
     border-style: solid;
-    border-color: var(--ui-border);
-    border-radius: var(--radius-md);
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
     user-select: none;
   }
 
-  .input-group > .el-addon > .is-text.icon-close {
-    width: var(--el-height-md);
-  }
-
-  .input-group > *:not(:first-child) {
-    margin-left: -1px;
-  }
-
-  .input-group > input.j-input:not(:first-child),
-  .input-group > select.j-select:not(:first-child),
-  .input-group
-    > :not(select.j-select)
-    + .el-addon:not(:first-child)
-    > .is-text {
-    border-left-color: transparent;
-  }
-
-  .input-group > input.j-input:not(:first-child),
-  .input-group > select.j-select:not(:first-child),
-  .input-group > *:not(:first-child) > *,
-  .input-group > *:not(:first-child) > .is-text {
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
-  }
-
-  .input-group > input.j-input:not(:last-child),
-  .input-group > select.j-select:not(:last-child),
-  .input-group > *:not(:last-child) > *,
-  .input-group > *:not(:last-child) > .is-text {
-    border-top-right-radius: 0;
-    border-bottom-right-radius: 0;
-  }
-
   /* input inner group */
+  .input-group,
   .input-inner-group {
     position: relative;
-  }
-
-  .input-inner-group button.j-button {
-    box-shadow: none;
+    width: 100%;
   }
 
   .input-inner-group input.j-input {
     width: 100%;
     letter-spacing: 0.4px;
-  }
-
-  .input-inner-group input.j-input:not(:last-child) {
-    padding-right: var(--el-height-md);
-  }
-
-  .input-inner-group input.j-input:not(:first-child) {
-    padding-left: var(--el-height-md);
   }
 
   .input-inner-group .el-addon {
@@ -720,8 +589,6 @@
     align-items: center;
     justify-content: center;
     min-width: var(--el-height-md);
-    color: var(--ui-fg-muted);
-    /* font-size: 0.875em; */
   }
 
   .input-inner-group .el-addon:last-child {

@@ -2,22 +2,13 @@
   .j-avatar {
     display: inline-block;
     vertical-align: middle;
-    width: var(--avatar-size);
-    height: var(--avatar-size);
     overflow: hidden;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
     user-select: none;
+    -o-object-fit: cover;
     object-fit: cover;
-    box-shadow: var(--avatar-box-shadow);
-    border: var(--avatar-border);
-    border-radius: var(--avatar-border-radius);
-    background: var(--avatar-bg);
-    color: var(--avatar-fg);
-    font-size: var(--avatar-font-size);
-    font-weight: var(--avatar-font-weight);
-  }
-
-  .j-avatar img {
-    border-radius: var(--avatar-border-radius);
   }
 
   .j-avatar img,

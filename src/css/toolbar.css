@@ -1,6 +1,7 @@
 @layer components {
   .j-toolbar-container {
-    position: var(--toolbar-container-position);
+    position: -webkit-sticky;
+    position: sticky;
     top: 0;
     width: 100%;
     z-index: var(--z-toolbar);
@@ -11,8 +12,6 @@
     scrollbar-width: none;
     -ms-overflow-style: none;
     scroll-behavior: smooth;
-    background: var(--toolbar-container-bg);
-    border-bottom: var(--toolbar-container-border);
   }
 
   .j-toolbar {
@@ -20,9 +19,6 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: var(--toolbar-gap);
-    padding: var(--toolbar-padding);
-    box-shadow: var(--toolbar-box-shadow);
   }
 
   @media screen and (max-width: 992px) {
@@ -31,61 +27,19 @@
     }
   }
 
-  .j-toolbar button svg {
-    width: var(--toolbar-icon-size);
-    height: var(--toolbar-icon-size);
-  }
-
-  .j-toolbar .divider {
-    width: var(--toolbar-divider-width);
-    height: var(--toolbar-divider-height);
-    background: var(--toolbar-divider-bg);
-    align-self: center;
-  }
-
-  .heading-drop-menu,
-  .editor-size-menu,
-  .color-drop-menu,
-  .editor-drop-heading,
-  .editor-drop-size,
-  .editor-drop-color {
-    background: var(--toolbar-drop-bg, var(--ui-bg-subtle));
-    box-shadow: var(--toolbar-drop-box-shadow, var(--shadow-md));
-    border: var(--toolbar-drop-border, 1px solid var(--ui-border));
-    border-radius: var(--toolbar-drop-radius, var(--radius-sm));
-    font-size: var(--toolbar-drop-font-size, var(--font-size-md));
-  }
-
-  .editor-drop-color {
-    padding: var(--toolbar-drop-padding, var(--space));
-  }
-
   .editor-drop-color .color-panel {
-    padding: 0.5rem;
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    gap: 0.5rem;
   }
 
   .editor-drop-color .color-panel button.color-btn {
-    padding: 0;
-    margin: 0;
-    outline: none;
-    width: 32px;
-    height: 32px;
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--ui-border);
     cursor: pointer;
   }
 
   .editor-drop-color .color-panel button.color-btn.color-btn-clear::after {
-    content: '🚫';
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 30px;
-    background: var(--ui-bg-subtle);
-    border-radius: var(--radius-sm);
   }
 
   .editor-drop-color .color-panel .color-btn:last-of-type {

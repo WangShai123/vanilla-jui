@@ -1,26 +1,33 @@
 @layer themes {
-  .j-button-group {
-    --btn-group-box-shadow: var(--shadow-sm);
-  }
-
   .j-button {
-    --btn-gap: var(--space) calc(var(--space) * 1.5);
-    /* --btn-font-weight: var(--font-medium); */
     --btn-font-size: var(--font-size-md);
     --btn-height: var(--el-height-md);
-    --btn-line-height: var(--line-height-self);
     --btn-fg: inherit;
     --btn-bg: transparent;
     --btn-padding: 0 var(--s3);
-    --btn-border-width: 1px;
-    --btn-border-style: solid;
     --btn-border-color: transparent;
-    --btn-border-radius: var(--radius-md);
+    --btn-radius: var(--radius-md);
     --btn-box-shadow: var(--shadow-sm);
+
+    gap: var(--space);
+    font-size: var(--btn-font-size);
+    height: var(--btn-height);
+    line-height: 1;
+    color: var(--btn-fg);
+    background-color: var(--btn-bg);
+    padding: var(--btn-padding);
+    border-width: 1px;
+    border-style: solid;
+    border-color: var(--btn-border-color);
+    border-radius: var(--btn-radius);
+    box-shadow: var(--btn-box-shadow);
+    outline: none;
   }
 
-  .j-button svg {
-    --btn-svg-size: var(--font-size-md);
+  .j-button.is-xs {
+    --btn-font-size: var(--font-size-sm);
+    --btn-height: var(--el-height-xs);
+    --btn-padding: var(--space) var(--s2);
   }
 
   .j-button.is-sm {
@@ -33,6 +40,12 @@
     --btn-font-size: var(--font-size-lg);
     --btn-height: var(--el-height-lg);
     --btn-padding: 0 var(--s3);
+  }
+
+  .j-button.is-xl {
+    --btn-font-size: var(--font-size-xl);
+    --btn-height: var(--el-height-xl);
+    --btn-padding: 0 var(--s4);
   }
 
   .j-button.is-default {
@@ -70,13 +83,11 @@
 
   .j-button.is-text {
     --btn-border-color: transparent;
-    --btn-text-height: auto;
-    --btn-text-padding: 0;
     --btn-box-shadow: none;
   }
 
   .j-button.is-icon {
-    aspect-ratio: var(--aspect-icon, 1);
+    aspect-ratio: 1/1;
     --btn-padding: var(--icon-padding, 0);
   }
 
@@ -119,14 +130,18 @@
 
   .j-button-group {
     --btn-padding: 0 var(--s2);
+    --btn-radius: var(--radius-md);
+
+    margin: 0;
+    box-shadow: var(--shadow-sm);
+    border-radius: var(--btn-radius);
   }
 
-  /* disabled */
+  /* status */
   .j-button:disabled {
     opacity: var(--opacity-disabled);
   }
 
-  /* status */
   .j-button:not(:disabled) {
     cursor: pointer;
   }
@@ -139,13 +154,48 @@
     opacity: var(--opacity-active);
   }
 
-  .j-button:not(:disabled).is-active {
-    --opacity: var(--opacity-active);
+  .j-button:not(:disabled).is-active,
+  .j-button:not(:disabled):focus,
+  .j-button:not(:disabled):focus-within,
+  .j-button:not(:disabled):focus-visible {
     --btn-border-color: var(--tone-solid);
+    --btn-box-shadow: 0 0 0 4px var(--tone-ring);
   }
 
-  .j-button:not(:disabled):focus-visible {
-    outline-color: var(--btn-ring, var(--tone-solid));
+  .j-button.is-reverse:not(:disabled).is-active,
+  .j-button.is-reverse:not(:disabled):focus,
+  .j-button.is-reverse:not(:disabled):focus-within,
+  .j-button.is-reverse:not(:disabled):focus-visible {
+    --btn-border-color: transparent;
+    --btn-box-shadow: 0 0 0 4px var(--tone-card-active);
+  }
+
+  .j-button.is-success:not(:disabled).is-active,
+  .j-button.is-success:not(:disabled):focus,
+  .j-button.is-success:not(:disabled):focus-within,
+  .j-button.is-success:not(:disabled):focus-visible {
+    --btn-border-color: transparent;
+    --btn-box-shadow: 0 0 0 4px var(--state-success-ring);
+  }
+
+  .j-button.is-warning:not(:disabled).is-active,
+  .j-button.is-warning:not(:disabled):focus,
+  .j-button.is-warning:not(:disabled):focus-within,
+  .j-button.is-warning:not(:disabled):focus-visible {
+    --btn-border-color: transparent;
+    --btn-box-shadow: 0 0 0 4px var(--state-warning-ring);
+  }
+
+  .j-button.is-danger:not(:disabled).is-active,
+  .j-button.is-danger:not(:disabled):focus,
+  .j-button.is-danger:not(:disabled):focus-within,
+  .j-button.is-danger:not(:disabled):focus-visible,
+  .j-button.is-error:not(:disabled).is-active,
+  .j-button.is-error:not(:disabled):focus,
+  .j-button.is-error:not(:disabled):focus-within,
+  .j-button.is-error:not(:disabled):focus-visible {
+    --btn-border-color: transparent;
+    --btn-box-shadow: 0 0 0 4px var(--state-danger-muted);
   }
 
   .j-button.is-default:hover:not(:disabled) {
@@ -157,10 +207,11 @@
     --btn-bg: var(--tone-subtle);
   }
 
+  .j-button.is-text:not(:disabled).is-active,
   .j-button.is-text:not(:disabled):active,
-  .j-button.is-text:not(:disabled):focus-visible,
-  .j-button.is-text:not(:disabled).is-active {
-    outline: none;
+  .j-button.is-text:not(:disabled):focus,
+  .j-button.is-text:not(:disabled):focus-within,
+  .j-button.is-text:not(:disabled):focus-visible {
     --btn-fg: var(--tone-solid);
     text-decoration: underline;
     text-underline-offset: var(--space);
@@ -191,11 +242,58 @@
   }
 
   .j-button-group .j-button:active,
+  .j-button-group .j-button:focus,
   .j-button-group .j-button:focus-visible,
   .j-button-group .j-button:focus-within {
-    outline: 0;
-    opacity: var(--opacity-active);
+    /* opacity: var(--opacity-active); */
     z-index: 1;
+  }
+
+  .j-button-group .j-button:not(:first-child) {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+  }
+
+  .j-button-group .j-button:not(:last-child) {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+
+  .j-button-group .j-button:not(:first-child):not(:last-child) {
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-width: 0;
+    border-right-width: 0;
+  }
+
+  .j-button-group.is-vertical {
+    flex-direction: column;
+  }
+
+  .j-button-group.is-vertical .j-button:not(:last-child) {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+
+  .j-button-group.is-vertical .j-button:not(:first-child) {
+    margin-left: 0;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+  }
+
+  .j-button-group.is-vertical .j-button:not(:last-child):not(:first-child) {
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 0;
+    border-bottom-width: 0;
+  }
+
+  .j-button-group.is-vertical .j-button:first-child {
+    border-top-right-radius: var(--btn-radius);
+  }
+
+  .j-button-group.is-vertical .j-button:last-child {
+    border-bottom-left-radius: var(--btn-radius);
   }
 
   .j-button-group.is-vertical .j-button:focus-within {

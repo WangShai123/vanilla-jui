@@ -1,12 +1,6 @@
 @layer themes {
   .j-tabs {
-    --tab-list-item-padding: var(--s2) var(--s3);
-    --tab-list-item-margin: 0;
-    --tab-list-font-weight: var(--font-medium);
     --tab-wrap-border: 1px solid var(--ui-border-subtle);
-    --panel-list-padding: var(--s3);
-    --panel-list-margin: 0;
-    --panel-list-item-margin: 0;
   }
 
   .j-tabs[data-tabs-direction='top'] .tab-wrap {
@@ -25,11 +19,27 @@
     border-left: var(--tab-wrap-border);
   }
 
+  .j-tabs .tab-list .tab-item {
+    padding: var(--s2) var(--s3);
+    margin: 0;
+    color: var(--tab-fg);
+    font-weight: var(--font-medium);
+  }
+
   .j-tabs .tab-list .tab-item[aria-selected='true'] {
     --tab-fg: var(--tone-solid);
   }
 
   .j-tabs .tab-list .tab-item[aria-disabled='true'] {
     --tab-fg: var(--ui-border-strong);
+  }
+
+  .j-tabs .panel-list {
+    padding: var(--s3);
+    margin: 0;
+  }
+
+  .j-tabs .panel-list .panel-item {
+    margin: 0;
   }
 }

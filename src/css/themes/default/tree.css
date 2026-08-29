@@ -1,0 +1,75 @@
+@layer themes {
+  .j-tree {
+    padding: 14px;
+    border: 1px solid var(--ui-border-subtle);
+    border-radius: var(--radius-md);
+    background: var(--ui-surface);
+    color: var(--tone-heading);
+    font-size: var(--font-size-sm);
+    line-height: 1.45;
+  }
+
+  .j-tree-list {
+    gap: 2px;
+  }
+
+  .j-tree-list .j-tree-list {
+    padding-left: 20px;
+  }
+
+  .j-tree-list .j-tree-list::before {
+    top: 0;
+    bottom: 10px;
+    left: 7px;
+    width: 1px;
+    background: var(--ui-border-subtle);
+  }
+
+  .j-tree-list .j-tree-list > .j-tree-item::before {
+    top: 13px;
+    left: -11px;
+    width: 12px;
+    height: 1px;
+    background: var(--ui-border-subtle);
+  }
+
+  .j-tree-list li {
+    margin: 0;
+    padding: 0;
+  }
+
+  .j-tree-node {
+    gap: 7px;
+    min-height: 26px;
+    padding: 0 4px;
+    border-radius: var(--radius-sm);
+    color: var(--tone-caption);
+  }
+
+  .j-tree-node[role='button']:hover,
+  .j-tree-node[role='button']:focus-visible {
+    color: var(--tone-text);
+    background: var(--tone-soft);
+    outline: 0;
+  }
+
+  .j-tree-item.is-directory > .j-tree-node {
+    color: var(--tone-heading);
+    font-weight: 600;
+  }
+
+  .j-tree-icon {
+    width: 16px;
+    height: 16px;
+    color: var(--tone-caption);
+  }
+
+  .j-tree-item.is-directory > .j-tree-node .j-tree-icon {
+    color: var(--tone-text);
+  }
+
+  .j-tree-icon .el-icon {
+    width: 16px;
+    height: 16px;
+  }
+}

@@ -1,25 +1,47 @@
 @layer themes {
   .j-modal {
-    --modal-fg: var(--ui-fg);
-    --modal-bg: var(--ui-bg);
-    --modal-border-width: 1px;
-    --modal-border-style: solid;
-    --modal-border-color: var(--ui-border);
-    --modal-border-radius: var(--radius-md);
-    --modal-box-shadow: var(--shadow-md);
-    --modal-min-width: 300px;
-    --modal-max-width: 500px;
-    --modal-max-height: 90vh;
-    --modal-header-gap: var(--space);
     --modal-header-padding: var(--s3) var(--s4) 0;
-    --modal-header-bottom-border: transparent;
-    --modal-title-font-size: var(--font-size-md);
-    --modal-title-font-weight: var(--font-medium);
     --modal-body-padding: var(--s4);
-    --modal-body-line-height: var(--line-height-paragraph);
-    --modal-footer-gap: var(--s2);
     --modal-footer-padding: 0 var(--s4) var(--s4);
-    --modal-footer-top-border: 1px solid transparent;
+
+    color: var(--ui-fg);
+    background: var(--ui-bg);
+    border-width: 1px;
+    border-style: solid;
+    border-color: var(--ui-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    min-width: 300px;
+    max-width: 500px;
+    max-height: 90vh;
+  }
+
+  .j-modal .modal-header {
+    gap: var(--space);
+    padding: var(--modal-header-padding);
+    border-bottom: transparent;
+  }
+
+  .j-modal .modal-header .modal-title {
+    margin: 0;
+    font-size: var(--font-size-md);
+    font-weight: var(--font-medium);
+  }
+
+  .j-modal .modal-body {
+    padding: var(--modal-body-padding);
+    min-height: 32px;
+  }
+
+  .j-modal .modal-body p {
+    margin: 0;
+    line-height: var(--line-height-paragraph);
+  }
+
+  .j-modal .modal-footer {
+    gap: var(--s2);
+    padding: var(--modal-footer-padding);
+    border-top: 1px solid transparent;
   }
 
   .j-modal.is-fullscreen .modal-header {

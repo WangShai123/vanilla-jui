@@ -1,0 +1,170 @@
+@layer themes {
+  .j-form.is-lg {
+    --form-gap-vertical: var(--s3);
+    --form-gap-horizontal: var(--s3);
+  }
+
+  .j-input {
+    --input-font-size: var(--font-size-md);
+    --input-bg: inherit;
+    --input-fg: inherit;
+  }
+
+  .j-input:not([type='checkbox']) {
+    --input-padding: calc(var(--space) * 1.5) var(--s2);
+    --input-height: var(--el-height-md);
+    --input-line-height: var(--line-height);
+  }
+
+  .j-input.is-sm {
+    --input-height: var(--el-height-sm);
+    --input-line-height: var(--line-height-self);
+    --input-font-size: var(--font-size-sm);
+  }
+
+  .j-input.is-lg {
+    --input-height: var(--el-height-lg);
+    --input-line-height: var(--line-height);
+    --input-font-size: var(--font-size-lg);
+  }
+
+  .j-input[type='password'] {
+    letter-spacing: 2px;
+  }
+
+  .j-input[type='password'].is-sm {
+    letter-spacing: 1px;
+  }
+
+  .j-input[type='password'].is-lg {
+    letter-spacing: 3px;
+  }
+
+  .j-input[type='password']:placeholder-shown {
+    letter-spacing: 0.5px;
+  }
+
+  .j-input[type='date'],
+  .j-input[type='datetime'],
+  .j-input[type='datetime-local'],
+  .j-input[type='time'],
+  .j-input[type='week'],
+  .j-input[type='month'],
+  .j-input[type='file'],
+  .j-input[type='color'] {
+    /* --input-font-size: var(--font-size-sm); */
+    --input-fg: var(--ui-fg-muted);
+  }
+
+  .j-input[type='color'] {
+    --input-padding: var(--space);
+    min-width: 5rem;
+  }
+
+  .j-input[type='color']::-webkit-color-swatch {
+    border: 0;
+  }
+
+  select.j-select {
+    --input-padding: calc(var(--space) * 1.5);
+    --input-height: var(--el-height-md);
+    --input-font-size: var(--font-size-md);
+  }
+
+  select.j-select.is-sm {
+    --input-padding: var(--space);
+    --input-height: var(--el-height-sm);
+    --input-font-size: var(--font-size-sm);
+  }
+
+  select.j-select.is-lg {
+    --input-padding: var(--s2);
+    --input-height: var(--el-height-lg);
+    --input-font-size: var(--font-size-lg);
+  }
+
+  .input-group .el-addon .j-button {
+    --btn-border-color: var(--ui-border);
+    --btn-fg: var(--ui-fg-muted);
+    --btn-bg: var(--ui-bg-muted);
+    --btn-padding: 0 var(--s2);
+    --btn-box-shadow: none;
+  }
+
+  .input-group .el-addon .is-text {
+    font-size: var(--font-size-md);
+    line-height: var(--line-height);
+    color: var(--ui-fg-muted);
+    background-color: var(--ui-bg-muted);
+    padding: var(--s2);
+    height: var(--el-height-md);
+    border-color: var(--ui-border);
+    border-radius: var(--radius-md);
+  }
+
+  .input-group .el-addon .icon-close,
+  .input-inner-group .el-addon .icon-close {
+    width: var(--input-height);
+  }
+
+  .input-group > *:not(:first-child) {
+    margin-left: -1px;
+  }
+
+  .input-group > input.j-input:not(:first-child),
+  .input-group > select.j-select:not(:first-child),
+  .input-group
+    > :not(select.j-select)
+    + .el-addon:not(:first-child)
+    > .is-text {
+    border-left-color: transparent;
+  }
+
+  .input-group > input.j-input:not(:first-child),
+  .input-group > select.j-select:not(:first-child),
+  .input-group > *:not(:first-child) > *,
+  .input-group > *:not(:first-child) > .is-text {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+  }
+
+  .input-group > input.j-input:not(:last-child),
+  .input-group > select.j-select:not(:last-child),
+  .input-group > *:not(:last-child) > *,
+  .input-group > *:not(:last-child) > .is-text {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+
+  .input-inner-group .j-button {
+    --btn-box-shadow: none;
+  }
+
+  .input-inner-group input.j-input:not(:last-child) {
+    padding-right: var(--el-height-md);
+  }
+
+  .input-inner-group input.j-input:not(:first-child) {
+    padding-left: var(--el-height-md);
+  }
+
+  .input-inner-group .el-addon {
+    color: var(--ui-fg-muted);
+  }
+
+  .mobile .j-input[type='file']::file-selector-button {
+    padding: var(--s3);
+    margin: calc(var(--space) * -1.7);
+    -webkit-margin-end: calc(var(--space) * 2.75);
+    margin-inline-end: calc(var(--space) * 2.75);
+  }
+
+  .mobile.j-font-md .j-input.is-lg[type='file']::file-selector-button {
+    margin: calc(var(--space) * -1.4);
+  }
+
+  /* .mobile .j-input, */
+  .mobile .j-textarea {
+    width: 100%;
+  }
+}

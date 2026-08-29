@@ -38,23 +38,16 @@
   }
 
   .j-tabs .tab-list .tab-item {
-    padding: var(--tab-list-item-padding);
-    margin: var(--tab-list-item-margin);
-    color: var(--tab-fg);
-    font-weight: var(--tab-list-font-weight);
     flex-shrink: 0;
     cursor: pointer;
   }
 
   .j-tabs .panel-list {
-    padding: var(--panel-list-padding);
-    margin: var(--panel-list-margin);
     flex: 1;
   }
 
   .j-tabs .panel-list .panel-item {
     display: none;
-    margin: var(--panel-list-item-margin);
     position: relative;
     min-height: 22px;
   }

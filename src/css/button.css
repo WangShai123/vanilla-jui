@@ -4,22 +4,14 @@
     justify-content: center;
     align-items: center;
     flex-wrap: nowrap;
-    gap: var(--btn-gap);
     position: relative;
     white-space: nowrap;
-    /* font-weight: var(--btn-font-weight); */
-    font-size: var(--btn-font-size);
-    height: var(--btn-height);
-    line-height: var(--btn-line-height);
-    color: var(--btn-fg);
-    background-color: var(--btn-bg);
-    padding: var(--btn-padding);
-    border-width: var(--btn-border-width);
-    border-style: var(--btn-border-style);
-    border-color: var(--btn-border-color);
-    border-radius: var(--btn-border-radius);
-    box-shadow: var(--btn-box-shadow);
+    -webkit-appearance: button;
+    -moz-appearance: button;
     appearance: button;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
     user-select: none;
     touch-action: manipulation;
   }
@@ -30,7 +22,7 @@
   }
 
   .j-button svg {
-    width: var(--btn-svg-size);
+    width: var(--btn-font-size);
     fill: currentColor;
   }
 
@@ -39,57 +31,7 @@
     color: inherit;
   }
 
-  /* group */
   .j-button-group {
     display: flex;
-    margin: 0;
-    box-shadow: var(--btn-group-box-shadow);
-  }
-
-  .j-button-group .j-button:not(:first-child) {
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
-  }
-
-  .j-button-group .j-button:not(:last-child) {
-    border-top-right-radius: 0;
-    border-bottom-right-radius: 0;
-  }
-
-  .j-button-group .j-button:not(:first-child):not(:last-child) {
-    border-top-width: var(--btn-border-width);
-    border-bottom-width: var(--btn-border-width);
-    border-left-width: 0;
-    border-right-width: 0;
-  }
-
-  .j-button-group.is-vertical {
-    flex-direction: column;
-  }
-
-  .j-button-group.is-vertical .j-button:not(:last-child) {
-    border-bottom-left-radius: 0;
-    border-bottom-right-radius: 0;
-  }
-
-  .j-button-group.is-vertical .j-button:not(:first-child) {
-    margin-left: 0;
-    border-top-left-radius: 0;
-    border-top-right-radius: 0;
-  }
-
-  .j-button-group.is-vertical .j-button:not(:last-child):not(:first-child) {
-    border-left-width: var(--btn-border-width);
-    border-right-width: var(--btn-border-width);
-    border-top-width: 0;
-    border-bottom-width: 0;
-  }
-
-  .j-button-group.is-vertical .j-button:first-child {
-    border-top-right-radius: var(--radius-md);
-  }
-
-  .j-button-group.is-vertical .j-button:last-child {
-    border-bottom-left-radius: var(--radius-md);
   }
 }

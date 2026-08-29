@@ -3,6 +3,20 @@
     --avatar-size: var(--el-height-md);
     --avatar-border-radius: var(--radius-sm);
     --avatar-box-shadow: var(--shadow-sm);
+
+    width: var(--avatar-size);
+    height: var(--avatar-size);
+    box-shadow: var(--avatar-box-shadow);
+    border: var(--avatar-border);
+    border-radius: var(--avatar-border-radius);
+    background: var(--avatar-bg);
+    color: var(--avatar-fg);
+    font-size: var(--avatar-font-size);
+    font-weight: var(--avatar-font-weight);
+  }
+
+  .j-avatar img {
+    border-radius: var(--avatar-border-radius);
   }
 
   .j-avatar.is-2xs {
@@ -44,6 +58,7 @@
   }
 
   .j-avatar-group .j-avatar:not(:first-child) {
+    -webkit-margin-start: calc(var(--space) * -3);
     margin-inline-start: calc(var(--space) * -3);
   }
 

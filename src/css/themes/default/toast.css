@@ -1,26 +1,33 @@
 @layer themes {
   .j-toast-container {
-    --toast-container-offset: var(--s2);
-    --toast-container-gap: var(--s2);
+    top: var(--s2);
+    right: var(--s2);
+    gap: var(--s2);
   }
 
   .j-toast {
-    --toast-padding: var(--s3) var(--s4);
-    --toast-font-size: var(--font-size-md);
-    --toast-font-weight: var(--font-medium);
-    --toast-min-width: 200px;
-    --toast-max-width: 310px;
-    --toast-box-shadow: var(--shadow-md);
-    --toast-border-width: 1px;
-    --toast-border-style: solid;
-    --toast-border-color: var(--ui-border);
-    --toast-border-radius: var(--radius-md);
     --toast-fg: var(--ui-fg);
     --toast-bg: var(--ui-bg);
+    --toast-border-color: var(--ui-border);
+
+    gap: var(--s2);
+    padding: var(--s3) var(--s4);
+    box-shadow: var(--shadow-md);
+    font-size: var(--font-size-md);
+    font-weight: var(--font-medium);
+    color: var(--toast-fg);
+    background: var(--toast-bg);
+    border-width: 1px;
+    border-style: solid;
+    border-color: var(--toast-border-color);
+    border-radius: var(--radius-md);
+    min-width: 200px;
+    max-width: 310px;
   }
 
   .j-toast .el-icon {
-    --toast-icon-size: var(--font-size-lg);
+    margin-right: var(--s2);
+    width: var(--font-size-lg);
   }
 
   .j-toast.is-success {
@@ -47,11 +54,6 @@
     --toast-border-color: var(--tone-border);
   }
 
-  .j-toast.is-confirm {
-    --toast-gap: calc(var(--space)*4);
-    --toast-min-width: 280px;
-  }
-
   .j-toast-lite {
     font-size: var(--font-size-md);
     color: var(--ui-bg);
@@ -59,5 +61,15 @@
     border-radius: var(--radius-md);
     padding: var(--s2) var(--s3);
     max-width: calc(var(--screen-sm) / 2);
+  }
+
+  .j-toast.is-confirm {
+    gap: var(--s4);
+    min-width: 280px;
+  }
+
+  .j-toast.is-confirm .toast-buttons {
+    width: 100%;
+    gap: var(--space);
   }
 }

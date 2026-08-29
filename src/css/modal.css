@@ -1,15 +1,5 @@
 @layer components {
   .j-modal {
-    color: var(--modal-fg);
-    background: var(--modal-bg);
-    border-width: var(--modal-border-width);
-    border-style: var(--modal-border-style);
-    border-color: var(--modal-border-color);
-    border-radius: var(--modal-border-radius);
-    box-shadow: var(--modal-box-shadow);
-    min-width: var(--modal-min-width);
-    max-width: var(--modal-max-width);
-    max-height: var(--modal-max-height);
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -31,36 +21,17 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: var(--modal-header-gap);
-    padding: var(--modal-header-padding);
-    border-bottom: var(--modal-header-bottom-border);
-  }
-
-  .j-modal .modal-header .modal-title {
-    margin: 0;
-    font-size: var(--modal-title-font-size);
-    font-weight: var(--modal-title-font-weight);
   }
 
   .j-modal .modal-body {
-    padding: var(--modal-body-padding);
     overflow-y: auto;
     overflow-wrap: break-word;
     flex: 1;
     position: relative;
-    min-height: 32px;
-  }
-
-  .j-modal .modal-body p {
-    margin: 0;
-    line-height: var(--modal-body-line-height);
   }
 
   .j-modal .modal-footer {
     display: flex;
     justify-content: flex-end;
-    gap: var(--modal-footer-gap);
-    padding: var(--modal-footer-padding);
-    border-top: var(--modal-footer-top-border);
   }
 }

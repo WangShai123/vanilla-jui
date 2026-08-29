@@ -8,6 +8,9 @@
     scroll-behavior: smooth;
     -ms-overflow-style: none;
     scrollbar-width: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
     user-select: none;
   }
 
@@ -39,7 +42,9 @@
     line-height: var(--menu-item-line-height);
     font-weight: var(--menu-font-weight);
     text-decoration: underline;
+    -webkit-text-decoration-style: wavy;
     text-decoration-style: wavy;
+    -webkit-text-decoration-color: var(--state-danger);
     text-decoration-color: var(--state-danger);
     text-underline-offset: 4px;
     padding: 4px 1rem;
@@ -52,22 +57,25 @@
     justify-content: center;
     align-items: center;
     flex-wrap: nowrap;
-    gap: var(--menu-link-gap);
     white-space: nowrap;
     cursor: pointer;
+    -webkit-appearance: button;
+    -moz-appearance: button;
     appearance: button;
     touch-action: manipulation;
+    text-decoration: none;
+
+    gap: var(--menu-link-gap);
     color: currentColor;
     background-color: inherit;
-    font-weight: var(--menu-link-font-weight);
-    text-decoration: none;
+    font-weight: var(--font-medium);
 
     padding: var(--menu-item-padding);
     height: var(--menu-item-height);
     line-height: var(--menu-item-line-height);
     border-width: var(--menu-item-border-width);
-    border-style: var(--menu-item-border-style);
-    border-color: var(--menu-item-border-color);
+    border-style: solid;
+    border-color: var(--ui-border);
     border-radius: var(--menu-item-border-radius);
   }
 
@@ -614,6 +622,9 @@
     padding: var(--space) var(--s2);
     text-decoration: none;
     color: var(--ui-fg-muted);
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
     user-select: none;
     border-radius: var(--radius-sm);
     transition: none;

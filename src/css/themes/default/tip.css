@@ -1,49 +1,59 @@
 @layer themes {
   .j-tip {
-    --tip-gap: var(--s2);
-    --tip-width: 100%;
-    --tip-padding: var(--s3) var(--s4);
-    --tip-border-width: 1px;
-    --tip-border-style: solid;
     --tip-border-color: var(--ui-border);
-    --tip-border-radius: var(--radius-md);
-    --tip-font-size: var(--font-size-md);
     --tip-fg: var(--ui-fg);
     --tip-bg: var(--ui-bg);
-    --tip-box-shadow: var(--shadow-sm);
-    --tip-icon-fg: var(--tip-fg);
+
+    row-gap: var(--s2);
+    width: 100%;
+    border-width: 1px;
+    border-style: solid;
+    border-color: var(--tip-border-color);
+    border-radius: var(--radius-md);
+    padding: var(--s3) var(--s4);
+    font-size: var(--font-size-md);
+    color: var(--tip-fg);
+    background: var(--tip-bg);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .j-tip .tip-icon {
+    color: var(--tip-fg);
+    transform: translateY(calc(var(--space, 0.25rem) * 0.5));
+    margin: 0;
   }
 
   .j-tip .tip-icon,
   .j-tip .tip-icon svg {
-    --tip-icon-size: var(--font-size-xl);
+    width: var(--font-size-xl);
+    height: var(--font-size-xl);
   }
 
   .j-tip .tip-title {
-    --tip-title-line-height: var(--line-height-paragraph);
-    --tip-title-font-weight: var(--font-medium);
+    line-height: var(--line-height-paragraph);
+    font-weight: var(--font-medium);
   }
 
   .j-tip .tip-content {
-    --tip-content-gap: var(--s2);
-    --tip-content-line-height: var(--line-height-paragraph);
+    gap: var(--s2);
+    line-height: var(--line-height-paragraph);
   }
 
   .j-tip.is-success {
     --tip-border-color: var(--state-success);
     --tip-bg: var(--state-success-muted);
-    --tip-icon-fg: var(--state-success);
+    --tip-fg: var(--state-success);
   }
 
   .j-tip.is-warning {
     --tip-border-color: var(--state-warning);
     --tip-bg: var(--state-warning-muted);
-    --tip-icon-fg: var(--state-warning);
+    --tip-fg: var(--state-warning);
   }
 
   .j-tip.is-danger {
     --tip-border-color: var(--state-danger);
     --tip-bg: var(--state-danger-muted);
-    --tip-icon-fg: var(--state-danger);
+    --tip-fg: var(--state-danger);
   }
 }

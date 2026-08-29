@@ -10,14 +10,12 @@
 
   .j-editor {
     --editor-font-size: var(--font-size-lg);
-    --editor-line-height: 1.85;
+    --editor-p-line-height: 1.75;
     --editor-word-space: 0.02em;
     --editor-letter-space: 0.01em;
-    --editor-heading-space: 2rem;
-    --editor-block-space: 1.5rem;
-    --editor-list-space: 1.25rem;
+    --editor-block-space: 1.25rem;
+    --editor-list-space: 1rem;
     --editor-space: 0.25rem;
-    --editor-dot-space: 0.125rem;
 
     --editor-heading-fg: var(--tone-heading);
     --editor-caption-fg: var(--tone-caption);
@@ -38,22 +36,40 @@
 
   .j-editor.is-sm {
     --editor-font-size: var(--font-size-md);
-    --editor-line-height: 1.65;
+    --editor-p-line-height: 1.75;
   }
 
   .j-editor.is-lg {
     --editor-font-size: var(--font-size-xl);
-    --editor-line-height: 1.8;
+    --editor-p-line-height: 1.8;
+    --editor-block-space: 1.5rem;
   }
 
   .j-editor.is-xl {
     --editor-font-size: var(--font-size-2xl);
-    --editor-line-height: 1.85;
+    --editor-p-line-height: 1.8;
+    --editor-block-space: 1.5rem;
   }
 
   .j-radius-round .j-editor {
     --radius-sm: 0.75rem;
     --radius-md: 1rem;
     --radius-lg: 1.5rem;
+  }
+
+  .mobile .j-editor h1 {
+    margin-bottom: 2rem;
+  }
+
+  .mobile .j-editor h2,
+  .mobile .j-editor h3,
+  .mobile .j-editor h4,
+  .mobile .j-editor h5,
+  .mobile .j-editor p {
+    --editor-block-space: 1.75rem;
+  }
+
+  .mobile .j-editor li p {
+    margin-block: 0;
   }
 }

@@ -2,14 +2,15 @@
   .j-tooltip {
     --tooltip-fg: var(--ui-bg);
     --tooltip-bg: var(--ui-fg);
-    --tooltip-border-width: 1px;
-    --tooltip-border-style: solid;
     --tooltip-border-color: var(--ui-border-strong);
-    --tooltip-border-radius: var(--radius-md);
-    --tooltip-max-width: 260px;
-    --tooltip-padding: 2px var(--s2);
-    --tooltip-font-size: var(--font-size-md);
-    --tooltip-line-height: var(--line-height);
+
+    background: var(--tooltip-bg);
+    color: var(--tooltip-fg);
+    border-width: 1px;
+    border-style: solid;
+    border-color: var(--tooltip-border-color);
+    border-radius: var(--radius-md);
+    max-width: 260px;
   }
 
   .j-tooltip.is-reverse {
@@ -40,5 +41,11 @@
     --tooltip-fg: var(--state-danger-fg);
     --tooltip-bg: var(--state-danger-text);
     --tooltip-border-color: var(--state-danger-border);
+  }
+
+  .j-tooltip .el-text {
+    padding: 2px var(--s2);
+    font-size: var(--font-size-md);
+    line-height: var(--line-height);
   }
 }

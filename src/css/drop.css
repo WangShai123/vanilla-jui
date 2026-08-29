@@ -6,7 +6,6 @@
     left: 0;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.2s ease;
     z-index: var(--z-drop);
   }
 
@@ -17,15 +16,6 @@
   }
 
   .drop-container {
-    border-width: var(--drop-border-width);
-    border-style: var(--drop-border-style);
-    border-color: var(--drop-border-color);
-    border-radius: var(--drop-border-radius);
-    background: var(--drop-bg);
-    color: var(--drop-fg);
-    box-shadow: var(--drop-box-shadow);
     position: relative;
-    min-width: 64px;
-    min-height: 32px;
   }
 }

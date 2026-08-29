@@ -1,12 +1,7 @@
-/* ============================================
-   Design Tokens - Unified Token System
-   vanilla-jui v2
-   ============================================ */
-
 @layer tokens {
   /* ============================================
-     1. Layout Tokens
-     ============================================ */
+    1. Layout Tokens
+  ============================================ */
 
   :root {
     /* --- Z-Index --- */
@@ -100,8 +95,8 @@
   }
 
   /* ============================================
-     2. Color Tokens - Light Mode
-     ============================================ */
+    2. Color Tokens - Light Mode
+  ============================================ */
 
   :root,
   .light {
@@ -223,6 +218,7 @@
     /* Card */
     --tone-card: rgba(255, 255, 255, 0.8);
     --tone-card-hover: rgba(255, 255, 255, 0.9);
+    --tone-card-active: rgba(0, 0, 0, 0.2);
     --tone-card-border: rgba(0, 0, 0, 0.08);
     --tone-card-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 
@@ -412,6 +408,7 @@
     /* Card */
     --tone-card: rgba(17, 24, 39, 0.82);
     --tone-card-hover: rgba(17, 24, 39, 0.92);
+    --tone-card-active: rgba(255, 255, 255, 0.15);
     --tone-card-border: rgba(148, 163, 184, 0.12);
     --tone-card-shadow: 0 1px 3px rgba(0, 0, 0, 0.28);
 
@@ -1163,13 +1160,13 @@
   }
 
   .j-radius-round {
-    --radius-2xs: 0.375rem;
-    --radius-xs: 0.5rem;
-    --radius-sm: 0.75rem;
-    --radius-md: 1rem;
-    --radius-lg: 999px;
-    --radius-xl: 999px;
-    --radius-2xl: 999px;
+    --radius-2xs: 0.75rem;
+    --radius-xs: 1rem;
+    --radius-sm: 1.25rem;
+    --radius-md: 1.5rem;
+    --radius-lg: 2rem;
+    --radius-xl: 2.5rem;
+    --radius-2xl: 3rem;
   }
 
   /* ============================================
@@ -1246,7 +1243,6 @@
     --font-size-xl: 1.125rem;
     --font-size-2xl: 1.25rem;
 
-    /* --- Element Heights --- */
     --el-height-3xs: 1rem;
     --el-height-2xs: 1.25rem;
     --el-height-xs: 1.5rem;
@@ -1275,5 +1271,44 @@
     --el-height-xl: 2.75rem;
     --el-height-2xl: 3rem;
     --el-height-3xl: 3.25rem;
+  }
+
+  .mobile,
+  .mobile.j-font-sm {
+    --font-size-xs: 0.75rem;
+    --font-size-sm: 0.875rem;
+    --font-size-md: 1rem;
+    --font-size-lg: 1.125rem;
+    --font-size-xl: 1.25rem;
+    --font-size-2xl: 1.5rem;
+
+    --el-height-3xs: 1.75rem;
+    --el-height-2xs: 2rem;
+    --el-height-xs: 2.25rem;
+    --el-height-sm: 2.5rem;
+    --el-height-md: 2.75rem;
+    --el-height-lg: 3rem;
+    --el-height-xl: 3.25rem;
+    --el-height-2xl: 3.5rem;
+    --el-height-3xl: 3.75rem;
+  }
+
+  .mobile.j-font-md {
+    --font-size-xs: 0.875rem;
+    --font-size-sm: 1rem;
+    --font-size-md: 1.125rem;
+    --font-size-lg: 1.25rem;
+    --font-size-xl: 1.5rem;
+    --font-size-2xl: 1.75rem;
+
+    --el-height-3xs: 2rem;
+    --el-height-2xs: 2.25rem;
+    --el-height-xs: 2.5rem;
+    --el-height-sm: 2.75rem;
+    --el-height-md: 3rem;
+    --el-height-lg: 3.25rem;
+    --el-height-xl: 3.5rem;
+    --el-height-2xl: 3.75rem;
+    --el-height-3xl: 4rem;
   }
 }

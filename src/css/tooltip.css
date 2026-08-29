@@ -1,21 +1,13 @@
 @layer comopnents {
   .j-tooltip {
     position: relative;
-    background: var(--tooltip-bg);
-    color: var(--tooltip-fg);
-    border-width: var(--tooltip-border-width);
-    border-style: var(--tooltip-border-style);
-    border-color: var(--tooltip-border-color);
-    border-radius: var(--tooltip-border-radius);
+    width: -webkit-fit-content;
+    width: -moz-fit-content;
     width: fit-content;
-    max-width: var(--tooltip-max-width);
   }
 
   .j-tooltip .el-text {
     word-wrap: break-word;
-    padding: var(--tooltip-padding);
-    font-size: var(--tooltip-font-size);
-    line-height: var(--tooltip-line-height);
     position: relative;
   }
 }

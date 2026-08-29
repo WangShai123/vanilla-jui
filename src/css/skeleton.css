@@ -1,19 +1,23 @@
 @layer components {
   .j-skeleton {
-    --skeleton-background: var(--ui-surface-muted);
-    --skeleton-radius: var(--radius-sm, 4px);
-    --skeleton-duration: 1.5s;
-
     display: block;
     width: 100%;
     min-height: var(--el-height-2xs);
-    border-radius: var(--skeleton-radius);
-    background: var(--skeleton-background);
+    border-radius: var(--radius-sm);
+    background: var(--ui-surface-muted);
     color: transparent;
     pointer-events: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
     user-select: none;
-    animation: animate-pulse var(--skeleton-duration)
-      cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    -webkit-animation: animate-pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    animation: animate-pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  .j-skeleton::-moz-selection {
+    color: transparent;
+    background: transparent;
   }
 
   .j-skeleton::selection {
@@ -66,11 +70,13 @@
 
   .j-skeleton.skeleton-static,
   .j-skeleton[aria-busy='false'] {
+    -webkit-animation: none;
     animation: none;
   }
 
   @media (prefers-reduced-motion: reduce) {
     .j-skeleton {
+      -webkit-animation: none;
       animation: none;
     }
   }

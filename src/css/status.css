@@ -6,6 +6,7 @@
  * - data-action
  * - shape status
  * - drag status
+ * - hidden
  */
 @layer status {
   /* sad mode */
@@ -44,11 +45,15 @@
   }
 
   /* disabled */
-  [disabled],
   :disabled,
   .is-disabled,
   [aria-disabled='true'] {
     cursor: not-allowed;
     user-select: none;
+  }
+
+  [hidden],
+  [aria-hidden='true'] {
+    display: none;
   }
 }

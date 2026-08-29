@@ -1,19 +1,9 @@
 @layer components {
-  .j-pagination {
-    font-size: var(--pagination-font-size);
-  }
-
-  .j-pagination a {
-    text-decoration: var(--pagination-link-decoration);
-    color: var(--pagination-link-fg);
-  }
-
   .j-pagination .pagination {
     list-style: none;
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: var(--pagination-gap);
     margin: 0;
     padding: 0;
   }

@@ -5,19 +5,40 @@
     --badge-height: 1.25rem;
     --badge-font-size: var(--font-size-sm);
     --badge-font-weight: var(--font-medium);
-    --badge-line-height: var(--line-height-self);
     --badge-radius: 500px;
     --badge-border-color: var(--ui-border);
     --badge-fg: var(--ui-fg);
     --badge-bg: var(--ui-bg);
     --badge-box-shadow: none;
+    --badge-gap: 4px;
+
+    gap: var(--badge-gap);
+    padding: var(--badge-padding);
+    min-width: var(--badge-min-width);
+    height: var(--badge-height);
+    font-size: var(--badge-font-size);
+    font-weight: var(--badge-font-weight);
+    border-radius: var(--badge-radius);
+    border: 1px solid var(--badge-border-color);
+    color: var(--badge-fg);
+    background-color: var(--badge-bg);
+    box-shadow: var(--badge-box-shadow);
+  }
+
+  .j-badge svg {
+    width: var(--font-size-sm);
+  }
+
+  .j-badge.is-sm svg {
+    width: var(--font-size-xs);
   }
 
   .j-badge.is-sm {
-    --badge-padding: 0 calc(var(--space) * 0.75);
+    --badge-padding: 0 var(--space);
     --badge-min-width: 1rem;
     --badge-height: 1rem;
-    --badge-font-size: 0.625rem;
+    --badge-font-size: var(--font-size-xs);
+    --badge-gap: 2px;
   }
 
   .j-badge.is-reverse {

@@ -4,6 +4,9 @@
     display: block;
     overflow: hidden;
     touch-action: pan-y;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
     user-select: none;
     width: 100%;
     min-height: var(--swiper-min-height);
@@ -26,6 +29,9 @@
     overflow: hidden;
     color: inherit;
     text-decoration: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
     user-select: none;
     width: 100%;
     min-width: 100%;
@@ -45,23 +51,13 @@
     display: flex;
     justify-content: center;
     align-items: center;
-
-    color: var(--ui-fg-soft);
-    font-size: var(--font-size-md);
     letter-spacing: 1px;
-
-    background-color: var(--tone-wash);
-    background-image: radial-gradient(
-      circle,
-      var(--ui-border) 1px,
-      transparent 1px
-    );
-    background-size: 20px 20px;
   }
 
   .j-swiper .swiper-image {
     position: relative;
     display: block;
+    -o-object-fit: cover;
     object-fit: cover;
     pointer-events: none;
     width: 100%;
@@ -74,16 +70,6 @@
   .j-swiper .swiper-slide-title {
     display: block;
     position: absolute;
-    right: var(--swiper-title-inset);
-    bottom: var(--swiper-title-inset);
-    left: var(--swiper-title-inset);
-    padding: var(--swiper-title-padding);
-    color: var(--swiper-title-color);
-    font-size: var(--swiper-title-font-size);
-    font-weight: var(--swiper-title-font-weight);
-    background: var(--swiper-title-bg);
-    border-radius: var(--swiper-title-border-radius);
-    line-height: var(--swiper-title-line-height);
     text-overflow: ellipsis;
     white-space: nowrap;
     z-index: 1;
@@ -93,43 +79,16 @@
   .j-swiper .swiper-pagination {
     position: absolute;
     display: flex;
-    gap: var(--swiper-pagination-gap);
     align-items: center;
     justify-content: center;
     z-index: 2;
   }
 
-  .j-swiper .swiper-pagination.is-horizontal {
-    right: var(--swiper-pagination-inline);
-    bottom: var(--swiper-pagination-block);
-    left: var(--swiper-pagination-inline);
-  }
-
   .j-swiper .swiper-pagination-indicator {
     display: inline-block;
-    width: var(--swiper-indicator-size);
-    height: var(--swiper-indicator-size);
-    padding: 0;
     cursor: pointer;
-    background: var(--swiper-indicator-bg);
-    border: 0;
     border-radius: 999px;
     outline: none;
-    transition:
-      width var(--duration-fast, 160ms) ease,
-      background-color var(--duration-fast, 160ms) ease,
-      opacity var(--duration-fast, 160ms) ease;
-  }
-
-  .j-swiper .swiper-pagination-indicator:hover,
-  .j-swiper .swiper-pagination-indicator:focus-visible {
-    background: var(--swiper-indicator-hover-bg);
-  }
-
-  .j-swiper .swiper-pagination-indicator.is-active,
-  .j-swiper .swiper-pagination-indicator.active {
-    width: var(--swiper-indicator-active-width);
-    background: var(--swiper-indicator-active-bg);
   }
 
   .j-swiper .swiper-navigation {
@@ -139,37 +98,11 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: var(--swiper-navigation-size);
-    height: var(--swiper-navigation-size);
-    padding: 0;
-    color: var(--swiper-navigation-fg);
     cursor: pointer;
-    background: var(--swiper-navigation-bg);
-    border: 0;
     border-radius: 999px;
-    transform: translateY(-50%);
-    transition:
-      background-color var(--duration-fast, 160ms) ease,
-      opacity var(--duration-fast, 160ms) ease;
-  }
-
-  .j-swiper .swiper-navigation:hover,
-  .j-swiper .swiper-navigation:focus-visible {
-    background: var(--swiper-navigation-hover-bg);
-    outline: none;
-  }
-
-  .j-swiper .swiper-navigation.is-prev {
-    left: var(--swiper-navigation-offset);
-  }
-
-  .j-swiper .swiper-navigation.is-next {
-    right: var(--swiper-navigation-offset);
   }
 
   .j-swiper .swiper-navigation svg {
-    width: var(--swiper-navigation-icon-size);
-    height: var(--swiper-navigation-icon-size);
     pointer-events: none;
   }
 

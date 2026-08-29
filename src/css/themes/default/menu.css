@@ -19,14 +19,11 @@
     --menu-item-error-tip-font-size: var(--font-size-sm);
     --menu-item-error-tip-padding: 0 var(--space);
 
-    --menu-link-font-weight: var(--font-medium);
     --menu-link-gap: var(--space);
     --menu-link-current-fg: var(--tone-solid);
 
     --sub-menu-bg: var(--ui-surface-subtle);
     --sub-menu-border-width: 1px;
-    --sub-menu-border-style: solid;
-    --sub-menu-border-color: var(--ui-border);
     --sub-menu-border-radius: var(--radius-md);
     --sub-menu-min-width: 120px;
     --sub-menu-max-width: 240px;

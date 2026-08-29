@@ -3,16 +3,9 @@
     display: inline-flex;
     justify-content: center;
     align-items: center;
-    padding: var(--badge-padding);
-    min-width: var(--badge-min-width);
-    height: var(--badge-height);
-    line-height: var(--badge-line-height);
-    font-size: var(--badge-font-size);
-    font-weight: var(--badge-font-weight);
-    border-radius: var(--badge-radius);
-    border: 1px solid var(--badge-border-color);
-    color: var(--badge-fg);
-    background-color: var(--badge-bg);
-    box-shadow: var(--badge-box-shadow);
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
   }
 }

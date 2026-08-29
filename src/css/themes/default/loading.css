@@ -1,6 +1,5 @@
 @layer themes {
   .j-loader {
-    --loader-position: absolute;
     --loader-size: var(--font-size-md);
     --loader-width: 1.5px;
     --loader-style: solid;

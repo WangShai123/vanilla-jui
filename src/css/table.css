@@ -1,41 +1,12 @@
 @layer components {
-  .j-table-container {
-    max-width: 100%;
-    overflow-y: hidden;
-    overflow-x: auto;
-    scrollbar-width: thin;
-    scrollbar-color: var(--ui-border) transparent;
-  }
-
   table {
-    /* width: var(--table-width); */
     text-indent: 0;
     border-color: inherit;
     border-collapse: collapse;
-    /* border-spacing: 0; */
-  }
 
-  table td,
-  table th {
-    border-width: var(--table-border-width);
-    border-style: var(--table-border-style);
-    border-color: var(--table-border-color);
-    padding: var(--table-cell-padding);
-    text-align: var(--table-cell-text-align);
-    vertical-align: var(--table-cell-vertical-align);
-  }
-
-  table thead th {
-    background: var(--table-striped-bg);
-    font-weight: var(--table-header-font-weight);
-    white-space: nowrap;
-  }
-
-  table tbody td {
-    min-width: var(--table-cell-min-width);
-  }
-
-  table tbody tr:hover {
-    background: var(--table-hover-bg);
+    overflow-x: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--ui-border) transparent;
+    display: block;
   }
 }

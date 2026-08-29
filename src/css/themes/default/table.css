@@ -1,17 +1,25 @@
 @layer themes {
-  table {
-    /* --table-width: 100%; */
-    --table-header-font-weight: 600;
-    /* --table-border-width: 0 0 1px; */
-    --table-border-width: 1px;
-    --table-border-style: solid;
-    --table-border-color: var(--ui-border-subtle);
-    --table-cell-min-width: 100px;
-    --table-cell-padding: 0.5rem 1rem;
-    --table-cell-text-align: left;
-    --table-cell-vertical-align: top;
-    /* --table-link-fg: var(--tone-solid); */
-    --table-striped-bg: var(--ui-bg-subtle);
-    --table-hover-bg: var(--ui-bg-subtle);
+  table td,
+  table th {
+    border-width: 1px;
+    border-style: solid;
+    border-color: var(--ui-border-subtle);
+    padding: 0.5rem 1rem;
+    text-align: left;
+    vertical-align: top;
+  }
+
+  table thead th {
+    background: var(--ui-bg-subtle);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  table tbody td {
+    min-width: 100px;
+  }
+
+  table tbody tr:hover {
+    background: var(--ui-bg-subtle);
   }
 }

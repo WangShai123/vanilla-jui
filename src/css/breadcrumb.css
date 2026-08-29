@@ -1,14 +1,10 @@
 @layer components {
   .j-breadcrumb {
-    font-size: var(--breadcrumb-font-size);
-    color: var(--breadcrumb-fg);
     white-space: nowrap;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
     user-select: none;
-  }
-
-  .j-breadcrumb svg {
-    width: var(--breadcrumb-icon-size);
-    height: var(--breadcrumb-icon-size);
   }
 
   .j-breadcrumb > ol,
@@ -29,11 +25,11 @@
   }
 
   .j-breadcrumb li:first-child a {
+    -webkit-padding-start: 0;
     padding-inline-start: 0;
   }
 
   .j-breadcrumb li + li::before {
-    color: var(--breadcrumb-divider-fg);
     content: '/';
   }
 
@@ -53,9 +49,6 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: var(--space);
-    color: var(--breadcrumb-link-fg);
-    padding: var(--breadcrumb-item-padding);
     text-decoration: none;
   }
 

@@ -1,13 +1,50 @@
 @layer themes {
   .j-offcanvas-overlay {
-    --offcanvas-overlay-bg: var(--ui-overlay-muted);
+    background: var(--ui-overlay-muted);
   }
 
   .j-offcanvas {
-    --offcanvas-bg: var(--ui-bg);
-    --offcanvas-box-shadow: var(--shadow-md);
     --offcanvas-border: 1px solid var(--ui-border-subtle);
     --offcanvas-block-width: 300px;
     --offcanvas-inline-height: 200px;
+
+    background: var(--ui-bg);
+    box-shadow: var(--shadow-md);
+  }
+
+  .j-offcanvas[data-direction='left'] {
+    top: 0;
+    left: 0;
+    width: var(--offcanvas-block-width);
+    height: 100vh;
+    border-right: var(--offcanvas-border);
+  }
+
+  .j-offcanvas[data-direction='right'] {
+    top: 0;
+    right: 0;
+    width: var(--offcanvas-block-width);
+    height: 100vh;
+    border-left: var(--offcanvas-border);
+  }
+
+  .j-offcanvas[data-direction='top'] {
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: var(--offcanvas-inline-height);
+    border-bottom: var(--offcanvas-border);
+  }
+
+  .j-offcanvas[data-direction='bottom'] {
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: var(--offcanvas-inline-height);
+    border-top: var(--offcanvas-border);
+  }
+
+  .j-font-md .j-offcanvas {
+    --offcanvas-block-width: 316px;
   }
 }

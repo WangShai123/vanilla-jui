@@ -20,6 +20,8 @@
   }
 
   body {
+    -moz-tab-size: 4;
+    -o-tab-size: 4;
     tab-size: 4;
     scroll-behavior: smooth;
     font-family:
@@ -42,6 +44,7 @@
   }
 
   img {
+    -o-object-fit: cover;
     object-fit: cover;
   }
 
@@ -54,6 +57,8 @@
   }
 
   .is-reset:where(button) {
+    -webkit-appearance: none;
+    -moz-appearance: none;
     appearance: none;
     cursor: default;
     background-color: transparent;
@@ -102,12 +107,20 @@
       linear-gradient(to right, var(--ui-surface-subtle) 1px, transparent 1px),
       linear-gradient(to bottom, var(--ui-surface-subtle) 1px, transparent 1px);
     background-size: 40px 56px;
+    -webkit-mask-image: radial-gradient(
+      ellipse 25% 10% at 50% 0%,
+      #000 60%,
+      transparent 300%
+    );
     mask-image: radial-gradient(
       ellipse 25% 10% at 50% 0%,
       #000 60%,
       transparent 300%
     );
     pointer-events: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
     user-select: none;
   }
 
@@ -156,6 +169,8 @@
 
   .block-center {
     margin-inline: auto;
+    height: -webkit-fit-content;
+    height: -moz-fit-content;
     height: fit-content;
   }
 
@@ -787,70 +802,87 @@
 
   /* columns */
   .columns-auto {
+    -moz-columns: auto;
     columns: auto;
   }
 
   .columns-6xs {
+    -moz-columns: var(--columns-6xs);
     columns: var(--columns-6xs);
   }
 
   .columns-5xs {
+    -moz-columns: var(--columns-5xs);
     columns: var(--columns-5xs);
   }
 
   .columns-4xs {
+    -moz-columns: var(--columns-4xs);
     columns: var(--columns-4xs);
   }
 
   .columns-3xs {
+    -moz-columns: var(--columns-3xs);
     columns: var(--columns-3xs);
   }
 
   .columns-2xs {
+    -moz-columns: var(--columns-2xs);
     columns: var(--columns-2xs);
   }
 
   .columns-xs {
+    -moz-columns: var(--columns-xs);
     columns: var(--columns-xs);
   }
 
   .columns-sm {
+    -moz-columns: var(--columns-sm);
     columns: var(--columns-sm);
   }
 
   .columns-md {
+    -moz-columns: var(--columns-md);
     columns: var(--columns-md);
   }
 
   .columns-lg {
+    -moz-columns: var(--columns-lg);
     columns: var(--columns-lg);
   }
 
   .columns-xl {
+    -moz-columns: var(--columns-xl);
     columns: var(--columns-xl);
   }
 
   .columns-2xl {
+    -moz-columns: var(--columns-2xl);
     columns: var(--columns-2xl);
   }
 
   .columns-3xl {
+    -moz-columns: var(--columns-3xl);
     columns: var(--columns-3xl);
   }
 
   .columns-4xl {
+    -moz-columns: var(--columns-4xl);
     columns: var(--columns-4xl);
   }
 
   .columns-5xl {
+    -moz-columns: var(--columns-5xl);
     columns: var(--columns-5xl);
   }
 
   .columns-6xl {
+    -moz-columns: var(--columns-6xl);
     columns: var(--columns-6xl);
   }
 
   .columns-7xl {
+    -moz-columns: var(--columns-7xl);
     columns: var(--columns-7xl);
   }
 

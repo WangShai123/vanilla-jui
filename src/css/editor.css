@@ -19,7 +19,7 @@
   ============================================ */
   .j-editor {
     font-size: var(--editor-font-size);
-    line-height: var(--editor-line-height);
+    line-height: 1.5;
     letter-spacing: var(--editor-letter-space);
     word-spacing: var(--editor-word-space);
     word-break: break-word;
@@ -28,17 +28,17 @@
   }
 
   /* ============================================
-    reset - 重置样式
+    Typography - 段落与标题
   ============================================ */
-  .j-editor p {
-    margin: 0;
-  }
-
-  /* ============================================
-      Typography - 段落与标题
-    ============================================ */
-  .j-editor > p {
-    margin-block: var(--editor-block-space);
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  li,
+  p {
+    overflow-wrap: break-word;
   }
 
   .j-editor h1,
@@ -47,51 +47,61 @@
   .j-editor h4,
   .j-editor h5,
   .j-editor h6 {
-    margin: var(--editor-heading-space) 0
-      calc(var(--editor-heading-space) * 0.625);
+    outline: none;
     font-weight: 600;
+    position: relative;
     color: var(--editor-heading-fg);
-    letter-spacing: -0.02em;
   }
 
   .j-editor h1 {
     font-size: 2em;
-    letter-spacing: -0.03em;
-    margin-top: 0;
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+    margin-block: 0;
   }
 
   .j-editor h2 {
-    font-size: 1.75em;
-    padding-bottom: 2px;
-    border-bottom: 1px solid var(--editor-border-subtle);
+    font-size: 1.5em;
+    letter-spacing: -0.02em;
+    padding-top: 1.5rem;
+    margin-top: 3rem;
+    margin-bottom: var(--editor-block-space);
+    line-height: 1.33333;
+    border-top: 1px solid var(--editor-border-subtle);
   }
 
   .j-editor h3 {
-    font-size: 1.5em;
+    font-size: 1.25em;
+    letter-spacing: -0.01em;
+    margin-top: 2rem;
+    margin-bottom: var(--editor-block-space);
+    line-height: 1.4;
   }
 
   .j-editor h4 {
-    font-size: 1.25em;
+    font-size: 1.125em;
+    letter-spacing: -0.01em;
+    margin-top: 1.75rem;
+    margin-bottom: var(--editor-block-space);
+    line-height: 1.33333;
   }
 
   .j-editor h5,
   .j-editor h6 {
     font-size: 1em;
+    margin-top: 1.5rem;
+    margin-bottom: var(--editor-block-space);
+    line-height: 1.5;
   }
 
-  /* 标题后的段落减少间距 */
-  /* .j-editor h1+p,
-  .j-editor h2+p,
-  .j-editor h3+p,
-  .j-editor h4+p,
-  .j-editor h5+p,
-  .j-editor h6+p {
-    margin-top: calc(var(--editor-block-space) * -0.5);
-  } */
+  .j-editor p {
+    margin-block: var(--editor-block-space);
+    line-height: var(--editor-p-line-height);
+  }
 
   /* ============================================
-      Inline Elements - 内联元素
-    ============================================ */
+    Inline Elements - 内联元素
+  ============================================ */
   .j-editor strong,
   .j-editor b {
     font-weight: 600;
@@ -106,6 +116,7 @@
   .j-editor u {
     text-decoration: underline;
     text-decoration-thickness: 4px;
+    -webkit-text-decoration-color: var(--editor-ring);
     text-decoration-color: var(--editor-ring);
     text-underline-offset: 0.2em;
   }
@@ -139,7 +150,9 @@
   }
 
   .j-editor abbr[title] {
+    -webkit-text-decoration: underline dotted;
     text-decoration: underline dotted;
+    -webkit-text-decoration-color: var(--tone-muted);
     text-decoration-color: var(--tone-muted);
     text-underline-offset: 0.2em;
     cursor: help;
@@ -160,21 +173,30 @@
   }
 
   /* ============================================
-      Links - 链接
-    ============================================ */
+    Links - 链接
+  ============================================ */
   .j-editor a {
     color: var(--editor-link);
     text-decoration: none;
+    -webkit-text-decoration-color: transparent;
     text-decoration-color: transparent;
     text-underline-offset: 0.15em;
     transition:
       color 0.15s,
+      -webkit-text-decoration-color 0.15s;
+    transition:
+      color 0.15s,
       text-decoration-color 0.15s;
+    transition:
+      color 0.15s,
+      text-decoration-color 0.15s,
+      -webkit-text-decoration-color 0.15s;
   }
 
   .j-editor a:hover {
     color: var(--editor-link-hover);
     text-decoration: underline;
+    -webkit-text-decoration-color: var(--editor-link-hover);
     text-decoration-color: var(--editor-link-hover);
   }
 
@@ -187,8 +209,8 @@
   }
 
   /* ============================================
-      Lists - 列表
-    ============================================ */
+    Lists - 列表
+  ============================================ */
   .j-editor ul,
   .j-editor ol {
     margin: 0 0 var(--editor-list-space);
@@ -197,7 +219,7 @@
 
   .j-editor ul li,
   .j-editor ol li {
-    margin-bottom: var(--editor-space);
+    margin-bottom: 0.4em;
     padding-left: 0.25em;
   }
 
@@ -251,7 +273,7 @@
   .j-editor dt {
     font-weight: 600;
     margin-top: 0.75rem;
-    margin-bottom: var(--editor-dot-space);
+    margin-bottom: var(--editor-space);
     color: var(--editor-heading-fg);
   }
 
@@ -265,11 +287,9 @@
     color: var(--tone-body);
   }
 
-  /* 任务列表 */
-
   /* ============================================
-      Blockquote - 引用
-    ============================================ */
+    Blockquote - 引用
+  ============================================ */
   .j-editor blockquote {
     margin: var(--editor-block-space) 0;
     margin-left: 0;
@@ -282,11 +302,16 @@
     font-style: italic;
   }
 
-  .j-editor blockquote p {
+  /* .j-editor blockquote p {
+    margin-block: 0;
+  } */
+
+  .j-editor blockquote > * {
     margin-block: 0;
   }
 
-  .j-editor blockquote p + p {
+  /* .j-editor blockquote p+p, */
+  .j-editor blockquote > * + * {
     margin-top: 0.5rem;
   }
 
@@ -303,15 +328,14 @@
   }
 
   /* ============================================
-      Code - 代码
-    ============================================ */
+    Code - 代码
+  ============================================ */
   code {
+    -webkit-box-decoration-break: clone;
     box-decoration-break: clone;
   }
 
   .j-editor code:not([class*='language-']) {
-    /* font-family:
-      'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace; */
     font-family: Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
     font-size: 0.875em;
     border: 1px solid var(--editor-border-subtle);
@@ -338,6 +362,8 @@
     background: var(--editor-code-bg);
     font-size: 0.875em;
     line-height: 1.6;
+    -moz-tab-size: 2;
+    -o-tab-size: 2;
     tab-size: 2;
   }
 
@@ -389,6 +415,8 @@
   }
 
   .code-block .code-header select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
     appearance: none;
     background: transparent;
     border: none;
@@ -529,8 +557,8 @@
   }
 
   /* ============================================
-       Media - 媒体
-       ============================================ */
+    Media - 媒体
+  ============================================ */
 
   .j-editor img {
     max-width: 100%;
@@ -580,18 +608,6 @@
   }
 
   /* ============================================
-    Table - 表格
-  ============================================ */
-
-  .j-editor table {
-    margin-block: var(--editor-block-space);
-    overflow-x: auto;
-    scrollbar-width: thin;
-    scrollbar-color: var(--ui-border) transparent;
-    display: block;
-  }
-
-  /* ============================================
     Horizontal Rule - 分割线
   ============================================ */
 
@@ -603,8 +619,8 @@
   }
 
   /* ============================================
-       Details / Summary - 折叠
-       ============================================ */
+    Details / Summary - 折叠
+  ============================================ */
 
   .j-editor details {
     margin: var(--editor-block-space) 0;
@@ -651,8 +667,8 @@
   }
 
   /* ============================================
-       Progress / Meter
-       ============================================ */
+    Progress / Meter
+  ============================================ */
 
   .j-editor progress {
     max-width: 100%;
@@ -692,7 +708,8 @@
     margin-bottom: 0;
   }
 
+  .j-editor table,
   .j-editor .block {
-    margin: var(--editor-block-space) 0;
+    margin-block: var(--editor-block-space);
   }
 }

@@ -2,7 +2,6 @@
   .j-flow {
     --flow-gap: var(--s2);
     --flow-step-size: 28px;
-    --flow-border: 1px solid var(--ui-border-subtle);
   }
 
   .j-flow,
@@ -44,8 +43,8 @@
     background: var(--ui-surface-muted);
     border-radius: 999px;
     display: inline-flex;
-    height: var(--flow-step-size);
     justify-content: center;
+    height: var(--flow-step-size);
     min-width: var(--flow-step-size);
   }
 
@@ -64,7 +63,7 @@
   }
 
   .j-flow .flow-footer {
-    border-top: var(--flow-border);
+    border-top: 1px solid var(--ui-border-subtle);
     display: flex;
     gap: var(--space);
     justify-content: flex-end;

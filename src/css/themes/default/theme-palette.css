@@ -1,12 +1,37 @@
 @layer themes {
   .j-theme-palette {
-    --palette-padding: 1rem 1rem 2rem;
-    --palette-container-gap: var(--s4);
-    --palette-item-gap: var(--s2);
-    --palette-item-title-font-size: var(--font-size-md);
-    --palette-item-title-font-weight: var(--font-bold);
-    --palette-items-columns: repeat(3, 1fr);
-    --palette-items-gap: var(--space);
-    --palette-items-icon-size: var(--font-size-sm);
+    padding-inline: var(--s4);
+    padding-block: var(--s4) var(--s8);
+  }
+
+  .j-theme-palette .palette-container {
+    gap: var(--s4);
+  }
+
+  .j-theme-palette .palette-item {
+    gap: var(--s2);
+  }
+
+  .j-theme-palette .item-title {
+    font-size: var(--font-size-md);
+    font-weight: var(--font-bold);
+  }
+
+  .j-theme-palette .items {
+    gap: var(--space);
+  }
+
+  .j-theme-palette [data-theme-group='theme'] .j-button {
+    justify-content: flex-start;
+    padding-inline: var(--s2);
+  }
+
+  .j-theme-palette .j-button .item-hex {
+    width: var(--font-size-sm);
+    height: var(--font-size-sm);
+  }
+
+  .mobile .j-theme-palette {
+    padding-block: var(--s4) 4rem;
   }
 }

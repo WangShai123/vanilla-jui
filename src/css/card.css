@@ -1,13 +1,15 @@
 @layer components {
   .j-card {
+    --card-border-radius: var(--radius-md);
+
     display: flex;
     flex-direction: column;
     position: relative;
     max-width: 100%;
-    color: var(--card-color, var(--ui-fg));
-    background-color: var(--card-background, var(--ui-bg));
-    border: 1px solid var(--card-border-color, var(--ui-border));
-    border-radius: var(--card-border-radius, var(--radius-md));
+    color: var(--ui-fg);
+    background-color: var(--ui-bg);
+    border: 1px solid var(--ui-border);
+    border-radius: var(--card-border-radius);
     box-shadow: var(--shadow-sm);
   }
 
@@ -19,17 +21,17 @@
   .j-card .card-header {
     display: flex;
     align-items: center;
-    background-color: var(--card-header-background, transparent);
+    background-color: transparent;
   }
 
   .j-card .card-header .header-title {
     display: flex;
     align-items: center;
     flex-grow: 1;
-    color: var(--card-header-color, var(--ui-fg));
+    color: var(--ui-fg);
     font-size: var(--font-size-md);
-    font-weight: var(--card-header-weight, var(--font-medium));
-    padding: var(--card-header-padding, var(--s3) var(--s4));
+    font-weight: var(--font-medium);
+    padding: var(--s3) var(--s4);
     margin: 0;
   }
 
@@ -43,7 +45,9 @@
     border: none;
     margin: 0;
     padding: 0;
-    padding: var(--card-header-padding, var(--space) var(--s2));
+    padding: var(--space) var(--s2);
+    -webkit-appearance: none;
+    -moz-appearance: none;
     appearance: none;
     cursor: pointer;
   }
@@ -66,6 +70,7 @@
   .j-card figure img {
     width: 100%;
     height: 100%;
+    -o-object-fit: cover;
     object-fit: cover;
   }
 
@@ -78,36 +83,33 @@
   }
 
   .j-card .card-media:first-child img {
-    border-start-end-radius: var(--card-border-radius, var(--radius-md));
-    border-start-start-radius: var(--card-border-radius, var(--radius-md));
+    border-start-end-radius: var(--card-border-radius);
+    border-start-start-radius: var(--card-border-radius);
   }
 
   .j-card .card-content {
-    background-color: var(--card-content-background);
-    padding: var(--card-content-padding, var(--s4));
-    line-height: var(--line-height-paragraph);
+    padding: var(--s4);
   }
 
   .j-card .card-content:last-child,
   .j-card .card-footer:last-child,
   .j-card .card-header:last-child {
-    border-end-end-radius: var(--card-border-radius, var(--radius-md));
-    border-end-start-radius: var(--card-border-radius, var(--radius-md));
+    border-end-end-radius: var(--card-border-radius);
+    border-end-start-radius: var(--card-border-radius);
   }
 
   .j-card .card-content:first-child,
   .j-card .card-footer:first-child,
   .j-card .card-header:first-child {
-    border-start-end-radius: var(--card-border-radius, var(--radius-md));
-    border-start-start-radius: var(--card-border-radius, var(--radius-md));
+    border-start-end-radius: var(--card-border-radius);
+    border-start-start-radius: var(--card-border-radius);
   }
 
   .j-card .card-footer {
     display: flex;
     align-items: stretch;
-    background-color: var(--card-footer-background);
     overflow: hidden;
-    gap: calc(var(--space)*2);
+    gap: var(--s2);
   }
 
   /* vertical */
@@ -119,11 +121,11 @@
     flex-direction: column;
     align-items: flex-start;
     gap: var(--s2);
-    padding: var(--card-header-padding, var(--s4) var(--s4) 0);
+    padding: var(--s4) var(--s4) 0;
   }
 
   .j-card.is-vertical .card-header .header-title {
-    font-size: var(--vertical-card-title-font-size, var(--font-size-lg));
+    font-size: var(--font-size-lg);
   }
 
   .j-card.is-vertical .card-header .header-description {
@@ -138,7 +140,7 @@
 
   .j-card .card-footer {
     border-top: none;
-    padding: var(--vertical-card-footer-padding, var(--s4));
+    padding: var(--s4);
   }
 
   .j-card .card-content + .card-footer {
