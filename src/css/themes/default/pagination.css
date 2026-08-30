@@ -10,6 +10,6 @@
   }
 
   .j-pagination .pagination {
-    gap: var(--space);
+    gap: 2px;
   }
 }

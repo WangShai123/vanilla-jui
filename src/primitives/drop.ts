@@ -128,7 +128,7 @@ const DROP_PROPS_SCHEMA = {
     ],
   },
   offset: {
-    default: 10,
+    default: 0,
     type: 'number',
     min: 0,
   },

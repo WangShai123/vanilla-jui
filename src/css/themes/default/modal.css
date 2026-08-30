@@ -28,6 +28,10 @@
     font-weight: var(--font-medium);
   }
 
+  .j-modal .modal-header .is-icon svg {
+    width: var(--font-size-lg);
+  }
+
   .j-modal .modal-body {
     padding: var(--modal-body-padding);
     min-height: 32px;

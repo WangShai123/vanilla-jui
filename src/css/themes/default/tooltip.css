@@ -11,6 +11,7 @@
     border-color: var(--tooltip-border-color);
     border-radius: var(--radius-md);
     max-width: 260px;
+    padding: 2px 4px;
   }
 
   .j-tooltip.is-reverse {
@@ -47,5 +48,12 @@
     padding: 2px var(--s2);
     font-size: var(--font-size-md);
     line-height: var(--line-height);
+  }
+
+  .drop-container:has(.j-tooltip) {
+    border: unset;
+    /* border-radius: unset; */
+    background: unset;
+    box-shadow: unset;
   }
 }

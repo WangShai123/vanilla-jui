@@ -11,6 +11,7 @@
 @layer status {
   /* sad mode */
   .is-sad {
+    -webkit-filter: grayscale(100%);
     filter: grayscale(100%);
   }
 
@@ -37,18 +38,24 @@
   /* drag status */
   .dragging {
     cursor: move;
+    cursor: -webkit-grab;
     cursor: grab;
   }
 
   .dragging:active {
+    cursor: -webkit-grabbing;
     cursor: grabbing;
   }
 
   /* disabled */
   :disabled,
+  [disabled],
   .is-disabled,
   [aria-disabled='true'] {
     cursor: not-allowed;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
     user-select: none;
   }
 

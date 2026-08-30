@@ -134,7 +134,7 @@ const TOOLTIP_OPTIONS_SCHEMA = {
       'right',
     ],
   },
-  offset: { default: 8, type: 'number' },
+  offset: { default: 0, type: 'number' },
   message: {
     default: '',
     type: 'string',

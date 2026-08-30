@@ -631,7 +631,6 @@ export function createAccordion(props: AccordionProps): AccordionInstance {
           jsx('span', {
             className: resolvedProps.className.arrow,
             'data-accordion-arrow': name,
-            'aria-hidden': 'true',
             children: icon('arrow-down'),
           }),
         ],

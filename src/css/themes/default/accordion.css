@@ -1,6 +1,5 @@
 @layer themes {
   .j-accordion {
-    --accordion-font-weight: var(--font-medium);
     --accordion-border: 1px solid var(--ui-border-subtle);
     --accordion-icon-transform: rotate(0deg);
   }
@@ -8,9 +7,8 @@
   .j-accordion .accordion-header {
     padding: var(--s2) var(--s3);
     margin: 0;
-    font-weight: var(--accordion-font-weight);
+    font-weight: var(--font-medium);
     font-size: var(--font-size-md);
-
     border-bottom: var(--accordion-border);
   }
 
@@ -34,12 +32,12 @@
     border-right: 0;
   }
 
-  .j-accordion .accordion-header[aria-expanded='true'] .header-title {
-    --accordion-font-weight: var(--font-bold);
-  }
-
   .j-accordion .accordion-header .header-arrow {
     transform: var(--accordion-icon-transform);
+  }
+
+  .j-accordion .accordion-header .header-arrow svg {
+    width: var(--font-size-lg);
   }
 
   .j-accordion[data-direction='horizontal'] .accordion-header .header-arrow {

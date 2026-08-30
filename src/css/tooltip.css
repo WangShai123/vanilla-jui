@@ -4,6 +4,10 @@
     width: -webkit-fit-content;
     width: -moz-fit-content;
     width: fit-content;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
   }
 
   .j-tooltip .el-text {

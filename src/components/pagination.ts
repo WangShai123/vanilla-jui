@@ -103,8 +103,8 @@ const DEFAULT_CLASS_NAMES: PaginationClassNames = {
   root: 'j-pagination',
   list: 'pagination',
   item: 'item',
-  button: 'j-button is-default is-icon',
-  currentBtn: 'j-button is-ghost is-icon is-active',
+  button: 'j-button is-ghost is-icon',
+  currentBtn: 'j-button is-outline is-icon is-active',
   moreBtn: 'j-button is-ghost is-icon',
   loading: 'animate-spin',
 };
