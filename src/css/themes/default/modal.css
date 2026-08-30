@@ -59,4 +59,8 @@
   .j-modal.is-fullscreen .modal-footer {
     --modal-footer-padding: var(--s4);
   }
+
+  .j-popup-layout:has(.is-fullscreen) {
+    padding: 0;
+  }
 }
