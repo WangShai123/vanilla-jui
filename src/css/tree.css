@@ -1,49 +1,51 @@
-.j-tree-list {
-  display: grid;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
+@layer components {
+  .j-tree-list {
+    display: grid;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
 
-.j-tree-list[hidden] {
-  display: none;
-}
+  .j-tree-list[hidden] {
+    display: none;
+  }
 
-.j-tree-list .j-tree-list {
-  position: relative;
-}
+  .j-tree-list .j-tree-list {
+    position: relative;
+  }
 
-.j-tree-list .j-tree-list::before {
-  position: absolute;
-  content: '';
-}
+  .j-tree-list .j-tree-list::before {
+    position: absolute;
+    content: '';
+  }
 
-.j-tree-item {
-  position: relative;
-}
+  .j-tree-item {
+    position: relative;
+  }
 
-.j-tree-list .j-tree-list > .j-tree-item::before {
-  position: absolute;
-  content: '';
-}
+  .j-tree-list .j-tree-list > .j-tree-item::before {
+    position: absolute;
+    content: '';
+  }
 
-.j-tree-node {
-  display: flex;
-  align-items: center;
-}
+  .j-tree-node {
+    display: flex;
+    align-items: center;
+  }
 
-.j-tree-node[role='button'] {
-  cursor: pointer;
-}
+  .j-tree-node[role='button'] {
+    cursor: pointer;
+  }
 
-.j-tree-icon {
-  display: inline-flex;
-  flex: 0 0 auto;
-  align-items: center;
-  justify-content: center;
-}
+  .j-tree-icon {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+  }
 
-.j-tree-label {
-  min-width: 0;
-  overflow-wrap: anywhere;
+  .j-tree-label {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
 }
