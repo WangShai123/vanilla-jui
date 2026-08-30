@@ -72,8 +72,8 @@
     padding: var(--s2) 0;
     background: var(--sub-menu-bg);
     border-width: var(--sub-menu-border-width);
-    border-style: var(--sub-menu-border-style);
-    border-color: var(--sub-menu-border-color);
+    border-style: solid;
+    border-color: var(--ui-border-subtle);
     border-radius: var(--menu-item-border-radius);
     min-width: 120px;
     max-width: 240px;
@@ -395,6 +395,11 @@
     padding-block: 0;
   }
 
+  .j-menu[data-menu-type='mobile'] .menu .menu-item a:hover,
+  .j-menu[data-menu-type='mobile']
+    .menu
+    .menu-item.menu-item-has-children:hover
+    > a,
   .j-menu[data-menu-type='mobile'] .menu .sub-menu .menu-item:hover a {
     background: inherit;
     color: inherit;
