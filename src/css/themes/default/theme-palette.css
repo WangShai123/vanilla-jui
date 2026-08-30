@@ -34,4 +34,8 @@
   .mobile .j-theme-palette {
     padding-block: var(--s4) 4rem;
   }
+
+  .mobile .j-theme-palette [data-theme-group='theme'] .j-button {
+    padding-inline: 6px;
+  }
 }

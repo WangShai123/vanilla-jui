@@ -80,6 +80,11 @@
     box-shadow: var(--sub-menu-box-shadow);
   }
 
+  .j-menu .menu .menu-item .sub-menu .menu-item a {
+    border-radius: 0;
+    height: auto;
+  }
+
   .j-menu .menu .menu-item .sub-menu .menu-item:hover a {
     background: var(--tone-solid);
     color: var(--tone-fg);
@@ -507,6 +512,7 @@
     left: 50%;
     transform: translateX(-50%) translateY(100%);
     bottom: calc(100% + var(--space));
+    border: 1px solid var(--ui-border-subtle);
     transition:
       transform 0.3s ease-in-out,
       visibility 0.3s ease-in-out,

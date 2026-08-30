@@ -69,10 +69,8 @@
 
   .j-menu .menu .menu-item .sub-menu .menu-item a {
     justify-content: flex-start;
-    border-radius: 0;
     flex-wrap: wrap;
     white-space: normal;
-    height: auto;
   }
 
   .j-menu .menu .menu-item.menu-item-has-children:hover .sub-menu {
