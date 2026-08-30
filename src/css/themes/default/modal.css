@@ -48,6 +48,10 @@
     border-top: 1px solid transparent;
   }
 
+  .j-modal.is-fullscreen {
+    max-height: 100vh;
+  }
+
   .j-modal.is-fullscreen .modal-header {
     --modal-header-padding: var(--s4);
   }
