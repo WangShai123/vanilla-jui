@@ -29,7 +29,7 @@ import {
 import {
   createValidator,
   type ValidatorClassNameConfig,
-} from '../validation/validator.ts';
+} from '../utilities/validator.ts';
 import { createLoading } from '../primitives/loading.ts';
 import { translate } from '../utilities/locale.ts';
 

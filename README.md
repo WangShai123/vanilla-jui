@@ -13,7 +13,7 @@ Vanilla-JUI is web UI infrastructure that decouples reactive UI, design tokens, 
 - **Unified API**: The component API is simple and consistent, requiring no memorization — updating state data immediately updates the view and interaction.
 - **100% custom styling**: Supports discarding the built-in styles and using the className mechanism with CSS tools such as Tailwind to fully customize styles.
 - **Multi-dimensional themes**: A multi-dimensional theme CSS architecture based on design tokens and root-node state makes personalized theme modes easy to implement.
-- **Common utilities**: Includes common utilities such as ID, Events, Timer, and DOM syntax sugar.
+- **Common utilities**: Includes common utilities such as ID, Events, Timer, Form Validator, Image Compression and DOM syntax sugar.
 
 ## Installation And Usage
 

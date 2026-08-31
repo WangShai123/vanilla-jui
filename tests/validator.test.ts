@@ -9,7 +9,7 @@ import {
   vi,
 } from 'vite-plus/test';
 
-import { createValidator } from '../src/validation/validator.ts';
+import { createValidator } from '../src/utilities/validator.ts';
 
 let validator: ReturnType<typeof createValidator> | null = null;
 

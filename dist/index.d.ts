@@ -325,6 +325,128 @@ interface KeyedElementRefs<TKey, TElement extends Element> {
 }
 declare function createKeyedElementRefs<TKey, TElement extends Element>(): KeyedElementRefs<TKey, TElement>;
 //#endregion
+//#region src/utilities/validator.d.ts
+type ValidatorElement = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
+type ValidatorMessageMap = Record<string, Partial<Record<string, string>>>;
+type ValidatorCustomResult = boolean | string;
+type ValidatorCustomRule = (element: ValidatorElement, validator: ValidatorInstance) => ValidatorCustomResult;
+interface ValidatorRule extends Record<string, unknown> {
+  required?: boolean;
+  minLength?: number;
+  maxLength?: number;
+  equalTo?: string;
+  email?: boolean;
+  checked?: boolean;
+  selected?: boolean;
+  multiple?: boolean;
+  min?: number;
+  max?: number;
+  noSpace?: boolean;
+  noChinese?: boolean;
+  noSpecial?: boolean;
+  pattern?: string | RegExp;
+  file?: boolean;
+  minSize?: number;
+  maxSize?: number;
+  accept?: string;
+  validate?: ValidatorCustomRule;
+}
+interface ValidatorProps extends Record<string, unknown> {
+  rules?: Record<string, ValidatorRule>;
+  messages?: ValidatorMessageMap;
+  vanilla?: boolean;
+  className?: ValidatorClassNameConfig;
+  onSubmit?: ((validator: ValidatorInstance) => void) | null;
+}
+interface ValidatorClassNames {
+  help: string;
+}
+type ValidatorClassNameConfig = Partial<ValidatorClassNames>;
+interface ResolvedValidatorProps extends Record<string, unknown> {
+  rules: Record<string, ValidatorRule>;
+  messages: ValidatorMessageMap;
+  vanilla: boolean;
+  className: ValidatorClassNames;
+  onSubmit: ((validator: ValidatorInstance) => void) | null;
+}
+interface ValidatorRuntime {
+  valid: boolean;
+  error: boolean;
+  message: string;
+  destroyed: boolean;
+}
+interface ResetOptions {
+  native?: boolean;
+}
+interface ValidatorInstance {
+  readonly element: HTMLFormElement | null;
+  props: ResolvedValidatorProps | null;
+  runtime: ValidatorRuntime;
+  validate(): boolean;
+  reset(options?: ResetOptions): void;
+  destroy(): void;
+}
+declare function createValidator(element: DOMReference, props?: ValidatorProps, bindEvents?: boolean): ValidatorInstance;
+//#endregion
+//#region src/utilities/compress.d.ts
+interface CompressOptions {
+  /** 压缩质量，范围 0-1，默认 0.7 */
+  quality?: number;
+  /** 目标宽度（像素），不指定则按原图比例缩放 */
+  width?: number;
+  /** 目标高度（像素），不指定则按原图比例缩放 */
+  height?: number;
+}
+interface ImgCompressInstance {
+  /**
+   * 将图片路径转换为压缩后的 base64 数据
+   * @param path - 图片文件路径或 base64 字符串
+   * @param callback - 压缩完成后的回调函数，接收 base64 字符串作为参数
+   */
+  canvasDataURL: (path: string, callback: (base64: string) => void) => void;
+  /**
+   * 压缩文件对象
+   * @param file - 文件对象（Blob 或 File）
+   * @param callback - 压缩完成后的回调函数，接收 base64 字符串作为参数
+   */
+  photoCompress: (file: Blob, callback: (base64: string) => void) => void;
+  /**
+   * 将 base64 字符串转换为 Blob 对象
+   * @param urlData - base64 数据（包含 data:image 前缀）
+   * @returns Blob 对象，如果解析失败则返回 undefined
+   */
+  convertBase64UrlToBlob: (urlData: string) => Blob | undefined;
+}
+/**
+ * 创建图片压缩实例
+ * @param options - 压缩配置选项
+ * @param singleton - 是否返回单例，默认 true
+ * @returns 图片压缩实例
+ * @example
+ * ```ts
+ * // 获取单例实例（默认）
+ * const imgzip = createImgCompress({ quality: 0.8, width: 800 });
+ *
+ * // 创建新实例
+ * const imgzip2 = createImgCompress({ quality: 0.9 }, false);
+ * ```
+ */
+declare function createImgCompress(options?: CompressOptions, singleton?: boolean): ImgCompressInstance;
+/**
+ * 获取单例实例（如果不存在则创建）
+ * @param options - 压缩配置选项（仅在首次创建时生效）
+ * @returns 单例实例
+ * @example
+ * ```ts
+ * const imgzip = getImgCompressInstance({ quality: 0.8 });
+ * ```
+ */
+declare function getImgCompressInstance(options?: CompressOptions): ImgCompressInstance;
+/**
+ * 重置单例实例（用于测试或重新配置）
+ */
+declare function resetImgCompressInstance(): void;
+//#endregion
 //#region src/core/scheduler.d.ts
 interface ScheduledTask {
   schedule: () => void;
@@ -771,69 +893,6 @@ interface StickyInstance {
   destroy(): void;
 }
 declare function createSticky(props?: StickyProps): StickyInstance;
-//#endregion
-//#region src/validation/validator.d.ts
-type ValidatorElement = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
-type ValidatorMessageMap = Record<string, Partial<Record<string, string>>>;
-type ValidatorCustomResult = boolean | string;
-type ValidatorCustomRule = (element: ValidatorElement, validator: ValidatorInstance) => ValidatorCustomResult;
-interface ValidatorRule extends Record<string, unknown> {
-  required?: boolean;
-  minLength?: number;
-  maxLength?: number;
-  equalTo?: string;
-  email?: boolean;
-  checked?: boolean;
-  selected?: boolean;
-  multiple?: boolean;
-  min?: number;
-  max?: number;
-  noSpace?: boolean;
-  noChinese?: boolean;
-  noSpecial?: boolean;
-  pattern?: string | RegExp;
-  file?: boolean;
-  minSize?: number;
-  maxSize?: number;
-  accept?: string;
-  validate?: ValidatorCustomRule;
-}
-interface ValidatorProps extends Record<string, unknown> {
-  rules?: Record<string, ValidatorRule>;
-  messages?: ValidatorMessageMap;
-  vanilla?: boolean;
-  className?: ValidatorClassNameConfig;
-  onSubmit?: ((validator: ValidatorInstance) => void) | null;
-}
-interface ValidatorClassNames {
-  help: string;
-}
-type ValidatorClassNameConfig = Partial<ValidatorClassNames>;
-interface ResolvedValidatorProps extends Record<string, unknown> {
-  rules: Record<string, ValidatorRule>;
-  messages: ValidatorMessageMap;
-  vanilla: boolean;
-  className: ValidatorClassNames;
-  onSubmit: ((validator: ValidatorInstance) => void) | null;
-}
-interface ValidatorRuntime {
-  valid: boolean;
-  error: boolean;
-  message: string;
-  destroyed: boolean;
-}
-interface ResetOptions {
-  native?: boolean;
-}
-interface ValidatorInstance {
-  readonly element: HTMLFormElement | null;
-  props: ResolvedValidatorProps | null;
-  runtime: ValidatorRuntime;
-  validate(): boolean;
-  reset(options?: ResetOptions): void;
-  destroy(): void;
-}
-declare function createValidator(element: DOMReference, props?: ValidatorProps, bindEvents?: boolean): ValidatorInstance;
 //#endregion
 //#region src/core/component.d.ts
 type ComponentProps = Record<string, unknown>;
@@ -1771,4 +1830,4 @@ interface MenuState extends Record<string, unknown> {
 type Menu = FunctionalComponent<ResolvedMenuProps, MenuState, HTMLElement>;
 declare function createMenu(input?: MenuProps): Menu;
 //#endregion
-export { ClassNameToken, CleanupFunction, CollapseMotionController, CollapseTransitionDefinition, ComponentCleanup, ComponentContext, ComponentController, ComponentDefinition, ComponentLifecycleEvent, ComponentListener, ComponentPlugin, ComponentPluginOptions, ComponentProps, ComponentRuntime, ComponentState, ContainerExpect, DOMReference, DropInstance, ElementRef, FieldOption, Flow, FlowAction, FlowBusyHook, FlowBusyStrategy, FlowChangeHook, FlowClassNameConfig, FlowClassNames, FlowCleanup, FlowContext, FlowData, FlowDirection, FlowErrorHook, FlowFinishHook, FlowGoToOptions, FlowGuardHook, FlowLifecycleHook, FlowMoveHook, FlowPayload, FlowProps, FlowRenderContext, FlowSlot, FlowSlotName, FlowSnapshot, FlowState, FlowStep, FlowStepResult, FlowSubscriber, FlowTarget, FlowText, Form, FormButtons, FormClassNameConfig, FormClassNames, FormDataRecord, FormDataValue, FormField, FormItem, FormItemNext, FormItemType, FormOption, FormProps, FormText, FormTextConfig, FormValidatorConfig, FunctionalComponent, IEventManager, IconAttributeValue, IconName, IconPathMap, IconProps, KeyedElementRefs, LazyRenderCallback, LazyRenderOptions, LazyRenderTarget, Menu, MenuClassNameConfig, MenuClassNames, MenuItem, MenuItemId, MenuItemRenderType, MenuProps, MenuType, Modal, ModalClassNameConfig, ModalClassNames, ModalProps, ModalText, MotionController, NormalizeContext, Offcanvas, OffcanvasAnimate, OffcanvasClassNameConfig, OffcanvasClassNames, OffcanvasContent, OffcanvasDirection, OffcanvasProps, OwnedView, OwnedViewOptions, Pagination, PaginationClassNameConfig, PaginationClassNames, PaginationCount, PaginationPage, PaginationProps, ParabolaInstance, ParamRule, ParamRuleInput, PopupProps, PresenceController, PresenceOptions, PresencePhase, PublicFlowStep, QueryContext, RenderableContent, RequireContainerResult, ResolveContainerResult, ResolveSchema, ResolvedProps, StateSyncOptions, SupportES2022, Swiper, SwiperClassNameConfig, SwiperClassNames, SwiperDataItem, SwiperDataLoader, SwiperDataSource, SwiperProps, SwiperSlideContext, TabContent, TabItem, Tabs, TabsClassNameConfig, TabsClassNames, TabsDirection, TabsDisabled, TabsPanelContext, TabsProps, TabsValue, ThemeClassNameConfig, ThemeClassNames, ThemeConfigKey, ThemeInstance, ThemeOptions, ThemePanelGroup, ThemeResolvedOptions, Toast, ToastClassNameConfig, ToastClassNameOptions, ToastClassNames, ToastConfirmProps, ToastOptions, ToastTheme, ToastThemeOptions, TocCurrent, TocItem, TooltipInstance, TransitionDefinition, TransitionTarget, ValidateCondition, ValidatorClassNameConfig, ValidatorClassNames, ValidatorInstance, addIcons, all, asRenderable, checkModernBrowser, copy, createAccordion, createCollapseTransition, createDrop, createElementRef, createEventManager, createFlow, createForm, createKeyedElementRefs, createLoading, createMenu, createModal, createMotionGroup, createOffcanvas, createOwnedView, createPagination, createParabola, createPopup, createPresence, createScheduledTask, createStateSync, createSticky, createSwiper, createTabs, createTheme, createToc, createTooltip, createTransition, createValidator, defineComponent, flexPosition, getRegistedIconPath, getStoreVersion, getType, icon, iconHtml, iconMarkup, isDomElementValue, isDomNodeValue, isElement, isHtmlElementValue, isMobile, isModernBrowser, isNilValue, isNode, isPlainObject, isRenderableContent, isRenderablePrimitive, isRenderableValue, joinClasses, lazyRender, listen, postJson, q, randomId, removeComponentPlugin, requireContainer, resolveContainer, resolveElement, resolveNode, resolveNodeList, resolveProps, restUrl, stateSnapshot, timer, trackStoreVersion, translate, useComponentPlugin, uuid, validateParam, waitForMotion };
+export { ClassNameToken, CleanupFunction, CollapseMotionController, CollapseTransitionDefinition, ComponentCleanup, ComponentContext, ComponentController, ComponentDefinition, ComponentLifecycleEvent, ComponentListener, ComponentPlugin, ComponentPluginOptions, ComponentProps, ComponentRuntime, ComponentState, CompressOptions, ContainerExpect, DOMReference, DropInstance, ElementRef, FieldOption, Flow, FlowAction, FlowBusyHook, FlowBusyStrategy, FlowChangeHook, FlowClassNameConfig, FlowClassNames, FlowCleanup, FlowContext, FlowData, FlowDirection, FlowErrorHook, FlowFinishHook, FlowGoToOptions, FlowGuardHook, FlowLifecycleHook, FlowMoveHook, FlowPayload, FlowProps, FlowRenderContext, FlowSlot, FlowSlotName, FlowSnapshot, FlowState, FlowStep, FlowStepResult, FlowSubscriber, FlowTarget, FlowText, Form, FormButtons, FormClassNameConfig, FormClassNames, FormDataRecord, FormDataValue, FormField, FormItem, FormItemNext, FormItemType, FormOption, FormProps, FormText, FormTextConfig, FormValidatorConfig, FunctionalComponent, IEventManager, IconAttributeValue, IconName, IconPathMap, IconProps, ImgCompressInstance, KeyedElementRefs, LazyRenderCallback, LazyRenderOptions, LazyRenderTarget, Menu, MenuClassNameConfig, MenuClassNames, MenuItem, MenuItemId, MenuItemRenderType, MenuProps, MenuType, Modal, ModalClassNameConfig, ModalClassNames, ModalProps, ModalText, MotionController, NormalizeContext, Offcanvas, OffcanvasAnimate, OffcanvasClassNameConfig, OffcanvasClassNames, OffcanvasContent, OffcanvasDirection, OffcanvasProps, OwnedView, OwnedViewOptions, Pagination, PaginationClassNameConfig, PaginationClassNames, PaginationCount, PaginationPage, PaginationProps, ParabolaInstance, ParamRule, ParamRuleInput, PopupProps, PresenceController, PresenceOptions, PresencePhase, PublicFlowStep, QueryContext, RenderableContent, RequireContainerResult, ResolveContainerResult, ResolveSchema, ResolvedProps, StateSyncOptions, SupportES2022, Swiper, SwiperClassNameConfig, SwiperClassNames, SwiperDataItem, SwiperDataLoader, SwiperDataSource, SwiperProps, SwiperSlideContext, TabContent, TabItem, Tabs, TabsClassNameConfig, TabsClassNames, TabsDirection, TabsDisabled, TabsPanelContext, TabsProps, TabsValue, ThemeClassNameConfig, ThemeClassNames, ThemeConfigKey, ThemeInstance, ThemeOptions, ThemePanelGroup, ThemeResolvedOptions, Toast, ToastClassNameConfig, ToastClassNameOptions, ToastClassNames, ToastConfirmProps, ToastOptions, ToastTheme, ToastThemeOptions, TocCurrent, TocItem, TooltipInstance, TransitionDefinition, TransitionTarget, ValidateCondition, ValidatorClassNameConfig, ValidatorClassNames, ValidatorInstance, addIcons, all, asRenderable, checkModernBrowser, copy, createAccordion, createCollapseTransition, createDrop, createElementRef, createEventManager, createFlow, createForm, createImgCompress, createKeyedElementRefs, createLoading, createMenu, createModal, createMotionGroup, createOffcanvas, createOwnedView, createPagination, createParabola, createPopup, createPresence, createScheduledTask, createStateSync, createSticky, createSwiper, createTabs, createTheme, createToc, createTooltip, createTransition, createValidator, defineComponent, flexPosition, getImgCompressInstance, getRegistedIconPath, getStoreVersion, getType, icon, iconHtml, iconMarkup, isDomElementValue, isDomNodeValue, isElement, isHtmlElementValue, isMobile, isModernBrowser, isNilValue, isNode, isPlainObject, isRenderableContent, isRenderablePrimitive, isRenderableValue, joinClasses, lazyRender, listen, postJson, q, randomId, removeComponentPlugin, requireContainer, resetImgCompressInstance, resolveContainer, resolveElement, resolveNode, resolveNodeList, resolveProps, restUrl, stateSnapshot, timer, trackStoreVersion, translate, useComponentPlugin, uuid, validateParam, waitForMotion };
