@@ -29,10 +29,7 @@
       Arial, sans-serif;
     color: var(--ui-fg);
     background-color: var(--ui-bg);
-
     min-width: var(--screen-xs, 320px);
-    min-height: 100vh;
-    min-height: 100dvh;
     font-size: var(--font-size-md);
     margin: 0;
   }
