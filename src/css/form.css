@@ -597,11 +597,12 @@
   }
 
   .input-inner-group
-    .el-addon:first-child.is-text:has(.j-button:not(.is-icon)) {
+    .el-addon:first-child.inner-wrap:has(.j-button:not(.is-icon)) {
     left: var(--space);
   }
 
-  .input-inner-group .el-addon:last-child.is-text:has(.j-button:not(.is-icon)) {
+  .input-inner-group
+    .el-addon:last-child.inner-wrap:has(.j-button:not(.is-icon)) {
     right: var(--space);
   }
 
@@ -610,14 +611,16 @@
     height: var(--font-size-xl);
   }
 
-  .input-inner-group .el-addon.is-text {
+  .input-inner-group .el-addon.inner-wrap {
     display: flex;
     gap: var(--space);
   }
 
   /* status active */
   .input-group .j-button:not(:disabled):active,
+  .inner-group .j-input:focus,
   .input-group .j-input:focus-within,
+  .inner-group .j-input:focus-visible,
   .input-group select.j-select:focus {
     z-index: 1;
   }

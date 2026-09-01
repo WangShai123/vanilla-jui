@@ -15,7 +15,7 @@
 
   .j-tree-list .j-tree-list::before {
     top: 0;
-    bottom: 10px;
+    bottom: 12px;
     left: 7px;
     width: 1px;
     background: var(--ui-border);
@@ -23,7 +23,7 @@
 
   .j-tree-list .j-tree-list > .j-tree-item::before {
     top: 13px;
-    left: -11px;
+    left: -12px;
     width: 12px;
     height: 1px;
     background: var(--ui-border);

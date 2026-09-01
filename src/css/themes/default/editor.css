@@ -57,6 +57,30 @@
     --radius-lg: 1.5rem;
   }
 
+  .j-editor table td,
+  .j-editor table th {
+    border-width: 1px;
+    border-style: solid;
+    border-color: var(--ui-border-subtle);
+    padding: 0.5rem 1rem;
+    text-align: left;
+    vertical-align: top;
+  }
+
+  .j-editor table thead th {
+    background: var(--ui-bg-subtle);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .j-editor table tbody td {
+    min-width: 100px;
+  }
+
+  .j-editor table tbody tr:hover {
+    background: var(--ui-bg-subtle);
+  }
+
   .mobile .j-editor h1 {
     margin-bottom: 2rem;
   }

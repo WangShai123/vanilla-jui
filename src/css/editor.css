@@ -712,4 +712,15 @@
   .j-editor .block {
     margin-block: var(--editor-block-space);
   }
+
+  .j-editor table {
+    text-indent: 0;
+    border-color: inherit;
+    border-collapse: collapse;
+
+    overflow-x: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--ui-border) transparent;
+    display: block;
+  }
 }
