@@ -34,8 +34,6 @@
     gap: var(--menu-link-gap);
     color: currentColor;
     background-color: inherit;
-    font-weight: var(--font-medium);
-
     padding: var(--menu-item-padding);
     height: var(--menu-item-height);
     line-height: var(--menu-item-line-height);
@@ -43,6 +41,10 @@
     border-style: solid;
     border-color: transparent;
     border-radius: var(--menu-item-border-radius);
+  }
+
+  .j-menu > .menu > .menu-item > a {
+    font-weight: var(--font-medium);
   }
 
   .j-menu .menu .menu-item a .el-icon,
@@ -86,11 +88,13 @@
   }
 
   .j-menu .menu .menu-item .sub-menu .menu-item:hover a {
-    background: var(--tone-solid);
-    color: var(--tone-fg);
+    /* background: var(--tone-solid); */
+    /* color: var(--tone-fg); */
     outline-width: var(--sub-menu-item-hover-outline-width);
     outline-style: solid;
     outline-color: var(--tone-solid);
+    background: var(--tone-soft);
+    color: var(--tone-text);
   }
 
   .j-menu .menu .menu-item a:hover,
@@ -100,7 +104,8 @@
     color: var(--tone-text);
   }
 
-  .j-menu .menu > .menu-item.current-menu-item > a {
+  .j-menu .menu > .menu-item.current-menu-item > a,
+  .j-menu .menu > .menu-item.current-menu-ancestor > a {
     color: var(--tone-solid);
   }
 

@@ -71,7 +71,7 @@
   }
 
   .j-button.is-outline {
-    --btn-bg: transparent;
+    --btn-bg: var(--tone-card);
     --btn-border-color: var(--tone-solid);
     --btn-fg: var(--tone-solid);
   }

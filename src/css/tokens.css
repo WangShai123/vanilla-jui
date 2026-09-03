@@ -110,7 +110,7 @@
     --ui-surface-hover: rgba(0, 0, 0, 0.02);
     --ui-surface-active: rgba(0, 0, 0, 0.04);
     --ui-surface-raised: #ffffff;
-    --ui-surface-overlay: rgba(255, 255, 255, 0.9);
+    --ui-surface-overlay: rgba(255, 255, 255, 0.85);
     --ui-fg: #111827;
     --ui-fg-muted: #6b7280;
     --ui-fg-soft: #9ca3af;
@@ -300,7 +300,7 @@
     --ui-surface-hover: rgba(255, 255, 255, 0.04);
     --ui-surface-active: rgba(255, 255, 255, 0.07);
     --ui-surface-raised: #151b24;
-    --ui-surface-overlay: rgba(7, 10, 15, 0.96);
+    --ui-surface-overlay: rgba(7, 10, 15, 0.9);
     --ui-fg: #f9fafb;
     --ui-fg-muted: #cbd5e1;
     --ui-fg-soft: #94a3b8;

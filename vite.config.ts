@@ -1,6 +1,5 @@
 import { defineConfig } from 'vite-plus';
 import type { OxfmtConfig } from 'oxfmt';
-
 import fmtConfig from './.oxfmtrc.json' with { type: 'json' };
 
 const externalPackages = [

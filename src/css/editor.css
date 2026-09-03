@@ -214,12 +214,12 @@
   .j-editor ul,
   .j-editor ol {
     margin: 0 0 var(--editor-list-space);
-    padding-left: 1.75em;
+    padding-left: 1.5em;
   }
 
   .j-editor ul li,
   .j-editor ol li {
-    margin-bottom: 0.4em;
+    margin-bottom: 0.375em;
     padding-left: 0.25em;
   }
 
@@ -674,7 +674,7 @@
     max-width: 100%;
     height: 0.5em;
     margin: 0.5em 0;
-    border-radius: var(--radius-full);
+    border-radius: 9999px;
     overflow: hidden;
   }
 
