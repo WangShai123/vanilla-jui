@@ -70,7 +70,7 @@
   }
 
   .j-menu .menu .menu-item .sub-menu {
-    transform: translateY(1px);
+    /* transform: translateY(1px); */
     padding: var(--s2) 0;
     background: var(--sub-menu-bg);
     border-width: var(--sub-menu-border-width);
