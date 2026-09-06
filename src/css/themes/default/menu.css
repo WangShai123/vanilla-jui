@@ -97,13 +97,13 @@
     color: var(--tone-text);
   } */
 
-  .j-menu .menu .menu-item .sub-menu .menu-item:hover a,
+  /* .j-menu .menu .menu-item .sub-menu .menu-item:hover a,
   .j-menu .menu .menu-item a:hover,
-  .j-menu .menu .menu-item.menu-item-has-children:hover > a {
+  .j-menu .menu .menu-item.menu-item-has-children:hover>a {
     text-decoration: none;
     background: var(--tone-soft);
     color: var(--tone-text);
-  }
+  } */
 
   .j-menu .menu > .menu-item.current-menu-item > a,
   .j-menu .menu > .menu-item.current-menu-ancestor > a {
@@ -127,14 +127,20 @@
     color: var(--tone-fg);
   }
 
+  .j-menu .menu .menu-item .sub-menu .menu-item:hover a,
+  .j-menu .menu .menu-item a:hover,
+  .j-menu .menu .menu-item.menu-item-has-children:hover > a,
   .j-menu
     .menu-item.menu-item-has-children:hover
     > .sub-menu
     > .menu-item.current-menu-item
     a {
-    color: var(--tone-fg);
-    background-color: var(--tone-solid);
-    outline: 1px solid var(--tone-solid);
+    text-decoration: none;
+    background: var(--tone-soft);
+    color: var(--tone-text);
+    /* color: var(--tone-fg); */
+    /* background-color: var(--tone-solid); */
+    /* outline: 1px solid var(--tone-solid); */
   }
 
   .j-menu .menu .menu-item:not(:has(a)):hover,
