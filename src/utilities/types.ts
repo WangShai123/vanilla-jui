@@ -55,14 +55,7 @@ export type ValidateCondition =
       message?: string;
     };
 
-export interface NormalizeContext<TInput extends LooseRecord = LooseRecord> {
-  key: string;
-  input: TInput;
-  options: LooseRecord;
-  schema: ResolveSchema<TInput>;
-}
-
-export interface ParamRule<TInput extends LooseRecord = LooseRecord> {
+export interface ParamRule<_TInput extends LooseRecord = LooseRecord> {
   type?: TypeRule;
   types?: TypeRule;
   required?: boolean;
@@ -78,13 +71,11 @@ export interface ParamRule<TInput extends LooseRecord = LooseRecord> {
   lessThan?: number;
   plain?: boolean;
   items?: ParamRuleInput;
-  shape?: ResolveSchema;
+  shape?: ParamShapeSchema;
   conditions?: ValidateCondition | readonly ValidateCondition[];
   validate?: (value: unknown) => boolean;
   message?: string;
-  normalize?: (value: unknown, context: NormalizeContext<TInput>) => unknown;
   default?: unknown;
-  factory?: boolean;
   [key: string]: unknown;
 }
 
@@ -92,20 +83,10 @@ export type ParamRuleInput<TInput extends LooseRecord = LooseRecord> =
   | TypeRule
   | ParamRule<TInput>;
 
-export type ResolveSchema<TInput extends LooseRecord = LooseRecord> = Record<
+export type ParamShapeSchema<TInput extends LooseRecord = LooseRecord> = Record<
   string,
   ParamRuleInput<TInput>
 >;
-
-export type ResolvedProps<TSchema extends object> = LooseRecord & {
-  [Key in keyof TSchema]: unknown;
-};
-
-function cloneDefault<T>(value: T): T {
-  if (Array.isArray(value)) return value.slice() as T;
-  if (isPlainObject(value)) return { ...(value as LooseRecord) } as T;
-  return value;
-}
 
 function normalizeRule<TInput extends LooseRecord = LooseRecord>(
   rule: ParamRuleInput<TInput> = {}
@@ -330,66 +311,6 @@ export function validateParam<TInput extends LooseRecord = LooseRecord>(
   }
 
   return value;
-}
-
-export function resolveProps<
-  TInput extends LooseRecord,
-  TSchema extends ResolveSchema<TInput>,
->(
-  input: TInput | null | undefined = {} as TInput,
-  schema: TSchema = {} as TSchema,
-  namespace = 'Options'
-): TInput & ResolvedProps<TSchema> {
-  const source = input == null ? {} : input;
-  if (typeof source !== 'object' || Array.isArray(source)) {
-    throw new Error(`${namespace} expects object.`);
-  }
-
-  const sourceRecord = source as TInput;
-  const resolved: LooseRecord = { ...sourceRecord };
-  const entries = Object.entries(schema || {}) as Array<
-    [string, ParamRuleInput<TInput>]
-  >;
-
-  for (const [key, rawRule] of entries) {
-    const rule = normalizeRule<TInput>(rawRule);
-    resolved[key] = Object.hasOwn(sourceRecord, key)
-      ? sourceRecord[key]
-      : resolveDefault(rule);
-  }
-
-  for (const [key, rawRule] of entries) {
-    const rule = normalizeRule<TInput>(rawRule);
-    if (typeof rule.normalize === 'function') {
-      resolved[key] = rule.normalize(resolved[key], {
-        key,
-        input: sourceRecord,
-        options: resolved,
-        schema,
-      });
-    }
-  }
-
-  for (const [key, rule] of entries) {
-    validateParam(key, resolved[key], rule, namespace);
-  }
-
-  return resolved as TInput & ResolvedProps<TSchema>;
-}
-
-interface DefaultRule {
-  default?: unknown;
-  factory?: boolean;
-}
-
-function resolveDefault(rule: DefaultRule): unknown {
-  if (!Object.hasOwn(rule, 'default')) return undefined;
-  const defaultValue = rule.default;
-  const value =
-    rule.factory && typeof defaultValue === 'function'
-      ? defaultValue()
-      : defaultValue;
-  return cloneDefault(value);
 }
 
 /**

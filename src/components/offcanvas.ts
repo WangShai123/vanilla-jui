@@ -19,11 +19,8 @@ import { createEventManager } from '../utilities/events.ts';
 import { createMotionGroup, createTransition } from '../core/motion.ts';
 import { createPresence } from '../core/presence.ts';
 import { createElementRef } from '../utilities/refs.ts';
-import {
-  type ResolveSchema,
-  resolveProps,
-  validateParam,
-} from '../utilities/types.ts';
+import { type ConfigSchema, resolveConfig } from '../utilities/config.ts';
+import { validateParam } from '../utilities/types.ts';
 
 export type OffcanvasDirection = 'top' | 'right' | 'bottom' | 'left';
 export type OffcanvasAnimate = string;
@@ -147,17 +144,14 @@ const OFFCANVAS_PROPS_SCHEMA = {
   },
   className: {
     default: DEFAULT_CLASS_NAMES,
-    type: 'object',
-    normalize: (value: unknown) => ({
-      ...DEFAULT_CLASS_NAMES,
-      ...(value && typeof value === 'object' ? value : {}),
-    }),
+    type: 'plainObject',
+    merge: 'shallow',
   },
   onShow: { default: null, types: ['function', 'null'] },
   onShown: { default: null, types: ['function', 'null'] },
   onHide: { default: null, types: ['function', 'null'] },
   onHidden: { default: null, types: ['function', 'null'] },
-} satisfies ResolveSchema<OffcanvasProps>;
+} satisfies ConfigSchema<OffcanvasProps>;
 
 const OFFCANVAS_STATE_SCHEMA = {
   content: OFFCANVAS_PROPS_SCHEMA.content,
@@ -170,7 +164,7 @@ function normalizeTtl(ttl: number): number {
 }
 
 function normalizeProps(input: OffcanvasProps): ResolvedOffcanvasProps {
-  const props = resolveProps(input, OFFCANVAS_PROPS_SCHEMA, 'Offcanvas');
+  const props = resolveConfig(input, OFFCANVAS_PROPS_SCHEMA, 'Offcanvas');
   return {
     content: props.content as OffcanvasContent,
     overlay: props.overlay as boolean,

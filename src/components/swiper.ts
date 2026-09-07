@@ -23,11 +23,8 @@ import {
 import { createEventManager } from '../utilities/events.ts';
 import { randomId } from '../utilities/id.ts';
 import { createScheduledTask } from '../core/scheduler.ts';
-import {
-  type ResolveSchema,
-  resolveProps,
-  validateParam,
-} from '../utilities/types.ts';
+import { type ConfigSchema, resolveConfig } from '../utilities/config.ts';
+import { validateParam } from '../utilities/types.ts';
 
 const SWIPE_THRESHOLD = 6;
 const AUTOPLAY_DELAY_FLOOR = 16;
@@ -217,13 +214,10 @@ const SWIPER_OPTIONS_SCHEMA = {
   preventClick: { default: true, type: 'boolean' },
   className: {
     default: DEFAULT_CLASS_NAMES,
-    type: 'object',
-    normalize: (value: unknown) => ({
-      ...DEFAULT_CLASS_NAMES,
-      ...(value && typeof value === 'object' ? value : {}),
-    }),
+    type: 'plainObject',
+    merge: 'shallow',
   },
-} satisfies ResolveSchema<SwiperProps>;
+} satisfies ConfigSchema<SwiperProps>;
 
 const SWIPER_DATA_ITEM_RULE = {
   type: 'plainObject',
@@ -270,7 +264,7 @@ function cloneDataSource(source: SwiperDataSource): SwiperDataSource {
 }
 
 function normalizeProps(input: SwiperProps = {}): ResolvedSwiperProps {
-  const props = resolveProps(
+  const props = resolveConfig(
     input,
     SWIPER_OPTIONS_SCHEMA,
     'Swiper.props'
@@ -279,7 +273,7 @@ function normalizeProps(input: SwiperProps = {}): ResolvedSwiperProps {
     ...props,
     id: props.id?.trim() || null,
     data: cloneDataSource(props.data),
-    className: { ...props.className },
+    className: props.className as SwiperClassNames,
   };
 }
 

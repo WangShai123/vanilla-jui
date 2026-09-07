@@ -21,11 +21,8 @@ import {
   createCollapseTransition,
 } from '../core/motion.ts';
 import { createKeyedElementRefs } from '../utilities/refs.ts';
-import {
-  type ResolveSchema,
-  resolveProps,
-  validateParam,
-} from '../utilities/types.ts';
+import { type ConfigSchema, resolveConfig } from '../utilities/config.ts';
+import { validateParam } from '../utilities/types.ts';
 
 type AccordionActive = number | string | Array<number | string> | null;
 type AccordionDirection = 'vertical' | 'horizontal';
@@ -182,15 +179,12 @@ const ACCORDION_PROPS_SCHEMA = {
   },
   className: {
     default: DEFAULT_CLASS_NAMES,
-    type: 'object',
-    normalize: (value: unknown) => ({
-      ...DEFAULT_CLASS_NAMES,
-      ...(value && typeof value === 'object' ? value : {}),
-    }),
+    type: 'plainObject',
+    merge: 'shallow',
   },
   onChange: { default: null, types: ['function', 'null'] },
   data: { default: [], ...ACCORDION_DATA_RULE },
-} satisfies ResolveSchema<AccordionProps>;
+} satisfies ConfigSchema<AccordionProps>;
 
 function isActiveValue(value: unknown): value is number | string {
   if (typeof value === 'number') return Number.isInteger(value) && value >= 0;
@@ -198,7 +192,7 @@ function isActiveValue(value: unknown): value is number | string {
 }
 
 function normalizeProps(props: AccordionProps): ResolvedAccordionProps {
-  const resolved = resolveProps(
+  const resolved = resolveConfig(
     props,
     ACCORDION_PROPS_SCHEMA,
     'Accordion.props'

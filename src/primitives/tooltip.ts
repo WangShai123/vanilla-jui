@@ -1,7 +1,7 @@
 import { jsx } from 'vanilla-signal';
 
 import { type DOMReference, joinClasses } from '../utilities/dom.ts';
-import { type ResolveSchema, resolveProps } from '../utilities/types.ts';
+import { type ConfigSchema, resolveConfig } from '../utilities/config.ts';
 import { createDrop } from './drop.ts';
 
 type DropInstance = ReturnType<typeof createDrop>;
@@ -102,20 +102,6 @@ const DEFAULT_CLASS_NAMES: TooltipClassNames = {
   },
 };
 
-function normalizeClassNames(value: unknown): TooltipClassNames {
-  const input = value && typeof value === 'object' ? value : {};
-  const ui =
-    'ui' in input && input.ui && typeof input.ui === 'object' ? input.ui : {};
-  return {
-    ...DEFAULT_CLASS_NAMES,
-    ...input,
-    ui: {
-      ...DEFAULT_CLASS_NAMES.ui,
-      ...ui,
-    },
-  };
-}
-
 const TOOLTIP_OPTIONS_SCHEMA = {
   name: { default: null, types: ['string', 'null'] },
   mode: { default: 'hover', type: 'string', enum: ['hover', 'click'] },
@@ -155,18 +141,18 @@ const TOOLTIP_OPTIONS_SCHEMA = {
   },
   className: {
     default: DEFAULT_CLASS_NAMES,
-    type: 'object',
-    normalize: normalizeClassNames,
+    type: 'plainObject',
+    merge: 'deep',
   },
   id: { default: null, types: ['string', 'null'] },
   delay: { default: 100, types: ['number', 'object'] },
   hoverIntent: { default: true, type: 'boolean' },
   onShown: { default: null, types: ['function', 'null'] },
   onHidden: { default: null, types: ['function', 'null'] },
-} satisfies ResolveSchema<TooltipProps>;
+} satisfies ConfigSchema<TooltipProps>;
 
 function normalizeProps(input: TooltipProps): ResolvedTooltipProps {
-  const props = resolveProps(input, TOOLTIP_OPTIONS_SCHEMA, 'Tooltip.props');
+  const props = resolveConfig(input, TOOLTIP_OPTIONS_SCHEMA, 'Tooltip.props');
   return {
     name: props.name as string | null,
     mode: props.mode as DropMode,

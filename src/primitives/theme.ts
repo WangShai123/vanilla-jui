@@ -11,6 +11,8 @@ import { translate } from '../utilities/locale.ts';
 import { all, joinClasses } from '../utilities/dom.ts';
 import { createEventManager } from '../utilities/events.ts';
 import { isPlainObject } from '../utilities/object.ts';
+import { type ConfigSchema, resolveConfig } from '../utilities/config.ts';
+import { mergeShallowConfig } from '../utilities/merge.ts';
 
 export type ThemeConfigKey = 'mode' | 'theme' | 'radius' | 'shadow' | 'font';
 
@@ -101,16 +103,26 @@ const THEME_CLASS_PREFIX: Record<Exclude<ThemeConfigKey, 'mode'>, string> = {
   font: 'j-font-',
 };
 
-function mergeClassNames(className?: ThemeClassNameConfig): ThemeClassNames {
-  return { ...DEFAULT_CLASS_NAMES, ...className };
-}
+const THEME_OPTIONS_SCHEMA = {
+  mode: { default: DEFAULT_OPTIONS.mode, type: 'string' },
+  theme: { default: DEFAULT_OPTIONS.theme, type: 'string' },
+  radius: { default: DEFAULT_OPTIONS.radius, type: 'string' },
+  shadow: { default: DEFAULT_OPTIONS.shadow, type: 'string' },
+  font: { default: DEFAULT_OPTIONS.font, type: 'string' },
+  key: { default: DEFAULT_OPTIONS.key, type: 'string' },
+  className: {
+    default: DEFAULT_CLASS_NAMES,
+    type: 'plainObject',
+    merge: 'shallow',
+  },
+} satisfies ConfigSchema<ThemeOptions>;
 
 function normalizeOptions(options: ThemeOptions = {}): ThemeResolvedOptions {
-  return {
-    ...DEFAULT_OPTIONS,
-    ...options,
-    className: mergeClassNames(options.className),
-  };
+  return resolveConfig(
+    options,
+    THEME_OPTIONS_SCHEMA,
+    'Theme.options'
+  ) as unknown as ThemeResolvedOptions;
 }
 
 function isThemeConfigKey(value: string | undefined): value is ThemeConfigKey {
@@ -340,14 +352,17 @@ export function createTheme(options: ThemeOptions = {}): ThemeInstance {
     return panel;
   };
   const setConfig = (newConfig: ThemeOptions): void => {
+    const config = normalizeOptions({
+      ...props,
+      ...newConfig,
+      className: mergeShallowConfig(
+        props.className,
+        newConfig.className ?? {}
+      ) as ThemeClassNames,
+    });
     runtime.configVersion += 1;
     flushSync(() => {
-      Object.assign(props, newConfig, {
-        className: mergeClassNames({
-          ...props.className,
-          ...newConfig.className,
-        }),
-      });
+      Object.assign(props, config);
     });
     saveConfig();
   };

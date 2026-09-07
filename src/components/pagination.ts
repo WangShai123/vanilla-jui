@@ -13,11 +13,8 @@ import {
 } from '../core/component.ts';
 import { icon } from '../primitives/icons.ts';
 import { isPlainObject } from '../utilities/object.ts';
-import {
-  type ResolveSchema,
-  resolveProps,
-  validateParam,
-} from '../utilities/types.ts';
+import { type ConfigSchema, resolveConfig } from '../utilities/config.ts';
+import { validateParam } from '../utilities/types.ts';
 import { translate } from '../utilities/locale.ts';
 import { createLoading } from '../primitives/loading.ts';
 
@@ -137,34 +134,23 @@ const COUNT_RULE = {
 const PAGINATION_PROPS_SCHEMA = {
   total: TOTAL_RULE,
   page: {
-    default: () => ({ ...DEFAULT_PAGE }),
-    factory: true,
-    normalize: (value: unknown) => ({
-      ...DEFAULT_PAGE,
-      ...(value && typeof value === 'object' ? value : {}),
-    }),
+    default: DEFAULT_PAGE,
+    merge: 'shallow',
     ...PAGE_RULE,
   },
   count: {
-    default: () => ({ ...DEFAULT_COUNT }),
-    factory: true,
-    normalize: (value: unknown) => ({
-      ...DEFAULT_COUNT,
-      ...(value && typeof value === 'object' ? value : {}),
-    }),
+    default: DEFAULT_COUNT,
+    merge: 'shallow',
     ...COUNT_RULE,
   },
   lock: { default: true, type: 'boolean' },
   onChange: { default: null, types: ['function', 'null'] },
   className: {
     default: DEFAULT_CLASS_NAMES,
-    type: 'object',
-    normalize: (value: unknown) => ({
-      ...DEFAULT_CLASS_NAMES,
-      ...(value && typeof value === 'object' ? value : {}),
-    }),
+    type: 'plainObject',
+    merge: 'shallow',
   },
-} satisfies ResolveSchema<PaginationProps>;
+} satisfies ConfigSchema<PaginationProps>;
 
 const PAGINATION_STATE_SCHEMA = {
   total: TOTAL_RULE,
@@ -190,7 +176,7 @@ function cloneCount(count: PaginationCount): PaginationCount {
 }
 
 function normalizeProps(input: PaginationProps = {}): ResolvedPaginationProps {
-  const props = resolveProps(
+  const props = resolveConfig(
     input,
     PAGINATION_PROPS_SCHEMA,
     'Pagination.props'

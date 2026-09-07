@@ -7,10 +7,13 @@ export * from './utilities/id.ts';
 export * from './utilities/dom.ts';
 export * from './utilities/events.ts';
 export * from './utilities/http.ts';
-export * from './utilities/locale.ts';
+// do not export any function from locale.ts
+// export * from './utilities/locale.ts';
 export * from './utilities/object.ts';
 export * from './utilities/timer.ts';
 export * from './utilities/types.ts';
+export * from './utilities/merge.ts';
+export * from './utilities/config.ts';
 export * from './utilities/state.ts';
 export * from './utilities/refs.ts';
 export * from './utilities/validator.ts';

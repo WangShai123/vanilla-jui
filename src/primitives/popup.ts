@@ -1,7 +1,7 @@
 import { type ElementProps, jsx } from 'vanilla-signal';
 
 import { asRenderable, type RenderableContent } from '../utilities/dom.ts';
-import { type ResolveSchema, resolveProps } from '../utilities/types.ts';
+import { type ConfigSchema, resolveConfig } from '../utilities/config.ts';
 
 export interface PopupProps extends Record<string, unknown> {
   className?: string;
@@ -28,10 +28,10 @@ const POPUP_PROPS_SCHEMA = {
     default: '',
     type: 'renderable',
   },
-} satisfies ResolveSchema<PopupProps>;
+} satisfies ConfigSchema<PopupProps>;
 
 function normalizeProps(input: PopupProps): ResolvedPopupProps {
-  const props = resolveProps(input, POPUP_PROPS_SCHEMA, 'Popup');
+  const props = resolveConfig(input, POPUP_PROPS_SCHEMA, 'Popup');
 
   return {
     className: props.className as string,

@@ -12,6 +12,7 @@ import { createLoading } from '../primitives/loading.ts';
 import { joinClasses, q } from '../utilities/dom.ts';
 import { listen } from '../utilities/events.ts';
 import { randomId } from '../utilities/id.ts';
+import { mergeShallowConfig } from '../utilities/merge.ts';
 import { timer } from '../utilities/timer.ts';
 import { validateParam } from '../utilities/types.ts';
 
@@ -97,14 +98,6 @@ const animations = new Map<HTMLElement, Animation>();
 const operations = new Map<HTMLElement, number>();
 const singletonToasts = new Map<'show' | 'confirm', HTMLElement>();
 let classNames = DEFAULT_CLASS_NAMES;
-
-function mergeClassNames(value?: ToastClassNameConfig): ToastClassNames {
-  return { ...DEFAULT_CLASS_NAMES, ...value };
-}
-
-function resolveClassNames(options?: ToastClassNameOptions): ToastClassNames {
-  return mergeClassNames({ ...classNames, ...options?.className });
-}
 
 function addToastDisposer(element: HTMLElement, dispose: () => void): void {
   const current = disposers.get(element);
@@ -378,7 +371,10 @@ function show(message = '', options: ToastOptions = {}): HTMLElement {
   validateParam('duration', duration, TOAST_DURATION_RULE, 'Toast.show');
   validateParam('theme', theme, TOAST_THEME_RULE, 'Toast.show');
 
-  const names = resolveClassNames(options);
+  const names = mergeShallowConfig(
+    classNames,
+    options.className ?? {}
+  ) as ToastClassNames;
   const id = randomId();
   const iconElement = jsx('span', {
     className: names.icon,
@@ -426,7 +422,10 @@ function lite(
   validateParam('message', message, 'string', 'Toast.lite');
   validateParam('duration', duration, LITE_DURATION_RULE, 'Toast.lite');
 
-  const names = mergeClassNames({ ...classNames, ...className });
+  const names = mergeShallowConfig(
+    classNames,
+    className ?? {}
+  ) as ToastClassNames;
   const previous = q<HTMLElement>('[data-toast-lite]');
   if (previous) {
     cancelToastTimers(previous.dataset.toast || '');
@@ -457,7 +456,10 @@ function confirm(message = '', props: ToastConfirmProps = {}): HTMLElement {
   const theme = props.theme || 'info';
   validateParam('once', once, 'boolean', 'Toast.confirm');
   validateParam('theme', theme, TOAST_THEME_RULE, 'Toast.confirm');
-  const names = resolveClassNames(props);
+  const names = mergeShallowConfig(
+    classNames,
+    props.className ?? {}
+  ) as ToastClassNames;
   const id = randomId();
   const element = jsx('div', {
     className: joinClasses(names.confirm, names[theme]),
@@ -526,7 +528,10 @@ export const Toast = {
   timers,
   disposers,
   configure(options: ToastClassNameOptions = {}): ToastClassNameOptions {
-    classNames = mergeClassNames(options.className);
+    classNames = mergeShallowConfig(
+      DEFAULT_CLASS_NAMES,
+      options.className ?? {}
+    ) as ToastClassNames;
     return { className: classNames };
   },
   show,

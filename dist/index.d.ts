@@ -253,9 +253,6 @@ declare const restUrl: string;
  */
 declare function postJson<T = unknown>(url: string, body: unknown, options?: Omit<RequestInit, 'method' | 'body'>): Promise<T>;
 //#endregion
-//#region src/utilities/locale.d.ts
-declare function translate(key: string): string;
-//#endregion
 //#region src/utilities/object.d.ts
 declare function isPlainObject(value: unknown): boolean;
 //#endregion
@@ -267,7 +264,7 @@ declare const timer: {
 };
 //#endregion
 //#region src/utilities/types.d.ts
-type LooseRecord = Record<string, unknown>;
+type LooseRecord$1 = Record<string, unknown>;
 type ValueTypeName = string;
 type TypeRule = ValueTypeName | readonly ValueTypeName[];
 declare function isNilValue(value: unknown): value is null | undefined;
@@ -281,13 +278,7 @@ type ValidateCondition = ((value: unknown) => boolean) | {
   test: (value: unknown) => boolean;
   message?: string;
 };
-interface NormalizeContext<TInput extends LooseRecord = LooseRecord> {
-  key: string;
-  input: TInput;
-  options: LooseRecord;
-  schema: ResolveSchema<TInput>;
-}
-interface ParamRule<TInput extends LooseRecord = LooseRecord> {
+interface ParamRule<_TInput extends LooseRecord$1 = LooseRecord$1> {
   type?: TypeRule;
   types?: TypeRule;
   required?: boolean;
@@ -303,20 +294,48 @@ interface ParamRule<TInput extends LooseRecord = LooseRecord> {
   lessThan?: number;
   plain?: boolean;
   items?: ParamRuleInput;
-  shape?: ResolveSchema;
+  shape?: ParamShapeSchema;
   conditions?: ValidateCondition | readonly ValidateCondition[];
   validate?: (value: unknown) => boolean;
   message?: string;
-  normalize?: (value: unknown, context: NormalizeContext<TInput>) => unknown;
   default?: unknown;
-  factory?: boolean;
   [key: string]: unknown;
 }
-type ParamRuleInput<TInput extends LooseRecord = LooseRecord> = TypeRule | ParamRule<TInput>;
-type ResolveSchema<TInput extends LooseRecord = LooseRecord> = Record<string, ParamRuleInput<TInput>>;
-type ResolvedProps<TSchema extends object> = LooseRecord & { [Key in keyof TSchema]: unknown; };
-declare function validateParam<TInput extends LooseRecord = LooseRecord>(name: string, value: unknown, rule?: ParamRuleInput<TInput>, namespace?: string): unknown;
-declare function resolveProps<TInput extends LooseRecord, TSchema extends ResolveSchema<TInput>>(input?: TInput | null | undefined, schema?: TSchema, namespace?: string): TInput & ResolvedProps<TSchema>;
+type ParamRuleInput<TInput extends LooseRecord$1 = LooseRecord$1> = TypeRule | ParamRule<TInput>;
+type ParamShapeSchema<TInput extends LooseRecord$1 = LooseRecord$1> = Record<string, ParamRuleInput<TInput>>;
+declare function validateParam<TInput extends LooseRecord$1 = LooseRecord$1>(name: string, value: unknown, rule?: ParamRuleInput<TInput>, namespace?: string): unknown;
+//#endregion
+//#region src/utilities/merge.d.ts
+type MergeStrategy = 'replace' | 'shallow' | 'deep' | ((defaultValue: unknown, inputValue: unknown, context: MergeContext) => unknown);
+interface MergeContext {
+  key: string;
+  path: string;
+}
+declare function cloneConfigValue<T>(value: T): T;
+declare function mergeShallowConfig(defaultValue: unknown, inputValue: unknown): unknown;
+declare function mergeDeepConfig(defaultValue: unknown, inputValue: unknown): unknown;
+declare function mergeConfigValue(defaultValue: unknown, inputValue: unknown, strategy: MergeStrategy | undefined, context: MergeContext): unknown;
+//#endregion
+//#region src/utilities/config.d.ts
+type LooseRecord = Record<string, unknown>;
+type ConfigTypeRule = string | readonly string[];
+interface ConfigNormalizeContext<TInput extends LooseRecord = LooseRecord> {
+  key: string;
+  path: string;
+  input: TInput;
+  options: LooseRecord;
+  schema: ConfigSchema<TInput>;
+}
+interface ConfigRule<TInput extends LooseRecord = LooseRecord> extends Omit<ParamRule<TInput>, 'normalize' | 'shape'> {
+  defaultFactory?: () => unknown;
+  merge?: MergeStrategy;
+  schema?: ConfigSchema;
+  normalize?: (value: unknown, context: ConfigNormalizeContext<TInput>) => unknown;
+}
+type ConfigRuleInput<TInput extends LooseRecord = LooseRecord> = ConfigTypeRule | ConfigRule<TInput>;
+type ConfigSchema<TInput extends LooseRecord = LooseRecord> = Record<string, ConfigRuleInput<TInput>>;
+type ResolvedConfig<TSchema extends object> = LooseRecord & { [Key in keyof TSchema]: unknown; };
+declare function resolveConfig<TInput extends LooseRecord, TSchema extends ConfigSchema<TInput>>(input?: TInput | null | undefined, schema?: TSchema, namespace?: string): ResolvedConfig<TSchema>;
 //#endregion
 //#region src/utilities/state.d.ts
 interface StateSyncOptions {
@@ -1854,4 +1873,4 @@ interface MenuState extends Record<string, unknown> {
 type Menu = FunctionalComponent<ResolvedMenuProps, MenuState, HTMLElement>;
 declare function createMenu(input?: MenuProps): Menu;
 //#endregion
-export { ClassNameToken, CleanupFunction, CollapseMotionController, CollapseTransitionDefinition, ComponentCleanup, ComponentContext, ComponentController, ComponentDefinition, ComponentLifecycleEvent, ComponentListener, ComponentPlugin, ComponentPluginOptions, ComponentProps, ComponentRuntime, ComponentState, CompressOptions, ContainerExpect, DOMReference, DropInstance, ElementRef, FieldOption, Flow, FlowAction, FlowBusyHook, FlowBusyStrategy, FlowChangeHook, FlowClassNameConfig, FlowClassNames, FlowCleanup, FlowContext, FlowData, FlowDirection, FlowErrorHook, FlowFinishHook, FlowGoToOptions, FlowGuardHook, FlowLifecycleHook, FlowMoveHook, FlowPayload, FlowProps, FlowRenderContext, FlowSlot, FlowSlotName, FlowSnapshot, FlowState, FlowStep, FlowStepResult, FlowSubscriber, FlowTarget, FlowText, Form, FormButtons, FormClassNameConfig, FormClassNames, FormDataRecord, FormDataValue, FormField, FormItem, FormItemNext, FormItemType, FormOption, FormProps, FormText, FormTextConfig, FormValidatorConfig, FunctionalComponent, IEventManager, IconAttributeValue, IconName, IconPathMap, IconProps, ImgCompressInstance, KeyedElementRefs, LazyRenderCallback, LazyRenderOptions, LazyRenderTarget, Menu, MenuClassNameConfig, MenuClassNames, MenuItem, MenuItemId, MenuItemRenderType, MenuProps, MenuType, Modal, ModalClassNameConfig, ModalClassNames, ModalProps, ModalText, MotionController, NormalizeContext, Offcanvas, OffcanvasAnimate, OffcanvasClassNameConfig, OffcanvasClassNames, OffcanvasContent, OffcanvasDirection, OffcanvasProps, OwnedView, OwnedViewOptions, Pagination, PaginationClassNameConfig, PaginationClassNames, PaginationCount, PaginationPage, PaginationProps, ParabolaInstance, ParamRule, ParamRuleInput, PopupProps, PresenceController, PresenceOptions, PresencePhase, PublicFlowStep, QueryContext, RenderableContent, RequireContainerResult, ResolveContainerResult, ResolveSchema, ResolvedProps, StateSyncOptions, SupportES2022, Swiper, SwiperClassNameConfig, SwiperClassNames, SwiperDataItem, SwiperDataLoader, SwiperDataSource, SwiperProps, SwiperSlideContext, TabContent, TabItem, Tabs, TabsClassNameConfig, TabsClassNames, TabsDirection, TabsDisabled, TabsPanelContext, TabsProps, TabsValue, ThemeClassNameConfig, ThemeClassNames, ThemeConfigKey, ThemeInstance, ThemeOptions, ThemePanelGroup, ThemeResolvedOptions, Toast, ToastClassNameConfig, ToastClassNameOptions, ToastClassNames, ToastConfirmProps, ToastOptions, ToastTheme, ToastThemeOptions, TocCurrent, TocItem, TooltipInstance, TransitionDefinition, TransitionTarget, ValidateCondition, ValidatorClassNameConfig, ValidatorClassNames, ValidatorInstance, addIcons, all, asRenderable, checkModernBrowser, copy, createAccordion, createCollapseTransition, createDrop, createElementRef, createEventManager, createFlow, createForm, createImgCompress, createKeyedElementRefs, createLoading, createMenu, createModal, createMotionGroup, createOffcanvas, createOwnedView, createPagination, createParabola, createPopup, createPresence, createScheduledTask, createStateSync, createSticky, createSwiper, createTabs, createTheme, createToc, createTooltip, createTransition, createValidator, defineComponent, flexPosition, getImgCompressInstance, getRegistedIconPath, getStoreVersion, getType, hashQueryParams, icon, iconHtml, iconMarkup, isDomElementValue, isDomNodeValue, isElement, isHtmlElementValue, isMobile, isModernBrowser, isNilValue, isNode, isPlainObject, isRenderableContent, isRenderablePrimitive, isRenderableValue, joinClasses, lazyRender, listen, postJson, q, randomId, removeComponentPlugin, requireContainer, resetImgCompressInstance, resolveContainer, resolveElement, resolveNode, resolveNodeList, resolveProps, restUrl, stateSnapshot, timer, trackStoreVersion, translate, useComponentPlugin, uuid, validateParam, waitForMotion };
+export { ClassNameToken, CleanupFunction, CollapseMotionController, CollapseTransitionDefinition, ComponentCleanup, ComponentContext, ComponentController, ComponentDefinition, ComponentLifecycleEvent, ComponentListener, ComponentPlugin, ComponentPluginOptions, ComponentProps, ComponentRuntime, ComponentState, CompressOptions, ConfigNormalizeContext, ConfigRule, ConfigRuleInput, ConfigSchema, ContainerExpect, DOMReference, DropInstance, ElementRef, FieldOption, Flow, FlowAction, FlowBusyHook, FlowBusyStrategy, FlowChangeHook, FlowClassNameConfig, FlowClassNames, FlowCleanup, FlowContext, FlowData, FlowDirection, FlowErrorHook, FlowFinishHook, FlowGoToOptions, FlowGuardHook, FlowLifecycleHook, FlowMoveHook, FlowPayload, FlowProps, FlowRenderContext, FlowSlot, FlowSlotName, FlowSnapshot, FlowState, FlowStep, FlowStepResult, FlowSubscriber, FlowTarget, FlowText, Form, FormButtons, FormClassNameConfig, FormClassNames, FormDataRecord, FormDataValue, FormField, FormItem, FormItemNext, FormItemType, FormOption, FormProps, FormText, FormTextConfig, FormValidatorConfig, FunctionalComponent, IEventManager, IconAttributeValue, IconName, IconPathMap, IconProps, ImgCompressInstance, KeyedElementRefs, LazyRenderCallback, LazyRenderOptions, LazyRenderTarget, Menu, MenuClassNameConfig, MenuClassNames, MenuItem, MenuItemId, MenuItemRenderType, MenuProps, MenuType, MergeContext, MergeStrategy, Modal, ModalClassNameConfig, ModalClassNames, ModalProps, ModalText, MotionController, Offcanvas, OffcanvasAnimate, OffcanvasClassNameConfig, OffcanvasClassNames, OffcanvasContent, OffcanvasDirection, OffcanvasProps, OwnedView, OwnedViewOptions, Pagination, PaginationClassNameConfig, PaginationClassNames, PaginationCount, PaginationPage, PaginationProps, ParabolaInstance, ParamRule, ParamRuleInput, ParamShapeSchema, PopupProps, PresenceController, PresenceOptions, PresencePhase, PublicFlowStep, QueryContext, RenderableContent, RequireContainerResult, ResolveContainerResult, ResolvedConfig, StateSyncOptions, SupportES2022, Swiper, SwiperClassNameConfig, SwiperClassNames, SwiperDataItem, SwiperDataLoader, SwiperDataSource, SwiperProps, SwiperSlideContext, TabContent, TabItem, Tabs, TabsClassNameConfig, TabsClassNames, TabsDirection, TabsDisabled, TabsPanelContext, TabsProps, TabsValue, ThemeClassNameConfig, ThemeClassNames, ThemeConfigKey, ThemeInstance, ThemeOptions, ThemePanelGroup, ThemeResolvedOptions, Toast, ToastClassNameConfig, ToastClassNameOptions, ToastClassNames, ToastConfirmProps, ToastOptions, ToastTheme, ToastThemeOptions, TocCurrent, TocItem, TooltipInstance, TransitionDefinition, TransitionTarget, ValidateCondition, ValidatorClassNameConfig, ValidatorClassNames, ValidatorInstance, addIcons, all, asRenderable, checkModernBrowser, cloneConfigValue, copy, createAccordion, createCollapseTransition, createDrop, createElementRef, createEventManager, createFlow, createForm, createImgCompress, createKeyedElementRefs, createLoading, createMenu, createModal, createMotionGroup, createOffcanvas, createOwnedView, createPagination, createParabola, createPopup, createPresence, createScheduledTask, createStateSync, createSticky, createSwiper, createTabs, createTheme, createToc, createTooltip, createTransition, createValidator, defineComponent, flexPosition, getImgCompressInstance, getRegistedIconPath, getStoreVersion, getType, hashQueryParams, icon, iconHtml, iconMarkup, isDomElementValue, isDomNodeValue, isElement, isHtmlElementValue, isMobile, isModernBrowser, isNilValue, isNode, isPlainObject, isRenderableContent, isRenderablePrimitive, isRenderableValue, joinClasses, lazyRender, listen, mergeConfigValue, mergeDeepConfig, mergeShallowConfig, postJson, q, randomId, removeComponentPlugin, requireContainer, resetImgCompressInstance, resolveConfig, resolveContainer, resolveElement, resolveNode, resolveNodeList, restUrl, stateSnapshot, timer, trackStoreVersion, useComponentPlugin, uuid, validateParam, waitForMotion };

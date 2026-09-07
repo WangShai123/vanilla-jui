@@ -3,7 +3,7 @@ import { insert, jsx } from 'vanilla-signal';
 import { type DOMReference, resolveElement } from '../utilities/dom.ts';
 import { randomId } from '../utilities/id.ts';
 import { timer } from '../utilities/timer.ts';
-import { type ResolveSchema, resolveProps } from '../utilities/types.ts';
+import { type ConfigSchema, resolveConfig } from '../utilities/config.ts';
 
 type ParabolaDirection =
   | 'center'
@@ -81,10 +81,7 @@ const PARABOLA_PROPS_SCHEMA = {
   ball: {
     default: DEFAULT_BALL,
     type: 'plainObject',
-    normalize: (value: unknown) => ({
-      ...DEFAULT_BALL,
-      ...(value && typeof value === 'object' ? value : {}),
-    }),
+    merge: 'shallow',
     shape: {
       color: 'string',
       size: 'string',
@@ -92,11 +89,8 @@ const PARABOLA_PROPS_SCHEMA = {
   },
   className: {
     default: DEFAULT_CLASS_NAMES,
-    type: 'object',
-    normalize: (value: unknown) => ({
-      ...DEFAULT_CLASS_NAMES,
-      ...(value && typeof value === 'object' ? value : {}),
-    }),
+    type: 'plainObject',
+    merge: 'shallow',
   },
   from: { default: null, ...ELEMENT_REF_RULE },
   to: { default: null, ...ELEMENT_REF_RULE },
@@ -108,10 +102,10 @@ const PARABOLA_PROPS_SCHEMA = {
   showDelay: { default: 0, type: 'number' },
   onShow: { default: null, types: ['function', 'null'] },
   onHidden: { default: null, types: ['function', 'null'] },
-} satisfies ResolveSchema<ParabolaProps>;
+} satisfies ConfigSchema<ParabolaProps>;
 
 function normalizeProps(input: ParabolaProps): ResolvedParabolaProps {
-  const props = resolveProps(input, PARABOLA_PROPS_SCHEMA, 'Parabola.props');
+  const props = resolveConfig(input, PARABOLA_PROPS_SCHEMA, 'Parabola.props');
   return {
     ball: props.ball as ParabolaBallProps,
     className: props.className as ParabolaClassNames,

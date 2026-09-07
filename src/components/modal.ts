@@ -23,13 +23,13 @@ import {
 } from '../utilities/dom.ts';
 import { randomId } from '../utilities/id.ts';
 import { createMotionGroup, createTransition } from '../core/motion.ts';
-import { isPlainObject } from '../utilities/object.ts';
 import { createPresence } from '../core/presence.ts';
 import {
-  type ResolveSchema,
-  resolveProps,
-  validateParam,
-} from '../utilities/types.ts';
+  type ConfigRule,
+  type ConfigSchema,
+  resolveConfig,
+} from '../utilities/config.ts';
+import { validateParam } from '../utilities/types.ts';
 
 type ModalTextInput = Partial<ModalText> & Record<string, unknown>;
 type ModalContentResult = RenderableContent<Modal>;
@@ -142,6 +142,14 @@ const DEFAULT_CLASS_NAMES: ModalClassNames = {
   confirmBtn: 'is-primary',
 };
 
+function createDefaultText(): ModalText {
+  return {
+    title: translate('Tip'),
+    confirm: translate('Confirm'),
+    cancel: translate('Cancel'),
+  };
+}
+
 function cloneProps(props: ResolvedModalProps): ResolvedModalProps {
   return {
     ...props,
@@ -172,21 +180,28 @@ const MODAL_CONTENT_RULE = {
 };
 
 const MODAL_TEXT_RULE = {
-  default: {},
-  type: 'object',
-  plain: true,
-  normalize: (value: unknown) => {
-    const text = (isPlainObject(value) ? value : {}) as ModalTextInput;
-    return {
-      ...text,
-      title: typeof text.title === 'string' ? text.title : translate('Tip'),
-      confirm:
-        typeof text.confirm === 'string' ? text.confirm : translate('Confirm'),
-      cancel:
-        typeof text.cancel === 'string' ? text.cancel : translate('Cancel'),
-    };
+  defaultFactory: createDefaultText,
+  type: 'plainObject',
+  merge: 'shallow',
+  schema: {
+    title: 'string',
+    confirm: 'string',
+    cancel: 'string',
   },
-};
+} satisfies ConfigRule<ModalProps>;
+
+const MODAL_CLASS_NAMES_SCHEMA = {
+  layout: 'string',
+  modal: 'string',
+  header: 'string',
+  body: 'string',
+  footer: 'string',
+  title: 'string',
+  closeBtn: 'string',
+  cancelBtn: 'string',
+  confirmBtn: 'string',
+  button: 'string',
+} satisfies ConfigSchema;
 
 const MODAL_PROPS_SCHEMA = {
   content: { default: '', ...MODAL_CONTENT_RULE },
@@ -196,6 +211,7 @@ const MODAL_PROPS_SCHEMA = {
   showCancel: { default: true, type: 'boolean' },
   showClose: { default: true, type: 'boolean' },
   fullscreen: { default: false, type: 'boolean' },
+  style: { default: null, types: ['string', 'plainObject', 'null'] },
   text: MODAL_TEXT_RULE,
   onShow: { default: null, types: ['function', 'null'] },
   onShown: { default: null, types: ['function', 'null'] },
@@ -221,13 +237,11 @@ const MODAL_PROPS_SCHEMA = {
   bgClose: { default: false, type: 'boolean' },
   className: {
     default: DEFAULT_CLASS_NAMES,
-    type: 'object',
-    normalize: (value: unknown) => ({
-      ...DEFAULT_CLASS_NAMES,
-      ...(value && typeof value === 'object' ? value : {}),
-    }),
+    type: 'plainObject',
+    merge: 'shallow',
+    schema: MODAL_CLASS_NAMES_SCHEMA,
   },
-} satisfies ResolveSchema<ModalProps>;
+} satisfies ConfigSchema<ModalProps>;
 
 const MODAL_STATE_SCHEMA = {
   content: MODAL_PROPS_SCHEMA.content,
@@ -241,7 +255,7 @@ const MODAL_UPDATE_RULE = {
 };
 
 function normalizeProps(input: ModalProps): ResolvedModalProps {
-  const props = resolveProps(input, MODAL_PROPS_SCHEMA, 'Modal');
+  const props = resolveConfig(input, MODAL_PROPS_SCHEMA, 'Modal');
   return {
     content: props.content as ModalContent,
     cache: props.cache as boolean,

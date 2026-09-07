@@ -18,11 +18,8 @@ import { icon } from '../primitives/icons.ts';
 import { joinClasses } from '../utilities/dom.ts';
 import { createEventManager } from '../utilities/events.ts';
 import { randomId } from '../utilities/id.ts';
-import {
-  type ResolveSchema,
-  resolveProps,
-  validateParam,
-} from '../utilities/types.ts';
+import { type ConfigSchema, resolveConfig } from '../utilities/config.ts';
+import { validateParam } from '../utilities/types.ts';
 
 export type MenuType = string | undefined;
 export type MenuItemId = string | number;
@@ -123,13 +120,10 @@ const MENU_PROPS_SCHEMA = {
   backText: { default: translate('b'), type: 'string' },
   className: {
     default: DEFAULT_CLASS_NAMES,
-    type: 'object',
-    normalize: (value: unknown) => ({
-      ...DEFAULT_CLASS_NAMES,
-      ...(value && typeof value === 'object' ? value : {}),
-    }),
+    type: 'plainObject',
+    merge: 'shallow',
   },
-} satisfies ResolveSchema<MenuProps>;
+} satisfies ConfigSchema<MenuProps>;
 
 const MENU_STATE_SCHEMA = {
   user: { type: 'number' },
@@ -138,7 +132,7 @@ const MENU_STATE_SCHEMA = {
 };
 
 function normalizeProps(input: MenuProps = {}): ResolvedMenuProps {
-  const props = resolveProps(
+  const props = resolveConfig(
     input,
     MENU_PROPS_SCHEMA,
     'Menu.props'
@@ -148,7 +142,7 @@ function normalizeProps(input: MenuProps = {}): ResolvedMenuProps {
     ...props,
     user: props.user,
     data: props.data,
-    className: { ...props.className },
+    className: props.className,
   };
 }
 

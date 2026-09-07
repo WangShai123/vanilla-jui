@@ -18,7 +18,7 @@ import {
 } from '../utilities/dom.ts';
 import { createEventManager } from '../utilities/events.ts';
 import { randomId } from '../utilities/id.ts';
-import { type ResolveSchema, resolveProps } from '../utilities/types.ts';
+import { type ConfigSchema, resolveConfig } from '../utilities/config.ts';
 
 interface TocClassNames {
   toc: string;
@@ -110,19 +110,16 @@ const TOC_PROPS_SCHEMA = {
   reactive: { default: false, type: 'boolean' },
   className: {
     default: DEFAULT_CLASS_NAMES,
-    type: 'object',
-    normalize: (value: unknown) => ({
-      ...DEFAULT_CLASS_NAMES,
-      ...(value && typeof value === 'object' ? value : {}),
-    }),
+    type: 'plainObject',
+    merge: 'shallow',
   },
   onChange: { default: null, types: ['function', 'null'] },
-} satisfies ResolveSchema<TocProps>;
+} satisfies ConfigSchema<TocProps>;
 
 const ACTIVE_OFFSET_TOLERANCE = 1;
 
 function normalizeProps(input: TocProps): ResolvedTocProps {
-  const props = resolveProps(input, TOC_PROPS_SCHEMA, 'Toc.props');
+  const props = resolveConfig(input, TOC_PROPS_SCHEMA, 'Toc.props');
   return {
     target: props.target as DOMReference,
     headings: props.headings as string,

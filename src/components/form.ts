@@ -21,11 +21,8 @@ import {
 } from '../utilities/dom.ts';
 import { randomId } from '../utilities/id.ts';
 import { isPlainObject } from '../utilities/object.ts';
-import {
-  type ResolveSchema,
-  resolveProps,
-  validateParam,
-} from '../utilities/types.ts';
+import { type ConfigSchema, resolveConfig } from '../utilities/config.ts';
+import { validateParam } from '../utilities/types.ts';
 import {
   createValidator,
   type ValidatorClassNameConfig,
@@ -261,18 +258,18 @@ const FORM_PROPS_SCHEMA = {
   buttonsPosition: { default: 'start', type: 'string' },
   text: {
     default: DEFAULT_TEXT,
-    type: 'object',
-    normalize: (value: unknown) => resolveText(value),
+    type: 'plainObject',
+    merge: 'shallow',
   },
   className: {
     default: DEFAULT_CLASS_NAMES,
-    type: 'object',
-    normalize: (value: unknown) => resolveClassNames(value),
+    type: 'plainObject',
+    merge: 'shallow',
   },
-  validator: { default: {}, type: 'object' },
+  validator: { default: {}, type: 'plainObject' },
   onSubmit: { default: null, types: ['function', 'null'] },
   onReset: { default: null, types: ['function', 'null'] },
-} satisfies ResolveSchema<FormProps>;
+} satisfies ConfigSchema<FormProps>;
 
 function cloneOptions(
   options: readonly FieldOption[] | undefined
@@ -380,20 +377,6 @@ function fieldIsRequired(
   return !!field.required || !!rules?.[field.name]?.required;
 }
 
-function resolveClassNames(value: unknown): FormClassNames {
-  return {
-    ...DEFAULT_CLASS_NAMES,
-    ...(isPlainObject(value) ? (value as Partial<FormClassNames>) : {}),
-  } as FormClassNames;
-}
-
-function resolveText(value: unknown): FormText {
-  return {
-    ...DEFAULT_TEXT,
-    ...(isPlainObject(value) ? (value as FormTextConfig) : {}),
-  } as FormText;
-}
-
 function renderFormText(
   content: RenderableContent<Form>,
   form: Form
@@ -441,7 +424,7 @@ function cloneValidator(validator: unknown): FormValidatorConfig {
 }
 
 function normalizeProps(input: FormProps): ResolvedFormProps {
-  const props = resolveProps(input, FORM_PROPS_SCHEMA, 'Form.props');
+  const props = resolveConfig(input, FORM_PROPS_SCHEMA, 'Form.props');
   const fields = cloneFields(props.fields as readonly FormItem<FormField>[]);
   return {
     ...props,
@@ -453,8 +436,8 @@ function normalizeProps(input: FormProps): ResolvedFormProps {
     fields,
     buttons: props.buttons as FormButtons,
     buttonsPosition: props.buttonsPosition as string,
-    text: resolveText(props.text),
-    className: resolveClassNames(props.className),
+    text: props.text as FormText,
+    className: props.className as FormClassNames,
     validator: cloneValidator(props.validator),
     onSubmit: props.onSubmit as ResolvedFormProps['onSubmit'],
     onReset: props.onReset as ResolvedFormProps['onReset'],

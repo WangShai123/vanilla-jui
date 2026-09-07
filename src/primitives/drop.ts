@@ -8,7 +8,7 @@ import {
 } from '../utilities/dom.ts';
 import { createEventManager } from '../utilities/events.ts';
 import { randomId } from '../utilities/id.ts';
-import { type ResolveSchema, resolveProps } from '../utilities/types.ts';
+import { type ConfigSchema, resolveConfig } from '../utilities/config.ts';
 import { createLoading } from './loading.ts';
 
 type DropMode = 'hover' | 'click';
@@ -144,11 +144,8 @@ const DROP_PROPS_SCHEMA = {
   },
   className: {
     default: DEFAULT_CLASS_NAMES,
-    type: 'object',
-    normalize: (value: unknown) => ({
-      ...DEFAULT_CLASS_NAMES,
-      ...(value && typeof value === 'object' ? value : {}),
-    }),
+    type: 'plainObject',
+    merge: 'shallow',
   },
   id: {
     default: null,
@@ -166,10 +163,10 @@ const DROP_PROPS_SCHEMA = {
   hoverIntent: { default: true, type: 'boolean' },
   onShown: { default: null, types: ['function', 'null'] },
   onHidden: { default: null, types: ['function', 'null'] },
-} satisfies ResolveSchema<DropProps>;
+} satisfies ConfigSchema<DropProps>;
 
 function normalizeProps(input: DropProps): ResolvedDropProps {
-  const props = resolveProps(input, DROP_PROPS_SCHEMA, 'Drop');
+  const props = resolveConfig(input, DROP_PROPS_SCHEMA, 'Drop');
   return {
     name: props.name as string | null,
     mode: props.mode as DropMode,

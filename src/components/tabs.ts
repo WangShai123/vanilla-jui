@@ -23,11 +23,8 @@ import { createEventManager } from '../utilities/events.ts';
 import { randomId } from '../utilities/id.ts';
 import { createElementRef, createKeyedElementRefs } from '../utilities/refs.ts';
 import { createScheduledTask } from '../core/scheduler.ts';
-import {
-  type ResolveSchema,
-  resolveProps,
-  validateParam,
-} from '../utilities/types.ts';
+import { type ConfigSchema, resolveConfig } from '../utilities/config.ts';
+import { validateParam } from '../utilities/types.ts';
 
 export type TabsDirection = 'top' | 'bottom' | 'left' | 'right';
 export type TabsValue = number | string;
@@ -160,13 +157,10 @@ const TABS_PROPS_SCHEMA = {
   data: { default: [], type: 'array' },
   className: {
     default: DEFAULT_CLASS_NAMES,
-    type: 'object',
-    normalize: (value: unknown) => ({
-      ...DEFAULT_CLASS_NAMES,
-      ...(value && typeof value === 'object' ? value : {}),
-    }),
+    type: 'plainObject',
+    merge: 'shallow',
   },
-} satisfies ResolveSchema<TabsProps>;
+} satisfies ConfigSchema<TabsProps>;
 
 const TAB_CONFIG_RULE = {
   type: 'plainObject',
@@ -217,7 +211,7 @@ function normalizeDisabled(disabled: TabsDisabled): TabsDisabled {
 }
 
 function normalizeProps(input: TabsProps): ResolvedTabsProps {
-  const props = resolveProps(input, TABS_PROPS_SCHEMA, 'Tabs.props');
+  const props = resolveConfig(input, TABS_PROPS_SCHEMA, 'Tabs.props');
   return {
     id: props.id as string,
     direction: props.direction as TabsDirection,

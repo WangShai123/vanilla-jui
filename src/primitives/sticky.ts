@@ -1,7 +1,7 @@
 import { createDeepStore, flushSync } from 'vanilla-signal';
 import { randomId } from '../utilities/id.ts';
 import { type DOMReference, all, requireContainer } from '../utilities/dom.ts';
-import { type ResolveSchema, resolveProps } from '../utilities/types.ts';
+import { type ConfigSchema, resolveConfig } from '../utilities/config.ts';
 
 type StickyOverflow = 'destroy' | 'ignore';
 
@@ -91,10 +91,10 @@ const STICKY_PROPS_SCHEMA = {
   },
   reactive: { default: false, type: 'boolean' },
   onReBuild: { default: null, types: ['function', 'null'] },
-} satisfies ResolveSchema<StickyProps>;
+} satisfies ConfigSchema<StickyProps>;
 
 function normalizeProps(input: StickyProps): ResolvedStickyProps {
-  const props = resolveProps(input, STICKY_PROPS_SCHEMA, 'Sticky.props');
+  const props = resolveConfig(input, STICKY_PROPS_SCHEMA, 'Sticky.props');
   return {
     target: props.target as DOMReference,
     parent: props.parent as DOMReference,

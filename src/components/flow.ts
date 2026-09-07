@@ -7,11 +7,9 @@ import {
 import { asRenderable, type RenderableContent } from '../utilities/dom.ts';
 import { randomId } from '../utilities/id.ts';
 import { isPlainObject } from '../utilities/object.ts';
-import {
-  type ResolveSchema,
-  resolveProps,
-  validateParam,
-} from '../utilities/types.ts';
+import { type ConfigSchema, resolveConfig } from '../utilities/config.ts';
+import { mergeShallowConfig } from '../utilities/merge.ts';
+import { validateParam } from '../utilities/types.ts';
 import { translate } from '../utilities/locale.ts';
 
 export type FlowData = Record<string, unknown>;
@@ -382,15 +380,11 @@ function cloneSteps(steps: unknown): FlowStep[] {
 
 function normalizeClassNames(value: unknown): FlowClassNames {
   if (typeof value === 'string') {
-    return {
-      ...DEFAULT_CLASS_NAMES,
+    return mergeShallowConfig(DEFAULT_CLASS_NAMES, {
       root: [DEFAULT_CLASS_NAMES.root, value.trim()].filter(Boolean).join(' '),
-    };
+    }) as FlowClassNames;
   }
-  return {
-    ...DEFAULT_CLASS_NAMES,
-    ...(isPlainObject(value) ? (value as FlowClassNameConfig) : {}),
-  };
+  return value as FlowClassNames;
 }
 
 function normalizeStepResult(
@@ -434,22 +428,19 @@ const FLOW_PROPS_SCHEMA = {
   showNext: { default: true, type: 'boolean' },
   showReset: { default: false, type: 'boolean' },
   text: {
-    default: {},
+    defaultFactory: () => ({
+      back: translate('b'),
+      next: translate('Next'),
+      finish: translate('Finish'),
+      reset: translate('Reset'),
+    }),
     type: 'plainObject',
-    normalize: (value: unknown) => {
-      const text = isPlainObject(value) ? (value as Partial<FlowText>) : {};
-      return {
-        back: typeof text.back === 'string' ? text.back : translate('b'),
-        next: typeof text.next === 'string' ? text.next : translate('Next'),
-        finish:
-          typeof text.finish === 'string' ? text.finish : translate('Finish'),
-        reset: typeof text.reset === 'string' ? text.reset : translate('Reset'),
-      };
-    },
+    merge: 'shallow',
   },
   className: {
     default: DEFAULT_CLASS_NAMES,
-    types: ['object', 'string'],
+    types: ['plainObject', 'string'],
+    merge: 'shallow',
     normalize: normalizeClassNames,
   },
   renderHeader: {
@@ -473,10 +464,10 @@ const FLOW_PROPS_SCHEMA = {
   onFinish: { default: null, types: ['function', 'null'] },
   onError: { default: null, types: ['function', 'null'] },
   onBusy: { default: null, types: ['function', 'null'] },
-} satisfies ResolveSchema<FlowProps>;
+} satisfies ConfigSchema<FlowProps>;
 
 function normalizeProps(input: FlowProps): ResolvedFlowProps {
-  const props = resolveProps(input, FLOW_PROPS_SCHEMA, 'Flow.props');
+  const props = resolveConfig(input, FLOW_PROPS_SCHEMA, 'Flow.props');
   return {
     id: props.id as string,
     steps: cloneSteps(props.steps),

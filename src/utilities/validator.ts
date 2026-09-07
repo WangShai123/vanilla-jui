@@ -7,12 +7,8 @@ import {
   resolveElement,
 } from '../utilities/dom.ts';
 import { createEventManager } from '../utilities/events.ts';
-import { isPlainObject } from '../utilities/object.ts';
-import {
-  type ResolveSchema,
-  resolveProps,
-  validateParam,
-} from '../utilities/types.ts';
+import { type ConfigSchema, resolveConfig } from '../utilities/config.ts';
+import { validateParam } from '../utilities/types.ts';
 
 type ValidatorElement =
   | HTMLInputElement
@@ -99,21 +95,14 @@ const VALIDATOR_PROPS_SCHEMA = {
   vanilla: { default: false, type: 'boolean' },
   className: {
     default: DEFAULT_CLASS_NAMES,
-    type: 'object',
-    normalize: (value: unknown) => resolveClassNames(value),
+    type: 'plainObject',
+    merge: 'shallow',
   },
   onSubmit: { default: null, types: ['function', 'null'] },
-} satisfies ResolveSchema<ValidatorProps>;
-
-function resolveClassNames(value: unknown): ValidatorClassNames {
-  return {
-    ...DEFAULT_CLASS_NAMES,
-    ...(isPlainObject(value) ? (value as ValidatorClassNameConfig) : {}),
-  } as ValidatorClassNames;
-}
+} satisfies ConfigSchema<ValidatorProps>;
 
 function normalizeProps(input: ValidatorProps): ResolvedValidatorProps {
-  const props = resolveProps(input, VALIDATOR_PROPS_SCHEMA, 'Validator.props');
+  const props = resolveConfig(input, VALIDATOR_PROPS_SCHEMA, 'Validator.props');
   return {
     rules: props.rules as Record<string, ValidatorRule>,
     messages: props.messages as ValidatorMessageMap,
