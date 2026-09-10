@@ -52,7 +52,6 @@
   .j-input[type='month'],
   .j-input[type='file'],
   .j-input[type='color'] {
-    /* --input-font-size: var(--font-size-sm); */
     --input-fg: var(--ui-fg-muted);
   }
 
@@ -83,17 +82,16 @@
     --input-font-size: var(--font-size-lg);
   }
 
-  .input-group .el-addon .j-button {
+  .input-group .j-button {
     --btn-border-color: var(--ui-border);
     --btn-fg: var(--ui-fg-muted);
     --btn-bg: var(--ui-bg-muted);
     --btn-padding: 0 var(--s2);
-    --btn-box-shadow: none;
+    /* --btn-box-shadow: none; */
   }
 
   .input-group .el-addon .is-text {
     font-size: var(--font-size-md);
-    line-height: var(--line-height);
     color: var(--ui-fg-muted);
     background-color: var(--ui-bg-muted);
     padding: var(--s2);
@@ -140,16 +138,33 @@
     --btn-box-shadow: none;
   }
 
-  .input-inner-group input.j-input:not(:last-child) {
-    padding-right: var(--el-height-md);
+  .input-inner-group .el-addon + .j-input {
+    padding-inline: var(--space);
   }
 
-  .input-inner-group input.j-input:not(:first-child) {
-    padding-left: var(--el-height-md);
+  .input-inner-group .el-addon + .j-select {
+    -webkit-padding-start: 2px;
+    padding-inline-start: 2px;
   }
 
   .input-inner-group .el-addon {
     color: var(--ui-fg-muted);
+  }
+
+  .input-inner-group .el-addon .j-button:not(.is-icon) {
+    --btn-height: var(--el-height-sm);
+  }
+
+  .input-inner-group .el-addon .j-button.is-xs:not(.is-icon),
+  .input-inner-group .el-addon .j-button.is-sm:not(.is-icon) {
+    height: inherit;
+  }
+
+  .input-group .j-button:active,
+  .input-inner-group:has(input:focus),
+  .input-inner-group:has(select:focus) {
+    border-color: var(--tone-solid);
+    box-shadow: 0 0 0 4px var(--tone-ring);
   }
 
   .mobile .j-input[type='file']::file-selector-button {

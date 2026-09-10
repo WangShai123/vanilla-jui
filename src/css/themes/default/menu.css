@@ -598,7 +598,7 @@
   .drop-menu .drop-container {
     min-width: 100px;
     max-width: 200px;
-    padding: var(--s2);
+    padding: var(--space);
     font-size: var(--font-size-md);
     background-color: var(--ui-surface-subtle);
     border-radius: var(--radius-sm);

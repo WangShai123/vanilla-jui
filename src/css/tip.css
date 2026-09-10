@@ -29,12 +29,13 @@
 
   .j-tip .tip-content {
     grid-column-start: 2;
-    display: grid;
-    justify-items: start;
-    margin: 0;
   }
 
-  .j-tip .tip-content > * {
-    margin: 0;
+  .j-tip .tip-content > *:first-child {
+    margin-top: 0;
+  }
+
+  .j-tip .tip-content > *:last-child {
+    margin-bottom: 0;
   }
 }

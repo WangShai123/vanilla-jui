@@ -41,9 +41,4 @@
     justify-content: center;
     align-items: center;
   }
-
-  .editor-drop-color .color-panel .color-btn:last-of-type {
-    grid-column: span 5;
-    width: auto;
-  }
 }

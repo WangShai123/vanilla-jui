@@ -10,7 +10,7 @@
 
   .j-editor {
     --editor-font-size: var(--font-size-lg);
-    --editor-p-line-height: 1.75;
+    --editor-line-height: 1.75;
     --editor-word-space: 0.02em;
     --editor-letter-space: 0.01em;
     --editor-block-space: 1.25rem;
@@ -36,18 +36,15 @@
 
   .j-editor.is-sm {
     --editor-font-size: var(--font-size-md);
-    --editor-p-line-height: 1.75;
   }
 
   .j-editor.is-lg {
     --editor-font-size: var(--font-size-xl);
-    --editor-p-line-height: 1.8;
     --editor-block-space: 1.5rem;
   }
 
   .j-editor.is-xl {
     --editor-font-size: var(--font-size-2xl);
-    --editor-p-line-height: 1.8;
     --editor-block-space: 1.5rem;
   }
 

@@ -48,9 +48,16 @@
   .j-editor h5,
   .j-editor h6 {
     outline: none;
-    font-weight: 600;
     position: relative;
+    font-weight: 600;
     color: var(--editor-heading-fg);
+    margin-bottom: var(--editor-block-space);
+  }
+
+  .j-editor h2,
+  .j-editor h3,
+  .j-editor h4 {
+    line-height: 1.33333;
   }
 
   .j-editor h1 {
@@ -63,40 +70,33 @@
   .j-editor h2 {
     font-size: 1.5em;
     letter-spacing: -0.02em;
-    padding-top: 1.5rem;
-    margin-top: 3rem;
-    margin-bottom: var(--editor-block-space);
-    line-height: 1.33333;
-    border-top: 1px solid var(--editor-border-subtle);
+    margin-top: 2.25rem;
+    /* padding-top: 1.5rem; */
+    /* border-top: 1px solid var(--editor-border-subtle); */
   }
 
   .j-editor h3 {
     font-size: 1.25em;
     letter-spacing: -0.01em;
     margin-top: 2rem;
-    margin-bottom: var(--editor-block-space);
-    line-height: 1.4;
   }
 
   .j-editor h4 {
     font-size: 1.125em;
     letter-spacing: -0.01em;
     margin-top: 1.75rem;
-    margin-bottom: var(--editor-block-space);
-    line-height: 1.33333;
   }
 
   .j-editor h5,
   .j-editor h6 {
     font-size: 1em;
     margin-top: 1.5rem;
-    margin-bottom: var(--editor-block-space);
-    line-height: 1.5;
+    line-height: 1.4;
   }
 
   .j-editor p {
     margin-block: var(--editor-block-space);
-    line-height: var(--editor-p-line-height);
+    line-height: var(--editor-line-height);
   }
 
   /* ============================================
@@ -426,6 +426,10 @@
     display: none;
   }
 
+  .code-block .code-header select:focus-visible {
+    outline: 0;
+  }
+
   .j-editor pre code[class*='language-'] {
     display: block;
     padding: 1.25em 1.5em;
@@ -672,16 +676,29 @@
 
   .j-editor progress {
     max-width: 100%;
-    height: 0.5em;
-    margin: 0.5em 0;
     border-radius: 9999px;
     overflow: hidden;
+    height: 0.625em;
+    margin-block: 0.25em;
   }
 
   .j-editor meter {
     max-width: 100%;
     height: 1em;
-    margin: 0.25em 0;
+    margin-block: 0.125em;
+  }
+
+  .j-editor progress::-webkit-progress-value,
+  .j-editor meter::-webkit-meter-optimum-value {
+    background-color: var(--tone-solid);
+    border-radius: 9999px;
+  }
+
+  .j-editor progress::-webkit-progress-bar,
+  .j-editor meter::-webkit-meter-bar {
+    background-color: var(--tone-border);
+    border: none;
+    border-radius: 9999px;
   }
 
   /* ============================================
@@ -722,5 +739,70 @@
     scrollbar-width: thin;
     scrollbar-color: var(--ui-border) transparent;
     display: block;
+  }
+
+  /* ============================================
+   * tasklist
+   * ========================================= */
+  .j-editor ul[data-type='taskList'] {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .j-editor ul[data-type='taskList'] li {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  .j-editor ul[data-type='taskList'] li label,
+  .j-editor ul[data-type='taskList'] li div {
+    display: flex;
+  }
+
+  .j-editor ul[data-type='taskList'] li > label {
+    flex: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+
+  .j-editor ul[data-type='taskList'] li div {
+    flex: auto;
+  }
+
+  .j-editor ul[data-type='taskList'] li div p {
+    line-height: 1.5;
+  }
+
+  .j-editor input[type='checkbox'] {
+    border: 1px solid var(--ui-border);
+    border-radius: var(--radius-sm);
+    background: var(--ui-bg);
+    clear: none;
+    cursor: pointer;
+    display: inline-block;
+    width: 1rem;
+    height: 1rem;
+    margin: 0;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    transition: all 0.05s ease-in-out;
+  }
+
+  .j-editor input[type='checkbox']:checked {
+    background: var(--tone-solid);
+    border-color: var(--tone-solid);
+  }
+
+  .j-editor input[type='checkbox']:checked:before {
+    content: url('data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2020%2020%27%3E%3Cpath%20d%3D%27M14.83%204.89l1.34.94-5.81%208.38H9.02L5.78%209.67l1.34-1.25%202.57%202.4z%27%20fill%3D%27%23ffffff%27%2F%3E%3C%2Fsvg%3E');
+    display: inline-block;
+    margin: -0.1875rem 0 0 -0.25rem;
+    width: 1.3125rem;
+    height: 1.3125rem;
   }
 }

@@ -24,7 +24,7 @@
     align-self: center;
   }
 
-  .heading-drop-menu,
+  /* .heading-drop-menu,
   .editor-size-menu,
   .color-drop-menu,
   .editor-drop-heading,
@@ -35,14 +35,14 @@
     border: 1px solid var(--ui-border);
     border-radius: var(--radius-sm);
     font-size: var(--font-size-md);
-  }
+  } */
 
-  .editor-drop-color {
+  /* .editor-drop-color {
     padding: var(--space);
-  }
+  } */
 
   .editor-drop-color .color-panel {
-    padding: 0.5rem;
+    padding: var(--space);
     gap: 0.5rem;
   }
 
@@ -54,6 +54,11 @@
     height: 32px;
     border-radius: var(--radius-sm);
     border: 1px solid var(--ui-border);
+  }
+
+  .editor-drop-color .color-panel .color-btn:last-of-type {
+    grid-column: span 5;
+    width: auto;
   }
 
   .editor-drop-color .color-panel button.color-btn.color-btn-clear::after {

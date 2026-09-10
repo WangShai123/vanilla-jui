@@ -30,14 +30,13 @@
   }
 
   .j-tip .tip-title {
-    line-height: var(--line-height-paragraph);
+    /* line-height: var(--line-height-paragraph); */
     font-weight: var(--font-medium);
   }
 
-  .j-tip .tip-content {
-    gap: var(--s2);
+  /* .j-tip .tip-content {
     line-height: var(--line-height-paragraph);
-  }
+  } */
 
   .j-tip.is-success {
     --tip-border-color: var(--state-success);
