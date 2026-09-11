@@ -24,25 +24,7 @@
     align-self: center;
   }
 
-  /* .heading-drop-menu,
-  .editor-size-menu,
-  .color-drop-menu,
-  .editor-drop-heading,
-  .editor-drop-size,
-  .editor-drop-color {
-    background: var(--ui-bg-subtle);
-    box-shadow: var(--shadow-md);
-    border: 1px solid var(--ui-border);
-    border-radius: var(--radius-sm);
-    font-size: var(--font-size-md);
-  } */
-
-  /* .editor-drop-color {
-    padding: var(--space);
-  } */
-
   .editor-drop-color .color-panel {
-    padding: var(--space);
     gap: 0.5rem;
   }
 
@@ -59,13 +41,6 @@
   .editor-drop-color .color-panel .color-btn:last-of-type {
     grid-column: span 5;
     width: auto;
-  }
-
-  .editor-drop-color .color-panel button.color-btn.color-btn-clear::after {
-    content: '🚫';
-    height: 30px;
-    background: var(--ui-bg-subtle);
-    border-radius: var(--radius-sm);
   }
 
   .j-toolbar button.is-sm svg {

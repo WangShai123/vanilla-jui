@@ -292,14 +292,11 @@
   ============================================ */
   .j-editor blockquote {
     margin: var(--editor-block-space) 0;
-    margin-left: 0;
-    margin-right: 0;
     padding: 0.75rem 1.25rem;
     border-left: 3px solid var(--editor-border-tone);
     border-radius: 0 var(--radius-md) var(--radius-md) 0;
     background-color: var(--editor-blockquote-bg);
     color: var(--editor-blockquote-fg);
-    font-style: italic;
   }
 
   /* .j-editor blockquote p {
@@ -581,11 +578,11 @@
   }
 
   .j-editor figcaption {
-    margin-top: 0.75rem;
+    margin-top: 0.5rem;
     font-size: var(--font-size-md);
     color: var(--editor-caption-fg);
     text-align: center;
-    line-height: 1.5;
+    line-height: 1.2;
   }
 
   .j-editor iframe,
@@ -753,7 +750,7 @@
   .j-editor ul[data-type='taskList'] li {
     display: flex;
     align-items: center;
-    gap: 0.25rem;
+    gap: 0.5rem;
   }
 
   .j-editor ul[data-type='taskList'] li label,
@@ -798,11 +795,23 @@
     border-color: var(--tone-solid);
   }
 
+  .dark .j-editor input[type='checkbox']:checked {
+    background: var(--tone-shade);
+    border-color: var(--tone-shade);
+  }
+
   .j-editor input[type='checkbox']:checked:before {
     content: url('data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2020%2020%27%3E%3Cpath%20d%3D%27M14.83%204.89l1.34.94-5.81%208.38H9.02L5.78%209.67l1.34-1.25%202.57%202.4z%27%20fill%3D%27%23ffffff%27%2F%3E%3C%2Fsvg%3E');
     display: inline-block;
     margin: -0.1875rem 0 0 -0.25rem;
     width: 1.3125rem;
     height: 1.3125rem;
+  }
+
+  .j-editor ul[data-type='taskList'] li:has(input[type='checkbox']:checked) p {
+    text-decoration: line-through;
+    -webkit-text-decoration-color: var(--ui-fg);
+    text-decoration-color: var(--ui-fg);
+    text-decoration-thickness: 2px;
   }
 }
