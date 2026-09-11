@@ -6,12 +6,7 @@
     flex-wrap: nowrap;
     position: relative;
     white-space: nowrap;
-    -webkit-appearance: button;
-    -moz-appearance: button;
     appearance: button;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
     user-select: none;
     touch-action: manipulation;
   }

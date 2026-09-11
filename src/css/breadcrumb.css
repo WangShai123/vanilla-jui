@@ -1,9 +1,6 @@
 @layer components {
   .j-breadcrumb {
     white-space: nowrap;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
     user-select: none;
   }
 
@@ -25,7 +22,6 @@
   }
 
   .j-breadcrumb li:first-child a {
-    -webkit-padding-start: 0;
     padding-inline-start: 0;
   }
 

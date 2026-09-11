@@ -33,6 +33,15 @@ export default defineConfig({
       },
       css: {
         minify: true,
+        lightningcss: {
+          sourceMap: false,
+          targets: {
+            chrome: 94,
+            firefox: 93,
+            safari: (15 << 16) | (4 << 8),
+            edge: 94,
+          },
+        },
       },
       outputOptions: {
         globals: {

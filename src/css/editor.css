@@ -116,7 +116,7 @@
   .j-editor u {
     text-decoration: underline;
     text-decoration-thickness: 4px;
-    -webkit-text-decoration-color: var(--editor-ring);
+
     text-decoration-color: var(--editor-ring);
     text-underline-offset: 0.2em;
   }
@@ -150,9 +150,7 @@
   }
 
   .j-editor abbr[title] {
-    -webkit-text-decoration: underline dotted;
     text-decoration: underline dotted;
-    -webkit-text-decoration-color: var(--tone-muted);
     text-decoration-color: var(--tone-muted);
     text-underline-offset: 0.2em;
     cursor: help;
@@ -178,25 +176,17 @@
   .j-editor a {
     color: var(--editor-link);
     text-decoration: none;
-    -webkit-text-decoration-color: transparent;
+
     text-decoration-color: transparent;
     text-underline-offset: 0.15em;
     transition:
       color 0.15s,
-      -webkit-text-decoration-color 0.15s;
-    transition:
-      color 0.15s,
       text-decoration-color 0.15s;
-    transition:
-      color 0.15s,
-      text-decoration-color 0.15s,
-      -webkit-text-decoration-color 0.15s;
   }
 
   .j-editor a:hover {
     color: var(--editor-link-hover);
     text-decoration: underline;
-    -webkit-text-decoration-color: var(--editor-link-hover);
     text-decoration-color: var(--editor-link-hover);
   }
 
@@ -328,7 +318,6 @@
     Code - 代码
   ============================================ */
   code {
-    -webkit-box-decoration-break: clone;
     box-decoration-break: clone;
   }
 
@@ -412,8 +401,6 @@
   }
 
   .code-block .code-header select {
-    -webkit-appearance: none;
-    -moz-appearance: none;
     appearance: none;
     background: transparent;
     border: none;
@@ -760,9 +747,6 @@
 
   .j-editor ul[data-type='taskList'] li > label {
     flex: none;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
     user-select: none;
   }
 
@@ -784,8 +768,6 @@
     width: 1rem;
     height: 1rem;
     margin: 0;
-    -webkit-appearance: none;
-    -moz-appearance: none;
     appearance: none;
     transition: all 0.05s ease-in-out;
   }
@@ -810,7 +792,6 @@
 
   .j-editor ul[data-type='taskList'] li:has(input[type='checkbox']:checked) p {
     text-decoration: line-through;
-    -webkit-text-decoration-color: var(--ui-fg);
     text-decoration-color: var(--ui-fg);
     text-decoration-thickness: 2px;
   }

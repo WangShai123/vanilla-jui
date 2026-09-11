@@ -31,14 +31,4 @@
     display: grid;
     grid-template-columns: repeat(5, 1fr);
   }
-
-  .editor-drop-color .color-panel button.color-btn {
-    cursor: pointer;
-  }
-
-  .editor-drop-color .color-panel button.color-btn.color-btn-clear::after {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
 }

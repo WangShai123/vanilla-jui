@@ -4,7 +4,6 @@
   }
 
   .j-pagination a {
-    -webkit-text-decoration: none;
     text-decoration: none;
     color: var(--ui-fg);
   }

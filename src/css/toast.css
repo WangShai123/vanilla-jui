@@ -33,13 +33,8 @@
     top: 45%;
     left: 50%;
     z-index: var(--z-toast);
-    width: -webkit-fit-content;
-    width: -moz-fit-content;
     width: fit-content;
     text-align: center;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
     user-select: none;
     pointer-events: none;
     transform: translate(-50%, -50%);

@@ -58,7 +58,6 @@
   }
 
   .j-avatar-group .j-avatar:not(:first-child) {
-    -webkit-margin-start: calc(var(--space) * -3);
     margin-inline-start: calc(var(--space) * -3);
   }
 

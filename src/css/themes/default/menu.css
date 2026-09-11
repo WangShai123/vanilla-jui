@@ -22,9 +22,7 @@
     line-height: var(--menu-item-line-height);
     font-weight: var(--menu-font-weight);
     text-decoration: underline;
-    -webkit-text-decoration-style: wavy;
     text-decoration-style: wavy;
-    -webkit-text-decoration-color: var(--state-danger);
     text-decoration-color: var(--state-danger);
     text-underline-offset: 4px;
     padding: 4px 1rem;
@@ -621,9 +619,6 @@
     padding: var(--space) var(--s2);
     text-decoration: none;
     color: var(--ui-fg-muted);
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
     user-select: none;
     border-radius: var(--radius-sm);
     transition: none;

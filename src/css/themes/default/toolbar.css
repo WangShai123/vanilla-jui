@@ -24,11 +24,8 @@
     align-self: center;
   }
 
-  .editor-drop-color .color-panel {
-    gap: 0.5rem;
-  }
-
   .editor-drop-color .color-panel button.color-btn {
+    cursor: pointer;
     padding: 0;
     margin: 0;
     outline: none;

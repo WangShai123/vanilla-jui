@@ -3,9 +3,6 @@
     display: inline-block;
     vertical-align: middle;
     overflow: hidden;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
     user-select: none;
     -o-object-fit: cover;
     object-fit: cover;

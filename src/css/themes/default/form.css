@@ -143,7 +143,6 @@
   }
 
   .input-inner-group .el-addon + .j-select {
-    -webkit-padding-start: 2px;
     padding-inline-start: 2px;
   }
 
@@ -170,7 +169,6 @@
   .mobile .j-input[type='file']::file-selector-button {
     padding: var(--s3);
     margin: calc(var(--space) * -1.7);
-    -webkit-margin-end: calc(var(--space) * 2.75);
     margin-inline-end: calc(var(--space) * 2.75);
   }
 

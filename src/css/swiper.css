@@ -4,9 +4,6 @@
     display: block;
     overflow: hidden;
     touch-action: pan-y;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
     user-select: none;
     width: 100%;
     min-height: var(--swiper-min-height);
@@ -29,9 +26,6 @@
     overflow: hidden;
     color: inherit;
     text-decoration: none;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
     user-select: none;
     width: 100%;
     min-width: 100%;

@@ -46,8 +46,6 @@
     margin: 0;
     padding: 0;
     padding: var(--space) var(--s2);
-    -webkit-appearance: none;
-    -moz-appearance: none;
     appearance: none;
     cursor: pointer;
   }
@@ -70,7 +68,6 @@
   .j-card figure img {
     width: 100%;
     height: 100%;
-    -o-object-fit: cover;
     object-fit: cover;
   }
 
