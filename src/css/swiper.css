@@ -51,7 +51,6 @@
   .j-swiper .swiper-image {
     position: relative;
     display: block;
-    -o-object-fit: cover;
     object-fit: cover;
     pointer-events: none;
     width: 100%;

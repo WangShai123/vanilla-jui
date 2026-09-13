@@ -1,9 +1,5 @@
 @layer components {
-  .j-theme-palette .palette-container {
-    display: flex;
-    flex-direction: column;
-  }
-
+  .j-theme-palette .palette-container,
   .j-theme-palette .palette-item {
     display: flex;
     flex-direction: column;

@@ -71,8 +71,6 @@
     font-size: 1.5em;
     letter-spacing: -0.02em;
     margin-top: 2.25rem;
-    /* padding-top: 1.5rem; */
-    /* border-top: 1px solid var(--editor-border-subtle); */
   }
 
   .j-editor h3 {
@@ -348,8 +346,6 @@
     background: var(--editor-code-bg);
     font-size: 0.875em;
     line-height: 1.6;
-    -moz-tab-size: 2;
-    -o-tab-size: 2;
     tab-size: 2;
   }
 

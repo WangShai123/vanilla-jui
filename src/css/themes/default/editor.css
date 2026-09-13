@@ -40,12 +40,12 @@
 
   .j-editor.is-lg {
     --editor-font-size: var(--font-size-xl);
-    --editor-block-space: 1.5rem;
+    /* --editor-block-space: 1.5rem; */
   }
 
   .j-editor.is-xl {
     --editor-font-size: var(--font-size-2xl);
-    --editor-block-space: 1.5rem;
+    /* --editor-block-space: 1.5rem; */
   }
 
   .j-radius-round .j-editor {
@@ -79,7 +79,7 @@
   }
 
   .mobile .j-editor h1 {
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
   }
 
   .mobile .j-editor h2,
@@ -87,10 +87,10 @@
   .mobile .j-editor h4,
   .mobile .j-editor h5,
   .mobile .j-editor p {
-    --editor-block-space: 1.75rem;
+    --editor-block-space: 1.5rem;
   }
 
-  .mobile .j-editor li p {
+  /* .mobile .j-editor li p {
     margin-block: 0;
-  }
+  } */
 }

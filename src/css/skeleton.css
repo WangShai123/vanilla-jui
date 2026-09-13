@@ -11,11 +11,6 @@
     animation: animate-pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
 
-  .j-skeleton::-moz-selection {
-    color: transparent;
-    background: transparent;
-  }
-
   .j-skeleton::selection {
     color: transparent;
     background: transparent;

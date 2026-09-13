@@ -4,7 +4,6 @@
     vertical-align: middle;
     overflow: hidden;
     user-select: none;
-    -o-object-fit: cover;
     object-fit: cover;
   }
 

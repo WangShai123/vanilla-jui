@@ -7,13 +7,11 @@
   }
 
   .j-tip:has(.tip-icon) {
-    -moz-column-gap: var(--s3);
     column-gap: var(--s3);
     grid-template-columns: var(--s4) 1fr;
   }
 
   .j-font-md .j-tip:has(.tip-icon) {
-    -moz-column-gap: var(--s5);
     column-gap: var(--s5);
   }
 
