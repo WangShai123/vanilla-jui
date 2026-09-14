@@ -6,6 +6,7 @@ export default {
     md: 'Medium',
     lg: 'Large',
     wn: 'Your browser is outdated and may pose security risks. Please upgrade your browser to access this site.',
+    toc: 'On this page',
   },
   zh: {
     b: '返回',
@@ -52,5 +53,6 @@ export default {
     'Go to next page': '访问下一页',
     Next: '下一步',
     Finish: '完成',
+    toc: '页面导航',
   },
 };

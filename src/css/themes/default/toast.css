@@ -23,6 +23,7 @@
     border-radius: var(--radius-md);
     min-width: 200px;
     max-width: 310px;
+    backdrop-filter: blur(4px);
   }
 
   .j-toast .el-icon {
@@ -31,25 +32,25 @@
 
   .j-toast.is-success {
     --toast-fg: var(--state-success);
-    --toast-bg: var(--state-success-weak);
+    --toast-bg: var(--state-success-soft);
     --toast-border-color: var(--state-success-border);
   }
 
   .j-toast.is-error {
     --toast-fg: var(--state-danger);
-    --toast-bg: var(--state-danger-weak);
+    --toast-bg: var(--state-danger-soft);
     --toast-border-color: var(--state-danger-border);
   }
 
   .j-toast.is-warning {
     --toast-fg: var(--state-warning);
-    --toast-bg: var(--state-warning-weak);
+    --toast-bg: var(--state-warning-soft);
     --toast-border-color: var(--state-warning-border);
   }
 
   .j-toast.is-primary {
     --toast-fg: var(--tone-solid);
-    --toast-bg: var(--tone-weak);
+    --toast-bg: var(--tone-soft);
     --toast-border-color: var(--tone-border);
   }
 

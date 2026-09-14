@@ -771,7 +771,7 @@ interface ToastOptions extends ToastThemeOptions {
   onClose?: () => void | Promise<void>;
   onCancel?: () => void | Promise<void>;
 }
-interface ToastConfirmProps extends ToastThemeOptions {
+interface ToastConfirmProps extends ToastClassNameOptions {
   once?: boolean;
   text?: {
     close?: string;
@@ -1002,10 +1002,10 @@ declare function defineComponent<TProps extends ComponentProps, TState extends C
 //#region src/components/toc.d.ts
 interface TocClassNames {
   toc: string;
+  title: string;
   list: string;
   link: string;
-  active: string;
-  levelPrefix: string;
+  indicator: string;
 }
 type TocClassNameConfig = Partial<TocClassNames>;
 interface TocItem {
@@ -1017,11 +1017,21 @@ interface TocCurrent {
   index: number;
   item: TocItem | null;
 }
+interface TocIndicator {
+  visible: boolean;
+  top: number;
+  height: number;
+  duration: number;
+  timingFunction: string;
+}
 interface TocProps extends Record<string, unknown> {
   target?: DOMReference;
   headings?: string;
   offset?: number;
   reactive?: boolean;
+  title?: boolean;
+  indicatorWidth?: string;
+  indicatorHeightRatio?: number;
   className?: TocClassNameConfig;
   onChange?: ((item: TocItem | null, index: number, toc: TocInstance) => void) | null;
 }
@@ -1030,12 +1040,16 @@ interface ResolvedTocProps extends Record<string, unknown> {
   headings: string;
   offset: number;
   reactive: boolean;
+  title: boolean;
+  indicatorWidth: string;
+  indicatorHeightRatio: number;
   className: TocClassNames;
   onChange: ((item: TocItem | null, index: number, toc: TocInstance) => void) | null;
 }
 interface TocState extends Record<string, unknown> {
   items: TocItem[];
   current: TocCurrent;
+  indicator: TocIndicator;
 }
 interface TocActions {
   activate(index: number): TocInstance;
@@ -1873,4 +1887,4 @@ interface MenuState extends Record<string, unknown> {
 type Menu = FunctionalComponent<ResolvedMenuProps, MenuState, HTMLElement>;
 declare function createMenu(input?: MenuProps): Menu;
 //#endregion
-export { ClassNameToken, CleanupFunction, CollapseMotionController, CollapseTransitionDefinition, ComponentCleanup, ComponentContext, ComponentController, ComponentDefinition, ComponentLifecycleEvent, ComponentListener, ComponentPlugin, ComponentPluginOptions, ComponentProps, ComponentRuntime, ComponentState, CompressOptions, ConfigNormalizeContext, ConfigRule, ConfigRuleInput, ConfigSchema, ContainerExpect, DOMReference, DropInstance, ElementRef, FieldOption, Flow, FlowAction, FlowBusyHook, FlowBusyStrategy, FlowChangeHook, FlowClassNameConfig, FlowClassNames, FlowCleanup, FlowContext, FlowData, FlowDirection, FlowErrorHook, FlowFinishHook, FlowGoToOptions, FlowGuardHook, FlowLifecycleHook, FlowMoveHook, FlowPayload, FlowProps, FlowRenderContext, FlowSlot, FlowSlotName, FlowSnapshot, FlowState, FlowStep, FlowStepResult, FlowSubscriber, FlowTarget, FlowText, Form, FormButtons, FormClassNameConfig, FormClassNames, FormDataRecord, FormDataValue, FormField, FormItem, FormItemNext, FormItemType, FormOption, FormProps, FormText, FormTextConfig, FormValidatorConfig, FunctionalComponent, IEventManager, IconAttributeValue, IconName, IconPathMap, IconProps, ImgCompressInstance, KeyedElementRefs, LazyRenderCallback, LazyRenderOptions, LazyRenderTarget, Menu, MenuClassNameConfig, MenuClassNames, MenuItem, MenuItemId, MenuItemRenderType, MenuProps, MenuType, MergeContext, MergeStrategy, Modal, ModalClassNameConfig, ModalClassNames, ModalProps, ModalText, MotionController, Offcanvas, OffcanvasAnimate, OffcanvasClassNameConfig, OffcanvasClassNames, OffcanvasContent, OffcanvasDirection, OffcanvasProps, OwnedView, OwnedViewOptions, Pagination, PaginationClassNameConfig, PaginationClassNames, PaginationCount, PaginationPage, PaginationProps, ParabolaInstance, ParamRule, ParamRuleInput, ParamShapeSchema, PopupProps, PresenceController, PresenceOptions, PresencePhase, PublicFlowStep, QueryContext, RenderableContent, RequireContainerResult, ResolveContainerResult, ResolvedConfig, StateSyncOptions, SupportES2022, Swiper, SwiperClassNameConfig, SwiperClassNames, SwiperDataItem, SwiperDataLoader, SwiperDataSource, SwiperProps, SwiperSlideContext, TabContent, TabItem, Tabs, TabsClassNameConfig, TabsClassNames, TabsDirection, TabsDisabled, TabsPanelContext, TabsProps, TabsValue, ThemeClassNameConfig, ThemeClassNames, ThemeConfigKey, ThemeInstance, ThemeOptions, ThemePanelGroup, ThemeResolvedOptions, Toast, ToastClassNameConfig, ToastClassNameOptions, ToastClassNames, ToastConfirmProps, ToastOptions, ToastTheme, ToastThemeOptions, TocCurrent, TocItem, TooltipInstance, TransitionDefinition, TransitionTarget, ValidateCondition, ValidatorClassNameConfig, ValidatorClassNames, ValidatorInstance, addIcons, all, asRenderable, checkModernBrowser, cloneConfigValue, copy, createAccordion, createCollapseTransition, createDrop, createElementRef, createEventManager, createFlow, createForm, createImgCompress, createKeyedElementRefs, createLoading, createMenu, createModal, createMotionGroup, createOffcanvas, createOwnedView, createPagination, createParabola, createPopup, createPresence, createScheduledTask, createStateSync, createSticky, createSwiper, createTabs, createTheme, createToc, createTooltip, createTransition, createValidator, defineComponent, flexPosition, getImgCompressInstance, getRegistedIconPath, getStoreVersion, getType, hashQueryParams, icon, iconHtml, iconMarkup, isDomElementValue, isDomNodeValue, isElement, isHtmlElementValue, isMobile, isModernBrowser, isNilValue, isNode, isPlainObject, isRenderableContent, isRenderablePrimitive, isRenderableValue, joinClasses, lazyRender, listen, mergeConfigValue, mergeDeepConfig, mergeShallowConfig, postJson, q, randomId, removeComponentPlugin, requireContainer, resetImgCompressInstance, resolveConfig, resolveContainer, resolveElement, resolveNode, resolveNodeList, restUrl, stateSnapshot, timer, trackStoreVersion, useComponentPlugin, uuid, validateParam, waitForMotion };
+export { ClassNameToken, CleanupFunction, CollapseMotionController, CollapseTransitionDefinition, ComponentCleanup, ComponentContext, ComponentController, ComponentDefinition, ComponentLifecycleEvent, ComponentListener, ComponentPlugin, ComponentPluginOptions, ComponentProps, ComponentRuntime, ComponentState, CompressOptions, ConfigNormalizeContext, ConfigRule, ConfigRuleInput, ConfigSchema, ContainerExpect, DOMReference, DropInstance, ElementRef, FieldOption, Flow, FlowAction, FlowBusyHook, FlowBusyStrategy, FlowChangeHook, FlowClassNameConfig, FlowClassNames, FlowCleanup, FlowContext, FlowData, FlowDirection, FlowErrorHook, FlowFinishHook, FlowGoToOptions, FlowGuardHook, FlowLifecycleHook, FlowMoveHook, FlowPayload, FlowProps, FlowRenderContext, FlowSlot, FlowSlotName, FlowSnapshot, FlowState, FlowStep, FlowStepResult, FlowSubscriber, FlowTarget, FlowText, Form, FormButtons, FormClassNameConfig, FormClassNames, FormDataRecord, FormDataValue, FormField, FormItem, FormItemNext, FormItemType, FormOption, FormProps, FormText, FormTextConfig, FormValidatorConfig, FunctionalComponent, IEventManager, IconAttributeValue, IconName, IconPathMap, IconProps, ImgCompressInstance, KeyedElementRefs, LazyRenderCallback, LazyRenderOptions, LazyRenderTarget, Menu, MenuClassNameConfig, MenuClassNames, MenuItem, MenuItemId, MenuItemRenderType, MenuProps, MenuType, MergeContext, MergeStrategy, Modal, ModalClassNameConfig, ModalClassNames, ModalProps, ModalText, MotionController, Offcanvas, OffcanvasAnimate, OffcanvasClassNameConfig, OffcanvasClassNames, OffcanvasContent, OffcanvasDirection, OffcanvasProps, OwnedView, OwnedViewOptions, Pagination, PaginationClassNameConfig, PaginationClassNames, PaginationCount, PaginationPage, PaginationProps, ParabolaInstance, ParamRule, ParamRuleInput, ParamShapeSchema, PopupProps, PresenceController, PresenceOptions, PresencePhase, PublicFlowStep, QueryContext, RenderableContent, RequireContainerResult, ResolveContainerResult, ResolvedConfig, StateSyncOptions, SupportES2022, Swiper, SwiperClassNameConfig, SwiperClassNames, SwiperDataItem, SwiperDataLoader, SwiperDataSource, SwiperProps, SwiperSlideContext, TabContent, TabItem, Tabs, TabsClassNameConfig, TabsClassNames, TabsDirection, TabsDisabled, TabsPanelContext, TabsProps, TabsValue, ThemeClassNameConfig, ThemeClassNames, ThemeConfigKey, ThemeInstance, ThemeOptions, ThemePanelGroup, ThemeResolvedOptions, Toast, ToastClassNameConfig, ToastClassNameOptions, ToastClassNames, ToastConfirmProps, ToastOptions, ToastTheme, ToastThemeOptions, TocCurrent, TocIndicator, TocItem, TooltipInstance, TransitionDefinition, TransitionTarget, ValidateCondition, ValidatorClassNameConfig, ValidatorClassNames, ValidatorInstance, addIcons, all, asRenderable, checkModernBrowser, cloneConfigValue, copy, createAccordion, createCollapseTransition, createDrop, createElementRef, createEventManager, createFlow, createForm, createImgCompress, createKeyedElementRefs, createLoading, createMenu, createModal, createMotionGroup, createOffcanvas, createOwnedView, createPagination, createParabola, createPopup, createPresence, createScheduledTask, createStateSync, createSticky, createSwiper, createTabs, createTheme, createToc, createTooltip, createTransition, createValidator, defineComponent, flexPosition, getImgCompressInstance, getRegistedIconPath, getStoreVersion, getType, hashQueryParams, icon, iconHtml, iconMarkup, isDomElementValue, isDomNodeValue, isElement, isHtmlElementValue, isMobile, isModernBrowser, isNilValue, isNode, isPlainObject, isRenderableContent, isRenderablePrimitive, isRenderableValue, joinClasses, lazyRender, listen, mergeConfigValue, mergeDeepConfig, mergeShallowConfig, postJson, q, randomId, removeComponentPlugin, requireContainer, resetImgCompressInstance, resolveConfig, resolveContainer, resolveElement, resolveNode, resolveNodeList, restUrl, stateSnapshot, timer, trackStoreVersion, useComponentPlugin, uuid, validateParam, waitForMotion };

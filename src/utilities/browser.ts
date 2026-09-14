@@ -128,7 +128,6 @@ export function isModernBrowser(): SupportES2022 {
 export function checkModernBrowser(): SupportES2022 {
   if (!isModernBrowser()) {
     Toast.confirm(translate('wn'), {
-      theme: 'error',
       onConfirm: () => {
         window.open('https://www.google.cn/chrome/fallback/', '_blank');
       },

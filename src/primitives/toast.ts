@@ -57,7 +57,7 @@ export interface ToastOptions extends ToastThemeOptions {
   onCancel?: () => void | Promise<void>;
 }
 
-export interface ToastConfirmProps extends ToastThemeOptions {
+export interface ToastConfirmProps extends ToastClassNameOptions {
   once?: boolean;
   text?: {
     close?: string;
@@ -453,16 +453,14 @@ function confirm(message = '', props: ToastConfirmProps = {}): HTMLElement {
   validateParam('message', message, 'string', 'Toast.confirm');
   const closeText = props.text?.close || translate('Close');
   const confirmText = props.text?.confirm || translate('Confirm');
-  const theme = props.theme || 'info';
   validateParam('once', once, 'boolean', 'Toast.confirm');
-  validateParam('theme', theme, TOAST_THEME_RULE, 'Toast.confirm');
   const names = mergeShallowConfig(
     classNames,
     props.className ?? {}
   ) as ToastClassNames;
   const id = randomId();
   const element = jsx('div', {
-    className: joinClasses(names.confirm, names[theme]),
+    className: names.confirm,
     'data-toast': id,
     'data-toast-confirm': '',
     children: [

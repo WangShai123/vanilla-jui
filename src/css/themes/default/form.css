@@ -139,7 +139,7 @@
   }
 
   .input-inner-group .el-addon + .j-input {
-    padding-inline: var(--space);
+    padding-inline: 0 var(--space);
   }
 
   .input-inner-group .el-addon + .j-select {

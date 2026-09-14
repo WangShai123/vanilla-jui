@@ -208,15 +208,15 @@ describe('Toast', () => {
   it('supports confirm toast callbacks and clearAll', async () => {
     const onConfirm = vi.fn<() => Promise<void>>(async () => {});
     const toast = Toast.confirm('Confirm?', {
-      theme: 'warning',
       text: { close: 'No', confirm: 'Yes' },
       onConfirm,
     });
 
     vi.advanceTimersByTime(11);
-    const duplicate = Toast.confirm('Ignored duplicate?', { theme: 'error' });
+    const duplicate = Toast.confirm('Ignored duplicate?');
     expect(toast.getAttribute('aria-live')).toBe('polite');
-    expect(toast.classList.contains('is-warning')).toBe(true);
+    expect(toast.classList.contains('is-warning')).toBe(false);
+    expect(toast.classList.contains('is-info')).toBe(false);
     expect(toast.classList.contains('is-confirm')).toBe(true);
     expect(duplicate).toBe(toast);
     expect(document.querySelectorAll('[data-toast-confirm]')).toHaveLength(1);
@@ -237,7 +237,6 @@ describe('Toast', () => {
     expect(document.body.contains(toast)).toBe(false);
 
     const fresh = Toast.confirm('Confirm again?', {
-      theme: 'primary',
       onConfirm: vi.fn(),
     });
     expect(fresh).not.toBe(toast);
