@@ -1,16 +1,12 @@
 @layer themes {
-  .j-toc {
-    width: 100%;
-    padding-left: 0.75rem;
-  }
-
   .j-toc .toc-title {
     color: var(--tone-caption);
     margin-bottom: 4px;
   }
 
   .j-toc .toc-link {
-    padding-block: 0.375rem;
+    padding-top: 0.375rem;
+    padding-bottom: 0.375rem;
     color: var(--tone-caption);
     font-size: var(--font-size-sm);
     text-decoration: none;
@@ -22,19 +18,11 @@
     color: var(--tone-heading);
   }
 
+  .j-toc:has(.toc-link),
   .j-toc .toc-link[data-toc-level='3'],
   .j-toc .toc-link[data-toc-level='4'],
   .j-toc .toc-link[data-toc-level='5'],
   .j-toc .toc-link[data-toc-level='6'] {
     padding-left: 0.75rem;
-  }
-
-  .j-toc .toc-indicator {
-    position: absolute;
-    left: 0;
-    background-color: var(--tone-solid);
-    transition-property: top;
-    pointer-events: none;
-    border-radius: 2px;
   }
 }

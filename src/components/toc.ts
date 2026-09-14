@@ -1,9 +1,11 @@
 import {
   For,
+  Show,
   createDeepStore,
   createEffect,
   createMemo,
   flushSync,
+  insert,
   jsx,
   untrack,
 } from 'vanilla-signal';
@@ -26,6 +28,16 @@ interface TocClassNames {
 }
 
 type TocClassNameConfig = Partial<TocClassNames>;
+
+interface TocIndicatorConfig {
+  width: string;
+  heightRatio: number;
+  radius: string;
+  left: string;
+  color: string;
+}
+
+type TocIndicatorConfigInput = Partial<TocIndicatorConfig>;
 
 export interface TocItem {
   id: string;
@@ -52,8 +64,7 @@ interface TocProps extends Record<string, unknown> {
   offset?: number;
   reactive?: boolean;
   title?: boolean;
-  indicatorWidth?: string;
-  indicatorHeightRatio?: number;
+  indicator?: TocIndicatorConfigInput;
   className?: TocClassNameConfig;
   onChange?:
     | ((item: TocItem | null, index: number, toc: TocInstance) => void)
@@ -66,8 +77,7 @@ interface ResolvedTocProps extends Record<string, unknown> {
   offset: number;
   reactive: boolean;
   title: boolean;
-  indicatorWidth: string;
-  indicatorHeightRatio: number;
+  indicator: TocIndicatorConfig;
   className: TocClassNames;
   onChange:
     | ((item: TocItem | null, index: number, toc: TocInstance) => void)
@@ -119,6 +129,14 @@ const DEFAULT_CLASS_NAMES: TocClassNames = {
   indicator: 'toc-indicator',
 };
 
+const DEFAULT_INDICATOR_CONFIG: TocIndicatorConfig = {
+  width: '2px',
+  heightRatio: 5,
+  radius: '2px',
+  left: '0',
+  color: 'var(--tone-solid)',
+};
+
 const TOC_PROPS_SCHEMA = {
   target: { default: '.j-content' },
   headings: { default: 'h2, h3', type: 'string' },
@@ -129,12 +147,22 @@ const TOC_PROPS_SCHEMA = {
   },
   reactive: { default: false, type: 'boolean' },
   title: { default: false, type: 'boolean' },
-  indicatorWidth: { default: '2px', type: 'string' },
-  indicatorHeightRatio: {
-    default: 5,
-    type: 'number',
-    min: 1,
-    max: 10,
+  indicator: {
+    default: DEFAULT_INDICATOR_CONFIG,
+    type: 'plainObject',
+    merge: 'shallow',
+    schema: {
+      width: { default: DEFAULT_INDICATOR_CONFIG.width, type: 'string' },
+      heightRatio: {
+        default: DEFAULT_INDICATOR_CONFIG.heightRatio,
+        type: 'number',
+        min: 1,
+        max: 10,
+      },
+      radius: { default: DEFAULT_INDICATOR_CONFIG.radius, type: 'string' },
+      left: { default: DEFAULT_INDICATOR_CONFIG.left, type: 'string' },
+      color: { default: DEFAULT_INDICATOR_CONFIG.color, type: 'string' },
+    },
   },
   className: {
     default: DEFAULT_CLASS_NAMES,
@@ -159,8 +187,7 @@ function normalizeProps(input: TocProps): ResolvedTocProps {
     offset: props.offset as number,
     reactive: props.reactive as boolean,
     title: props.title as boolean,
-    indicatorWidth: props.indicatorWidth as string,
-    indicatorHeightRatio: props.indicatorHeightRatio as number,
+    indicator: props.indicator as TocIndicatorConfig,
     className: props.className as TocClassNames,
     onChange: props.onChange as ResolvedTocProps['onChange'],
   };
@@ -238,7 +265,10 @@ export function createToc(props: TocProps = {}): TocInstance {
   let activeLinkId: string | null = null;
   let listHeight = 0;
   const linkRefs = new Map<string, HTMLElement>();
-  const renderableItems = createMemo(() => state.items);
+  const getItems = (): TocItem[] =>
+    Array.isArray(state.items) ? state.items : [];
+  const hasItems = (): boolean => getItems().length > 0;
+  const renderableItems = createMemo(getItems);
 
   const setIndicator = (indicator: TocIndicator): void => {
     if (
@@ -307,7 +337,7 @@ export function createToc(props: TocProps = {}): TocInstance {
     const linkRect = link.getBoundingClientRect();
     const linkHeight = link.offsetHeight || linkRect.height;
     const linkTop = link.offsetTop;
-    const height = (linkHeight * settings.indicatorHeightRatio) / 10;
+    const height = (linkHeight * settings.indicator.heightRatio) / 10;
     const top = linkTop + (linkHeight - height) / 2;
     const distance = state.indicator.visible
       ? Math.abs(top - state.indicator.top)
@@ -333,15 +363,16 @@ export function createToc(props: TocProps = {}): TocInstance {
   };
 
   const syncListLayout = (): void => {
-    if (!toc.runtime.built || !listElement || state.items.length === 0) {
+    const items = getItems();
+    if (!toc.runtime.built || !listElement || items.length === 0) {
       listHeight = 0;
       setIndicator(hiddenIndicator());
       return;
     }
-    pruneLinkRefs(state.items);
+    pruneLinkRefs(items);
     const listRect = listElement.getBoundingClientRect();
     listHeight = listElement.offsetHeight || listRect.height;
-    const current = state.items[state.current.index] || null;
+    const current = items[state.current.index] || null;
     updateIndicatorForItem(current);
   };
 
@@ -400,13 +431,14 @@ export function createToc(props: TocProps = {}): TocInstance {
   };
 
   const setActive = (index: number): number => {
+    const items = getItems();
     if (index === state.current.index) {
-      const current = state.items[index] || null;
+      const current = items[index] || null;
       const duration = updateIndicatorForItem(current);
       if (duration < 0) scheduleListLayoutSync();
       return duration;
     }
-    const current = state.items[index] || null;
+    const current = items[index] || null;
     flushSync(() => {
       state.current = { index, item: current };
     });
@@ -487,13 +519,14 @@ export function createToc(props: TocProps = {}): TocInstance {
   };
 
   const activate = (index: number): TocInstance => {
+    const items = getItems();
     if (
       toc.runtime.built &&
       Number.isInteger(index) &&
       index >= 0 &&
-      index < state.items.length
+      index < items.length
     ) {
-      scrollToItem(state.items[index], { activeIndex: index });
+      scrollToItem(items[index], { activeIndex: index });
     }
     return toc;
   };
@@ -505,80 +538,95 @@ export function createToc(props: TocProps = {}): TocInstance {
     actions: { activate },
     view: () => {
       createEffect(() => {
-        const items = state.items;
+        const items = getItems();
         void items.map((item) => item.id).join('\0');
         untrack(() => {
           pruneLinkRefs(items);
+          if (items.length === 0) {
+            listElement = null;
+            listHeight = 0;
+            linkRefs.clear();
+            syncActiveMarker(null);
+            setIndicator(hiddenIndicator());
+          }
           scheduleListLayoutSync();
         });
       });
-      const titleElement = settings.title
-        ? jsx('div', {
-            className: settings.className.title,
-            'data-toc-title': '',
-            children: translate('toc'),
-          })
-        : null;
-      const listView = jsx('div', {
-        ref: (element: HTMLElement) => {
-          listElement = element;
-          scheduleListLayoutSync();
-        },
-        className: settings.className.list,
-        'data-toc-list': 'root',
-        children: [
-          For({
-            each: renderableItems,
-            key: (item: TocItem) => item.id,
-            children: (
-              itemAccessor: () => TocItem,
-              indexAccessor: () => number
-            ) =>
-              jsx('a', {
-                ref: (element: HTMLElement) =>
-                  bindLinkRef(itemAccessor(), element),
-                className: settings.className.link,
-                href: () => `#${itemAccessor().id}`,
-                'data-toc-link': () => String(indexAccessor()),
-                'data-toc-target': () => itemAccessor().id,
-                'data-toc-level': () => String(itemAccessor().level),
-                onClick: (event: Event) => {
-                  event.preventDefault();
-                  const item = itemAccessor();
-                  scrollToItem(item, {
-                    activeIndex: state.items.findIndex(
-                      (current) => current.id === item.id
-                    ),
-                    updateHash: true,
-                  });
-                },
-                children: () => itemAccessor().text,
-              }),
-          }),
-          For({
-            each: () => (state.items.length > 0 ? [true] : []),
-            key: () => 'toc-indicator',
-            children: () =>
-              jsx('div', {
-                className: settings.className.indicator,
-                'data-toc-indicator': '',
-                hidden: () => !state.indicator.visible,
-                style: () => ({
-                  top: `${state.indicator.top}px`,
-                  width: settings.indicatorWidth,
-                  height: `${state.indicator.height}px`,
-                  transitionDuration: `${state.indicator.duration}ms`,
-                  transitionTimingFunction: state.indicator.timingFunction,
-                }),
-              }),
-          }),
-        ],
-      });
-      return jsx('nav', {
+      const root = jsx('nav', {
         className: settings.className.toc,
         'data-toc': 'root',
-        children: settings.title ? [titleElement, listView] : listView,
       }) as HTMLElement;
+      insert(
+        root,
+        Show({
+          when: hasItems,
+          children: () => {
+            const titleElement = settings.title
+              ? jsx('div', {
+                  className: settings.className.title,
+                  'data-toc-title': '',
+                  children: translate('toc'),
+                })
+              : null;
+            const listView = jsx('div', {
+              ref: (element: HTMLElement) => {
+                listElement = element;
+                scheduleListLayoutSync();
+              },
+              className: settings.className.list,
+              'data-toc-list': 'root',
+              children: For({
+                each: renderableItems,
+                key: (item: TocItem) => item.id,
+                children: (itemAccessor: () => TocItem) =>
+                  jsx('a', {
+                    ref: (element: HTMLElement) =>
+                      bindLinkRef(itemAccessor(), element),
+                    className: settings.className.link,
+                    href: () => `#${itemAccessor().id}`,
+                    'data-toc-level': () => String(itemAccessor().level),
+                    onClick: (event: Event) => {
+                      event.preventDefault();
+                      const item = itemAccessor();
+                      scrollToItem(item, {
+                        activeIndex: getItems().findIndex(
+                          (current) => current.id === item.id
+                        ),
+                        updateHash: true,
+                      });
+                    },
+                    children: () => itemAccessor().text,
+                  }),
+              }),
+            }) as HTMLElement;
+            insert(
+              listView,
+              Show({
+                when: hasItems,
+                children: () =>
+                  jsx('div', {
+                    className: settings.className.indicator,
+                    'data-toc-indicator': '',
+                    hidden: () => !state.indicator.visible,
+                    style: () => ({
+                      pointerEvents: 'none',
+                      position: 'absolute',
+                      left: settings.indicator.left,
+                      top: `${state.indicator.top}px`,
+                      width: settings.indicator.width,
+                      height: `${state.indicator.height}px`,
+                      transition: `top ${state.indicator.duration}ms ${state.indicator.timingFunction}`,
+                      borderRadius: settings.indicator.radius,
+                      backgroundColor: settings.indicator.color,
+                    }),
+                  }),
+              })
+            );
+            return settings.title ? [titleElement, listView] : listView;
+          },
+        })
+      );
+      return root;
     },
     onBuild(context) {
       target = requireContainer(settings.target, 'Toc.target');

@@ -33,25 +33,35 @@ describe('hashQueryParams', () => {
     ).toEqual(Array.from(new TextEncoder().encode('{"page":1}')));
   });
 
-  it('falls back to a browser-safe SHA-256 implementation without crypto.subtle', async () => {
+  it('rejects when crypto.subtle is unavailable', async () => {
     vi.stubGlobal('crypto', cryptoWithSubtle(undefined));
 
-    await expect(hashQueryParams({ sort: ' desc ', page: 1 })).resolves.toBe(
-      '3joqbu1s3dd84'
+    await expect(hashQueryParams({ sort: ' desc ', page: 1 })).rejects.toThrow(
+      'hashQueryParams only works in secure context.'
     );
   });
 
-  it('falls back when crypto is unavailable', async () => {
+  it('rejects when crypto is unavailable', async () => {
     vi.stubGlobal('crypto', undefined);
 
-    await expect(hashQueryParams({ page: 1 }, 4)).resolves.toBe('vcj3ph');
+    await expect(hashQueryParams({ page: 1 }, 4)).rejects.toThrow(
+      'hashQueryParams only works in secure context.'
+    );
   });
 
   it('keeps key sorting and string trimming deterministic', async () => {
-    vi.stubGlobal('crypto', undefined);
+    const digest = vi.fn<SubtleCrypto['digest']>(
+      async () => Uint8Array.from([0x01, 0x02, 0x03, 0x04]).buffer
+    );
+    vi.stubGlobal('crypto', cryptoWithSubtle({ digest }));
 
     await expect(hashQueryParams({ page: 1, sort: 'desc' })).resolves.toBe(
       await hashQueryParams({ sort: ' desc ', page: 1 })
+    );
+    expect(
+      Array.from(new Uint8Array(digest.mock.calls[0]?.[1] as ArrayBuffer))
+    ).toEqual(
+      Array.from(new Uint8Array(digest.mock.calls[1]?.[1] as ArrayBuffer))
     );
   });
 

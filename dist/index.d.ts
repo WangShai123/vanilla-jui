@@ -1008,6 +1008,14 @@ interface TocClassNames {
   indicator: string;
 }
 type TocClassNameConfig = Partial<TocClassNames>;
+interface TocIndicatorConfig {
+  width: string;
+  heightRatio: number;
+  radius: string;
+  left: string;
+  color: string;
+}
+type TocIndicatorConfigInput = Partial<TocIndicatorConfig>;
 interface TocItem {
   id: string;
   text: string;
@@ -1030,8 +1038,7 @@ interface TocProps extends Record<string, unknown> {
   offset?: number;
   reactive?: boolean;
   title?: boolean;
-  indicatorWidth?: string;
-  indicatorHeightRatio?: number;
+  indicator?: TocIndicatorConfigInput;
   className?: TocClassNameConfig;
   onChange?: ((item: TocItem | null, index: number, toc: TocInstance) => void) | null;
 }
@@ -1041,8 +1048,7 @@ interface ResolvedTocProps extends Record<string, unknown> {
   offset: number;
   reactive: boolean;
   title: boolean;
-  indicatorWidth: string;
-  indicatorHeightRatio: number;
+  indicator: TocIndicatorConfig;
   className: TocClassNames;
   onChange: ((item: TocItem | null, index: number, toc: TocInstance) => void) | null;
 }

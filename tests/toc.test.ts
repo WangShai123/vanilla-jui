@@ -29,6 +29,17 @@ function mount(): { container: HTMLElement; target: HTMLElement } {
   return { container, target };
 }
 
+function mountEmpty(): { container: HTMLElement; target: HTMLElement } {
+  document.body.innerHTML = `
+    <aside id="toc"></aside>
+    <main id="content" class="j-content"></main>
+  `;
+  const container = document.querySelector<HTMLElement>('#toc');
+  const target = document.querySelector<HTMLElement>('#content');
+  if (!container || !target) throw new Error('Missing Toc fixture.');
+  return { container, target };
+}
+
 function mountMany(count: number): {
   container: HTMLElement;
   target: HTMLElement;
@@ -116,6 +127,10 @@ function mockListMetrics(list: HTMLElement, height: number): void {
     }) as DOMRect;
 }
 
+function getTocLinks(container: HTMLElement): NodeListOf<HTMLElement> {
+  return container.querySelectorAll<HTMLElement>('[data-toc-list] a');
+}
+
 async function tick(count = 4): Promise<void> {
   for (let index = 0; index < count; index += 1) {
     await Promise.resolve();
@@ -150,6 +165,19 @@ afterEach(() => {
 });
 
 describe('Toc', () => {
+  it('renders an empty data-toc root without source items', async () => {
+    const { container } = mountEmpty();
+
+    toc = createToc({ target: '#content' }).build();
+    if (toc.element) container.appendChild(toc.element);
+    await tick();
+
+    expect(container.querySelector('[data-toc="root"]')).toBeTruthy();
+    expect(container.querySelector('[data-toc-list]')).toBeNull();
+    expect(getTocLinks(container)).toHaveLength(0);
+    expect(container.querySelector('[data-toc-indicator]')).toBeNull();
+  });
+
   it('builds default classes and data markers from headings', () => {
     const { container } = mount();
 
@@ -164,8 +192,10 @@ describe('Toc', () => {
         .querySelector('[data-toc-list="root"]')
         ?.classList.contains('toc-list')
     ).toBe(true);
-    expect(container.querySelectorAll('[data-toc-link]')).toHaveLength(3);
-    const intro = container.querySelector('[data-toc-target="intro"]');
+    expect(getTocLinks(container)).toHaveLength(3);
+    expect(container.querySelector('[data-toc-link]')).toBeNull();
+    expect(container.querySelector('[data-toc-target]')).toBeNull();
+    const intro = container.querySelector('a[href="#intro"]');
     expect(intro?.classList.contains('toc-link')).toBe(true);
     expect(intro?.getAttribute('data-toc-level')).toBe('2');
     expect(intro?.hasAttribute('data-toc-index')).toBe(false);
@@ -191,7 +221,7 @@ describe('Toc', () => {
     }).build();
     if (toc.element) container.appendChild(toc.element);
 
-    const link = container.querySelector<HTMLElement>('[data-toc-link="1"]');
+    const link = getTocLinks(container)[1];
     expect(
       container
         .querySelector('[data-toc="root"]')
@@ -258,7 +288,7 @@ describe('Toc', () => {
     toc = createToc({ target, offset: 40 }).build();
     if (toc.element) container.appendChild(toc.element);
 
-    const links = container.querySelectorAll<HTMLElement>('[data-toc-link]');
+    const links = getTocLinks(container);
     const list = container.querySelector<HTMLElement>('[data-toc-list]');
     if (!list) throw new Error('Missing Toc list.');
     mockLinkMetrics(links, 24);
@@ -278,11 +308,15 @@ describe('Toc', () => {
     expect(indicator?.style.height).toBe('12px');
     expect(indicator?.style.top).toBe('30px');
     expect(indicator?.style.width).toBe('2px');
-    expect(indicator?.style.transitionDuration).toBe('0ms');
-    expect(indicator?.style.transitionTimingFunction).toBe('ease-in-out');
+    expect(indicator?.style.left).toBe('0px');
+    expect(indicator?.style.borderRadius).toBe('2px');
+    expect(indicator?.style.backgroundColor).toBe('var(--tone-solid)');
+    expect(indicator?.style.position).toBe('absolute');
+    expect(indicator?.style.pointerEvents).toBe('none');
+    expect(indicator?.style.transition).toBe('top 0ms ease-in-out');
   });
 
-  it('applies configured indicator width and height ratio', async () => {
+  it('applies configured indicator styles and height ratio', async () => {
     const { container, target } = mount();
     const headings = Array.from(target.querySelectorAll('h2, h3'));
     mockHeadingTop(headings[0], -20);
@@ -292,12 +326,17 @@ describe('Toc', () => {
     toc = createToc({
       target,
       offset: 40,
-      indicatorWidth: '4px',
-      indicatorHeightRatio: 10,
+      indicator: {
+        width: '4px',
+        heightRatio: 10,
+        radius: '6px',
+        left: '3px',
+        color: 'red',
+      },
     }).build();
     if (toc.element) container.appendChild(toc.element);
 
-    const links = container.querySelectorAll<HTMLElement>('[data-toc-link]');
+    const links = getTocLinks(container);
     const list = container.querySelector<HTMLElement>('[data-toc-list]');
     if (!list) throw new Error('Missing Toc list.');
     mockLinkMetrics(links, 24);
@@ -311,19 +350,22 @@ describe('Toc', () => {
     expect(indicator?.style.width).toBe('4px');
     expect(indicator?.style.height).toBe('24px');
     expect(indicator?.style.top).toBe('24px');
+    expect(indicator?.style.borderRadius).toBe('6px');
+    expect(indicator?.style.left).toBe('3px');
+    expect(indicator?.style.backgroundColor).toBe('red');
   });
 
-  it('validates indicatorHeightRatio range', () => {
+  it('validates indicator heightRatio range', () => {
     expect(() =>
       createToc({
         target: '#content',
-        indicatorHeightRatio: 0,
+        indicator: { heightRatio: 0 },
       })
     ).toThrow();
     expect(() =>
       createToc({
         target: '#content',
-        indicatorHeightRatio: 11,
+        indicator: { heightRatio: 11 },
       })
     ).toThrow();
   });
@@ -337,7 +379,7 @@ describe('Toc', () => {
 
     toc = createToc({ target, offset: 40 }).build();
     if (toc.element) container.appendChild(toc.element);
-    const links = container.querySelectorAll<HTMLElement>('[data-toc-link]');
+    const links = getTocLinks(container);
     const list = container.querySelector<HTMLElement>('[data-toc-list]');
     if (!list) throw new Error('Missing Toc list.');
     mockLinkMetrics(links, 24);
@@ -349,7 +391,7 @@ describe('Toc', () => {
     const observer = new MutationObserver((records) => {
       for (const record of records) {
         changedIndexes.add(
-          Number((record.target as HTMLElement).dataset.tocLink)
+          Array.from(links).indexOf(record.target as HTMLElement)
         );
       }
     });
@@ -374,8 +416,8 @@ describe('Toc', () => {
     ).toHaveLength(1);
     expect(
       container.querySelector<HTMLElement>('[data-toc-indicator]')?.style
-        .transitionDuration
-    ).toBe('960ms');
+        .transition
+    ).toBe('top 960ms ease-in-out');
   });
 
   it('keeps the clicked lower target current during pending smooth scroll', async () => {
@@ -387,7 +429,7 @@ describe('Toc', () => {
 
     toc = createToc({ target, offset: 40 }).build();
     if (toc.element) container.appendChild(toc.element);
-    const links = container.querySelectorAll<HTMLElement>('[data-toc-link]');
+    const links = getTocLinks(container);
     const list = container.querySelector<HTMLElement>('[data-toc-list]');
     if (!list) throw new Error('Missing Toc list.');
     mockLinkMetrics(links, 24);
@@ -399,7 +441,7 @@ describe('Toc', () => {
     const observer = new MutationObserver((records) => {
       for (const record of records) {
         changedIndexes.add(
-          Number((record.target as HTMLElement).dataset.tocLink)
+          Array.from(links).indexOf(record.target as HTMLElement)
         );
       }
     });
@@ -439,7 +481,7 @@ describe('Toc', () => {
 
     toc = createToc({ target, offset: 40 }).build();
     if (toc.element) container.appendChild(toc.element);
-    const links = container.querySelectorAll<HTMLElement>('[data-toc-link]');
+    const links = getTocLinks(container);
     const list = container.querySelector<HTMLElement>('[data-toc-list]');
     if (!list) throw new Error('Missing Toc list.');
     mockLinkMetrics(links, 24);
@@ -451,7 +493,7 @@ describe('Toc', () => {
     const observer = new MutationObserver((records) => {
       for (const record of records) {
         changedIndexes.add(
-          Number((record.target as HTMLElement).dataset.tocLink)
+          Array.from(links).indexOf(record.target as HTMLElement)
         );
       }
     });
@@ -481,13 +523,13 @@ describe('Toc', () => {
     expect(changedIndexes).toEqual(new Set([6, 1]));
   });
 
-  it('delegates link clicks through data-toc-link', () => {
+  it('handles clicks from nested link content', () => {
     const { container } = mount();
     const pushState = vi.spyOn(window.history, 'pushState');
 
     toc = createToc({ target: '#content', offset: 24 }).build();
     if (toc.element) container.appendChild(toc.element);
-    const link = container.querySelector<HTMLElement>('[data-toc-link="1"]');
+    const link = getTocLinks(container)[1];
     if (!link) throw new Error('Missing Toc link.');
     link.appendChild(document.createElement('span'));
     link
@@ -510,7 +552,7 @@ describe('Toc', () => {
 
     toc = createToc({ target }).build();
     if (toc.element) container.appendChild(toc.element);
-    expect(container.querySelectorAll('[data-toc-link]')).toHaveLength(3);
+    expect(getTocLinks(container)).toHaveLength(3);
 
     toc.setState({
       items: [
@@ -524,10 +566,32 @@ describe('Toc', () => {
 
     expect(toc.state.items.map((item) => item.text)).toContain('Edited Intro');
     expect(toc.state.items.map((item) => item.id)).toContain('live-heading');
-    expect(container.querySelectorAll('[data-toc-link]')).toHaveLength(4);
+    expect(getTocLinks(container)).toHaveLength(4);
     expect(
-      container.querySelector('[data-toc-target="live-heading"]')?.textContent
+      container.querySelector('a[href="#live-heading"]')?.textContent
     ).toBe('Live Heading');
+
+    toc.setState({ items: [] });
+    await tick();
+
+    expect(container.querySelector('[data-toc]')).toBeTruthy();
+    expect(container.querySelector('[data-toc-list]')).toBeNull();
+    expect(getTocLinks(container)).toHaveLength(0);
+
+    toc.setState({
+      items: [{ id: 'intro', text: 'Restored Intro', level: 2 }],
+    });
+    await tick();
+
+    expect(container.querySelector('[data-toc]')).toBeTruthy();
+    expect(getTocLinks(container)).toHaveLength(1);
+
+    toc.setState({ items: undefined as never });
+    await tick();
+
+    expect(container.querySelector('[data-toc]')).toBeTruthy();
+    expect(container.querySelector('[data-toc-list]')).toBeNull();
+    expect(getTocLinks(container)).toHaveLength(0);
   });
 
   it('does not observe target DOM changes when reactive is disabled', async () => {
@@ -535,7 +599,7 @@ describe('Toc', () => {
 
     toc = createToc({ target }).build();
     if (toc.element) container.appendChild(toc.element);
-    expect(container.querySelectorAll('[data-toc-link]')).toHaveLength(3);
+    expect(getTocLinks(container)).toHaveLength(3);
 
     const intro = target.querySelector<HTMLElement>('#intro');
     if (!intro) throw new Error('Missing intro heading.');
@@ -554,7 +618,7 @@ describe('Toc', () => {
     expect(toc.state.items.map((item) => item.id)).not.toContain(
       'manual-heading'
     );
-    expect(container.querySelectorAll('[data-toc-link]')).toHaveLength(3);
+    expect(getTocLinks(container)).toHaveLength(3);
   });
 
   it('observes target heading changes only when reactive is enabled', async () => {
@@ -562,7 +626,7 @@ describe('Toc', () => {
 
     toc = createToc({ target, reactive: true }).build();
     if (toc.element) container.appendChild(toc.element);
-    expect(container.querySelectorAll('[data-toc-link]')).toHaveLength(3);
+    expect(getTocLinks(container)).toHaveLength(3);
 
     const added = document.createElement('h3');
     added.id = 'observed-heading';
@@ -573,6 +637,6 @@ describe('Toc', () => {
     expect(toc.state.items.map((item) => item.id)).toContain(
       'observed-heading'
     );
-    expect(container.querySelectorAll('[data-toc-link]')).toHaveLength(4);
+    expect(getTocLinks(container)).toHaveLength(4);
   });
 });
