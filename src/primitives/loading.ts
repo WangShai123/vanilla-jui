@@ -33,8 +33,8 @@ export function createLoading(
       position: 'absolute',
       width: '100%',
       height: '100%',
-      borderRadius: 'inherit',
-      backdropFilter: 'blur(4px)',
+      // borderRadius: 'inherit',
+      // backdropFilter: 'blur(4px)',
     },
     children: i,
   });

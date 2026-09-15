@@ -50,10 +50,6 @@ type FormControlType =
 
 export interface FormClassNames {
   form: string;
-  vertical: string;
-  horizontal: string;
-  itemVertical: string;
-  itemHorizontal: string;
   item: string;
   label: string;
   required: string;
@@ -68,8 +64,6 @@ export interface FormClassNames {
   select: string;
   radio: string;
   checkbox: string;
-  choiceVertical: string;
-  choiceHorizontal: string;
   choiceGroup: string;
   radioLabel: string;
   radioText: string;
@@ -117,7 +111,6 @@ export interface FormField {
   readonly?: boolean;
   autocomplete?: string;
   multiple?: boolean;
-  vertical?: boolean;
   group?: boolean;
   size?: string;
   variant?: string;
@@ -145,8 +138,6 @@ export type FormTextConfig = Partial<FormText>;
 
 export interface FormProps extends Record<string, unknown> {
   id?: string | null;
-  vertical?: boolean;
-  itemVertical?: boolean;
   size?: string;
   style?: FormStyle;
   fields?: readonly FormItem<FormField>[];
@@ -163,8 +154,6 @@ export interface FormProps extends Record<string, unknown> {
 
 interface ResolvedFormProps extends Record<string, unknown> {
   id: string;
-  vertical: boolean;
-  itemVertical: boolean;
   size: string;
   style: FormStyle;
   fields: FormItem<FormField>[];
@@ -203,10 +192,6 @@ interface FormControlContext {
 
 const DEFAULT_CLASS_NAMES: FormClassNames = {
   form: 'j-form',
-  vertical: 'is-vertical',
-  horizontal: 'is-horizontal',
-  itemVertical: 'is-item-vertical',
-  itemHorizontal: 'is-item-horizontal',
   item: 'form-field',
   label: 'field-legend',
   required: 'is-required',
@@ -221,8 +206,6 @@ const DEFAULT_CLASS_NAMES: FormClassNames = {
   select: 'j-select',
   radio: 'j-radio',
   checkbox: 'j-checkbox',
-  choiceVertical: 'is-vertical',
-  choiceHorizontal: 'is-horizontal',
   choiceGroup: 'is-group',
   radioLabel: 'radio-label',
   radioText: 'radio-text',
@@ -249,8 +232,6 @@ const FORM_PROPS_SCHEMA = {
       return value;
     },
   },
-  vertical: { default: true, type: 'boolean' },
-  itemVertical: { default: true, type: 'boolean' },
   size: { default: 'md', type: 'string' },
   style: { default: '', types: ['string', 'object', 'null'] },
   fields: { default: [], type: 'array' },
@@ -429,8 +410,6 @@ function normalizeProps(input: FormProps): ResolvedFormProps {
   return {
     ...props,
     id: String(props.id),
-    vertical: Boolean(props.vertical),
-    itemVertical: Boolean(props.itemVertical),
     size: props.size as string,
     style: props.style as FormStyle,
     fields,
@@ -713,21 +692,15 @@ export function createForm(input: FormProps = {}): Form {
     return jsx('div', {
       className: () => {
         const field = fieldAccessor();
-        const direction = field.vertical ? 'vertical' : 'horizontal';
         const names = props.className;
         return joinClasses(
           type === 'radio' ? names.radio : names.checkbox,
-          direction === 'vertical'
-            ? names.choiceVertical
-            : names.choiceHorizontal,
           field.group ? names.choiceGroup : '',
           field.size ? `is-${field.size}` : ''
         );
       },
       'data-field-choice-group': () => fieldAccessor().name || id,
       'data-choice-type': type,
-      'data-choice-layout': () =>
-        fieldAccessor().vertical ? 'vertical' : 'horizontal',
       children: () =>
         (fieldAccessor().options || []).map((option, optionIndex) => {
           const item = normalizeOption(option);
@@ -1090,23 +1063,10 @@ export function createForm(input: FormProps = {}): Form {
     },
     view: () => {
       const element = jsx('form', {
-        className: joinClasses(
-          props.className.form,
-          props.vertical
-            ? props.className.vertical
-            : props.className.horizontal,
-          props.itemVertical
-            ? props.className.itemVertical
-            : props.className.itemHorizontal,
-          formSizeClass()
-        ),
+        className: joinClasses(props.className.form, formSizeClass()),
         id: props.id,
         novalidate: props.validator.vanilla === false,
         'data-form': 'root',
-        'data-form-layout': props.vertical ? 'vertical' : 'horizontal',
-        'data-form-field-layout': props.itemVertical
-          ? 'vertical'
-          : 'horizontal',
         onSubmit: (event: Event) => void handleSubmit(event),
         onReset: (event: Event) => {
           resetValidationState();

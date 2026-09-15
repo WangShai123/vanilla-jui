@@ -1,7 +1,6 @@
 @layer themes {
   .j-tip {
     --tip-border-color: var(--ui-border);
-    --tip-fg: var(--ui-fg);
     --tip-bg: var(--ui-bg);
 
     row-gap: var(--s2);
@@ -12,15 +11,19 @@
     border-radius: var(--radius-md);
     padding: var(--s3) var(--s4);
     font-size: var(--font-size-md);
-    color: var(--tip-fg);
     background: var(--tip-bg);
-    box-shadow: var(--shadow-sm);
+    box-shadow: var(--shadow-xs);
+    backdrop-filter: blur(2px);
   }
 
   .j-tip .tip-icon {
-    color: var(--tip-fg);
     transform: translateY(calc(var(--space, 0.25rem) * 0.5));
     margin: 0;
+  }
+
+  .j-tip .tip-icon,
+  .j-tip .tip-title {
+    color: var(--tip-fg);
   }
 
   .j-tip .tip-icon,
@@ -30,29 +33,30 @@
   }
 
   .j-tip .tip-title {
-    /* line-height: var(--line-height-paragraph); */
     font-weight: var(--font-medium);
   }
 
-  /* .j-tip .tip-content {
-    line-height: var(--line-height-paragraph);
-  } */
+  .j-tip.is-primary {
+    --tip-border-color: var(--state-info-border);
+    --tip-bg: var(--state-info-soft);
+    --tip-fg: var(--state-info-text);
+  }
 
   .j-tip.is-success {
-    --tip-border-color: var(--state-success);
-    --tip-bg: var(--state-success-muted);
-    --tip-fg: var(--state-success);
+    --tip-border-color: var(--state-success-border);
+    --tip-bg: var(--state-success-soft);
+    --tip-fg: var(--state-success-text);
   }
 
   .j-tip.is-warning {
-    --tip-border-color: var(--state-warning);
-    --tip-bg: var(--state-warning-muted);
-    --tip-fg: var(--state-warning);
+    --tip-border-color: var(--state-warning-border);
+    --tip-bg: var(--state-warning-soft);
+    --tip-fg: var(--state-warning-text);
   }
 
   .j-tip.is-danger {
-    --tip-border-color: var(--state-danger);
-    --tip-bg: var(--state-danger-muted);
-    --tip-fg: var(--state-danger);
+    --tip-border-color: var(--state-danger-border);
+    --tip-bg: var(--state-danger-soft);
+    --tip-fg: var(--state-danger-text);
   }
 }

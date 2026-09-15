@@ -1,9 +1,4 @@
 @layer themes {
-  .j-form.is-lg {
-    --form-gap-vertical: var(--s3);
-    --form-gap-horizontal: var(--s3);
-  }
-
   .j-input {
     --input-font-size: var(--font-size-md);
     --input-bg: inherit;
@@ -87,7 +82,6 @@
     --btn-fg: var(--ui-fg-muted);
     --btn-bg: var(--ui-bg-muted);
     --btn-padding: 0 var(--s2);
-    /* --btn-box-shadow: none; */
   }
 
   .input-group .el-addon .is-text {

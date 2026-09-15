@@ -5,14 +5,9 @@
     display: flex;
   }
 
-  .j-form.is-vertical {
+  .j-form {
     flex-direction: column;
-    gap: var(--s2);
-  }
-
-  .j-form.is-horizontal {
-    flex-direction: row;
-    gap: var(--s2);
+    gap: var(--s3);
   }
 
   .j-form .form-field {
@@ -23,45 +18,22 @@
   .j-form fieldset.form-field {
     border: 0;
     padding: 0;
-    min-inline-size: 0;
   }
 
-  .j-form.is-item-vertical .form-field {
+  .j-form .form-field {
     flex-direction: column;
   }
 
-  .j-form.is-item-horizontal .form-field {
-    flex-direction: row;
-  }
-
   .j-form .form-field .field-legend {
+    justify-content: space-between;
     color: var(--ui-fg-muted);
     font-size: var(--font-size-sm);
-  }
-
-  .j-form .form-field > legend.field-legend {
-    padding: 0;
-  }
-
-  .j-form .form-field .field-legend,
-  .j-form .form-field .field-control {
     gap: var(--space);
-  }
-
-  .j-form.is-horizontal .form-field .field-legend {
-    align-items: center;
-    height: var(--el-height-md);
   }
 
   .j-form .field-legend.is-required::after {
     content: '*';
     color: var(--state-danger);
-  }
-
-  .j-form .form-field .field-control {
-    display: flex;
-    flex-direction: column;
-    margin: 0;
   }
 
   .j-form .form-field .field-control .help-block {
@@ -77,15 +49,11 @@
   .j-form .form-buttons {
     display: flex;
     gap: var(--s2);
-    margin-top: 1rem;
+    margin-top: var(--s2);
   }
 
   .j-form [data-field-buttons] button {
     position: relative;
-  }
-
-  .j-form.is-horizontal .form-buttons {
-    margin: 0;
   }
 
   /* input */
@@ -96,7 +64,6 @@
   }
 
   .j-input:not([type='checkbox']) {
-    /* display: block; */
     border-width: 1px;
     border-style: solid;
     border-color: var(--ui-border);
@@ -520,9 +487,9 @@
     cursor: not-allowed;
   }
 
-  .j-form.is-vertical input.j-input:not([type='checkbox']):not([type='radio']),
-  .j-form.is-vertical select.j-select,
-  .j-form.is-vertical textarea.j-textarea {
+  .j-form input.j-input:not([type='checkbox']):not([type='radio']),
+  .j-form select.j-select,
+  .j-form textarea.j-textarea {
     width: 100%;
   }
 

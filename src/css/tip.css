@@ -27,6 +27,7 @@
 
   .j-tip .tip-content {
     grid-column-start: 2;
+    color: var(--ui-gray);
   }
 
   .j-tip .tip-content > *:first-child {

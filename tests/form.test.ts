@@ -86,9 +86,12 @@ describe('Form', () => {
     expect(Object.keys(form.state)).toEqual(['fields', 'submitting']);
     expect(Object.hasOwn(form.state, 'data')).toBe(false);
     expect(form.element?.classList.contains('j-form')).toBe(true);
-    expect(form.element?.classList.contains('is-vertical')).toBe(true);
+    expect(form.element?.classList.contains('is-vertical')).toBe(false);
+    expect(form.element?.classList.contains('is-horizontal')).toBe(false);
     expect(form.element?.classList.contains('is-md')).toBe(true);
     expect(form.element?.dataset.form).toBe('root');
+    expect(form.element?.hasAttribute('data-form-layout')).toBe(false);
+    expect(form.element?.hasAttribute('data-form-field-layout')).toBe(false);
     expect(form.element?.querySelector('.form-field')).toBeTruthy();
     expect(form.element?.querySelector('.field-legend')).toBeTruthy();
     expect(form.element?.querySelector('.field-control')).toBeTruthy();
@@ -121,7 +124,6 @@ describe('Form', () => {
       ],
       className: {
         form: 'profile-form',
-        vertical: 'profile-stack',
         item: 'profile-field',
         control: 'profile-control',
         help: 'profile-help',
@@ -131,7 +133,7 @@ describe('Form', () => {
     mountForm();
 
     expect(form.element?.classList.contains('profile-form')).toBe(true);
-    expect(form.element?.classList.contains('profile-stack')).toBe(true);
+    expect(form.element?.classList.contains('profile-stack')).toBe(false);
     expect(form.element?.classList.contains('j-form')).toBe(false);
     expect(form.element?.querySelector('.profile-field')).toBeTruthy();
     expect(
@@ -268,11 +270,12 @@ describe('Form', () => {
     expect(
       form.element?.querySelector<HTMLElement>('[data-choice-type="radio"]')
         ?.className
-    ).toBe('j-radio is-horizontal');
+    ).toBe('j-radio');
     expect(
       form.element?.querySelector<HTMLElement>('[data-choice-type="checkbox"]')
         ?.className
-    ).toBe('j-checkbox is-horizontal');
+    ).toBe('j-checkbox');
+    expect(form.element?.querySelector('[data-choice-layout]')).toBeNull();
 
     const defaultSwitch = form.element?.querySelector<HTMLElement>(
       '[data-field-switch="publish"]'

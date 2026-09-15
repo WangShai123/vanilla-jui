@@ -1139,10 +1139,6 @@ type FormItemType = FormControlType;
 type FormControlType = 'checkbox' | 'custom' | 'email' | 'password' | 'radio' | 'select' | 'switch' | 'text' | 'textarea' | (string & {});
 interface FormClassNames {
   form: string;
-  vertical: string;
-  horizontal: string;
-  itemVertical: string;
-  itemHorizontal: string;
   item: string;
   label: string;
   required: string;
@@ -1157,8 +1153,6 @@ interface FormClassNames {
   select: string;
   radio: string;
   checkbox: string;
-  choiceVertical: string;
-  choiceHorizontal: string;
   choiceGroup: string;
   radioLabel: string;
   radioText: string;
@@ -1195,7 +1189,6 @@ interface FormField {
   readonly?: boolean;
   autocomplete?: string;
   multiple?: boolean;
-  vertical?: boolean;
   group?: boolean;
   size?: string;
   variant?: string;
@@ -1218,8 +1211,6 @@ interface FormText {
 type FormTextConfig = Partial<FormText>;
 interface FormProps extends Record<string, unknown> {
   id?: string | null;
-  vertical?: boolean;
-  itemVertical?: boolean;
   size?: string;
   style?: FormStyle;
   fields?: readonly FormItem<FormField>[];
@@ -1233,8 +1224,6 @@ interface FormProps extends Record<string, unknown> {
 }
 interface ResolvedFormProps extends Record<string, unknown> {
   id: string;
-  vertical: boolean;
-  itemVertical: boolean;
   size: string;
   style: FormStyle;
   fields: FormItem<FormField>[];
