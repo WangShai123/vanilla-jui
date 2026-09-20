@@ -1,4 +1,4 @@
-@layer themes {
+@layer components {
   .j-tip {
     --tip-border-color: var(--ui-border);
     --tip-bg: var(--ui-bg);
@@ -14,6 +14,20 @@
     background: var(--tip-bg);
     box-shadow: var(--shadow-xs);
     backdrop-filter: blur(2px);
+
+    position: relative;
+    display: grid;
+    grid-template-columns: 0 1fr;
+    align-items: flex-start;
+  }
+
+  .j-tip:has(.tip-icon) {
+    column-gap: var(--s3);
+    grid-template-columns: var(--s4) 1fr;
+  }
+
+  .j-font-md .j-tip:has(.tip-icon) {
+    column-gap: var(--s5);
   }
 
   .j-tip .tip-icon {
@@ -34,6 +48,27 @@
 
   .j-tip .tip-title {
     font-weight: var(--font-medium);
+
+    grid-column-start: 2;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+    line-clamp: 1;
+    margin: 0;
+  }
+
+  .j-tip .tip-content {
+    grid-column-start: 2;
+    color: var(--ui-gray);
+  }
+
+  .j-tip .tip-content > *:first-child {
+    margin-top: 0;
+  }
+
+  .j-tip .tip-content > *:last-child {
+    margin-bottom: 0;
   }
 
   .j-tip.is-primary {

@@ -1,4 +1,4 @@
-@layer themes {
+@layer components {
   .j-badge {
     --badge-padding: 0 calc(var(--space) * 1.5);
     --badge-min-width: 1.25rem;
@@ -23,6 +23,11 @@
     color: var(--badge-fg);
     background-color: var(--badge-bg);
     box-shadow: var(--badge-box-shadow);
+
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    user-select: none;
   }
 
   .j-badge svg {
@@ -46,16 +51,28 @@
     --badge-fg: var(--ui-bg);
   }
 
-  .j-badge.is-primary {
+  .j-badge.is-solid {
     --badge-bg: var(--tone-solid);
     --badge-fg: var(--tone-fg);
     --badge-border-color: var(--tone-solid);
   }
 
-  .j-badge.is-secondary {
+  .j-badge.is-soft {
     --badge-bg: var(--tone-soft);
     --badge-fg: var(--tone-text);
     --badge-border-color: var(--tone-soft);
+  }
+
+  .j-badge.is-wash {
+    --badge-bg: var(--tone-wash);
+    --badge-fg: var(--tone-text);
+    --badge-border-color: var(--tone-wash);
+  }
+
+  .j-badge.is-primary {
+    --badge-bg: var(--state-info);
+    --badge-fg: var(--state-info-fg);
+    --badge-border-color: var(--state-info);
   }
 
   .j-badge.is-success {

@@ -1,4 +1,4 @@
-@layer themes {
+@layer comopnents {
   .j-tooltip {
     --tooltip-fg: var(--ui-bg);
     --tooltip-bg: var(--ui-fg);
@@ -12,6 +12,10 @@
     border-radius: var(--radius-md);
     max-width: 260px;
     padding: 2px 4px;
+
+    position: relative;
+    width: fit-content;
+    user-select: none;
   }
 
   .j-tooltip.is-reverse {
@@ -48,11 +52,13 @@
     padding: 2px var(--s2);
     font-size: var(--font-size-md);
     line-height: var(--line-height);
+
+    word-wrap: break-word;
+    position: relative;
   }
 
   .drop-container:has(.j-tooltip) {
     border: unset;
-    /* border-radius: unset; */
     background: unset;
     box-shadow: unset;
   }

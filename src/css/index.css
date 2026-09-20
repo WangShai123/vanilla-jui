@@ -1,4 +1,4 @@
-@layer tokens, gradient, layout, icon, font, components, themes, animation, status;
+@layer tokens, layout, animation, gradient, icon, font, components, status;
 
 @import url('./tokens.css');
 @import url('./layout.css');
@@ -7,7 +7,6 @@
 @import url('./icon.css');
 @import url('./font.css');
 
-@import url('./components.css');
 @import url('./themes/index.css');
 
 @import url('./status.css');

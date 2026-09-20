@@ -1,16 +1,53 @@
-@layer themes {
+@layer components {
   .j-loader {
     --loader-size: var(--font-size-md);
     --loader-width: 1.5px;
     --loader-style: solid;
     --loader-fg: currentcolor;
-    --loader-speed: var(--speed-xl);
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+  }
+
+  .j-loader .loader {
+    display: inline-block;
+    width: var(--loader-size);
+    height: var(--loader-size);
+    border-width: var(--loader-width);
+    border-style: var(--loader-style);
+    border-color: var(--loader-fg);
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: var(--speed-xl) linear infinite animate-spin;
+  }
+
+  .j-loader .polygon-loader {
+    width: var(--loader-size);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    border: 1.5px solid var(--loader-fg);
+    animation:
+      polygon-loader-1 0.8s infinite linear alternate,
+      polygon-loader-2 1.6s infinite linear;
   }
 
   .j-loader .tone-loader {
     --loader-width: 2px;
     --loader-fg: var(--tone-soft);
     --loader-top-fg: var(--tone-solid);
+
+    width: var(--loader-size);
+    height: var(--loader-size);
+    border-width: var(--loader-width);
+    border-style: var(--loader-style);
+    border-color: var(--loader-fg);
+    border-top-color: var(--loader-top-fg);
+    border-radius: 50%;
+    animation: 1s linear infinite animate-spin;
   }
 
   .j-loader .flow-loader {
@@ -24,5 +61,110 @@
       #0000 calc(100% - var(--loader-width)),
       #000 0
     );
+
+    width: var(--loader-size);
+    height: var(--loader-size);
+    border: none;
+    border-radius: 50%;
+    aspect-ratio: 1;
+    background: var(--loader-bg);
+    mask: var(--loader-mask);
+    animation: 1s linear infinite animate-spin;
+  }
+
+  @keyframes polygon-loader-1 {
+    0% {
+      clip-path: polygon(50% 50%, 0 0, 50% 0%, 50% 0%, 50% 0%, 50% 0%, 50% 0%);
+    }
+
+    12.5% {
+      clip-path: polygon(
+        50% 50%,
+        0 0,
+        50% 0%,
+        100% 0%,
+        100% 0%,
+        100% 0%,
+        100% 0%
+      );
+    }
+
+    25% {
+      clip-path: polygon(
+        50% 50%,
+        0 0,
+        50% 0%,
+        100% 0%,
+        100% 100%,
+        100% 100%,
+        100% 100%
+      );
+    }
+
+    50% {
+      clip-path: polygon(
+        50% 50%,
+        0 0,
+        50% 0%,
+        100% 0%,
+        100% 100%,
+        50% 100%,
+        0% 100%
+      );
+    }
+
+    62.5% {
+      clip-path: polygon(
+        50% 50%,
+        100% 0,
+        100% 0%,
+        100% 0%,
+        100% 100%,
+        50% 100%,
+        0% 100%
+      );
+    }
+
+    75% {
+      clip-path: polygon(
+        50% 50%,
+        100% 100%,
+        100% 100%,
+        100% 100%,
+        100% 100%,
+        50% 100%,
+        0% 100%
+      );
+    }
+
+    100% {
+      clip-path: polygon(
+        50% 50%,
+        50% 100%,
+        50% 100%,
+        50% 100%,
+        50% 100%,
+        50% 100%,
+        0% 100%
+      );
+    }
+  }
+
+  @keyframes polygon-loader-2 {
+    0% {
+      transform: scaleY(1) rotate(0deg);
+    }
+
+    49.99% {
+      transform: scaleY(1) rotate(135deg);
+    }
+
+    50% {
+      transform: scaleY(-1) rotate(0deg);
+    }
+
+    100% {
+      transform: scaleY(-1) rotate(-135deg);
+    }
   }
 }

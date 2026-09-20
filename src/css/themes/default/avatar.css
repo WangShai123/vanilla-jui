@@ -1,4 +1,4 @@
-@layer themes {
+@layer components {
   .j-avatar {
     --avatar-size: var(--el-height-md);
     --avatar-border-radius: var(--radius-sm);
@@ -13,10 +13,21 @@
     color: var(--avatar-fg);
     font-size: var(--avatar-font-size);
     font-weight: var(--avatar-font-weight);
+
+    display: inline-block;
+    vertical-align: middle;
+    overflow: hidden;
+    user-select: none;
+    object-fit: cover;
   }
 
   .j-avatar img {
     border-radius: var(--avatar-border-radius);
+  }
+
+  .j-avatar img,
+  .j-avatar svg {
+    margin: 0;
   }
 
   .j-avatar.is-2xs {
@@ -51,6 +62,17 @@
     --avatar-bg: var(--tone-subtle);
     --avatar-fg: var(--tone-solid);
     --avatar-font-weight: var(--font-medium);
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .j-avatar-group {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: nowrap;
   }
 
   .j-avatar-group .j-avatar {

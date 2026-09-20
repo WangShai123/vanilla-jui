@@ -19,6 +19,11 @@
     color-scheme: dark;
   }
 
+  html,
+  body {
+    height: 100%;
+  }
+
   body {
     tab-size: 4;
     scroll-behavior: smooth;
@@ -27,7 +32,7 @@
       Arial, sans-serif;
     color: var(--ui-fg);
     background-color: var(--ui-bg);
-    min-width: var(--screen-xs, 320px);
+    min-width: 320px;
     font-size: var(--font-size-md);
     margin: 0;
   }
@@ -142,10 +147,10 @@
   }
 
   /* ==============================
-    * 响应式 Flex 布局系统
-    * 列类名 flex-col-* 避免与 Tailwind 冲突
-    * 建议：Flex 更适合一维排列（如导航、表单）
-    * ============================ */
+   * 响应式 Flex 布局系统
+   * 列类名 flex-col-* 避免与 Tailwind 冲突
+   * 建议：Flex 更适合一维排列（如导航、表单）
+   * ============================ */
 
   /* 容器：居中 + 最大宽度 */
   .container {
@@ -272,8 +277,8 @@
   }
 
   /* ============================================
-     小屏幕 sm (≥576px)
-     ============================================ */
+    小屏幕 sm (≥576px)
+  ============================================ */
   @media (min-width: 576px) {
     .flex-col-sm-1 {
       --span: 1;
@@ -325,8 +330,8 @@
   }
 
   /* ============================================
-       中屏幕 md (≥768px)
-       ============================================ */
+    中屏幕 md (≥768px)
+  ============================================ */
   @media (min-width: 768px) {
     .flex-col-md-1 {
       --span: 1;
@@ -378,8 +383,8 @@
   }
 
   /* ============================================
-           大屏幕 lg (≥992px)
-           ============================================ */
+    大屏幕 lg (≥992px)
+  ============================================ */
   @media (min-width: 992px) {
     .flex-col-lg-1 {
       --span: 1;
@@ -431,8 +436,8 @@
   }
 
   /* ============================================
-           超大屏幕 xl (≥1200px)
-           ============================================ */
+    超大屏幕 xl (≥1200px)
+  ============================================ */
   @media (min-width: 1200px) {
     .flex-col-xl-1 {
       --span: 1;
@@ -484,8 +489,8 @@
   }
 
   /* ============================================
-           超大屏幕 xxl (≥1400px) - 可选
-           ============================================ */
+    超大屏幕 xxl (≥1400px) - 可选
+  ============================================ */
   @media (min-width: 1400px) {
     .flex-col-xxl-1 {
       --span: 1;
@@ -537,10 +542,10 @@
   }
 
   /* ==============================
-    * 响应式 Grid 布局系统
-    * 类名前缀 grid- 避免命名冲突
-    * 建议：Grid 更适合二维布局（如卡片网格、仪表盘）
-    * ============================== */
+   * 响应式 Grid 布局系统
+   * 类名前缀 grid- 避免命名冲突
+   * 建议：Grid 更适合二维布局（如卡片网格、仪表盘）
+   * ============================== */
 
   /* Grid 容器：自动 gap + 响应式列 */
   .grid-container {
@@ -601,9 +606,9 @@
   }
 
   /*
-     * 自动填充：最小宽度 + 自适应列数
-     * 建议：grid-cols-auto-* 用于自适应卡片布局（如商品列表），非常实用。
-     */
+   * 自动填充：最小宽度 + 自适应列数
+   * 建议：grid-cols-auto-* 用于自适应卡片布局（如商品列表），非常实用。
+   */
   .grid-col-auto-150 {
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   }
@@ -793,75 +798,6 @@
     aspect-ratio: auto;
   }
 
-  /* columns */
-  /* .columns-auto {
-    columns: auto;
-  }
-
-  .columns-6xs {
-    columns: var(--columns-6xs);
-  }
-
-  .columns-5xs {
-    columns: var(--columns-5xs);
-  }
-
-  .columns-4xs {
-    columns: var(--columns-4xs);
-  }
-
-  .columns-3xs {
-    columns: var(--columns-3xs);
-  }
-
-  .columns-2xs {
-    columns: var(--columns-2xs);
-  }
-
-  .columns-xs {
-    columns: var(--columns-xs);
-  }
-
-  .columns-sm {
-    columns: var(--columns-sm);
-  }
-
-  .columns-md {
-    columns: var(--columns-md);
-  }
-
-  .columns-lg {
-    columns: var(--columns-lg);
-  }
-
-  .columns-xl {
-    columns: var(--columns-xl);
-  }
-
-  .columns-2xl {
-    columns: var(--columns-2xl);
-  }
-
-  .columns-3xl {
-    columns: var(--columns-3xl);
-  }
-
-  .columns-4xl {
-    columns: var(--columns-4xl);
-  }
-
-  .columns-5xl {
-    columns: var(--columns-5xl);
-  }
-
-  .columns-6xl {
-    columns: var(--columns-6xl);
-  }
-
-  .columns-7xl {
-    columns: var(--columns-7xl);
-  } */
-
   .w-full {
     width: 100%;
   }
@@ -872,5 +808,162 @@
 
   .w-screen {
     width: 100vw;
+  }
+
+  /* ============================================
+    Divider
+  ============================================ */
+  .divider {
+    align-self: stretch;
+    border-color: currentColor;
+    border-left-width: 1px;
+    border-top-width: 1px;
+    opacity: 0.1;
+  }
+
+  /* ============================================
+    Skeleton
+  ============================================ */
+  .j-skeleton {
+    display: block;
+    width: 100%;
+    min-height: var(--el-height-2xs);
+    border-radius: var(--radius-sm);
+    background: var(--ui-surface-muted);
+    color: transparent;
+    pointer-events: none;
+    user-select: none;
+    animation: animate-pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  .j-skeleton::selection {
+    color: transparent;
+    background: transparent;
+  }
+
+  .j-skeleton.skeleton-inline {
+    display: inline-block;
+    width: 8rem;
+    vertical-align: middle;
+  }
+
+  .j-skeleton.skeleton-text {
+    height: var(--el-height-sm);
+    min-height: var(--el-height-sm);
+  }
+
+  .j-skeleton.skeleton-title {
+    width: 60%;
+    height: var(--el-height-md);
+    min-height: var(--el-height-md);
+  }
+
+  .j-skeleton.skeleton-block {
+    height: calc(var(--el-height-md) * 4);
+    min-height: calc(var(--el-height-md) * 4);
+  }
+
+  .j-skeleton.skeleton-avatar,
+  .j-skeleton.skeleton-circle {
+    aspect-ratio: 1;
+    border-radius: 999px;
+  }
+
+  .j-skeleton.skeleton-avatar {
+    width: var(--el-height-md);
+    min-height: var(--el-height-md);
+  }
+
+  .j-skeleton.skeleton-button {
+    width: 5rem;
+    min-height: var(--el-height-md);
+  }
+
+  .j-skeleton.skeleton-image {
+    aspect-ratio: 16 / 9;
+    min-height: 0;
+  }
+
+  .j-skeleton.skeleton-static,
+  .j-skeleton[aria-busy='false'] {
+    animation: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .j-skeleton {
+      animation: none;
+    }
+  }
+
+  /* ============================================
+    Popup
+  ============================================ */
+  .j-popup-layout {
+    background: var(--ui-popup-bg);
+    backdrop-filter: blur(4px);
+    padding: var(--s4);
+
+    display: flex;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: var(--z-popup);
+  }
+
+  .j-popup-layout,
+  .j-popup-layout.is-center,
+  .j-popup-layout.is-center-center {
+    justify-content: center;
+    align-items: center;
+  }
+
+  .j-popup-layout.is-top,
+  .j-popup-layout.is-top-center {
+    justify-content: center;
+    align-items: flex-start;
+  }
+
+  .j-popup-layout.is-bottom,
+  .j-popup-layout.is-bottom-center {
+    justify-content: center;
+    align-items: flex-end;
+  }
+
+  .j-popup-layout.is-left,
+  .j-popup-layout.is-left-center {
+    justify-content: flex-start;
+    align-items: center;
+  }
+
+  .j-popup-layout.is-right,
+  .j-popup-layout.is-right-center {
+    justify-content: flex-end;
+    align-items: center;
+  }
+
+  .j-popup-layout.is-top-left,
+  .j-popup-layout.is-left-top {
+    justify-content: flex-start;
+    align-items: flex-start;
+  }
+
+  .j-popup-layout.is-top-right,
+  .j-popup-layout.is-right-top {
+    justify-content: flex-end;
+    align-items: flex-start;
+  }
+
+  .j-popup-layout.is-bottom-left,
+  .j-popup-layout.is-left-bottom {
+    justify-content: flex-start;
+    align-items: flex-end;
+  }
+
+  .j-popup-layout.is-bottom-right,
+  .j-popup-layout.is-right-bottom {
+    justify-content: flex-end;
+    align-items: flex-end;
   }
 }

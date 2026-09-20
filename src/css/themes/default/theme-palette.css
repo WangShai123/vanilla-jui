@@ -1,7 +1,13 @@
-@layer themes {
+@layer components {
   .j-theme-palette {
     padding-inline: var(--s4);
     padding-block: var(--s4) var(--s8);
+  }
+
+  .j-theme-palette .palette-container,
+  .j-theme-palette .palette-item {
+    display: flex;
+    flex-direction: column;
   }
 
   .j-theme-palette .palette-container {
@@ -19,6 +25,14 @@
 
   .j-theme-palette .items {
     gap: var(--space);
+
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .j-theme-palette .j-button {
+    min-width: 0;
+    overflow: hidden;
   }
 
   .j-theme-palette [data-theme-group='theme'] .j-button {
@@ -29,6 +43,10 @@
   .j-theme-palette .j-button .item-hex {
     width: var(--font-size-sm);
     height: var(--font-size-sm);
+
+    display: inline-block;
+    border-radius: 50%;
+    flex-shrink: 0;
   }
 
   .mobile .j-theme-palette {
@@ -37,5 +55,10 @@
 
   .mobile .j-theme-palette [data-theme-group='theme'] .j-button {
     padding-inline: 6px;
+  }
+
+  .j-theme-palette .j-button .button-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 }

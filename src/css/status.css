@@ -53,7 +53,6 @@
     user-select: none;
   }
 
-  /* [aria-hidden='true'], */
   [hidden] {
     display: none;
   }

@@ -1,4 +1,4 @@
-@layer themes {
+@layer components {
   #j-editor-container {
     --editor-max-width: 880px;
     --editor-min-height: calc(100vh - 51px);
@@ -6,7 +6,24 @@
     --editor-border-width: 1px;
     --editor-border-style: solid;
     --editor-border-color: var(--ui-border);
+
+    max-width: var(--editor-max-width);
+    border-width: var(--editor-border-width);
+    border-style: var(--editor-border-style);
+    border-color: var(--editor-border-color);
+    border-top: none;
+    border-bottom: none;
+    min-height: var(--editor-min-height);
+    padding: var(--editor-padding);
   }
+
+  .ProseMirror {
+    outline: 0;
+  }
+
+  /* ============================================
+    Editor - 文章阅读/编辑器预览样式
+  ============================================ */
 
   .j-editor {
     --editor-font-size: var(--font-size-lg);
@@ -32,6 +49,14 @@
     --editor-code-bg: var(--tone-code-bg);
     --editor-code-fg: var(--tone-code-fg);
     --editor-bg-subtle: var(--ui-bg-subtle);
+
+    font-size: var(--editor-font-size);
+    line-height: 1.5;
+    letter-spacing: var(--editor-letter-space);
+    word-spacing: var(--editor-word-space);
+    word-break: break-word;
+    outline: 0;
+    position: relative;
   }
 
   .j-editor.is-sm {
@@ -40,18 +65,767 @@
 
   .j-editor.is-lg {
     --editor-font-size: var(--font-size-xl);
-    /* --editor-block-space: 1.5rem; */
   }
 
   .j-editor.is-xl {
     --editor-font-size: var(--font-size-2xl);
-    /* --editor-block-space: 1.5rem; */
   }
 
   .j-radius-round .j-editor {
     --radius-sm: 0.75rem;
     --radius-md: 1rem;
     --radius-lg: 1.5rem;
+  }
+
+  /* ============================================
+    Typography - 段落与标题
+  ============================================ */
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  li,
+  p {
+    overflow-wrap: break-word;
+  }
+
+  .j-editor h1,
+  .j-editor h2,
+  .j-editor h3,
+  .j-editor h4,
+  .j-editor h5,
+  .j-editor h6 {
+    outline: none;
+    position: relative;
+    font-weight: 600;
+    color: var(--editor-heading-fg);
+    margin-bottom: var(--editor-block-space);
+  }
+
+  .j-editor h2,
+  .j-editor h3,
+  .j-editor h4 {
+    line-height: 1.33333;
+  }
+
+  .j-editor h1 {
+    font-size: 2em;
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+    margin-block: 0;
+  }
+
+  .j-editor h2 {
+    font-size: 1.5em;
+    letter-spacing: -0.02em;
+    margin-top: 2.25rem;
+  }
+
+  .j-editor h3 {
+    font-size: 1.25em;
+    letter-spacing: -0.01em;
+    margin-top: 2rem;
+  }
+
+  .j-editor h4 {
+    font-size: 1.125em;
+    letter-spacing: -0.01em;
+    margin-top: 1.75rem;
+  }
+
+  .j-editor h5,
+  .j-editor h6 {
+    font-size: 1em;
+    margin-top: 1.5rem;
+    line-height: 1.4;
+  }
+
+  .j-editor p {
+    margin-block: var(--editor-block-space);
+    line-height: var(--editor-line-height);
+  }
+
+  /* ============================================
+    Inline Elements - 内联元素
+  ============================================ */
+  .j-editor strong,
+  .j-editor b {
+    font-weight: 600;
+    color: var(--editor-heading-fg);
+  }
+
+  .j-editor em,
+  .j-editor i {
+    font-style: italic;
+  }
+
+  .j-editor u {
+    text-decoration: underline;
+    text-decoration-thickness: 4px;
+
+    text-decoration-color: var(--editor-ring);
+    text-underline-offset: 0.2em;
+  }
+
+  .j-editor s,
+  .j-editor del {
+    text-decoration: line-through;
+    color: var(--editor-caption-fg);
+  }
+
+  .j-editor mark {
+    background: var(--tone-highlight);
+    color: var(--tone-highlight-fg);
+    padding: 0.1em 0.3em;
+    border-radius: 0.2em;
+  }
+
+  .j-editor small {
+    font-size: 0.875em;
+    color: var(--editor-caption-fg);
+  }
+
+  .j-editor sub {
+    vertical-align: sub;
+    font-size: 0.75em;
+  }
+
+  .j-editor sup {
+    vertical-align: super;
+    font-size: 0.75em;
+  }
+
+  .j-editor abbr[title] {
+    text-decoration: underline dotted;
+    text-decoration-color: var(--tone-muted);
+    text-underline-offset: 0.2em;
+    cursor: help;
+  }
+
+  .j-editor time {
+    white-space: nowrap;
+    color: var(--editor-caption-fg);
+  }
+
+  .j-editor ruby {
+    font-size: 0.95em;
+  }
+
+  .j-editor rt {
+    font-size: 0.7em;
+    color: var(--editor-caption-fg);
+  }
+
+  /* ============================================
+    Links - 链接
+  ============================================ */
+  .j-editor a {
+    color: var(--editor-link);
+    text-decoration: none;
+
+    text-decoration-color: transparent;
+    text-underline-offset: 0.15em;
+    transition:
+      color 0.15s,
+      text-decoration-color 0.15s;
+  }
+
+  .j-editor a:hover {
+    color: var(--editor-link-hover);
+    text-decoration: underline;
+    text-decoration-color: var(--editor-link-hover);
+  }
+
+  .j-editor a:visited {
+    color: var(--editor-link-visited);
+  }
+
+  .j-editor a:active {
+    color: var(--editor-link-active);
+  }
+
+  /* ============================================
+    Lists - 列表
+  ============================================ */
+  .j-editor ul,
+  .j-editor ol {
+    margin: 0 0 var(--editor-list-space);
+    padding-left: 1.5em;
+  }
+
+  .j-editor ul li,
+  .j-editor ol li {
+    margin-bottom: 0.375em;
+    padding-left: 0.25em;
+  }
+
+  .j-editor ul li:last-child,
+  .j-editor ol li:last-child {
+    margin-bottom: 0;
+  }
+
+  .j-editor ul {
+    list-style-type: disc;
+  }
+
+  .j-editor ol {
+    list-style-type: decimal;
+  }
+
+  .j-editor ul ul,
+  .j-editor ol ol,
+  .j-editor ol ul,
+  .j-editor ul ol {
+    margin-top: var(--editor-space);
+    margin-bottom: 0;
+  }
+
+  .j-editor ul ul {
+    list-style-type: circle;
+  }
+
+  .j-editor ul ul ul {
+    list-style-type: square;
+  }
+
+  .j-editor ol ol {
+    list-style-type: lower-alpha;
+  }
+
+  .j-editor ol ol ol {
+    list-style-type: lower-roman;
+  }
+
+  .j-editor ul p,
+  .j-editor ol p {
+    margin: 0;
+  }
+
+  /* Definition List */
+  .j-editor dl {
+    margin-block: var(--editor-block-space);
+  }
+
+  .j-editor dt {
+    font-weight: 600;
+    margin-top: 0.75rem;
+    margin-bottom: var(--editor-space);
+    color: var(--editor-heading-fg);
+  }
+
+  .j-editor dl dt:first-child {
+    margin-top: 0;
+  }
+
+  .j-editor dd {
+    margin: 0 0 0.75rem;
+    padding-left: var(--editor-list-space);
+    color: var(--tone-body);
+  }
+
+  /* ============================================
+    Task List - 任务列表
+  ============================================ */
+  .j-editor ul[data-type='taskList'] {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .j-editor ul[data-type='taskList'] li {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .j-editor ul[data-type='taskList'] li label,
+  .j-editor ul[data-type='taskList'] li div {
+    display: flex;
+  }
+
+  .j-editor ul[data-type='taskList'] li > label {
+    flex: none;
+    user-select: none;
+  }
+
+  .j-editor ul[data-type='taskList'] li div {
+    flex: auto;
+  }
+
+  .j-editor ul[data-type='taskList'] li div p {
+    line-height: 1.5;
+  }
+
+  .j-editor input[type='checkbox'] {
+    border: 1px solid var(--ui-border);
+    border-radius: var(--radius-sm);
+    background: var(--ui-bg);
+    clear: none;
+    cursor: pointer;
+    display: inline-block;
+    width: 1rem;
+    height: 1rem;
+    margin: 0;
+    appearance: none;
+    transition: all 0.05s ease-in-out;
+  }
+
+  .j-editor input[type='checkbox']:checked {
+    background: var(--tone-solid);
+    border-color: var(--tone-solid);
+  }
+
+  .dark .j-editor input[type='checkbox']:checked {
+    background: var(--tone-shade);
+    border-color: var(--tone-shade);
+  }
+
+  .j-editor input[type='checkbox']:checked:before {
+    content: url('data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2020%2020%27%3E%3Cpath%20d%3D%27M14.83%204.89l1.34.94-5.81%208.38H9.02L5.78%209.67l1.34-1.25%202.57%202.4z%27%20fill%3D%27%23ffffff%27%2F%3E%3C%2Fsvg%3E');
+    display: inline-block;
+    margin: -0.1875rem 0 0 -0.25rem;
+    width: 1.3125rem;
+    height: 1.3125rem;
+  }
+
+  .j-editor ul[data-type='taskList'] li:has(input[type='checkbox']:checked) p {
+    text-decoration: line-through;
+    text-decoration-color: var(--ui-fg);
+    text-decoration-thickness: 2px;
+  }
+
+  /* ============================================
+    Blockquote - 引用
+  ============================================ */
+  .j-editor blockquote {
+    margin: var(--editor-block-space) 0;
+    padding: 0.75rem 1.25rem;
+    border-left: 3px solid var(--editor-border-tone);
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    background-color: var(--editor-blockquote-bg);
+    color: var(--editor-blockquote-fg);
+  }
+
+  .j-editor blockquote > * {
+    margin-block: 0;
+  }
+
+  .j-editor blockquote > * + * {
+    margin-top: 0.25rem;
+  }
+
+  .j-editor cite {
+    display: block;
+    margin-block: 0.25rem;
+    font-style: normal;
+    font-size: 0.875em;
+    color: var(--editor-caption-fg);
+  }
+
+  .j-editor cite::before {
+    content: '— ';
+  }
+
+  /* ============================================
+    Code - 代码
+  ============================================ */
+  code {
+    box-decoration-break: clone;
+  }
+
+  .j-editor code:not([class*='language-']),
+  .j-editor kbd {
+    font-family: Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+    font-size: 0.875em;
+    border: 1px solid var(--editor-border-subtle);
+    border-radius: var(--radius-sm);
+    word-break: break-word;
+    background: var(--editor-code-bg);
+    color: var(--editor-code-fg);
+  }
+
+  .j-editor code:not([class*='language-']) {
+    padding: 2px 4px;
+  }
+
+  .j-editor kbd {
+    border-color: var(--editor-border);
+    border-bottom-width: 2px;
+    padding: 2px 6px;
+    color: var(--tone-body);
+  }
+
+  .j-editor pre {
+    position: relative;
+    margin: 1rem 0;
+    font-size: 0.875em;
+    line-height: 1.6;
+    tab-size: 2;
+    color: var(--ui-fg);
+    background: var(--editor-bg-subtle);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--editor-border-subtle);
+  }
+
+  .j-radius-round .j-editor pre {
+    border-radius: 1.25rem;
+  }
+
+  pre .code-header {
+    display: flex;
+    align-items: center;
+    gap: 40px;
+    padding: 0.5rem 1rem 0;
+    font-size: 12px;
+    color: var(--ui-fg-soft);
+  }
+
+  pre .code-dots {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--state-success);
+    box-shadow:
+      14px 0 0 var(--state-warning),
+      28px 0 0 var(--state-danger);
+  }
+
+  pre .code-language,
+  pre .code-header select {
+    font-size: 12px;
+    color: var(--ui-fg-soft);
+  }
+
+  pre .code-header select {
+    appearance: none;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+  }
+
+  pre .code-header select::-ms-expand {
+    display: none;
+  }
+
+  pre .code-header select:focus-visible {
+    outline: 0;
+  }
+
+  .j-editor pre code[class*='language-'] {
+    display: block;
+    padding: 1rem;
+    overflow: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--ui-border) transparent;
+  }
+
+  pre .code-header + code[class*='language-'] {
+    padding: 0.5rem 1rem 0.75rem;
+  }
+
+  /* purposely ignored */
+  .hljs-char.escape_,
+  .hljs-link,
+  .hljs-params,
+  .hljs-property,
+  .hljs-punctuation,
+  .hljs-tag {
+    color: var(--ui-gray);
+  }
+
+  /* prettylights-syntax-entity */
+  .hljs-title,
+  .hljs-title.class_,
+  .hljs-title.class_.inherited__,
+  .hljs-title.function_ {
+    color: var(--ui-violet);
+  }
+
+  /* prettylights-syntax-constant */
+  .hljs-attr,
+  .hljs-attribute,
+  .hljs-literal,
+  .hljs-meta,
+  .hljs-number,
+  .hljs-operator,
+  .hljs-variable,
+  .hljs-selector-attr,
+  .hljs-selector-class,
+  .hljs-selector-id {
+    color: var(--ui-teal);
+  }
+
+  /* prettylights-syntax-keyword */
+  .hljs-doctag,
+  .hljs-keyword,
+  .hljs-meta .hljs-keyword,
+  .hljs-template-tag,
+  .hljs-template-variable,
+  .hljs-type,
+  .hljs-variable.language_ {
+    color: var(--ui-tomato);
+  }
+
+  /* prettylights-syntax-string */
+  .hljs-regexp,
+  .hljs-string,
+  .hljs-meta .hljs-string {
+    color: var(--ui-pink);
+  }
+
+  /* prettylights-syntax-variable */
+  .hljs-built_in,
+  .hljs-symbol {
+    color: var(--ui-orange);
+  }
+
+  /* prettylights-syntax-comment */
+  .hljs-comment,
+  .hljs-code,
+  .hljs-formula {
+    color: var(--ui-fg-soft);
+  }
+
+  .language-markdown .hljs-code {
+    color: inherit;
+  }
+
+  /* .dark .hljs-comment,
+      .dark .hljs-code,
+      .dark .hljs-formula {
+        color: var(--ui-gray-shade);
+      } */
+
+  /* prettylights-syntax-entity-tag */
+  .hljs-name,
+  .hljs-quote,
+  .hljs-selector-tag,
+  .hljs-selector-pseudo {
+    color: var(--ui-indigo);
+  }
+
+  /* prettylights-syntax-storage-modifier-import */
+  .hljs-subst {
+    color: var(--ui-fg);
+  }
+
+  /* prettylights-syntax-markup-heading */
+  .hljs-section {
+    color: var(--ui-teal);
+    font-weight: bold;
+  }
+
+  /* prettylights-syntax-markup-list */
+  .hljs-bullet {
+    color: var(--ui-gold);
+  }
+
+  /* prettylights-syntax-markup-italic */
+  .hljs-emphasis {
+    color: var(--ui-fg);
+    font-style: italic;
+  }
+
+  /* prettylights-syntax-markup-bold */
+  .hljs-strong {
+    color: var(--ui-fg);
+    font-weight: bold;
+  }
+
+  /* prettylights-syntax-markup-inserted */
+  .hljs-addition {
+    color: var(--ui-indigo);
+    background-color: #f0fff4;
+  }
+
+  /* prettylights-syntax-markup-deleted */
+  .hljs-deletion {
+    color: var(--ui-ruby);
+    background-color: #ffeef0;
+  }
+
+  /* ============================================
+    Media - 媒体
+  ============================================ */
+
+  .j-editor img {
+    max-width: 100%;
+    height: auto;
+  }
+
+  .j-editor figure {
+    margin: var(--editor-block-space) 0;
+  }
+
+  .j-editor figure img,
+  .j-editor figure video,
+  .j-editor figure iframe {
+    display: block;
+    margin: 0 auto;
+  }
+
+  .j-editor figcaption {
+    margin-top: 0.5rem;
+    font-size: var(--font-size-md);
+    color: var(--editor-caption-fg);
+    text-align: center;
+    line-height: 1.2;
+  }
+
+  .j-editor iframe,
+  .j-editor video,
+  .j-editor audio {
+    max-width: 100%;
+  }
+
+  .j-editor video,
+  .j-editor audio {
+    display: block;
+    border-radius: var(--radius-lg);
+  }
+
+  .j-editor video {
+    background-color: var(--ui-fg);
+  }
+
+  .j-editor figure:has(audio) {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+
+  /* ============================================
+    Horizontal Rule - 分割线
+  ============================================ */
+
+  .j-editor hr {
+    margin: var(--editor-block-space) 0;
+    border: 0;
+    height: 1px;
+    background: var(--editor-border);
+  }
+
+  /* ============================================
+    Details / Summary - 折叠
+  ============================================ */
+
+  .j-editor details {
+    margin: var(--editor-block-space) 0;
+    padding: 1em;
+    background-color: var(--editor-bg-subtle);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--editor-border-subtle);
+  }
+
+  .j-editor summary {
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--editor-heading-fg);
+    outline: none;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+  }
+
+  .j-editor summary::before {
+    content: '▸';
+    display: inline-block;
+    transition: transform 0.2s ease;
+  }
+
+  .j-editor details[open] > summary::before {
+    transform: rotate(90deg);
+  }
+
+  .j-editor details[open] p,
+  .j-editor details[open] ul,
+  .j-editor details[open] ol,
+  .j-editor details[open] > * {
+    margin-bottom: 1em;
+  }
+
+  .j-editor details[open] > summary + * {
+    margin-top: 0;
+  }
+
+  .j-editor details[open] > *:last-child {
+    margin-bottom: 0;
+  }
+
+  /* ============================================
+    Progress / Meter
+  ============================================ */
+
+  .j-editor progress {
+    max-width: 100%;
+    border-radius: 9999px;
+    overflow: hidden;
+    height: 0.625em;
+    margin-block: 0.25em;
+  }
+
+  .j-editor meter {
+    max-width: 100%;
+    height: 1em;
+    margin-block: 0.125em;
+  }
+
+  .j-editor progress::-webkit-progress-value,
+  .j-editor meter::-webkit-meter-optimum-value {
+    background-color: var(--tone-solid);
+    border-radius: 9999px;
+  }
+
+  .j-editor progress::-webkit-progress-bar,
+  .j-editor meter::-webkit-meter-bar {
+    background-color: var(--tone-border);
+    border: none;
+    border-radius: 9999px;
+  }
+
+  /* ============================================
+    Address
+  ============================================ */
+  .j-editor address {
+    font-style: normal;
+    margin-block: var(--editor-block-space);
+    padding: 1em 1.25em;
+    background-color: var(--editor-bg-subtle);
+    border-radius: var(--radius-lg);
+    color: var(--editor-caption-fg);
+    font-size: 0.9375em;
+  }
+
+  /* ============================================
+    Block Item - 通用块级元素
+  ============================================ */
+  .j-editor > *:first-child {
+    margin-top: 0;
+  }
+
+  .j-editor > *:last-child {
+    margin-bottom: 0;
+  }
+
+  .j-editor table,
+  .j-editor .block {
+    margin-block: var(--editor-block-space);
+  }
+
+  .j-editor table {
+    text-indent: 0;
+    border-color: inherit;
+    border-collapse: collapse;
+
+    overflow-x: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--ui-border) transparent;
+    display: block;
   }
 
   .j-editor table td,
@@ -78,6 +852,10 @@
     background: var(--ui-bg-subtle);
   }
 
+  /* ============================================
+    Mobile
+  ============================================ */
+
   .mobile .j-editor h1 {
     margin-bottom: 1.5rem;
   }
@@ -89,8 +867,4 @@
   .mobile .j-editor p {
     --editor-block-space: 1.5rem;
   }
-
-  /* .mobile .j-editor li p {
-    margin-block: 0;
-  } */
 }

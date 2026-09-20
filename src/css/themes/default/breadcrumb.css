@@ -1,4 +1,4 @@
-@layer themes {
+@layer components {
   .j-breadcrumb {
     --breadcrumb-font-size: var(--font-size-md);
     --breadcrumb-fg: var(--ui-fg-muted);
@@ -9,6 +9,42 @@
 
     font-size: var(--breadcrumb-font-size);
     color: var(--breadcrumb-fg);
+
+    white-space: nowrap;
+    user-select: none;
+  }
+
+  .j-breadcrumb > ol,
+  .j-breadcrumb > ul {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    align-items: flex-start;
+    margin: 0;
+    padding: 0;
+  }
+
+  .j-breadcrumb > ol li,
+  .j-breadcrumb > ul li {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .j-breadcrumb li + li::before {
+    content: '/';
+  }
+
+  .j-breadcrumb.is-dot li + li::before {
+    content: '•';
+  }
+
+  .j-breadcrumb.is-arrow li + li::before {
+    content: '>';
+  }
+
+  .j-breadcrumb.is-dash li + li::before {
+    content: '–';
   }
 
   .j-breadcrumb svg {
@@ -30,10 +66,21 @@
     gap: var(--space);
     color: var(--breadcrumb-link-fg);
     padding: var(--breadcrumb-item-padding);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
   }
 
   .j-breadcrumb a:hover {
     --breadcrumb-link-fg: var(--tone-solid);
+  }
+
+  .j-breadcrumb a span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .j-breadcrumb li + li::before {
@@ -42,5 +89,22 @@
 
   .j-breadcrumb li.is-active a {
     --breadcrumb-link-fg: var(--ui-fg-muted);
+
+    cursor: default;
+    pointer-events: none;
+  }
+
+  .j-breadcrumb li:first-child a {
+    padding-inline-start: 0;
+  }
+
+  .j-breadcrumb.is-center ul,
+  .j-breadcrumb.is-center ol {
+    justify-content: center;
+  }
+
+  .j-breadcrumb.is-right ul,
+  .j-breadcrumb.is-right ol {
+    justify-content: flex-end;
   }
 }

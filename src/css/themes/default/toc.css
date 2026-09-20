@@ -1,4 +1,4 @@
-@layer themes {
+@layer components {
   .j-toc .toc-title {
     color: var(--tone-caption);
     margin-bottom: 4px;

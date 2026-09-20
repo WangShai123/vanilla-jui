@@ -1,4 +1,4 @@
-@layer themes {
+@layer components {
   .j-tree {
     padding: 14px;
     border: 1px solid var(--ui-border-subtle);
@@ -11,6 +11,20 @@
 
   .j-tree-list {
     gap: 2px;
+
+    display: grid;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* .j-tree-list[hidden] {
+    display: none;
+  } */
+
+  .j-tree-list .j-tree-list {
+    padding-left: 20px;
+    position: relative;
   }
 
   .j-tree-list .j-tree-list::before {
@@ -19,6 +33,13 @@
     left: 7px;
     width: 1px;
     background: var(--ui-border);
+
+    position: absolute;
+    content: '';
+  }
+
+  .j-tree-item {
+    position: relative;
   }
 
   .j-tree-list .j-tree-list > .j-tree-item::before {
@@ -27,6 +48,9 @@
     width: 12px;
     height: 1px;
     background: var(--ui-border);
+
+    position: absolute;
+    content: '';
   }
 
   .j-tree-list li {
@@ -40,6 +64,13 @@
     padding: 0 4px;
     border-radius: var(--radius-sm);
     color: var(--tone-caption);
+
+    display: flex;
+    align-items: center;
+  }
+
+  .j-tree-node[role='button'] {
+    cursor: pointer;
   }
 
   .j-tree-node[role='button']:hover,
@@ -58,6 +89,11 @@
     width: 16px;
     height: 16px;
     color: var(--tone-caption);
+
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
   }
 
   .j-tree-item.is-directory > .j-tree-node .j-tree-icon {
@@ -69,7 +105,8 @@
     height: 16px;
   }
 
-  .j-tree-list .j-tree-list {
-    padding-left: 20px;
+  .j-tree-label {
+    min-width: 0;
+    overflow-wrap: anywhere;
   }
 }

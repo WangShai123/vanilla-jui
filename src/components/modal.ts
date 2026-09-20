@@ -139,7 +139,7 @@ const DEFAULT_CLASS_NAMES: ModalClassNames = {
   button: 'j-button',
   closeBtn: 'is-icon is-sm is-ghost',
   cancelBtn: 'is-ghost',
-  confirmBtn: 'is-primary',
+  confirmBtn: 'is-solid',
 };
 
 function createDefaultText(): ModalText {

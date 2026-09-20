@@ -199,7 +199,7 @@ const DEFAULT_CLASS_NAMES: FormClassNames = {
   helpInvalid: 'is-invalid',
   buttons: 'form-buttons',
   button: 'j-button',
-  submitBtn: 'is-primary',
+  submitBtn: 'is-solid',
   resetBtn: 'is-ghost',
   input: 'j-input',
   textarea: 'j-textarea',

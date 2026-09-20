@@ -330,7 +330,7 @@ const DEFAULT_CLASS_NAMES: FlowClassNames = {
   button: 'j-button',
   reset: 'is-ghost flow-reset',
   back: 'is-ghost flow-back',
-  next: 'is-primary flow-next',
+  next: 'is-solid flow-next',
 };
 
 const FLOW_STEP_RULE = {

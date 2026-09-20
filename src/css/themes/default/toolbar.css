@@ -1,13 +1,30 @@
-@layer themes {
+@layer components {
   .j-toolbar-container {
     background: var(--ui-bg);
     border-bottom: 1px solid var(--ui-border);
+
+    position: sticky;
+    top: 0;
+    width: 100%;
+    z-index: var(--z-toolbar);
+    overflow: hidden;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-color: transparent transparent;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    scroll-behavior: smooth;
   }
 
   .j-toolbar {
     gap: 0;
     padding: var(--s2);
     box-shadow: var(--shadow-sm);
+
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
 
   .j-toolbar button svg {
@@ -22,6 +39,11 @@
     height: 16px;
     background: var(--ui-fg);
     align-self: center;
+  }
+
+  .editor-drop-color .color-panel {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
   }
 
   .editor-drop-color .color-panel button.color-btn {
@@ -46,5 +68,11 @@
 
   .j-toolbar button.is-lg svg {
     --toolbar-icon-size: var(--font-size-2xl);
+  }
+
+  @media screen and (max-width: 992px) {
+    .j-toolbar {
+      justify-content: flex-start;
+    }
   }
 }

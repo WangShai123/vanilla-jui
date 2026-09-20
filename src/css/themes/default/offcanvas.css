@@ -1,6 +1,14 @@
-@layer themes {
+@layer components {
   .j-offcanvas-overlay {
     background: var(--ui-overlay-muted);
+
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: auto;
+    z-index: var(--z-overlay);
   }
 
   .j-offcanvas {
@@ -10,6 +18,9 @@
 
     background: var(--ui-bg);
     box-shadow: var(--shadow-md);
+
+    position: fixed;
+    z-index: var(--z-offcanvas);
   }
 
   .j-offcanvas[data-direction='left'] {
@@ -46,5 +57,12 @@
 
   .j-font-md .j-offcanvas {
     --offcanvas-block-width: 316px;
+  }
+
+  .j-offcanvas .offcanvas-content {
+    position: relative;
+    height: 100%;
+    overflow-y: auto;
+    scrollbar-width: none;
   }
 }

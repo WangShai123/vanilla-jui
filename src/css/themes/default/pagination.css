@@ -1,4 +1,4 @@
-@layer themes {
+@layer components {
   .j-pagination {
     font-size: var(--font-size-md);
   }
@@ -10,5 +10,17 @@
 
   .j-pagination .pagination {
     gap: 2px;
+
+    list-style: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+  }
+
+  .j-pagination ul.pagination li {
+    margin: 0;
+    padding: 0;
   }
 }

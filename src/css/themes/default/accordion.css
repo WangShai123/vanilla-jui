@@ -1,7 +1,14 @@
-@layer themes {
+@layer components {
   .j-accordion {
     --accordion-border: 1px solid var(--ui-border-subtle);
     --accordion-icon-transform: rotate(0deg);
+
+    display: flex;
+    flex-direction: column;
+  }
+
+  .j-accordion[data-direction='horizontal'] {
+    flex-direction: row;
   }
 
   .j-accordion .accordion-header {
@@ -10,6 +17,11 @@
     font-weight: var(--font-medium);
     font-size: var(--font-size-md);
     border-bottom: var(--accordion-border);
+
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
   }
 
   .j-accordion[data-direction='horizontal'] .accordion-header {
@@ -32,8 +44,18 @@
     border-right: 0;
   }
 
+  .j-accordion .accordion-header .header-title {
+    flex: 1;
+    text-align: left;
+  }
+
   .j-accordion .accordion-header .header-arrow {
     transform: var(--accordion-icon-transform);
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: transform 0.3s ease-out;
   }
 
   .j-accordion .accordion-header .header-arrow svg {
@@ -58,6 +80,8 @@
     margin: 0;
     font-size: var(--font-size-md);
     border-bottom: var(--accordion-border);
+
+    position: relative;
   }
 
   .j-accordion .accordion-panel[aria-hidden='false'] {
@@ -85,5 +109,17 @@
   .j-accordion .accordion-panel .panel-content {
     margin: 0;
     padding: 0 var(--s3) var(--s2);
+
+    position: relative;
+    min-height: inherit;
+  }
+
+  .j-accordion[data-direction='horizontal']
+    .accordion-panel[aria-hidden='false']
+    .panel-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: 100%;
   }
 }
