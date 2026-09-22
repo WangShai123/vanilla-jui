@@ -47,55 +47,55 @@
   }
 
   .j-badge.is-reverse {
-    --badge-bg: var(--ui-fg);
     --badge-fg: var(--ui-bg);
+    --badge-bg: var(--ui-fg);
   }
 
   .j-badge.is-solid {
-    --badge-bg: var(--tone-solid);
     --badge-fg: var(--tone-fg);
+    --badge-bg: var(--tone-solid);
     --badge-border-color: var(--tone-solid);
   }
 
   .j-badge.is-soft {
-    --badge-bg: var(--tone-soft);
     --badge-fg: var(--tone-text);
+    --badge-bg: var(--tone-soft);
     --badge-border-color: var(--tone-soft);
   }
 
   .j-badge.is-wash {
-    --badge-bg: var(--tone-wash);
     --badge-fg: var(--tone-text);
+    --badge-bg: var(--tone-wash);
     --badge-border-color: var(--tone-wash);
   }
 
   .j-badge.is-primary {
-    --badge-bg: var(--state-info);
-    --badge-fg: var(--state-info-fg);
-    --badge-border-color: var(--state-info);
+    --badge-fg: var(--state-info-text);
+    --badge-bg: var(--state-info-soft);
+    --badge-border-color: var(--state-info-border);
   }
 
   .j-badge.is-success {
-    --badge-bg: var(--state-success);
-    --badge-fg: var(--state-success-fg);
-    --badge-border-color: var(--state-success);
+    --badge-fg: var(--state-success-text);
+    --badge-bg: var(--state-success-soft);
+    --badge-border-color: var(--state-success-border);
   }
 
   .j-badge.is-warning {
-    --badge-bg: var(--state-warning);
-    --badge-fg: var(--state-warning-fg);
-    --badge-border-color: var(--state-warning);
+    --badge-fg: var(--state-warning-text);
+    --badge-bg: var(--state-warning-soft);
+    --badge-border-color: var(--state-warning-border);
   }
 
   .j-badge.is-danger {
-    --badge-bg: var(--state-danger);
-    --badge-fg: var(--state-danger-fg);
-    --badge-border-color: var(--state-danger);
+    --badge-fg: var(--state-danger-text);
+    --badge-bg: var(--state-danger-subtle);
+    --badge-border-color: var(--state-danger-subtle);
   }
 
   .j-badge.is-error {
-    --badge-border-color: var(--state-danger-subtle);
-    --badge-bg: var(--state-danger-subtle);
-    --badge-fg: var(--state-danger-text);
+    --badge-fg: var(--state-danger-fg);
+    --badge-bg: var(--state-danger);
+    --badge-border-color: var(--state-danger);
   }
 }

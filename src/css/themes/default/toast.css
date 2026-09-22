@@ -53,28 +53,32 @@
     word-break: normal;
   }
 
-  .j-toast.is-success {
-    --toast-fg: var(--state-success);
-    --toast-bg: var(--state-success-soft);
-    --toast-border-color: var(--state-success-border);
-  }
-
-  .j-toast.is-error {
-    --toast-fg: var(--state-danger);
-    --toast-bg: var(--state-danger-soft);
-    --toast-border-color: var(--state-danger-border);
-  }
-
-  .j-toast.is-warning {
-    --toast-fg: var(--state-warning);
-    --toast-bg: var(--state-warning-soft);
-    --toast-border-color: var(--state-warning-border);
+  .j-toast.is-info {
+    --toast-bg: color-mix(in srgb, var(--ui-bg) 50%, transparent);
   }
 
   .j-toast.is-primary {
-    --toast-fg: var(--tone-solid);
-    --toast-bg: var(--tone-soft);
-    --toast-border-color: var(--tone-border);
+    --toast-fg: var(--state-info-text);
+    --toast-bg: var(--state-info-soft);
+    --toast-border-color: var(--state-info-ring);
+  }
+
+  .j-toast.is-success {
+    --toast-fg: var(--state-success-text);
+    --toast-bg: var(--state-success-soft);
+    --toast-border-color: var(--state-success-ring);
+  }
+
+  .j-toast.is-warning {
+    --toast-fg: var(--state-warning-text);
+    --toast-bg: var(--state-warning-soft);
+    --toast-border-color: var(--state-warning-ring);
+  }
+
+  .j-toast.is-error {
+    --toast-fg: var(--state-danger-text);
+    --toast-bg: var(--state-danger-soft);
+    --toast-border-color: var(--state-danger-ring);
   }
 
   .j-toast-lite {
@@ -97,6 +101,8 @@
   }
 
   .j-toast.is-confirm {
+    --toast-bg: color-mix(in srgb, var(--ui-bg) 50%, transparent);
+
     gap: var(--s4);
     min-width: 280px;
 

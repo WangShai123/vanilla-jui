@@ -127,12 +127,12 @@
     @supports (color: color-mix(in srgb, red 50%, blue)) {
       background-color: color-mix(
         in srgb,
-        var(--ui-bg-subtle) 20%,
+        var(--ui-bg-subtle) 50%,
         transparent
       );
     }
 
-    backdrop-filter: blur(8px);
+    backdrop-filter: blur(4px);
 
     display: none;
     position: absolute;
@@ -534,8 +534,8 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-width: var(--columns-6xs);
-    max-width: var(--columns-2xs);
+    min-width: 10rem;
+    max-width: 18rem;
     left: 50%;
     transform: translateX(-50%) translateY(100%);
     bottom: calc(100% + var(--space));

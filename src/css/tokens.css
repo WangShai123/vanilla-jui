@@ -67,27 +67,6 @@
     --screen-lg: 992px;
     --screen-xl: 1200px;
 
-    /* --- Container Widths --- */
-    --columns-6xs: 10rem;
-    --columns-5xs: 12rem;
-    --columns-4xs: 14rem;
-    --columns-3xs: 16rem;
-    --columns-2xs: 18rem;
-    --columns-xs: 20rem;
-    --columns-sm: 24rem;
-    --columns-md: 28rem;
-    --columns-lg: 32rem;
-    --columns-xl: 36rem;
-    --columns-2xl: 42rem;
-    --columns-3xl: 48rem;
-    --columns-4xl: 56rem;
-    --columns-5xl: 64rem;
-    --columns-6xl: 72rem;
-    --columns-7xl: 80rem;
-
-    /* --- Border Radius --- */
-    --radius-full: 9999px;
-
     /* --- Opacity --- */
     --opacity-hover: 0.85;
     --opacity-active: 0.95;
@@ -127,7 +106,7 @@
     --ui-popup-bg: rgba(0, 0, 0, 0.0625);
     --ui-input-color: #111827;
     --ui-input-border: rgba(0, 0, 0, 0.15);
-    --ui-input-focus-border: #3b82f6;
+    --ui-input-focus-border: var(--ui-blue);
     --ui-input-placeholder: #9ca3af;
     --ui-input-focus-ring: rgba(59, 130, 246, 0.25);
     --ui-tooltip-bg: #1f2937;
@@ -263,7 +242,7 @@
     --state-warning-border: rgba(245, 158, 11, 0.25);
     --state-warning-ring: rgba(245, 158, 11, 0.3);
 
-    --state-info: #3b82f6;
+    --state-info: var(--ui-blue);
     --state-info-hover: #2563eb;
     --state-info-active: #1d4ed8;
     --state-info-fg: #ffffff;
@@ -286,8 +265,8 @@
   }
 
   /* ============================================
-     3. Color Tokens - Dark Mode
-     ============================================ */
+    3. Color Tokens - Dark Mode
+  ============================================ */
 
   .dark {
     /* UI Structure */
@@ -453,7 +432,7 @@
     --state-warning-border: rgba(251, 191, 36, 0.25);
     --state-warning-ring: rgba(251, 191, 36, 0.4);
 
-    --state-info: #60a5fa;
+    --state-info: var(--ui-blue-shade);
     --state-info-hover: #93bbfd;
     --state-info-active: #bfdbfe;
     --state-info-fg: #030712;
