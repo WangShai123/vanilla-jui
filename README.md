@@ -46,4 +46,4 @@ UMD global variable: `jui`
 
 ## Documentation And Preview
 
-[Documentation And Preview](https://app.jealer.com/vanilla-jui/)
+[Documentation And Preview](https://www.jealer.com/docs/vanilla-jui/)

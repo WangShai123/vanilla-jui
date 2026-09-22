@@ -45,4 +45,4 @@ UMD 全局变量 `jui`
 
 ## 文档与预览
 
-[文档与预览](https://app.jealer.com/vanilla-jui/)
+[文档与预览](https://www.jealer.com/docs/vanilla-jui/)
