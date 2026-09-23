@@ -1,6 +1,6 @@
 {
   "name": "vanilla-jui",
-  "version": "1.7.14",
+  "version": "1.7.15",
   "private": false,
   "description": "A lightweight, reactive, and fully customizable vanilla JS UI library.",
   "keywords": [
@@ -23,7 +23,7 @@
     "validator",
     "vanilla"
   ],
-  "homepage": "https://www.jealer.com/docs/vanilla-jui/",
+  "homepage": "https://app.jealer.com/en/vanilla-jui/",
   "bugs": {
     "url": "https://github.com/WangShai123/vanilla-jui/issues"
   },
