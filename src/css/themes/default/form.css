@@ -668,7 +668,6 @@
   .input-inner-group .el-addon.is-text {
     display: flex;
     align-items: center;
-    flex-shrink: 0;
     padding-inline: var(--s2);
     user-select: none;
   }
@@ -676,6 +675,11 @@
   .input-inner-group .el-addon.inner-wrap {
     gap: var(--space);
     padding-inline: var(--space);
+  }
+
+  .input-group .el-addon,
+  .input-inner-group .el-addon {
+    flex-shrink: 0;
   }
 
   /* input style */
