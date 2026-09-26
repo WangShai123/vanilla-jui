@@ -6,9 +6,7 @@
 
     background: var(--tooltip-bg);
     color: var(--tooltip-fg);
-    border-width: 1px;
-    border-style: solid;
-    border-color: var(--tooltip-border-color);
+    border: 1px solid var(--tooltip-border-color);
     border-radius: var(--radius-md);
     max-width: 260px;
     padding: 2px 4px;

@@ -18,10 +18,6 @@
     list-style: none;
   }
 
-  /* .j-tree-list[hidden] {
-    display: none;
-  } */
-
   .j-tree-list .j-tree-list {
     padding-left: 20px;
     position: relative;
@@ -86,8 +82,6 @@
   }
 
   .j-tree-icon {
-    width: 16px;
-    height: 16px;
     color: var(--tone-caption);
 
     display: inline-flex;
@@ -100,6 +94,7 @@
     color: var(--tone-text);
   }
 
+  .j-tree-icon,
   .j-tree-icon .el-icon {
     width: 16px;
     height: 16px;

@@ -4,12 +4,9 @@
     --badge-min-width: 1.25rem;
     --badge-height: 1.25rem;
     --badge-font-size: var(--font-size-sm);
-    --badge-font-weight: var(--font-medium);
-    --badge-radius: 500px;
     --badge-border-color: var(--ui-border);
     --badge-fg: var(--ui-fg);
     --badge-bg: var(--ui-bg);
-    --badge-box-shadow: none;
     --badge-gap: 4px;
 
     gap: var(--badge-gap);
@@ -17,12 +14,12 @@
     min-width: var(--badge-min-width);
     height: var(--badge-height);
     font-size: var(--badge-font-size);
-    font-weight: var(--badge-font-weight);
-    border-radius: var(--badge-radius);
+    font-weight: var(--font-medium);
+    border-radius: 50%;
     border: 1px solid var(--badge-border-color);
     color: var(--badge-fg);
     background-color: var(--badge-bg);
-    box-shadow: var(--badge-box-shadow);
+    box-shadow: none;
 
     display: inline-flex;
     justify-content: center;

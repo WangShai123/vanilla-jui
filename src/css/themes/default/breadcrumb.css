@@ -1,14 +1,11 @@
 @layer components {
   .j-breadcrumb {
     --breadcrumb-font-size: var(--font-size-md);
-    --breadcrumb-fg: var(--ui-fg-muted);
     --breadcrumb-icon-size: var(--font-size-md);
-    --breadcrumb-divider-fg: var(--ui-fg-soft);
     --breadcrumb-link-fg: var(--tone-text);
-    --breadcrumb-item-padding: 0 var(--s2);
 
     font-size: var(--breadcrumb-font-size);
-    color: var(--breadcrumb-fg);
+    color: var(--ui-fg-muted);
 
     white-space: nowrap;
     user-select: none;
@@ -65,7 +62,7 @@
   .j-breadcrumb a {
     gap: var(--space);
     color: var(--breadcrumb-link-fg);
-    padding: var(--breadcrumb-item-padding);
+    padding: 0 var(--s2);
 
     display: flex;
     align-items: center;
@@ -84,7 +81,7 @@
   }
 
   .j-breadcrumb li + li::before {
-    color: var(--breadcrumb-divider-fg);
+    color: var(--ui-fg-soft);
   }
 
   .j-breadcrumb li.is-active a {

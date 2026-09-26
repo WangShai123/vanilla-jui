@@ -5,9 +5,7 @@
 
     row-gap: var(--s2);
     width: 100%;
-    border-width: 1px;
-    border-style: solid;
-    border-color: var(--tip-border-color);
+    border: 1px solid var(--tip-border-color);
     border-radius: var(--radius-md);
     padding: var(--s3) var(--s4);
     font-size: var(--font-size-md);

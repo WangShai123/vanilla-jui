@@ -1,7 +1,6 @@
 @layer components {
   .j-theme-palette {
-    padding-inline: var(--s4);
-    padding-block: var(--s4) var(--s8);
+    padding: var(--s4) var(--s4) var(--s8);
   }
 
   .j-theme-palette .palette-container,

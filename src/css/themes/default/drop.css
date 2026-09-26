@@ -1,8 +1,6 @@
 @layer components {
   .drop-container {
-    border-width: 1px;
-    border-style: solid;
-    border-color: var(--ui-border);
+    border: 1px solid var(--ui-border);
     border-radius: var(--radius-sm);
     background: var(--ui-bg);
     color: var(--ui-fg);

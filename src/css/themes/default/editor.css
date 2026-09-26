@@ -1,20 +1,13 @@
 @layer components {
   #j-editor-container {
-    --editor-max-width: 880px;
-    --editor-min-height: calc(100vh - 51px);
-    --editor-padding: 1.5rem 1.5rem 4rem;
-    --editor-border-width: 1px;
-    --editor-border-style: solid;
-    --editor-border-color: var(--ui-border);
-
-    max-width: var(--editor-max-width);
-    border-width: var(--editor-border-width);
-    border-style: var(--editor-border-style);
-    border-color: var(--editor-border-color);
+    max-width: 880px;
+    border-width: 1px;
+    border-style: solid;
+    border-color: var(--ui-border);
     border-top: none;
     border-bottom: none;
-    min-height: var(--editor-min-height);
-    padding: var(--editor-padding);
+    min-height: calc(100vh - 51px);
+    padding: 1.5rem 1.5rem 4rem;
   }
 
   .ProseMirror {
@@ -28,32 +21,17 @@
   .j-editor {
     --editor-font-size: var(--font-size-lg);
     --editor-line-height: 1.75;
-    --editor-word-space: 0.02em;
-    --editor-letter-space: 0.01em;
     --editor-block-space: 1.25rem;
-    --editor-list-space: 1rem;
-    --editor-space: 0.25rem;
 
     --editor-heading-fg: var(--tone-heading);
     --editor-caption-fg: var(--tone-caption);
-    --editor-ring: var(--tone-ring);
-    --editor-border-tone: var(--tone-border);
     --editor-border-subtle: var(--ui-border-subtle);
-    --editor-blockquote-bg: var(--tone-wash);
-    --editor-blockquote-fg: var(--tone-subtitle);
-    --editor-link: var(--tone-link);
-    --editor-link-hover: var(--tone-link-hover);
-    --editor-link-visited: var(--tone-link-visited);
-    --editor-link-active: var(--tone-link-active);
-    --editor-border: var(--ui-border-subtle);
-    --editor-code-bg: var(--tone-code-bg);
-    --editor-code-fg: var(--tone-code-fg);
     --editor-bg-subtle: var(--ui-bg-subtle);
 
     font-size: var(--editor-font-size);
     line-height: 1.5;
-    letter-spacing: var(--editor-letter-space);
-    word-spacing: var(--editor-word-space);
+    letter-spacing: 0.01em;
+    word-spacing: 0.02em;
     word-break: break-word;
     outline: 0;
     position: relative;
@@ -166,7 +144,7 @@
     text-decoration: underline;
     text-decoration-thickness: 4px;
 
-    text-decoration-color: var(--editor-ring);
+    text-decoration-color: var(--tone-ring);
     text-underline-offset: 0.2em;
   }
 
@@ -223,7 +201,7 @@
     Links - 链接
   ============================================ */
   .j-editor a {
-    color: var(--editor-link);
+    color: var(--tone-link);
     text-decoration: none;
 
     text-decoration-color: transparent;
@@ -234,17 +212,17 @@
   }
 
   .j-editor a:hover {
-    color: var(--editor-link-hover);
+    color: var(--tone-link-hover);
     text-decoration: underline;
-    text-decoration-color: var(--editor-link-hover);
+    text-decoration-color: var(--tone-link-hover);
   }
 
   .j-editor a:visited {
-    color: var(--editor-link-visited);
+    color: var(--tone-link-visited);
   }
 
   .j-editor a:active {
-    color: var(--editor-link-active);
+    color: var(--tone-link-active);
   }
 
   /* ============================================
@@ -252,14 +230,14 @@
   ============================================ */
   .j-editor ul,
   .j-editor ol {
-    margin: 0 0 var(--editor-list-space);
-    padding-left: 1.5em;
+    margin: 0 0 1rem;
+    padding-left: 18px;
   }
 
   .j-editor ul li,
   .j-editor ol li {
-    margin-bottom: 0.375em;
-    padding-left: 0.25em;
+    margin-bottom: 10px;
+    padding-left: 2px;
   }
 
   .j-editor ul li:last-child,
@@ -279,8 +257,7 @@
   .j-editor ol ol,
   .j-editor ol ul,
   .j-editor ul ol {
-    margin-top: var(--editor-space);
-    margin-bottom: 0;
+    margin: 10px 0;
   }
 
   .j-editor ul ul {
@@ -311,8 +288,7 @@
 
   .j-editor dt {
     font-weight: 600;
-    margin-top: 0.75rem;
-    margin-bottom: var(--editor-space);
+    margin: 1rem 0 10px;
     color: var(--editor-heading-fg);
   }
 
@@ -322,7 +298,7 @@
 
   .j-editor dd {
     margin: 0 0 0.75rem;
-    padding-left: var(--editor-list-space);
+    padding-left: 18px;
     color: var(--tone-body);
   }
 
@@ -403,10 +379,10 @@
   .j-editor blockquote {
     margin: var(--editor-block-space) 0;
     padding: 0.75rem 1.25rem;
-    border-left: 3px solid var(--editor-border-tone);
+    border-left: 3px solid var(--tone-border);
     border-radius: 0 var(--radius-md) var(--radius-md) 0;
-    background-color: var(--editor-blockquote-bg);
-    color: var(--editor-blockquote-fg);
+    background-color: var(--tone-wash);
+    color: var(--tone-subtitle);
   }
 
   .j-editor blockquote > * {
@@ -443,8 +419,8 @@
     border: 1px solid var(--editor-border-subtle);
     border-radius: var(--radius-sm);
     word-break: break-word;
-    background: var(--editor-code-bg);
-    color: var(--editor-code-fg);
+    background: var(--tone-code-bg);
+    color: var(--tone-code-fg);
   }
 
   .j-editor code:not([class*='language-']) {
@@ -452,7 +428,7 @@
   }
 
   .j-editor kbd {
-    border-color: var(--editor-border);
+    border-color: var(--editor-border-subtle);
     border-bottom-width: 2px;
     padding: 2px 6px;
     color: var(--tone-body);
@@ -706,7 +682,7 @@
     margin: var(--editor-block-space) 0;
     border: 0;
     height: 1px;
-    background: var(--editor-border);
+    background: var(--editor-border-subtle);
   }
 
   /* ============================================
