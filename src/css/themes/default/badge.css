@@ -15,7 +15,7 @@
     height: var(--badge-height);
     font-size: var(--badge-font-size);
     font-weight: var(--font-medium);
-    border-radius: 50%;
+    border-radius: 48px;
     border: 1px solid var(--badge-border-color);
     color: var(--badge-fg);
     background-color: var(--badge-bg);

@@ -13,13 +13,13 @@
     gap: 2px;
 
     display: grid;
-    margin: 0;
-    padding: 0;
-    list-style: none;
+    margin: 0 !important;
+    padding: 0 !important;
+    list-style-type: none !important;
   }
 
   .j-tree-list .j-tree-list {
-    padding-left: 20px;
+    padding-left: 24px !important;
     position: relative;
   }
 
@@ -40,7 +40,7 @@
 
   .j-tree-list .j-tree-list > .j-tree-item::before {
     top: 13px;
-    left: -12px;
+    left: -16px;
     width: 12px;
     height: 1px;
     background: var(--ui-border);
@@ -50,12 +50,12 @@
   }
 
   .j-tree-list li {
-    margin: 0;
-    padding: 0;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
   .j-tree-node {
-    gap: 7px;
+    gap: 8px;
     min-height: 26px;
     padding: 0 4px;
     border-radius: var(--radius-sm);
