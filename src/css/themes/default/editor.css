@@ -122,8 +122,12 @@
   }
 
   .j-editor p {
-    margin-block: var(--editor-block-space);
     line-height: var(--editor-line-height);
+  }
+
+  .j-editor > div,
+  .j-editor p {
+    margin-block: var(--editor-block-space);
   }
 
   /* ============================================
