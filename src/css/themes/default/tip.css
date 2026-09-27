@@ -61,6 +61,10 @@
     color: var(--ui-gray);
   }
 
+  .j-tip .tip-content p {
+    margin: 6px 0;
+  }
+
   .j-tip .tip-content > *:first-child {
     margin-top: 0;
   }
