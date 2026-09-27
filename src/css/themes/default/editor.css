@@ -93,7 +93,7 @@
     font-size: 2em;
     letter-spacing: -0.02em;
     line-height: 1.25;
-    margin-block: 0;
+    margin: 0;
   }
 
   .j-editor h2 {
@@ -287,7 +287,8 @@
 
   /* Definition List */
   .j-editor dl {
-    margin-block: var(--editor-block-space);
+    /* margin-block: var(--editor-block-space); */
+    margin: var(--editor-block-space) 0;
   }
 
   .j-editor dt {
@@ -390,7 +391,8 @@
   }
 
   .j-editor blockquote > * {
-    margin-block: 0;
+    /* margin-block: 0; */
+    margin: 0;
   }
 
   .j-editor blockquote > * + * {
@@ -399,7 +401,8 @@
 
   .j-editor cite {
     display: block;
-    margin-block: 0.25rem;
+    /* margin-block: 0.25rem; */
+    margin: 0.25rem 0;
     font-style: normal;
     font-size: 0.875em;
     color: var(--editor-caption-fg);
@@ -746,13 +749,15 @@
     border-radius: 9999px;
     overflow: hidden;
     height: 0.625em;
-    margin-block: 0.25em;
+    /* margin-block: 0.25em; */
+    margin: 0.25em 0;
   }
 
   .j-editor meter {
     max-width: 100%;
     height: 1em;
-    margin-block: 0.125em;
+    /* margin-block: 0.125em; */
+    margin: 0.125em 0;
   }
 
   .j-editor progress::-webkit-progress-value,
@@ -773,7 +778,8 @@
   ============================================ */
   .j-editor address {
     font-style: normal;
-    margin-block: var(--editor-block-space);
+    /* margin-block: var(--editor-block-space); */
+    margin: var(--editor-block-space) 0;
     padding: 1em 1.25em;
     background-color: var(--editor-bg-subtle);
     border-radius: var(--radius-lg);
@@ -794,7 +800,8 @@
 
   .j-editor table,
   .j-editor .block {
-    margin-block: var(--editor-block-space);
+    /* margin-block: var(--editor-block-space); */
+    margin: var(--editor-block-space) 0;
   }
 
   .j-editor table {

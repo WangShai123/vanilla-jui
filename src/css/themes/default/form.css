@@ -139,22 +139,25 @@
     color: var(--ui-fg-muted);
     appearance: none;
     border-width: 0;
-    border-inline-end-width: 1px;
+    /* border-inline-end-width: 1px; */
+    border-right-width: 1px;
     border-radius: 0;
     border-color: var(--ui-border);
     background-color: transparent;
-    margin: calc(var(--space) * -2);
+    margin: calc(var(--s2) * -1);
     font-size: var(--input-font-size);
   }
 
   .j-input[type='file']::file-selector-button,
   .j-font-sm .j-input[type='file']::file-selector-button {
-    margin-inline-end: var(--s2);
+    /* margin-inline-end: var(--s2); */
+    margin-right: var(--s2);
     padding: var(--s2);
   }
 
   .j-font-md .j-input[type='file']::file-selector-button {
-    margin-inline-end: calc(var(--space) * 2.75);
+    /* margin-inline-end: calc(var(--space) * 2.75); */
+    margin-right: calc(var(--space) * 2.75);
     padding: calc(var(--space) * 2.75);
   }
 
@@ -615,11 +618,14 @@
   }
 
   .input-inner-group .el-addon + .j-input {
-    padding-inline: 0 var(--space);
+    /* padding-inline: 0 var(--space); */
+    padding-left: 0;
+    padding-right: var(--space);
   }
 
   .input-inner-group .el-addon + .j-select {
-    padding-inline-start: 2px;
+    /* padding-inline-start: 2px; */
+    padding-left: 2px;
   }
 
   .input-inner-group .el-addon {
@@ -655,13 +661,17 @@
   .input-inner-group .el-addon.is-text {
     display: flex;
     align-items: center;
-    padding-inline: var(--s2);
     user-select: none;
+    /* padding-inline: var(--s2); */
+    padding-left: var(--s2);
+    padding-right: var(--s2);
   }
 
   .input-inner-group .el-addon.inner-wrap {
     gap: var(--space);
-    padding-inline: var(--space);
+    /* padding-inline: var(--space); */
+    padding-left: var(--space);
+    padding-right: var(--space);
   }
 
   .input-group .el-addon,
@@ -801,16 +811,11 @@
   /*************************
    * .mobile
    *************************/
-  .mobile .j-input[type='file']::file-selector-button {
-    padding: var(--s3);
-    margin: calc(var(--space) * -1.7);
-    margin-inline-end: calc(var(--space) * 2.75);
+  .mobile input.j-input[type='file'] {
+    --input-padding: 0.5rem;
   }
 
-  .mobile.j-font-md .j-input.is-lg[type='file']::file-selector-button {
-    margin: calc(var(--space) * -1.4);
-  }
-
+  .mobile .j-input[type='file'],
   .mobile .j-textarea {
     width: 100%;
   }

@@ -1261,15 +1261,15 @@
     --font-size-xl: 1.25rem;
     --font-size-2xl: 1.5rem;
 
-    --el-height-3xs: 1.75rem;
-    --el-height-2xs: 2rem;
-    --el-height-xs: 2.25rem;
-    --el-height-sm: 2.5rem;
-    --el-height-md: 2.75rem;
-    --el-height-lg: 3rem;
-    --el-height-xl: 3.25rem;
-    --el-height-2xl: 3.5rem;
-    --el-height-3xl: 3.75rem;
+    --el-height-3xs: 1.5rem;
+    --el-height-2xs: 1.75rem;
+    --el-height-xs: 2rem;
+    --el-height-sm: 2.25rem;
+    --el-height-md: 2.5rem;
+    --el-height-lg: 2.75rem;
+    --el-height-xl: 3rem;
+    --el-height-2xl: 3.25rem;
+    --el-height-3xl: 3.5rem;
   }
 
   .mobile.j-font-md {
@@ -1280,14 +1280,14 @@
     --font-size-xl: 1.5rem;
     --font-size-2xl: 1.75rem;
 
-    --el-height-3xs: 2rem;
-    --el-height-2xs: 2.25rem;
-    --el-height-xs: 2.5rem;
-    --el-height-sm: 2.75rem;
-    --el-height-md: 3rem;
-    --el-height-lg: 3.25rem;
-    --el-height-xl: 3.5rem;
-    --el-height-2xl: 3.75rem;
-    --el-height-3xl: 4rem;
+    --el-height-3xs: 1.75rem;
+    --el-height-2xs: 2rem;
+    --el-height-xs: 2.25rem;
+    --el-height-sm: 2.5rem;
+    --el-height-md: 2.75rem;
+    --el-height-lg: 3rem;
+    --el-height-xl: 3.25rem;
+    --el-height-2xl: 3.5rem;
+    --el-height-3xl: 3.75rem;
   }
 }

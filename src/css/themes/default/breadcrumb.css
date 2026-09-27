@@ -92,7 +92,8 @@
   }
 
   .j-breadcrumb li:first-child a {
-    padding-inline-start: 0;
+    /* padding-inline-start: 0; */
+    padding-left: 0;
   }
 
   .j-breadcrumb.is-center ul,

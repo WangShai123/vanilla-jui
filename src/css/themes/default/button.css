@@ -195,7 +195,10 @@
     opacity: var(--opacity-active);
   }
 
-  .j-button:not(:disabled).is-active,
+  .j-button:not(:disabled).is-active {
+    --btn-border-color: var(--tone-solid);
+  }
+
   .j-button:not(:disabled):focus,
   .j-button:not(:disabled):focus-within,
   .j-button:not(:disabled):focus-visible {

@@ -1,6 +1,6 @@
 @layer components {
   .j-theme-palette {
-    padding: var(--s4) var(--s4) var(--s8);
+    padding: 1rem 1rem 2rem;
   }
 
   .j-theme-palette .palette-container,
@@ -36,7 +36,7 @@
 
   .j-theme-palette [data-theme-group='theme'] .j-button {
     justify-content: flex-start;
-    padding-inline: var(--s2);
+    --btn-padding: 0 var(--s2);
   }
 
   .j-theme-palette .j-button .item-hex {
@@ -49,11 +49,11 @@
   }
 
   .mobile .j-theme-palette {
-    padding-block: var(--s4) 4rem;
+    padding: 1rem 1rem 4rem;
   }
 
   .mobile .j-theme-palette [data-theme-group='theme'] .j-button {
-    padding-inline: 6px;
+    --btn-padding: 0 6px;
   }
 
   .j-theme-palette .j-button .button-text {
