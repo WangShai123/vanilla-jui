@@ -259,6 +259,18 @@ function cloneData(data: SwiperDataItem[] | undefined): SwiperDataItem[] {
   return Array.isArray(data) ? data.map((item) => ({ ...item })) : [];
 }
 
+function cloneRenderableContent<TContext>(
+  content: RenderableContent<TContext>
+): RenderableContent<TContext> {
+  if (typeof Node !== 'undefined' && content instanceof Node) {
+    return content.cloneNode(true);
+  }
+  if (Array.isArray(content)) {
+    return content.map((item) => cloneRenderableContent(item));
+  }
+  return content;
+}
+
 function cloneDataSource(source: SwiperDataSource): SwiperDataSource {
   return Array.isArray(source) ? cloneData(source) : source;
 }
@@ -774,7 +786,7 @@ export function createSwiper(input: SwiperProps = {}): Swiper {
     const realIndex = (): number =>
       toRealIndexFromTrackPosition(trackIndexAccessor());
     const slideContent = () => {
-      const { item } = itemAccessor();
+      const { item, clone } = itemAccessor();
       if (item.children != null) {
         const context = {
           swiper,
@@ -783,11 +795,11 @@ export function createSwiper(input: SwiperProps = {}): Swiper {
             return realIndex();
           },
         } as SwiperSlideContext;
-        return asRenderable(
+        const content =
           typeof item.children === 'function'
             ? item.children(context)
-            : item.children
-        );
+            : item.children;
+        return asRenderable(clone ? cloneRenderableContent(content) : content);
       }
       return [
         item.image

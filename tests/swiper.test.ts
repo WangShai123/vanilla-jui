@@ -169,6 +169,44 @@ describe('Swiper', () => {
     );
   });
 
+  it('renders cloned loop slides when custom children are DOM nodes', () => {
+    const child = (name: string): HTMLElement => {
+      const element = document.createElement('strong');
+      element.dataset.slide = name;
+      element.textContent = name;
+      return element;
+    };
+    const first = child('one');
+    const last = child('three');
+
+    swiper = mount(
+      createSwiper({
+        data: [
+          { children: first },
+          { children: child('two') },
+          { children: last },
+        ],
+        autoplay: false,
+      })
+    );
+
+    const renderedSlides = slides(swiper);
+    expect(renderedSlides.map((slide) => slide.textContent)).toEqual([
+      'three',
+      'one',
+      'two',
+      'three',
+      'one',
+    ]);
+    expect(
+      renderedSlides.every((slide) => slide.querySelector('[data-slide]'))
+    ).toBe(true);
+    expect(renderedSlides[1].firstElementChild).toBe(first);
+    expect(renderedSlides[3].firstElementChild).toBe(last);
+    expect(renderedSlides[0].firstElementChild).not.toBe(last);
+    expect(renderedSlides[4].firstElementChild).not.toBe(first);
+  });
+
   it('uses data markers for navigation when className is customized', () => {
     swiper = mount(
       createSwiper({
