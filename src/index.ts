@@ -11,6 +11,7 @@ export * from './utilities/http.ts';
 // export * from './utilities/locale.ts';
 export * from './utilities/object.ts';
 export * from './utilities/timer.ts';
+export * from './utilities/string.ts';
 export * from './utilities/types.ts';
 export * from './utilities/merge.ts';
 export * from './utilities/config.ts';

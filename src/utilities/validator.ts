@@ -8,6 +8,7 @@ import {
 } from '../utilities/dom.ts';
 import { createEventManager } from '../utilities/events.ts';
 import { type ConfigSchema, resolveConfig } from '../utilities/config.ts';
+import { removeSpaces } from '../utilities/string.ts';
 import { validateParam } from '../utilities/types.ts';
 
 type ValidatorElement =
@@ -181,7 +182,7 @@ function validateMinLength(
   minLength: unknown
 ): boolean {
   if (typeof minLength !== 'number') return true;
-  return element.value.length >= minLength;
+  return removeSpaces(element.value).length >= minLength;
 }
 
 function validateMaxLength(
@@ -189,12 +190,12 @@ function validateMaxLength(
   maxLength: unknown
 ): boolean {
   if (typeof maxLength !== 'number') return true;
-  return element.value.length <= maxLength;
+  return removeSpaces(element.value).length <= maxLength;
 }
 
 function validateEmail(element: ValidatorElement): boolean {
   const emailPattern = /^([\w-.]+@([\w-]+\.)+[\w-]{2,4})?$/;
-  return emailPattern.test(element.value);
+  return emailPattern.test(removeSpaces(element.value));
 }
 
 function validateEqualTo(

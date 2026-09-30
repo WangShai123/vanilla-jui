@@ -206,6 +206,25 @@ describe('Validator', () => {
     expect(form.querySelector('[data-validator-help="email"]')).toBeNull();
   });
 
+  it('validates email after removing spaces', () => {
+    const form = mount(`
+      <form>
+        <div data-field-control="email">
+          <input name="email" type="text" value=" demo @ example.com ">
+        </div>
+      </form>
+    `);
+
+    validator = createValidator(form, {
+      rules: { email: { email: true } },
+    });
+
+    expect(validator.validate()).toBe(true);
+
+    input(form, 'email').value = ' demo @bad ';
+    expect(validator.validate()).toBe(false);
+  });
+
   it('applies configured rules when a control also has native validation attributes', () => {
     const form = mount(`
       <form>
@@ -232,6 +251,60 @@ describe('Validator', () => {
 
     input(form, 'message').value = '12345';
     expect(validator.validate()).toBe(true);
+  });
+
+  it('validates minLength after removing spaces', () => {
+    const form = mount(`
+      <form>
+        <div data-field-control="message">
+          <input name="message" type="text" value="     a">
+        </div>
+      </form>
+    `);
+
+    validator = createValidator(form, {
+      rules: { message: { minLength: 6 } },
+      messages: {
+        message: {
+          minLength: 'Message must contain at least 6 characters',
+        },
+      },
+    });
+
+    expect(validator.validate()).toBe(false);
+    expect(
+      form.querySelector('[data-validator-help="message"]')?.textContent
+    ).toBe('Message must contain at least 6 characters');
+
+    input(form, 'message').value = 'a b c d e f';
+    expect(validator.validate()).toBe(true);
+  });
+
+  it('validates maxLength after removing spaces', () => {
+    const form = mount(`
+      <form>
+        <div data-field-control="message">
+          <input name="message" type="text" value="a b c">
+        </div>
+      </form>
+    `);
+
+    validator = createValidator(form, {
+      rules: { message: { maxLength: 3 } },
+      messages: {
+        message: {
+          maxLength: 'Message must contain at most 3 characters',
+        },
+      },
+    });
+
+    expect(validator.validate()).toBe(true);
+
+    input(form, 'message').value = 'a b c d';
+    expect(validator.validate()).toBe(false);
+    expect(
+      form.querySelector('[data-validator-help="message"]')?.textContent
+    ).toBe('Message must contain at most 3 characters');
   });
 
   it('automatically revalidates an invalid text field after user input', () => {
