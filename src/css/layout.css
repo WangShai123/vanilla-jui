@@ -679,9 +679,6 @@
     }
   }
 
-  /**
-	 * 为减少体积，md/lg/xl 断点只保留常用列数（如 1/2/3/4/6/12）
-	 */
   @media (min-width: 768px) {
     .grid-col-md-1 {
       grid-template-columns: repeat(1, 1fr);
@@ -691,7 +688,6 @@
       grid-template-columns: repeat(2, 1fr);
     }
 
-    /* ... 可按需补充 md-3 ～ md-12 */
     .grid-col-md-3 {
       grid-template-columns: repeat(3, 1fr);
     }
@@ -700,8 +696,32 @@
       grid-template-columns: repeat(4, 1fr);
     }
 
+    .grid-col-md-5 {
+      grid-template-columns: repeat(5, 1fr);
+    }
+
     .grid-col-md-6 {
       grid-template-columns: repeat(6, 1fr);
+    }
+
+    .grid-col-md-7 {
+      grid-template-columns: repeat(7, 1fr);
+    }
+
+    .grid-col-md-8 {
+      grid-template-columns: repeat(8, 1fr);
+    }
+
+    .grid-col-md-9 {
+      grid-template-columns: repeat(9, 1fr);
+    }
+
+    .grid-col-md-10 {
+      grid-template-columns: repeat(10, 1fr);
+    }
+
+    .grid-col-md-11 {
+      grid-template-columns: repeat(11, 1fr);
     }
 
     .grid-col-md-12 {
@@ -726,8 +746,32 @@
       grid-template-columns: repeat(4, 1fr);
     }
 
+    .grid-col-lg-5 {
+      grid-template-columns: repeat(5, 1fr);
+    }
+
     .grid-col-lg-6 {
       grid-template-columns: repeat(6, 1fr);
+    }
+
+    .grid-col-lg-7 {
+      grid-template-columns: repeat(7, 1fr);
+    }
+
+    .grid-col-lg-8 {
+      grid-template-columns: repeat(8, 1fr);
+    }
+
+    .grid-col-lg-9 {
+      grid-template-columns: repeat(9, 1fr);
+    }
+
+    .grid-col-lg-10 {
+      grid-template-columns: repeat(10, 1fr);
+    }
+
+    .grid-col-lg-11 {
+      grid-template-columns: repeat(11, 1fr);
     }
 
     .grid-col-lg-12 {
@@ -752,8 +796,32 @@
       grid-template-columns: repeat(4, 1fr);
     }
 
+    .grid-col-xl-5 {
+      grid-template-columns: repeat(5, 1fr);
+    }
+
     .grid-col-xl-6 {
       grid-template-columns: repeat(6, 1fr);
+    }
+
+    .grid-col-xl-7 {
+      grid-template-columns: repeat(7, 1fr);
+    }
+
+    .grid-col-xl-8 {
+      grid-template-columns: repeat(8, 1fr);
+    }
+
+    .grid-col-xl-9 {
+      grid-template-columns: repeat(9, 1fr);
+    }
+
+    .grid-col-xl-10 {
+      grid-template-columns: repeat(10, 1fr);
+    }
+
+    .grid-col-xl-11 {
+      grid-template-columns: repeat(11, 1fr);
     }
 
     .grid-col-xl-12 {
