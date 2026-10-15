@@ -921,7 +921,8 @@ export function createForm(input: FormProps = {}): Form {
         'data-field-label': () => fieldAccessor().name || id,
         children: () => asRenderable(fieldAccessor().label),
       };
-      if (isGroupedControl()) return jsx('legend', labelProps) as HTMLElement;
+      // if (isGroupedControl()) return jsx('legend', labelProps) as HTMLElement;
+      if (isGroupedControl()) return jsx('label', labelProps) as HTMLElement;
       return jsx('label', { ...labelProps, for: id }) as HTMLElement;
     };
     const controlContainer = (): HTMLElement =>
