@@ -16,7 +16,7 @@ import { mergeShallowConfig } from '../utilities/merge.ts';
 import { timer } from '../utilities/timer.ts';
 import { validateParam } from '../utilities/types.ts';
 
-export type ToastTheme = 'info' | 'success' | 'warning' | 'error' | 'primary';
+export type ToastTheme = 'default' | 'info' | 'success' | 'warning' | 'error';
 
 export interface ToastClassNames {
   container: string;
@@ -29,11 +29,11 @@ export interface ToastClassNames {
   button: string;
   closeBtn: string;
   confirmBtn: string;
+  default: string;
   info: string;
   success: string;
   warning: string;
   error: string;
-  primary: string;
 }
 
 export type ToastClassNameConfig = Partial<ToastClassNames>;
@@ -77,9 +77,9 @@ const DEFAULT_CLASS_NAMES: ToastClassNames = {
   buttons: 'toast-buttons',
   button: 'j-button is-sm',
   closeBtn: 'is-ghost',
-  confirmBtn: 'is-outline',
+  confirmBtn: 'is-reverse',
+  default: 'is-default',
   info: 'is-info',
-  primary: 'is-primary',
   success: 'is-success',
   warning: 'is-warning',
   error: 'is-error',
@@ -87,7 +87,7 @@ const DEFAULT_CLASS_NAMES: ToastClassNames = {
 
 const TOAST_THEME_RULE = {
   type: 'string',
-  enum: ['info', 'success', 'warning', 'error', 'primary'],
+  enum: ['default', 'info', 'success', 'warning', 'error'],
 };
 const TOAST_DURATION_RULE = { type: 'number', min: 0 };
 const LITE_DURATION_RULE = { type: 'number', greaterThan: 0 };
@@ -136,7 +136,7 @@ function isToastLoading(options: ToastOptions): boolean {
 }
 
 function toastIconName(theme: ToastTheme): ToastTheme {
-  return theme === 'primary' ? 'info' : theme;
+  return theme === 'default' ? 'info' : theme;
 }
 
 function toastIconStyle(options: ToastOptions): Record<string, string> {
@@ -366,7 +366,7 @@ function show(message = '', options: ToastOptions = {}): HTMLElement {
   }
   validateParam('message', message, 'string', 'Toast.show');
   const duration = options.duration ?? 3000;
-  const theme = options.theme || 'info';
+  const theme = options.theme || 'default';
   validateParam('once', once, 'boolean', 'Toast.show');
   validateParam('duration', duration, TOAST_DURATION_RULE, 'Toast.show');
   validateParam('theme', theme, TOAST_THEME_RULE, 'Toast.show');
@@ -532,13 +532,12 @@ export const Toast = {
     ) as ToastClassNames;
     return { className: classNames };
   },
-  show,
-  success: (message = '', options: ToastOptions = {}) =>
-    show(message, { ...options, theme: 'success' }),
+  show: (message = '', options: ToastOptions = {}) =>
+    show(message, { ...options, theme: 'default' }),
   info: (message = '', options: ToastOptions = {}) =>
     show(message, { ...options, theme: 'info' }),
-  primary: (message = '', options: ToastOptions = {}) =>
-    show(message, { ...options, theme: 'primary' }),
+  success: (message = '', options: ToastOptions = {}) =>
+    show(message, { ...options, theme: 'success' }),
   warning: (message = '', options: ToastOptions = {}) =>
     show(message, { ...options, theme: 'warning' }),
   error: (message = '', options: ToastOptions = {}) =>

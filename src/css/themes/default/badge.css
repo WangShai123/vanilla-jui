@@ -66,7 +66,7 @@
     --badge-border-color: var(--tone-wash);
   }
 
-  .j-badge.is-primary {
+  .j-badge.is-info {
     --badge-fg: var(--state-info-text);
     --badge-bg: var(--state-info-soft);
     --badge-border-color: var(--state-info-border);
@@ -84,15 +84,9 @@
     --badge-border-color: var(--state-warning-border);
   }
 
-  .j-badge.is-danger {
-    --badge-fg: var(--state-danger-text);
-    --badge-bg: var(--state-danger-subtle);
-    --badge-border-color: var(--state-danger-subtle);
-  }
-
   .j-badge.is-error {
-    --badge-fg: var(--state-danger-fg);
-    --badge-bg: var(--state-danger);
-    --badge-border-color: var(--state-danger);
+    --badge-fg: var(--state-error-text);
+    --badge-bg: var(--state-error-subtle);
+    --badge-border-color: var(--state-error-subtle);
   }
 }

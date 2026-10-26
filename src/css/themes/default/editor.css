@@ -126,7 +126,7 @@
     margin: var(--editor-block-space) 0;
   }
 
-  .j-editor > div {
+  .j-editor>div {
     margin: var(--editor-block-space) 0;
   }
 
@@ -327,7 +327,7 @@
     display: flex;
   }
 
-  .j-editor ul[data-type='taskList'] li > label {
+  .j-editor ul[data-type='taskList'] li>label {
     flex: none;
     user-select: none;
   }
@@ -390,12 +390,12 @@
     color: var(--tone-subtitle);
   }
 
-  .j-editor blockquote > * {
+  .j-editor blockquote>* {
     /* margin-block: 0; */
     margin: 0;
   }
 
-  .j-editor blockquote > * + * {
+  .j-editor blockquote>*+* {
     margin-top: 0.25rem;
   }
 
@@ -473,7 +473,7 @@
     background: var(--state-success);
     box-shadow:
       14px 0 0 var(--state-warning),
-      28px 0 0 var(--state-danger);
+      28px 0 0 var(--state-error);
   }
 
   pre .code-language,
@@ -505,7 +505,7 @@
     scrollbar-color: var(--ui-border) transparent;
   }
 
-  pre .code-header + code[class*='language-'] {
+  pre .code-header+code[class*='language-'] {
     padding: 0.5rem 1rem 0.75rem;
   }
 
@@ -721,22 +721,22 @@
     transition: transform 0.2s ease;
   }
 
-  .j-editor details[open] > summary::before {
+  .j-editor details[open]>summary::before {
     transform: rotate(90deg);
   }
 
   .j-editor details[open] p,
   .j-editor details[open] ul,
   .j-editor details[open] ol,
-  .j-editor details[open] > * {
+  .j-editor details[open]>* {
     margin-bottom: 1em;
   }
 
-  .j-editor details[open] > summary + * {
+  .j-editor details[open]>summary+* {
     margin-top: 0;
   }
 
-  .j-editor details[open] > *:last-child {
+  .j-editor details[open]>*:last-child {
     margin-bottom: 0;
   }
 
@@ -790,11 +790,11 @@
   /* ============================================
     Block Item - 通用块级元素
   ============================================ */
-  .j-editor > *:first-child {
+  .j-editor>*:first-child {
     margin-top: 0;
   }
 
-  .j-editor > *:last-child {
+  .j-editor>*:last-child {
     margin-bottom: 0;
   }
 

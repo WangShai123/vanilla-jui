@@ -94,6 +94,7 @@
     --ui-fg-muted: #6b7280;
     --ui-fg-soft: #9ca3af;
     --ui-fg-subtle: #d1d5db;
+    --ui-reverse: #000;
     --ui-border-subtle: rgba(0, 0, 0, 0.06);
     --ui-border: rgba(0, 0, 0, 0.1);
     --ui-border-strong: rgba(0, 0, 0, 0.2);
@@ -206,17 +207,17 @@
     --tone-code-fg: #374151;
 
     /* States */
-    --state-danger: #ef4444;
-    --state-danger-hover: #dc2626;
-    --state-danger-active: #b91c1c;
-    --state-danger-fg: #ffffff;
-    --state-danger-text: #dc2626;
-    --state-danger-subtle: rgba(239, 68, 68, 0.08);
-    --state-danger-soft: rgba(239, 68, 68, 0.12);
-    --state-danger-muted: rgba(239, 68, 68, 0.16);
-    --state-danger-weak: #fce1e1;
-    --state-danger-border: rgba(239, 68, 68, 0.25);
-    --state-danger-ring: rgba(239, 68, 68, 0.3);
+    --state-error: #ef4444;
+    --state-error-hover: #dc2626;
+    --state-error-active: #b91c1c;
+    --state-error-fg: #ffffff;
+    --state-error-text: #dc2626;
+    --state-error-subtle: rgba(239, 68, 68, 0.08);
+    --state-error-soft: rgba(239, 68, 68, 0.12);
+    --state-error-muted: rgba(239, 68, 68, 0.16);
+    --state-error-weak: #fce1e1;
+    --state-error-border: rgba(239, 68, 68, 0.25);
+    --state-error-ring: rgba(239, 68, 68, 0.3);
 
     --state-success: #22c55e;
     --state-success-hover: #16a34a;
@@ -254,8 +255,8 @@
     --state-info-ring: rgba(59, 130, 246, 0.3);
 
     /* Component Aliases */
-    --state-danger-solid: var(--state-danger);
-    --state-danger-surface: var(--state-danger-subtle);
+    --state-error-solid: var(--state-error);
+    --state-error-surface: var(--state-error-subtle);
     --state-success-solid: var(--state-success);
     --state-success-surface: var(--state-success-subtle);
     --state-warning-solid: var(--state-warning);
@@ -284,6 +285,7 @@
     --ui-fg-muted: #cbd5e1;
     --ui-fg-soft: #94a3b8;
     --ui-fg-subtle: #64748b;
+    --ui-reverse: #fff;
     --ui-border-subtle: rgba(148, 163, 184, 0.12);
     --ui-border: rgba(148, 163, 184, 0.18);
     --ui-border-strong: rgba(148, 163, 184, 0.28);
@@ -396,17 +398,17 @@
     --tone-code-fg: #e5e7eb;
 
     /* States */
-    --state-danger: #f87171;
-    --state-danger-hover: #fca5a5;
-    --state-danger-active: #fecaca;
-    --state-danger-fg: #030712;
-    --state-danger-text: #fca5a5;
-    --state-danger-subtle: rgba(248, 113, 113, 0.1);
-    --state-danger-soft: rgba(248, 113, 113, 0.15);
-    --state-danger-muted: rgba(248, 113, 113, 0.2);
-    --state-danger-weak: #291111;
-    --state-danger-border: rgba(248, 113, 113, 0.25);
-    --state-danger-ring: rgba(248, 113, 113, 0.4);
+    --state-error: #f87171;
+    --state-error-hover: #fca5a5;
+    --state-error-active: #fecaca;
+    --state-error-fg: #030712;
+    --state-error-text: #fca5a5;
+    --state-error-subtle: rgba(248, 113, 113, 0.1);
+    --state-error-soft: rgba(248, 113, 113, 0.15);
+    --state-error-muted: rgba(248, 113, 113, 0.2);
+    --state-error-weak: #291111;
+    --state-error-border: rgba(248, 113, 113, 0.25);
+    --state-error-ring: rgba(248, 113, 113, 0.4);
 
     --state-success: #4ade80;
     --state-success-hover: #86efac;

@@ -52,8 +52,8 @@
 
 .j-cap-field .cap-control[data-state='error'],
 .j-cap-field .cap-control[data-state='rate-limited'] {
-    border-color: var(--state-danger-border);
-    color: var(--state-danger-text);
+    border-color: var(--state-error-border);
+    color: var(--state-error-text);
 }
 
 .j-cap-field .cap-control-icon,

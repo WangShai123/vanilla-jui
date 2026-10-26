@@ -65,15 +65,15 @@
     margin: 6px 0;
   }
 
-  .j-tip .tip-content > *:first-child {
+  .j-tip .tip-content>*:first-child {
     margin-top: 0;
   }
 
-  .j-tip .tip-content > *:last-child {
+  .j-tip .tip-content>*:last-child {
     margin-bottom: 0;
   }
 
-  .j-tip.is-primary {
+  .j-tip.is-info {
     --tip-border-color: var(--state-info-border);
     --tip-bg: var(--state-info-soft);
     --tip-fg: var(--state-info-text);
@@ -91,9 +91,9 @@
     --tip-fg: var(--state-warning-text);
   }
 
-  .j-tip.is-danger {
-    --tip-border-color: var(--state-danger-border);
-    --tip-bg: var(--state-danger-soft);
-    --tip-fg: var(--state-danger-text);
+  .j-tip.is-error {
+    --tip-border-color: var(--state-error-border);
+    --tip-bg: var(--state-error-soft);
+    --tip-fg: var(--state-error-text);
   }
 }
