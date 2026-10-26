@@ -96,6 +96,63 @@ afterEach(() => {
 });
 
 describe('Toast', () => {
+  it.each([undefined, ''] as const)(
+    'omits the icon and theme class when theme is %s',
+    (theme) => {
+      const toast = Toast.show('Saved', { duration: 0, theme });
+
+      expect(toast.className).toBe('j-toast');
+      expect(toast.querySelector('[data-toast-icon]')).toBeNull();
+      expect(toast.querySelector('[data-toast-message]')?.textContent).toBe(
+        'Saved'
+      );
+    }
+  );
+
+  it('preserves the loading icon for an unthemed toast across loading changes', async () => {
+    const [loading, setLoading] = createSignal(false);
+    const toast = Toast.show('Saved', { duration: 1000, loading });
+    const parent = toast.parentElement;
+    const message = toast.querySelector('[data-toast-message]');
+
+    expect(toast.querySelector('[data-toast-icon]')).toBeNull();
+
+    setLoading(true);
+    await Promise.resolve();
+    const icon = toast.querySelector('[data-toast-icon]');
+    expect(icon?.querySelector('svg')).toBeTruthy();
+    expect(message?.textContent).toBe('Loading...');
+    expect(Toast.timers.size).toBe(0);
+
+    setLoading(false);
+    await Promise.resolve();
+    expect(toast.querySelector('[data-toast-icon]')).toBeNull();
+    expect(message?.textContent).toBe('Saved');
+    expect(Toast.timers.size).toBe(1);
+
+    setLoading(true);
+    await Promise.resolve();
+    expect(toast.querySelector('[data-toast-icon]')).toBe(icon);
+    expect(toast.querySelector('[data-toast-message]')).toBe(message);
+    expect(toast.parentElement).toBe(parent);
+    expect(parent?.querySelector('[data-toast]')).toBe(toast);
+
+    Toast.clearAll();
+    setLoading(false);
+    await Promise.resolve();
+    expect(document.body.contains(toast)).toBe(false);
+    expect(message?.textContent).toBe('Loading...');
+    expect(Toast.timers.size).toBe(0);
+    expect(Toast.disposers.size).toBe(0);
+  });
+
+  it('renders the selected theme icon through show', () => {
+    const toast = Toast.show('Saved', { duration: 0, theme: 'success' });
+
+    expect(toast.classList.contains('is-success')).toBe(true);
+    expect(toast.querySelector('[data-toast-icon] svg')).toBeTruthy();
+  });
+
   it('shows default toast with stable data markers', () => {
     const toast = Toast.success('Saved', { duration: 0 });
     vi.advanceTimersByTime(11);

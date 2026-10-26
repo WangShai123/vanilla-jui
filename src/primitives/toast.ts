@@ -16,7 +16,7 @@ import { mergeShallowConfig } from '../utilities/merge.ts';
 import { timer } from '../utilities/timer.ts';
 import { validateParam } from '../utilities/types.ts';
 
-export type ToastTheme = 'default' | 'info' | 'success' | 'warning' | 'error';
+export type ToastTheme = '' | 'info' | 'success' | 'warning' | 'error';
 
 export interface ToastClassNames {
   container: string;
@@ -29,7 +29,6 @@ export interface ToastClassNames {
   button: string;
   closeBtn: string;
   confirmBtn: string;
-  default: string;
   info: string;
   success: string;
   warning: string;
@@ -78,7 +77,6 @@ const DEFAULT_CLASS_NAMES: ToastClassNames = {
   button: 'j-button is-sm',
   closeBtn: 'is-ghost',
   confirmBtn: 'is-reverse',
-  default: 'is-default',
   info: 'is-info',
   success: 'is-success',
   warning: 'is-warning',
@@ -87,7 +85,7 @@ const DEFAULT_CLASS_NAMES: ToastClassNames = {
 
 const TOAST_THEME_RULE = {
   type: 'string',
-  enum: ['default', 'info', 'success', 'warning', 'error'],
+  enum: ['', 'info', 'success', 'warning', 'error'],
 };
 const TOAST_DURATION_RULE = { type: 'number', min: 0 };
 const LITE_DURATION_RULE = { type: 'number', greaterThan: 0 };
@@ -135,10 +133,6 @@ function isToastLoading(options: ToastOptions): boolean {
   return !!access(options.loading ?? false);
 }
 
-function toastIconName(theme: ToastTheme): ToastTheme {
-  return theme === 'default' ? 'info' : theme;
-}
-
 function toastIconStyle(options: ToastOptions): Record<string, string> {
   return isToastLoading(options)
     ? {
@@ -156,9 +150,9 @@ function toastIconStyle(options: ToastOptions): Record<string, string> {
 function toastIconContent(
   theme: ToastTheme,
   options: ToastOptions
-): HTMLElement | SVGElement {
+): HTMLElement | SVGElement | null {
   if (isToastLoading(options)) return createLoading();
-  return icon(toastIconName(theme));
+  return theme ? icon(theme) : null;
 }
 
 function toastMessage(message: string, options: ToastOptions): string {
@@ -188,6 +182,11 @@ function bindToastStatus(
 ): void {
   const id = element.dataset.toast || randomId();
   const dispose = createRoot((dispose) => {
+    insert(
+      element,
+      () => (theme || isToastLoading(options) ? iconElement : null),
+      messageElement
+    );
     insert(iconElement, () => toastIconContent(theme, options));
     insert(messageElement, () => toastMessage(message, options));
     createEffect(() => {
@@ -366,7 +365,7 @@ function show(message = '', options: ToastOptions = {}): HTMLElement {
   }
   validateParam('message', message, 'string', 'Toast.show');
   const duration = options.duration ?? 3000;
-  const theme = options.theme || 'default';
+  const theme = options.theme ?? '';
   validateParam('once', once, 'boolean', 'Toast.show');
   validateParam('duration', duration, TOAST_DURATION_RULE, 'Toast.show');
   validateParam('theme', theme, TOAST_THEME_RULE, 'Toast.show');
@@ -386,11 +385,11 @@ function show(message = '', options: ToastOptions = {}): HTMLElement {
     'data-toast-message': id,
   }) as HTMLElement;
   const toast = jsx('div', {
-    className: joinClasses(names.toast, names[theme]),
+    className: joinClasses(names.toast, theme ? names[theme] : ''),
     'data-toast': id,
     role: 'alert',
     'aria-atomic': 'true',
-    children: [iconElement, messageElement],
+    children: messageElement,
   }) as HTMLElement;
   bindToastStatus(
     toast,
@@ -532,8 +531,7 @@ export const Toast = {
     ) as ToastClassNames;
     return { className: classNames };
   },
-  show: (message = '', options: ToastOptions = {}) =>
-    show(message, { ...options, theme: 'default' }),
+  show,
   info: (message = '', options: ToastOptions = {}) =>
     show(message, { ...options, theme: 'info' }),
   success: (message = '', options: ToastOptions = {}) =>

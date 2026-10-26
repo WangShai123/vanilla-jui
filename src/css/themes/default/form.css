@@ -320,11 +320,11 @@
   .j-checkbox label {
     display: flex;
     align-items: center;
-    gap: var(--checkbox-label-gap, var(--s2));
-    font-size: var(--checkbox-label-font-size, var(--font-size-md));
+    gap: calc(var(--space) * 1.5);
+    font-size: var(--font-size-md);
     height: var(--el-height-md);
-    padding: calc(var(--space)*2);
-    border-radius: var(--checkbox-label-border-radius, var(--radius-md));
+    padding: var(--s2);
+    border-radius: var(--radius-md);
   }
 
   .j-radio label,
@@ -333,7 +333,7 @@
   }
 
   .j-checkbox label:not(:has(input[type='checkbox']:disabled)):hover {
-    background-color: var(--checkbox-hover-bg-color, var(--ui-surface-hover));
+    background-color: var(--ui-surface-hover);
   }
 
   .j-checkbox input[type='checkbox'] {
@@ -628,7 +628,7 @@
   .input-inner-group:has(input:focus),
   .input-inner-group:has(select:focus) {
     border-color: var(--tone-solid);
-    box-shadow: 0 0 0 4px var(--tone-ring);
+    box-shadow: 0 0 0 3px var(--tone-ring);
   }
 
   .input-inner-group .el-addon svg {
@@ -710,7 +710,7 @@
   .input-group .j-button:not(:disabled):active {
     outline: 0;
     border-color: var(--tone-solid);
-    box-shadow: 0 0 0 4px var(--tone-ring);
+    box-shadow: 0 0 0 3px var(--tone-ring);
   }
 
   .j-radio label input[type='radio']:focus-within {

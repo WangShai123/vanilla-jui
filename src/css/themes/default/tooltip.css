@@ -41,9 +41,9 @@
   }
 
   .j-tooltip.is-error {
-    --tooltip-fg: var(--state-danger-fg);
-    --tooltip-bg: var(--state-danger-text);
-    --tooltip-border-color: var(--state-danger-border);
+    --tooltip-fg: var(--state-error-fg);
+    --tooltip-bg: var(--state-error-text);
+    --tooltip-border-color: var(--state-error-border);
   }
 
   .j-tooltip .el-text {

@@ -739,7 +739,7 @@ interface TooltipProps extends Record<string, unknown> {
 declare function createTooltip(element: DOMReference, input?: TooltipProps): TooltipInstance;
 //#endregion
 //#region src/primitives/toast.d.ts
-type ToastTheme = 'info' | 'success' | 'warning' | 'error' | 'primary';
+type ToastTheme = '' | 'info' | 'success' | 'warning' | 'error';
 interface ToastClassNames {
   container: string;
   toast: string;
@@ -755,7 +755,6 @@ interface ToastClassNames {
   success: string;
   warning: string;
   error: string;
-  primary: string;
 }
 type ToastClassNameConfig = Partial<ToastClassNames>;
 interface ToastClassNameOptions {
@@ -793,9 +792,8 @@ declare const Toast: {
   disposers: Map<HTMLElement, () => void>;
   configure(options?: ToastClassNameOptions): ToastClassNameOptions;
   show: typeof show;
-  success: (message?: string, options?: ToastOptions) => HTMLElement;
   info: (message?: string, options?: ToastOptions) => HTMLElement;
-  primary: (message?: string, options?: ToastOptions) => HTMLElement;
+  success: (message?: string, options?: ToastOptions) => HTMLElement;
   warning: (message?: string, options?: ToastOptions) => HTMLElement;
   error: (message?: string, options?: ToastOptions) => HTMLElement;
   hide: typeof hide;
