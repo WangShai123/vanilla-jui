@@ -200,7 +200,7 @@
   }
 
   .j-menu .menu-item.list-menu>.sub-menu>.menu-item>a {
-    padding: calc(var(--space) * 1.25) calc(var(--space) * 2.5);
+    padding: calc(var(--space) * 1.25) var(--s2d5);
     line-height: 1.75;
   }
 

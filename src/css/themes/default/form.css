@@ -55,7 +55,7 @@
   }
 
   .j-input:not([type='checkbox']) {
-    --input-padding: calc(var(--space) * 1.5) var(--s2);
+    --input-padding: var(--s1d5) var(--s2);
     --input-height: var(--el-height-md);
     --input-line-height: var(--line-height);
 
@@ -246,7 +246,7 @@
   .j-radio.is-group label span.radio-text {
     color: var(--ui-fg);
     background-color: var(--ui-bg);
-    padding: var(--radio-group-padding, calc(var(--space) * 1.5) var(--s3));
+    padding: var(--radio-group-padding, var(--s1d5) var(--s3));
     height: var(--el-height-md);
     line-height: var(--line-height);
     box-shadow: 0 0 0 1px var(--ui-input-border);
@@ -288,7 +288,7 @@
   }
 
   .j-radio.is-group.is-sm label span.radio-text {
-    --radio-group-padding: var(--space) calc(var(--space) * 2.5);
+    --radio-group-padding: var(--space) var(--s2d5);
     height: var(--el-height-sm);
   }
 
@@ -297,7 +297,7 @@
   }
 
   .j-radio.is-group.is-lg label span.radio-text {
-    --radio-group-padding: var(--s3) calc(var(--space) * 3.5);
+    --radio-group-padding: var(--s3) var(--s3d5);
     height: var(--el-height-lg);
   }
 
@@ -320,7 +320,7 @@
   .j-checkbox label {
     display: flex;
     align-items: center;
-    gap: calc(var(--space) * 1.5);
+    gap: var(--s1d5);
     font-size: var(--font-size-md);
     height: var(--el-height-md);
     padding: var(--s2);
@@ -458,7 +458,7 @@
 
   /* select */
   select.j-select {
-    --input-padding: calc(var(--space) * 1.5);
+    --input-padding: var(--s1d5);
     --input-height: var(--el-height-md);
     --input-font-size: var(--font-size-md);
 

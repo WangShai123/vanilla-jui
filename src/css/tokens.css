@@ -18,8 +18,11 @@
 
     /* --- Spacing --- */
     --space: 0.25rem;
+    --s1d5: 0.375rem;
     --s2: 0.5rem;
+    --s2d5: 0.625rem;
     --s3: 0.75rem;
+    --s3d5: 0.875rem;
     --s4: 1rem;
     --s5: 1.25rem;
     --s6: 1.5rem;
