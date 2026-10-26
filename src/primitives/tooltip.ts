@@ -39,7 +39,7 @@ interface TooltipClassNames {
 
 interface TooltipThemeClassNames {
   reverse: string;
-  primary: string;
+  info: string;
   success: string;
   warning: string;
   error: string;
@@ -48,7 +48,7 @@ interface TooltipThemeClassNames {
 type TooltipTheme =
   | false
   | 'reverse'
-  | 'primary'
+  | 'info'
   | 'success'
   | 'warning'
   | 'error';
@@ -95,7 +95,7 @@ const DEFAULT_CLASS_NAMES: TooltipClassNames = {
   message: 'el-text',
   ui: {
     reverse: 'is-reverse',
-    primary: 'is-primary',
+    info: 'is-info',
     success: 'is-success',
     warning: 'is-warning',
     error: 'is-error',
@@ -131,7 +131,7 @@ const TOOLTIP_OPTIONS_SCHEMA = {
   theme: {
     default: false,
     types: ['string', 'boolean'],
-    enum: [false, 'reverse', 'primary', 'success', 'warning', 'error'],
+    enum: [false, 'reverse', 'info', 'success', 'warning', 'error'],
   },
   cache: { default: false, type: 'boolean' },
   ttl: {

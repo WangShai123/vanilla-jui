@@ -22,7 +22,7 @@
     --tooltip-border-color: var(--ui-border);
   }
 
-  .j-tooltip.is-primary {
+  .j-tooltip.is-info {
     --tooltip-fg: var(--state-info-fg);
     --tooltip-bg: var(--state-info-text);
     --tooltip-border-color: var(--state-info-border);

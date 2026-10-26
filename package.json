@@ -1,6 +1,6 @@
 {
   "name": "vanilla-jui",
-  "version": "1.7.30",
+  "version": "1.7.31",
   "private": false,
   "description": "A lightweight, reactive, and fully customizable vanilla JS UI library.",
   "keywords": [
@@ -66,10 +66,10 @@
     "vanilla-signal-i18n": "^1.1.3"
   },
   "devDependencies": {
-    "@tsdown/css": "^0.22.14",
-    "jsdom": "^30.0.1",
+    "@tsdown/css": "^0.23.2",
+    "jsdom": "^30.1.3",
     "typescript": "^7.0.2",
-    "vite-plus": "^0.3.0"
+    "vite-plus": "^1.4.0"
   },
   "registry": {
     "type": "git",
@@ -84,5 +84,9 @@
   },
   "allowScripts": {
     "fsevents@2.3.3": true
+  },
+  "overrides": {
+    "vite": "npm:@voidzero-dev/vite-plus-core@1.4.0",
+    "vitest": "5.0.5"
   }
 }

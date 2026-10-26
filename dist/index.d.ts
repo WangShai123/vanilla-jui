@@ -1,5 +1,4 @@
 import { MaybeAccessor, Renderable } from "vanilla-signal";
-//#region src/utilities/browser.d.ts
 declare global {
   interface Navigator {
     userAgentData?: {
@@ -20,7 +19,7 @@ declare global {
 /**
  * 采用 MDN 推荐的组合策略：特性检测优先，UA 嗅探兜底
  */
-declare function isMobile(): boolean;
+export declare function isMobile(): boolean;
 /**
  * 复制文本到剪贴板。
  *
@@ -28,12 +27,10 @@ declare function isMobile(): boolean;
  * @param {unknown} text 需要复制的文本（接受任意类型，内部会安全转换为字符串）。
  * @returns {Promise<boolean>} 是否复制成功。
  */
-declare function copy(text: unknown): Promise<boolean>;
-type SupportES2022 = boolean;
-declare function isModernBrowser(): SupportES2022;
-declare function checkModernBrowser(): SupportES2022;
-//#endregion
-//#region src/utilities/id.d.ts
+export declare function copy(text: unknown): Promise<boolean>;
+export type SupportES2022 = boolean;
+export declare function isModernBrowser(): SupportES2022;
+export declare function checkModernBrowser(): SupportES2022;
 /**
  * 生成标准 UUID v4 字符串。
  *
@@ -42,7 +39,7 @@ declare function checkModernBrowser(): SupportES2022;
  *
  * @returns UUID v4 字符串（如 xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx）
  */
-declare function uuid(): string;
+export declare function uuid(): string;
 /**
  * 生成适合 DOM id 的随机字符串。
  *
@@ -52,7 +49,7 @@ declare function uuid(): string;
  * @returns 随机字符串
  * @throws {Error} 长度不在有效范围内时抛出错误
  */
-declare function randomId(length?: number): string;
+export declare function randomId(length?: number): string;
 /**
  * 查询参数值类型
  */
@@ -76,22 +73,20 @@ type QueryParams = Record<string, QueryParamValue>;
  * // 返回: "2k7x9f3m4n5p"
  * ```
  */
-declare function hashQueryParams(params: QueryParams, bytes?: number): Promise<string>;
-//#endregion
-//#region src/utilities/dom.d.ts
-type ContainerExpect = 'node' | 'element' | 'array';
-type ResolveContainerResult<TExpect extends ContainerExpect = 'element'> = TExpect extends 'array' ? Node[] : TExpect extends 'node' ? Node : Element;
-type RequireContainerResult<TExpect extends ContainerExpect = 'element'> = NonNullable<ResolveContainerResult<TExpect>>;
-type DOMReference = Node | string | readonly DOMReference[] | false | null | undefined;
-type QueryContext = Document | DocumentFragment | Element;
-type CleanupFunction = () => void;
-type LazyRenderTarget = string | Element;
-type LazyRenderCallback = () => void;
-type ClassNameToken = string | false | null | undefined;
-type RenderableContent<TContext = unknown> = Node | string | number | boolean | null | undefined | readonly RenderableContent<TContext>[] | ((context: TContext) => RenderableContent<TContext>);
-declare function asRenderable<TContext>(value: RenderableContent<TContext>): Renderable;
-declare function joinClasses(...tokens: ClassNameToken[]): string;
-interface LazyRenderOptions {
+export declare function hashQueryParams(params: QueryParams, bytes?: number): Promise<string>;
+export type ContainerExpect = 'node' | 'element' | 'array';
+export type ResolveContainerResult<TExpect extends ContainerExpect = 'element'> = TExpect extends 'array' ? Node[] : TExpect extends 'node' ? Node : Element;
+export type RequireContainerResult<TExpect extends ContainerExpect = 'element'> = NonNullable<ResolveContainerResult<TExpect>>;
+export type DOMReference = Node | string | readonly DOMReference[] | false | null | undefined;
+export type QueryContext = Document | DocumentFragment | Element;
+export type CleanupFunction = () => void;
+export type LazyRenderTarget = string | Element;
+export type LazyRenderCallback = () => void;
+export type ClassNameToken = string | false | null | undefined;
+export type RenderableContent<TContext = unknown> = Node | string | number | boolean | null | undefined | readonly RenderableContent<TContext>[] | ((context: TContext) => RenderableContent<TContext>);
+export declare function asRenderable<TContext>(value: RenderableContent<TContext>): Renderable;
+export declare function joinClasses(...tokens: ClassNameToken[]): string;
+export interface LazyRenderOptions {
   threshold?: number | number[];
   rootMargin?: string;
   root?: Element | Document | null;
@@ -102,13 +97,13 @@ interface LazyRenderOptions {
  * @param {*} value 需要判断的值。
  * @returns {boolean}
  */
-declare function isNode(value: unknown): value is Node;
+export declare function isNode(value: unknown): value is Node;
 /**
  * 判断是否为 DOM Element。
  * @param {*} value 需要判断的值。
  * @returns {boolean}
  */
-declare function isElement(value: unknown): value is Element;
+export declare function isElement(value: unknown): value is Element;
 /**
  * 将 DOM 引用解析为节点列表。
  *
@@ -122,7 +117,7 @@ declare function isElement(value: unknown): value is Element;
  * @param {Element|Node|string|Array|false|null|undefined} ref 元素引用、选择器、节点或空值。
  * @returns {Node[]|null}
  */
-declare function resolveNodeList(ref: DOMReference): Node[] | null;
+export declare function resolveNodeList(ref: DOMReference): Node[] | null;
 /**
  * 将 DOM 引用解析为节点。
  *
@@ -135,7 +130,7 @@ declare function resolveNodeList(ref: DOMReference): Node[] | null;
  * @param {Element|Node|string|Array|false|null|undefined} ref 元素引用、选择器、节点或空值。
  * @returns {Node|null}
  */
-declare function resolveNode(ref: DOMReference): Node | null;
+export declare function resolveNode(ref: DOMReference): Node | null;
 /**
  * 将 DOM 引用解析为元素。
  *
@@ -148,7 +143,7 @@ declare function resolveNode(ref: DOMReference): Node | null;
  * @param {Element|Node|string|Array|false|null|undefined} ref 元素引用、选择器、节点或空值。
  * @returns {Element|null}
  */
-declare function resolveElement(ref: DOMReference): Element | null;
+export declare function resolveElement(ref: DOMReference): Element | null;
 /**
  * 统一解析容器引用。
  *
@@ -157,7 +152,7 @@ declare function resolveElement(ref: DOMReference): Element | null;
  * @param {'node'|'element'|'array'} [expect='element'] 期望返回类型。
  * @returns {Node|Element|Node[]|null}
  */
-declare function resolveContainer<TExpect extends ContainerExpect = 'element'>(container: DOMReference, namespace?: string, expect?: TExpect): ResolveContainerResult<TExpect> | null;
+export declare function resolveContainer<TExpect extends ContainerExpect = 'element'>(container: DOMReference, namespace?: string, expect?: TExpect): ResolveContainerResult<TExpect> | null;
 /**
  * 强制解析容器并要求返回值存在。
  *
@@ -166,27 +161,27 @@ declare function resolveContainer<TExpect extends ContainerExpect = 'element'>(c
  * @param {'node'|'element'|'array'} [expect='element'] 期望返回类型。
  * @returns {Node|Element|Node[]}
  */
-declare function requireContainer<TExpect extends ContainerExpect = 'element'>(container: DOMReference, namespace?: string, expect?: TExpect): RequireContainerResult<TExpect>;
+export declare function requireContainer<TExpect extends ContainerExpect = 'element'>(container: DOMReference, namespace?: string, expect?: TExpect): RequireContainerResult<TExpect>;
 /**
  * 判断是否为组件可渲染内容。
  * @param {*} value 需要判断的值。
  * @returns {boolean}
  */
-declare function isRenderableContent(value: unknown): value is RenderableContent;
+export declare function isRenderableContent(value: unknown): value is RenderableContent;
 /**
  * 根据 CSS 选择器获取第一个匹配的元素。
  * @param {string} selector CSS 选择器。
  * @param {Document|Element} [context=document] 查询范围。
  * @returns {Element|null}
  */
-declare function q<TElement extends Element = Element>(selector: string, context?: QueryContext): TElement | null;
+export declare function q<TElement extends Element = Element>(selector: string, context?: QueryContext): TElement | null;
 /**
  * 根据 CSS 选择器获取所有匹配的元素。
  * @param {string} selector CSS 选择器。
  * @param {Document|Element} [context=document] 查询范围。
  * @returns {Element[]}
  */
-declare function all<TElement extends Element = Element>(selector: string, context?: QueryContext): TElement[];
+export declare function all<TElement extends Element = Element>(selector: string, context?: QueryContext): TElement[];
 /**
  * 当目标元素进入可视区域时执行渲染回调，仅执行一次后自动清理。
  *
@@ -197,9 +192,7 @@ declare function all<TElement extends Element = Element>(selector: string, conte
  * @param {Object} [options] 配置项。
  * @returns {Function} 停止观察的清理函数。
  */
-declare function lazyRender(target: LazyRenderTarget, renderCallback: LazyRenderCallback, options?: LazyRenderOptions): CleanupFunction;
-//#endregion
-//#region src/utilities/events.d.ts
+export declare function lazyRender(target: LazyRenderTarget, renderCallback: LazyRenderCallback, options?: LazyRenderOptions): CleanupFunction;
 /**
  * 绑定 DOM 事件并返回一次性解绑函数。
  *
@@ -211,11 +204,11 @@ declare function lazyRender(target: LazyRenderTarget, renderCallback: LazyRender
  * @param {boolean | AddEventListenerOptions} [options] - 事件选项。
  * @returns {() => void} 解绑函数，可重复调用。
  */
-declare function listen<T extends EventTarget, K extends string>(target: T, type: K, handler: (this: T, ev: Event) => any, options?: boolean | AddEventListenerOptions): () => void;
+export declare function listen<T extends EventTarget, K extends string>(target: T, type: K, handler: (this: T, ev: Event) => any, options?: boolean | AddEventListenerOptions): () => void;
 /**
  * 事件管理器实例的接口定义
  */
-interface IEventManager {
+export interface IEventManager {
   /**
    * 绑定事件并自动记录解绑函数。
    * 同一个 key 重复绑定时会先解绑旧事件，避免组件重渲染时重复监听。
@@ -235,14 +228,12 @@ interface IEventManager {
  * - 同一个 key 重复绑定时会先解绑旧事件，避免组件重渲染时重复监听。
  * - `off(key)` 和 `clear()` 用于跨作用域精确释放。
  */
-declare function createEventManager(): IEventManager;
-//#endregion
-//#region src/utilities/http.d.ts
+export declare function createEventManager(): IEventManager;
 /**
  * 当前站点 WordPress REST API 根地址。
  * @type {string}
  */
-declare const restUrl: string;
+export declare const restUrl: string;
 /**
  * 发送 JSON POST 请求并解析 JSON 响应。
  * @template T - 期望返回的 JSON 数据类型
@@ -251,37 +242,29 @@ declare const restUrl: string;
  * @param {RequestInit} [options] - 透传给 fetch 的请求配置（排除 method 和 body）
  * @returns {Promise<T>} 解析后的 JSON 响应体
  */
-declare function postJson<T = unknown>(url: string, body: unknown, options?: Omit<RequestInit, 'method' | 'body'>): Promise<T>;
-//#endregion
-//#region src/utilities/object.d.ts
-declare function isPlainObject(value: unknown): boolean;
-//#endregion
-//#region src/utilities/timer.d.ts
-declare const timer: {
+export declare function postJson<T = unknown>(url: string, body: unknown, options?: Omit<RequestInit, 'method' | 'body'>): Promise<T>;
+export declare function isPlainObject(value: unknown): boolean;
+export declare const timer: {
   timers: Record<string, number>;
   start(key: string, duration: number, callback: () => void): void;
   cancel(key: string): void;
 };
-//#endregion
-//#region src/utilities/string.d.ts
-declare function removeSpaces(value: string | null | undefined): string;
-//#endregion
-//#region src/utilities/types.d.ts
+export declare function removeSpaces(value: string | null | undefined): string;
 type LooseRecord$1 = Record<string, unknown>;
 type ValueTypeName = string;
 type TypeRule = ValueTypeName | readonly ValueTypeName[];
-declare function isNilValue(value: unknown): value is null | undefined;
-declare function isDomNodeValue(value: unknown): value is Node;
-declare function isDomElementValue(value: unknown): value is Element;
-declare function isHtmlElementValue(value: unknown): value is HTMLElement;
-declare function isRenderablePrimitive(value: unknown): value is string | number | boolean;
-declare function isRenderableValue(value: unknown): boolean;
-declare const getType: (val: unknown) => string;
-type ValidateCondition = ((value: unknown) => boolean) | {
+export declare function isNilValue(value: unknown): value is null | undefined;
+export declare function isDomNodeValue(value: unknown): value is Node;
+export declare function isDomElementValue(value: unknown): value is Element;
+export declare function isHtmlElementValue(value: unknown): value is HTMLElement;
+export declare function isRenderablePrimitive(value: unknown): value is string | number | boolean;
+export declare function isRenderableValue(value: unknown): boolean;
+export declare const getType: (val: unknown) => string;
+export type ValidateCondition = ((value: unknown) => boolean) | {
   test: (value: unknown) => boolean;
   message?: string;
 };
-interface ParamRule<_TInput extends LooseRecord$1 = LooseRecord$1> {
+export interface ParamRule<_TInput extends LooseRecord$1 = LooseRecord$1> {
   type?: TypeRule;
   types?: TypeRule;
   required?: boolean;
@@ -304,74 +287,64 @@ interface ParamRule<_TInput extends LooseRecord$1 = LooseRecord$1> {
   default?: unknown;
   [key: string]: unknown;
 }
-type ParamRuleInput<TInput extends LooseRecord$1 = LooseRecord$1> = TypeRule | ParamRule<TInput>;
-type ParamShapeSchema<TInput extends LooseRecord$1 = LooseRecord$1> = Record<string, ParamRuleInput<TInput>>;
-declare function validateParam<TInput extends LooseRecord$1 = LooseRecord$1>(name: string, value: unknown, rule?: ParamRuleInput<TInput>, namespace?: string): unknown;
-//#endregion
-//#region src/utilities/merge.d.ts
-type MergeStrategy = 'replace' | 'shallow' | 'deep' | ((defaultValue: unknown, inputValue: unknown, context: MergeContext) => unknown);
-interface MergeContext {
+export type ParamRuleInput<TInput extends LooseRecord$1 = LooseRecord$1> = TypeRule | ParamRule<TInput>;
+export type ParamShapeSchema<TInput extends LooseRecord$1 = LooseRecord$1> = Record<string, ParamRuleInput<TInput>>;
+export declare function validateParam<TInput extends LooseRecord$1 = LooseRecord$1>(name: string, value: unknown, rule?: ParamRuleInput<TInput>, namespace?: string): unknown;
+export type MergeStrategy = 'replace' | 'shallow' | 'deep' | ((defaultValue: unknown, inputValue: unknown, context: MergeContext) => unknown);
+export interface MergeContext {
   key: string;
   path: string;
 }
-declare function cloneConfigValue<T>(value: T): T;
-declare function mergeShallowConfig(defaultValue: unknown, inputValue: unknown): unknown;
-declare function mergeDeepConfig(defaultValue: unknown, inputValue: unknown): unknown;
-declare function mergeConfigValue(defaultValue: unknown, inputValue: unknown, strategy: MergeStrategy | undefined, context: MergeContext): unknown;
-//#endregion
-//#region src/utilities/config.d.ts
+export declare function cloneConfigValue<T>(value: T): T;
+export declare function mergeShallowConfig(defaultValue: unknown, inputValue: unknown): unknown;
+export declare function mergeDeepConfig(defaultValue: unknown, inputValue: unknown): unknown;
+export declare function mergeConfigValue(defaultValue: unknown, inputValue: unknown, strategy: MergeStrategy | undefined, context: MergeContext): unknown;
 type LooseRecord = Record<string, unknown>;
 type ConfigTypeRule = string | readonly string[];
-interface ConfigNormalizeContext<TInput extends LooseRecord = LooseRecord> {
+export interface ConfigNormalizeContext<TInput extends LooseRecord = LooseRecord> {
   key: string;
   path: string;
   input: TInput;
   options: LooseRecord;
   schema: ConfigSchema<TInput>;
 }
-interface ConfigRule<TInput extends LooseRecord = LooseRecord> extends Omit<ParamRule<TInput>, 'normalize' | 'shape'> {
+export interface ConfigRule<TInput extends LooseRecord = LooseRecord> extends Omit<ParamRule<TInput>, 'normalize' | 'shape'> {
   defaultFactory?: () => unknown;
   merge?: MergeStrategy;
   schema?: ConfigSchema;
   normalize?: (value: unknown, context: ConfigNormalizeContext<TInput>) => unknown;
 }
-type ConfigRuleInput<TInput extends LooseRecord = LooseRecord> = ConfigTypeRule | ConfigRule<TInput>;
-type ConfigSchema<TInput extends LooseRecord = LooseRecord> = Record<string, ConfigRuleInput<TInput>>;
-type ResolvedConfig<TSchema extends object> = LooseRecord & { [Key in keyof TSchema]: unknown; };
-declare function resolveConfig<TInput extends LooseRecord, TSchema extends ConfigSchema<TInput>>(input?: TInput | null | undefined, schema?: TSchema, namespace?: string): ResolvedConfig<TSchema>;
-//#endregion
-//#region src/utilities/state.d.ts
-interface StateSyncOptions {
+export type ConfigRuleInput<TInput extends LooseRecord = LooseRecord> = ConfigTypeRule | ConfigRule<TInput>;
+export type ConfigSchema<TInput extends LooseRecord = LooseRecord> = Record<string, ConfigRuleInput<TInput>>;
+export type ResolvedConfig<TSchema extends object> = LooseRecord & { [Key in keyof TSchema]: unknown; };
+export declare function resolveConfig<TInput extends LooseRecord, TSchema extends ConfigSchema<TInput>>(input?: TInput | null | undefined, schema?: TSchema, namespace?: string): ResolvedConfig<TSchema>;
+export interface StateSyncOptions {
   deferInitial?: boolean;
   flushInitial?: boolean;
   flush?: 'microtask' | 'sync';
 }
-declare function getStoreVersion(value: unknown): number;
-declare function trackStoreVersion<T>(value: T): T;
-declare function stateSnapshot<T>(value: T): T;
+export declare function getStoreVersion(value: unknown): number;
+export declare function trackStoreVersion<T>(value: T): T;
+export declare function stateSnapshot<T>(value: T): T;
 /**
  * Bridges reactive state to an expensive imperative effect. Declarative view
  * bindings should depend on state directly instead of using this helper.
  */
-declare function createStateSync<TSnapshot>(read: () => TSnapshot, sync: (snapshot: TSnapshot) => void | Promise<void>, { deferInitial, flushInitial, flush }?: StateSyncOptions): () => void;
-//#endregion
-//#region src/utilities/refs.d.ts
-interface ElementRef<TElement extends Element> {
+export declare function createStateSync<TSnapshot>(read: () => TSnapshot, sync: (snapshot: TSnapshot) => void | Promise<void>, { deferInitial, flushInitial, flush }?: StateSyncOptions): () => void;
+export interface ElementRef<TElement extends Element> {
   readonly current: TElement | null;
   set: (element: TElement) => void;
   clear: () => void;
 }
-declare function createElementRef<TElement extends Element>(): ElementRef<TElement>;
-interface KeyedElementRefs<TKey, TElement extends Element> {
+export declare function createElementRef<TElement extends Element>(): ElementRef<TElement>;
+export interface KeyedElementRefs<TKey, TElement extends Element> {
   readonly elements: ReadonlyMap<TKey, TElement>;
   get: (key: TKey) => TElement | undefined;
   bind: (key: TKey) => (element: TElement) => void;
   delete: (key: TKey) => void;
   clear: () => void;
 }
-declare function createKeyedElementRefs<TKey, TElement extends Element>(): KeyedElementRefs<TKey, TElement>;
-//#endregion
-//#region src/utilities/validator.d.ts
+export declare function createKeyedElementRefs<TKey, TElement extends Element>(): KeyedElementRefs<TKey, TElement>;
 type ValidatorElement = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
 type ValidatorMessageMap = Record<string, Partial<Record<string, string>>>;
 type ValidatorCustomResult = boolean | string;
@@ -404,10 +377,10 @@ interface ValidatorProps extends Record<string, unknown> {
   className?: ValidatorClassNameConfig;
   onSubmit?: ((validator: ValidatorInstance) => void) | null;
 }
-interface ValidatorClassNames {
+export interface ValidatorClassNames {
   help: string;
 }
-type ValidatorClassNameConfig = Partial<ValidatorClassNames>;
+export type ValidatorClassNameConfig = Partial<ValidatorClassNames>;
 interface ResolvedValidatorProps extends Record<string, unknown> {
   rules: Record<string, ValidatorRule>;
   messages: ValidatorMessageMap;
@@ -424,7 +397,7 @@ interface ValidatorRuntime {
 interface ResetOptions {
   native?: boolean;
 }
-interface ValidatorInstance {
+export interface ValidatorInstance {
   readonly element: HTMLFormElement | null;
   props: ResolvedValidatorProps | null;
   runtime: ValidatorRuntime;
@@ -432,10 +405,8 @@ interface ValidatorInstance {
   reset(options?: ResetOptions): void;
   destroy(): void;
 }
-declare function createValidator(element: DOMReference, props?: ValidatorProps, bindEvents?: boolean): ValidatorInstance;
-//#endregion
-//#region src/utilities/compress.d.ts
-interface CompressOptions {
+export declare function createValidator(element: DOMReference, props?: ValidatorProps, bindEvents?: boolean): ValidatorInstance;
+export interface CompressOptions {
   /** 压缩质量，范围 0-1，默认 0.7 */
   quality?: number;
   /** 目标宽度（像素），不指定则按原图比例缩放 */
@@ -443,7 +414,7 @@ interface CompressOptions {
   /** 目标高度（像素），不指定则按原图比例缩放 */
   height?: number;
 }
-interface ImgCompressInstance {
+export interface ImgCompressInstance {
   /**
    * 将图片路径转换为压缩后的 base64 数据
    * @param path - 图片文件路径或 base64 字符串
@@ -492,22 +463,18 @@ declare function getImgCompressInstance(options?: CompressOptions): ImgCompressI
  * 重置单例实例（用于测试或重新配置）
  */
 declare function resetImgCompressInstance(): void;
-//#endregion
-//#region src/core/scheduler.d.ts
 interface ScheduledTask {
   schedule: () => void;
   flush: () => void;
   cancel: () => void;
   dispose: () => void;
 }
-declare function createScheduledTask(run: () => void): ScheduledTask;
-//#endregion
-//#region src/core/view.d.ts
-interface OwnedView<TElement extends Element> {
+export declare function createScheduledTask(run: () => void): ScheduledTask;
+export interface OwnedView<TElement extends Element> {
   element: TElement;
   dispose: () => void;
 }
-interface OwnedViewOptions {
+export interface OwnedViewOptions {
   removeOnDispose?: boolean;
 }
 /**
@@ -515,36 +482,32 @@ interface OwnedViewOptions {
  * Reactive accessors declared by the factory retain the owner, while the
  * factory itself is not turned into a replaceable dynamic region.
  */
-declare function createOwnedView<TElement extends Element>(factory: () => TElement, options?: OwnedViewOptions): OwnedView<TElement>;
-//#endregion
-//#region src/core/motion.d.ts
-type TransitionTarget = () => Element | null | undefined;
-interface TransitionDefinition {
+export declare function createOwnedView<TElement extends Element>(factory: () => TElement, options?: OwnedViewOptions): OwnedView<TElement>;
+export type TransitionTarget = () => Element | null | undefined;
+export interface TransitionDefinition {
   keyframes: Keyframe[] | PropertyIndexedKeyframes;
   options?: KeyframeAnimationOptions;
   respectReducedMotion?: boolean;
 }
-interface MotionController {
+export interface MotionController {
   enter: (signal?: AbortSignal) => Promise<void>;
   leave: (signal?: AbortSignal) => Promise<void>;
   cancel: () => void;
 }
-interface CollapseTransitionDefinition {
+export interface CollapseTransitionDefinition {
   axis?: 'vertical' | 'horizontal';
   options?: KeyframeAnimationOptions;
   fade?: boolean;
   respectReducedMotion?: boolean;
 }
-interface CollapseMotionController extends MotionController {
+export interface CollapseMotionController extends MotionController {
   setExpanded: (expanded: boolean) => void;
 }
-declare function createMotionGroup(...motions: readonly MotionController[]): MotionController;
-declare function createTransition(target: TransitionTarget, definition: TransitionDefinition): MotionController;
-declare function createCollapseTransition(target: () => HTMLElement | null | undefined, definition?: CollapseTransitionDefinition): CollapseMotionController;
-//#endregion
-//#region src/core/presence.d.ts
-type PresencePhase = 'hidden' | 'entering' | 'visible' | 'leaving';
-interface PresenceOptions {
+export declare function createMotionGroup(...motions: readonly MotionController[]): MotionController;
+export declare function createTransition(target: TransitionTarget, definition: TransitionDefinition): MotionController;
+export declare function createCollapseTransition(target: () => HTMLElement | null | undefined, definition?: CollapseTransitionDefinition): CollapseMotionController;
+export type PresencePhase = 'hidden' | 'entering' | 'visible' | 'leaving';
+export interface PresenceOptions {
   elements: () => readonly (Element | null | undefined)[];
   mount: () => void;
   activate: () => void;
@@ -552,20 +515,18 @@ interface PresenceOptions {
   unmount: () => void;
   motion?: MotionController;
 }
-interface PresenceController {
+export interface PresenceController {
   readonly phase: PresencePhase;
   enter: () => Promise<boolean>;
   leave: () => Promise<boolean>;
   cancel: () => void;
 }
-declare function waitForMotion(elements: readonly Element[], signal?: AbortSignal): Promise<void>;
-declare function createPresence(options: PresenceOptions): PresenceController;
-//#endregion
-//#region src/primitives/icons.d.ts
-type IconPathMap = Record<string, string>;
-type IconName = string;
-type IconAttributeValue = string | number | boolean | null | undefined;
-interface IconProps {
+export declare function waitForMotion(elements: readonly Element[], signal?: AbortSignal): Promise<void>;
+export declare function createPresence(options: PresenceOptions): PresenceController;
+export type IconPathMap = Record<string, string>;
+export type IconName = string;
+export type IconAttributeValue = string | number | boolean | null | undefined;
+export interface IconProps {
   className?: IconAttributeValue;
   [attribute: string]: IconAttributeValue;
 }
@@ -578,7 +539,7 @@ interface IconProps {
  * @returns {SVGElement}
  * @throws {Error} 图标不存在或非 DOM 环境时抛出。
  */
-declare function icon(name: IconName, props?: IconProps): SVGElement;
+export declare function icon(name: IconName, props?: IconProps): SVGElement;
 /**
  * 获取完整 SVG 字符串。
  *
@@ -586,13 +547,13 @@ declare function icon(name: IconName, props?: IconProps): SVGElement;
  * @param {string} name 图标名称。
  * @returns {string}
  */
-declare function iconHtml(name: IconName): string;
-declare const iconMarkup: typeof iconHtml;
+export declare function iconHtml(name: IconName): string;
+export declare const iconMarkup: typeof iconHtml;
 /**
  * 获取当前已注册图标的 path 片段浅拷贝。
  * @returns {Record<string, string>}
  */
-declare function getRegistedIconPath(): IconPathMap;
+export declare function getRegistedIconPath(): IconPathMap;
 /**
  * 批量注册自定义图标。
  *
@@ -600,28 +561,22 @@ declare function getRegistedIconPath(): IconPathMap;
  * @param {Record<string, string>} svgPathObjects 图标名称到 SVG path 的映射。
  * @returns {void}
  */
-declare function addIcons(svgPathObjects: IconPathMap): void;
-//#endregion
-//#region src/primitives/loading.d.ts
-type flexPosition = 'center' | 'flex-start' | 'flex-end';
+export declare function addIcons(svgPathObjects: IconPathMap): void;
+export type flexPosition = 'center' | 'flex-start' | 'flex-end';
 /**
  * 创建通用加载状态节点
  * 定位 absolute 撑满父元素 居中 背景模糊滤镜
  * @returns {HTMLElement}
  */
-declare function createLoading(xDirection?: flexPosition, yDirection?: flexPosition): HTMLDivElement;
-//#endregion
-//#region src/primitives/popup.d.ts
-interface PopupProps extends Record<string, unknown> {
+export declare function createLoading(xDirection?: flexPosition, yDirection?: flexPosition): HTMLDivElement;
+export interface PopupProps extends Record<string, unknown> {
   className?: string;
   position?: string;
   component?: string;
   labelledby?: string;
   content?: RenderableContent;
 }
-declare function createPopup(props?: PopupProps): HTMLElement;
-//#endregion
-//#region src/primitives/drop.d.ts
+export declare function createPopup(props?: PopupProps): HTMLElement;
 type DropMode$1 = 'hover' | 'click';
 type DropPosition$1 = 'auto' | 'top-left' | 'top-center' | 'top-right' | 'bottom-left' | 'bottom-center' | 'bottom-right' | 'left' | 'right';
 interface DropClassNames {
@@ -664,7 +619,7 @@ interface ResolvedDropProps extends Record<string, unknown> {
   onShown: NonNullable<DropProps['onShown']> | null;
   onHidden: NonNullable<DropProps['onHidden']> | null;
 }
-interface DropInstance {
+export interface DropInstance {
   readonly target: Element | null;
   readonly props: ResolvedDropProps;
   readonly element: HTMLElement | null;
@@ -681,9 +636,7 @@ interface DropInstance {
  *
  * 可用于菜单、提示、下拉面板等场景，支持点击或 hover 触发，并自动计算视口内位置。
  */
-declare function createDrop(reference: DOMReference, input?: DropProps): DropInstance;
-//#endregion
-//#region src/primitives/tooltip.d.ts
+export declare function createDrop(reference: DOMReference, input?: DropProps): DropInstance;
 type DropInstance$1 = ReturnType<typeof createDrop>;
 type DropMode = 'hover' | 'click';
 type DropPosition = 'auto' | 'top-left' | 'top-center' | 'top-right' | 'bottom-left' | 'bottom-center' | 'bottom-right' | 'left' | 'right';
@@ -691,7 +644,7 @@ interface DropDelay {
   show?: number;
   hide?: number;
 }
-interface TooltipInstance {
+export interface TooltipInstance {
   readonly element: HTMLElement | null;
   readonly drop: DropInstance$1 | null;
   show(useDelay?: boolean): void;
@@ -706,12 +659,12 @@ interface TooltipClassNames {
 }
 interface TooltipThemeClassNames {
   reverse: string;
-  primary: string;
+  info: string;
   success: string;
   warning: string;
   error: string;
 }
-type TooltipTheme = false | 'reverse' | 'primary' | 'success' | 'warning' | 'error';
+type TooltipTheme = false | 'reverse' | 'info' | 'success' | 'warning' | 'error';
 type TooltipClassNameConfig = Partial<Omit<TooltipClassNames, 'ui'>> & {
   ui?: Partial<TooltipThemeClassNames>;
 };
@@ -736,11 +689,9 @@ interface TooltipProps extends Record<string, unknown> {
  *
  * 基于 Drop 实现，提供更轻量的文本提示封装。
  */
-declare function createTooltip(element: DOMReference, input?: TooltipProps): TooltipInstance;
-//#endregion
-//#region src/primitives/toast.d.ts
-type ToastTheme = '' | 'info' | 'success' | 'warning' | 'error';
-interface ToastClassNames {
+export declare function createTooltip(element: DOMReference, input?: TooltipProps): TooltipInstance;
+export type ToastTheme = '' | 'info' | 'success' | 'warning' | 'error';
+export interface ToastClassNames {
   container: string;
   toast: string;
   icon: string;
@@ -756,14 +707,14 @@ interface ToastClassNames {
   warning: string;
   error: string;
 }
-type ToastClassNameConfig = Partial<ToastClassNames>;
-interface ToastClassNameOptions {
+export type ToastClassNameConfig = Partial<ToastClassNames>;
+export interface ToastClassNameOptions {
   className?: ToastClassNameConfig;
 }
-interface ToastThemeOptions extends ToastClassNameOptions {
+export interface ToastThemeOptions extends ToastClassNameOptions {
   theme?: ToastTheme;
 }
-interface ToastOptions extends ToastThemeOptions {
+export interface ToastOptions extends ToastThemeOptions {
   duration?: number;
   once?: boolean;
   loading?: MaybeAccessor<boolean>;
@@ -773,7 +724,7 @@ interface ToastOptions extends ToastThemeOptions {
   onClose?: () => void | Promise<void>;
   onCancel?: () => void | Promise<void>;
 }
-interface ToastConfirmProps extends ToastClassNameOptions {
+export interface ToastConfirmProps extends ToastClassNameOptions {
   once?: boolean;
   text?: {
     close?: string;
@@ -787,7 +738,7 @@ declare function show(message?: string, options?: ToastOptions): HTMLElement;
 declare function lite(message?: string, duration?: number, className?: ToastClassNameConfig): HTMLElement;
 declare function confirm(message?: string, props?: ToastConfirmProps): HTMLElement;
 declare function clearAll(): void;
-declare const Toast: {
+export declare const Toast: {
   timers: Set<string>;
   disposers: Map<HTMLElement, () => void>;
   configure(options?: ToastClassNameOptions): ToastClassNameOptions;
@@ -802,10 +753,8 @@ declare const Toast: {
   clearAll: typeof clearAll;
   destroyAll: typeof clearAll;
 };
-//#endregion
-//#region src/primitives/theme.d.ts
-type ThemeConfigKey = 'mode' | 'theme' | 'radius' | 'shadow' | 'font';
-interface ThemeClassNames {
+export type ThemeConfigKey = 'mode' | 'theme' | 'radius' | 'shadow' | 'font';
+export interface ThemeClassNames {
   panel: string;
   title: string;
   container: string;
@@ -818,8 +767,8 @@ interface ThemeClassNames {
   swatch: string;
   buttonText: string;
 }
-type ThemeClassNameConfig = Partial<ThemeClassNames>;
-interface ThemeOptions extends Record<string, unknown> {
+export type ThemeClassNameConfig = Partial<ThemeClassNames>;
+export interface ThemeOptions extends Record<string, unknown> {
   mode?: string;
   theme?: string;
   radius?: string;
@@ -828,12 +777,12 @@ interface ThemeOptions extends Record<string, unknown> {
   key?: string;
   className?: ThemeClassNameConfig;
 }
-interface ThemePanelGroup {
+export interface ThemePanelGroup {
   title: string;
   type: ThemeConfigKey;
   buttons: Array<[string, string]>;
 }
-interface ThemeResolvedOptions {
+export interface ThemeResolvedOptions {
   mode: string;
   theme: string;
   radius: string;
@@ -842,15 +791,13 @@ interface ThemeResolvedOptions {
   key: string;
   className: ThemeClassNames;
 }
-interface ThemeInstance {
+export interface ThemeInstance {
   props: ThemeResolvedOptions;
   createPanel(containerClass?: string | null, panelConfig?: ThemePanelGroup[] | null): HTMLElement;
   setConfig(newConfig: ThemeOptions): void;
   destroy(): void;
 }
-declare function createTheme(options?: ThemeOptions): ThemeInstance;
-//#endregion
-//#region src/primitives/parabola.d.ts
+export declare function createTheme(options?: ThemeOptions): ThemeInstance;
 type ParabolaDirection = 'center' | 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left';
 interface ParabolaBallProps {
   color: string;
@@ -883,16 +830,14 @@ interface ResolvedParabolaProps extends Record<string, unknown> {
 interface ParabolaRuntime {
   destroyed: boolean;
 }
-interface ParabolaInstance {
+export interface ParabolaInstance {
   readonly props: ResolvedParabolaProps;
   readonly element: HTMLElement | null;
   readonly runtime: ParabolaRuntime;
   show(): Promise<boolean>;
   destroy(): void;
 }
-declare function createParabola(input?: ParabolaProps): ParabolaInstance;
-//#endregion
-//#region src/primitives/sticky.d.ts
+export declare function createParabola(input?: ParabolaProps): ParabolaInstance;
 type StickyOverflow = 'destroy' | 'ignore';
 interface StickyProps extends Record<string, unknown> {
   target?: DOMReference;
@@ -936,23 +881,21 @@ interface StickyInstance {
   reBuild(): StickyInstance;
   destroy(): void;
 }
-declare function createSticky(props?: StickyProps): StickyInstance;
-//#endregion
-//#region src/core/component.d.ts
-type ComponentProps = Record<string, unknown>;
-type ComponentState = Record<string, unknown>;
-type ComponentCleanup = void | (() => void) | {
+export declare function createSticky(props?: StickyProps): StickyInstance;
+export type ComponentProps = Record<string, unknown>;
+export type ComponentState = Record<string, unknown>;
+export type ComponentCleanup = void | (() => void) | {
   destroy: () => void;
 };
-type ComponentPluginOptions = Record<string, unknown> | undefined;
-interface ComponentRuntime {
+export type ComponentPluginOptions = Record<string, unknown> | undefined;
+export interface ComponentRuntime {
   built: boolean;
   mounted: boolean;
   destroyed: boolean;
 }
-type ComponentLifecycleEvent = 'build' | 'mount' | 'unmount' | 'destroy';
-type ComponentListener = (...args: unknown[]) => void;
-interface ComponentController<TProps extends ComponentProps = ComponentProps, TState extends ComponentState = ComponentState, TElement extends Element = HTMLElement> {
+export type ComponentLifecycleEvent = 'build' | 'mount' | 'unmount' | 'destroy';
+export type ComponentListener = (...args: unknown[]) => void;
+export interface ComponentController<TProps extends ComponentProps = ComponentProps, TState extends ComponentState = ComponentState, TElement extends Element = HTMLElement> {
   readonly props: TProps;
   readonly state: TState;
   readonly runtime: ComponentRuntime;
@@ -969,10 +912,10 @@ interface ComponentController<TProps extends ComponentProps = ComponentProps, TS
   emit(event: string, ...args: unknown[]): this;
   destroy(): void;
 }
-type ComponentPlugin<TComponent = ComponentController> = ((component: TComponent, options?: ComponentPluginOptions) => ComponentCleanup) | {
+export type ComponentPlugin<TComponent = ComponentController> = ((component: TComponent, options?: ComponentPluginOptions) => ComponentCleanup) | {
   install: (component: TComponent, options?: ComponentPluginOptions) => ComponentCleanup;
 };
-interface ComponentContext<TProps extends ComponentProps, TState extends ComponentState, TElement extends Element> {
+export interface ComponentContext<TProps extends ComponentProps, TState extends ComponentState, TElement extends Element> {
   readonly props: TProps;
   readonly state: TState;
   readonly runtime: ComponentRuntime;
@@ -981,7 +924,7 @@ interface ComponentContext<TProps extends ComponentProps, TState extends Compone
   assertActive: (operation: string) => void;
   emit: (event: string, ...args: unknown[]) => void;
 }
-interface ComponentDefinition<TProps extends ComponentProps, TState extends ComponentState, TElement extends Element, TActions extends object> {
+export interface ComponentDefinition<TProps extends ComponentProps, TState extends ComponentState, TElement extends Element, TActions extends object> {
   name: string;
   ownsElement?: boolean;
   props: TProps;
@@ -995,12 +938,10 @@ interface ComponentDefinition<TProps extends ComponentProps, TState extends Comp
   onUnmount?: (context: ComponentContext<TProps, TState, TElement>) => void;
   onDestroy?: (context: ComponentContext<TProps, TState, TElement>) => void;
 }
-type FunctionalComponent<TProps extends ComponentProps, TState extends ComponentState, TElement extends Element, TActions extends object = object> = ComponentController<TProps, TState, TElement> & TActions;
-declare function useComponentPlugin(name: string, plugin: ComponentPlugin | null | undefined): void;
-declare function removeComponentPlugin(name: string): void;
-declare function defineComponent<TProps extends ComponentProps, TState extends ComponentState, TElement extends Element, TActions extends object = object>(definition: ComponentDefinition<TProps, TState, TElement, TActions>): FunctionalComponent<TProps, TState, TElement, TActions>;
-//#endregion
-//#region src/components/toc.d.ts
+export type FunctionalComponent<TProps extends ComponentProps, TState extends ComponentState, TElement extends Element, TActions extends object = object> = ComponentController<TProps, TState, TElement> & TActions;
+export declare function useComponentPlugin(name: string, plugin: ComponentPlugin | null | undefined): void;
+export declare function removeComponentPlugin(name: string): void;
+export declare function defineComponent<TProps extends ComponentProps, TState extends ComponentState, TElement extends Element, TActions extends object = object>(definition: ComponentDefinition<TProps, TState, TElement, TActions>): FunctionalComponent<TProps, TState, TElement, TActions>;
 interface TocClassNames {
   toc: string;
   title: string;
@@ -1017,16 +958,16 @@ interface TocIndicatorConfig {
   color: string;
 }
 type TocIndicatorConfigInput = Partial<TocIndicatorConfig>;
-interface TocItem {
+export interface TocItem {
   id: string;
   text: string;
   level: number;
 }
-interface TocCurrent {
+export interface TocCurrent {
   index: number;
   item: TocItem | null;
 }
-interface TocIndicator {
+export interface TocIndicator {
   visible: boolean;
   top: number;
   height: number;
@@ -1062,9 +1003,7 @@ interface TocActions {
   activate(index: number): TocInstance;
 }
 type TocInstance = FunctionalComponent<ResolvedTocProps, TocState, HTMLElement, TocActions>;
-declare function createToc(props?: TocProps): TocInstance;
-//#endregion
-//#region src/components/accordion.d.ts
+export declare function createToc(props?: TocProps): TocInstance;
 type AccordionActive = number | string | Array<number | string> | null;
 type AccordionDirection = 'vertical' | 'horizontal';
 type AccordionContent = RenderableContent<AccordionContentContext> | ((context: AccordionContentContext) => Promise<RenderableContent<AccordionContentContext>>);
@@ -1128,17 +1067,15 @@ interface AccordionActions {
   getIndex(value: number | string | undefined | null): number;
   activate(value: number | string | undefined): Promise<void>;
 }
-declare function createAccordion(props: AccordionProps): AccordionInstance;
-//#endregion
-//#region src/components/form.d.ts
+export declare function createAccordion(props: AccordionProps): AccordionInstance;
 type FormValue = string | number | boolean;
-type FieldOption = FormValue | FormOption;
+export type FieldOption = FormValue | FormOption;
 type FormStyle = string | Partial<CSSStyleDeclaration> | null;
-type FormDataValue = FormDataEntryValue | FormDataEntryValue[];
-type FormDataRecord = Record<string, FormDataValue>;
-type FormItemType = FormControlType;
+export type FormDataValue = FormDataEntryValue | FormDataEntryValue[];
+export type FormDataRecord = Record<string, FormDataValue>;
+export type FormItemType = FormControlType;
 type FormControlType = 'checkbox' | 'custom' | 'email' | 'password' | 'radio' | 'select' | 'switch' | 'text' | 'textarea' | (string & {});
-interface FormClassNames {
+export interface FormClassNames {
   form: string;
   item: string;
   label: string;
@@ -1160,22 +1097,22 @@ interface FormClassNames {
   switch: string;
   switchSlider: string;
 }
-type FormClassNameConfig = Partial<FormClassNames>;
-interface FormOption {
+export type FormClassNameConfig = Partial<FormClassNames>;
+export interface FormOption {
   value?: FormValue | FormDataEntryValue | null;
   text?: RenderableContent<Form>;
   label?: RenderableContent<Form>;
   checked?: boolean;
   disabled?: boolean;
 }
-type FormItemNext = (current: FormItem, acients: FormItem[]) => FormItem | null;
-interface FormItem<TPayload = FormField> {
+export type FormItemNext = (current: FormItem, acients: FormItem[]) => FormItem | null;
+export interface FormItem<TPayload = FormField> {
   id?: string;
   type: FormItemType;
   payload: TPayload;
   next?: FormItemNext | null;
 }
-interface FormField {
+export interface FormField {
   [key: string]: unknown;
   id?: string;
   label?: RenderableContent<Form> | false;
@@ -1196,7 +1133,7 @@ interface FormField {
   className?: string;
   content?: RenderableContent<FormControlContext>;
 }
-interface FormValidatorConfig {
+export interface FormValidatorConfig {
   rules?: Record<string, Record<string, unknown>>;
   messages?: Record<string, Record<string, string>>;
   vanilla?: boolean;
@@ -1204,13 +1141,13 @@ interface FormValidatorConfig {
   onSubmit?: (() => void) | null;
   [key: string]: unknown;
 }
-type FormButtons = boolean | string;
-interface FormText {
+export type FormButtons = boolean | string;
+export interface FormText {
   submit: RenderableContent<Form>;
   reset: RenderableContent<Form>;
 }
-type FormTextConfig = Partial<FormText>;
-interface FormProps extends Record<string, unknown> {
+export type FormTextConfig = Partial<FormText>;
+export interface FormProps extends Record<string, unknown> {
   id?: string | null;
   size?: string;
   style?: FormStyle;
@@ -1254,23 +1191,21 @@ interface FormActions {
   setFields(fields: readonly FormItem<FormField>[]): Form;
   resetFields(): Form;
 }
-type Form = FunctionalComponent<ResolvedFormProps, FormState, HTMLFormElement, FormActions>;
-declare function createForm(input?: FormProps): Form;
-//#endregion
-//#region src/components/flow.d.ts
-type FlowData = Record<string, unknown>;
-type FlowPayload = FlowData | null;
-type FlowAction = 'next' | 'back' | 'goTo' | 'finish';
-type FlowBusyStrategy = 'ignore' | 'throw';
-type FlowDirection = string;
-type FlowSlotName = 'renderHeader' | 'renderBody' | 'renderFooter';
-type FlowCleanup = () => void;
-type FlowTarget = string | number;
-type FlowStepResult = string | {
+export type Form = FunctionalComponent<ResolvedFormProps, FormState, HTMLFormElement, FormActions>;
+export declare function createForm(input?: FormProps): Form;
+export type FlowData = Record<string, unknown>;
+export type FlowPayload = FlowData | null;
+export type FlowAction = 'next' | 'back' | 'goTo' | 'finish';
+export type FlowBusyStrategy = 'ignore' | 'throw';
+export type FlowDirection = string;
+export type FlowSlotName = 'renderHeader' | 'renderBody' | 'renderFooter';
+export type FlowCleanup = () => void;
+export type FlowTarget = string | number;
+export type FlowStepResult = string | {
   id: string;
   data?: FlowPayload;
 };
-interface FlowClassNames {
+export interface FlowClassNames {
   root: string;
   header: string;
   steps: string;
@@ -1287,8 +1222,8 @@ interface FlowClassNames {
   back: string;
   next: string;
 }
-type FlowClassNameConfig = Partial<FlowClassNames>;
-interface FlowStep {
+export type FlowClassNameConfig = Partial<FlowClassNames>;
+export interface FlowStep {
   id: string;
   title?: string;
   content?: RenderableContent<FlowContext>;
@@ -1301,8 +1236,8 @@ interface FlowStep {
   canLeave?: FlowGuardHook;
   [key: string]: unknown;
 }
-type PublicFlowStep = Omit<FlowStep, 'onEnter' | 'onLeave' | 'onNext' | 'onBack' | 'canEnter' | 'canLeave'>;
-interface FlowSnapshot {
+export type PublicFlowStep = Omit<FlowStep, 'onEnter' | 'onLeave' | 'onNext' | 'onBack' | 'canEnter' | 'canLeave'>;
+export interface FlowSnapshot {
   id: string;
   currentId: string;
   currentIndex: number;
@@ -1321,7 +1256,7 @@ interface FlowSnapshot {
   busyAction: FlowAction | null;
   error: unknown;
 }
-interface FlowState extends Record<string, unknown> {
+export interface FlowState extends Record<string, unknown> {
   id: string;
   currentId: string;
   currentIndex: number;
@@ -1336,10 +1271,10 @@ interface FlowState extends Record<string, unknown> {
   busyAction: FlowAction | null;
   version: number;
 }
-interface FlowGoToOptions {
+export interface FlowGoToOptions {
   direction?: FlowDirection;
 }
-interface FlowContext {
+export interface FlowContext {
   flow: Flow;
   step: FlowStep;
   state: FlowState;
@@ -1359,7 +1294,7 @@ interface FlowContext {
   goTo: (target: FlowTarget, payload?: FlowPayload, options?: FlowGoToOptions) => Promise<FlowSnapshot | null>;
   addCleanup: (cleanup: FlowCleanup) => FlowCleanup;
 }
-interface FlowRenderContext {
+export interface FlowRenderContext {
   flow: Flow;
   snapshot: FlowSnapshot;
   state: FlowState;
@@ -1373,23 +1308,23 @@ interface FlowRenderContext {
   goTo: (target: FlowTarget, payload?: FlowPayload, options?: FlowGoToOptions) => Promise<FlowSnapshot | null>;
   reset: () => Flow;
 }
-type FlowLifecycleHook = (context: FlowContext) => void | Promise<void>;
-type FlowGuardHook = (context: FlowContext) => boolean | void | Promise<boolean | void>;
-type FlowMoveHook = (context: FlowContext) => FlowStepResult | FlowPayload | void | Promise<FlowStepResult | FlowPayload | void>;
-type FlowFinishHook = (snapshot: FlowSnapshot, flow: Flow) => void | Promise<void>;
-type FlowChangeHook = (snapshot: FlowSnapshot, flow: Flow, previous: FlowSnapshot | null) => void;
-type FlowErrorHook = (error: unknown, snapshot: FlowSnapshot, flow: Flow, previous: FlowSnapshot | null) => void;
-type FlowBusyHook = (action: FlowAction, snapshot: FlowSnapshot, flow: Flow) => void;
-type FlowSlot = false | null | ((context: FlowRenderContext) => RenderableContent<FlowRenderContext>);
-type FlowSubscriber = (snapshot: FlowSnapshot, flow: Flow, previous: FlowSnapshot | null) => void;
-interface FlowText {
+export type FlowLifecycleHook = (context: FlowContext) => void | Promise<void>;
+export type FlowGuardHook = (context: FlowContext) => boolean | void | Promise<boolean | void>;
+export type FlowMoveHook = (context: FlowContext) => FlowStepResult | FlowPayload | void | Promise<FlowStepResult | FlowPayload | void>;
+export type FlowFinishHook = (snapshot: FlowSnapshot, flow: Flow) => void | Promise<void>;
+export type FlowChangeHook = (snapshot: FlowSnapshot, flow: Flow, previous: FlowSnapshot | null) => void;
+export type FlowErrorHook = (error: unknown, snapshot: FlowSnapshot, flow: Flow, previous: FlowSnapshot | null) => void;
+export type FlowBusyHook = (action: FlowAction, snapshot: FlowSnapshot, flow: Flow) => void;
+export type FlowSlot = false | null | ((context: FlowRenderContext) => RenderableContent<FlowRenderContext>);
+export type FlowSubscriber = (snapshot: FlowSnapshot, flow: Flow, previous: FlowSnapshot | null) => void;
+export interface FlowText {
   back: string;
   next: string;
   finish: string;
   reset: string;
   [key: string]: string;
 }
-interface FlowProps extends Record<string, unknown> {
+export interface FlowProps extends Record<string, unknown> {
   id?: string | null;
   steps?: FlowStep[];
   initial?: string | number | null;
@@ -1458,7 +1393,7 @@ interface FlowActions {
   reset(): Flow;
   finish(payload?: FlowPayload): Promise<FlowSnapshot | null>;
 }
-interface Flow extends FlowActions {
+export interface Flow extends FlowActions {
   readonly props: ResolvedFlowProps;
   readonly steps: FlowStep[];
   readonly state: FlowState;
@@ -1474,13 +1409,11 @@ interface Flow extends FlowActions {
   unmount(): this;
   destroy(): void;
 }
-declare function createFlow(input?: FlowProps): Flow;
-//#endregion
-//#region src/components/modal.d.ts
+export declare function createFlow(input?: FlowProps): Flow;
 type ModalTextInput = Partial<ModalText> & Record<string, unknown>;
 type ModalContentResult = RenderableContent<Modal>;
 type ModalContent = ModalContentResult | ((modal: Modal) => ModalContentResult | Promise<ModalContentResult>);
-interface ModalClassNames {
+export interface ModalClassNames {
   layout: string;
   modal: string;
   header: string;
@@ -1492,14 +1425,14 @@ interface ModalClassNames {
   confirmBtn: string;
   button: string;
 }
-type ModalClassNameConfig = Partial<ModalClassNames>;
-interface ModalText {
+export type ModalClassNameConfig = Partial<ModalClassNames>;
+export interface ModalText {
   title: string;
   confirm: string;
   cancel: string;
 }
 type ModalStyle = string | Partial<CSSStyleDeclaration> | null;
-interface ModalProps extends Record<string, unknown> {
+export interface ModalProps extends Record<string, unknown> {
   content?: ModalContent;
   cache?: boolean;
   ttl?: number;
@@ -1556,11 +1489,9 @@ interface ModalActions {
   hide(): Modal;
   reset(): Modal;
 }
-type Modal = FunctionalComponent<ResolvedModalProps, ModalState, HTMLElement, ModalActions>;
-declare function createModal(input?: ModalProps): Modal;
-//#endregion
-//#region src/components/swiper.d.ts
-interface SwiperClassNames {
+export type Modal = FunctionalComponent<ResolvedModalProps, ModalState, HTMLElement, ModalActions>;
+export declare function createModal(input?: ModalProps): Modal;
+export interface SwiperClassNames {
   root: string;
   wrapper: string;
   slide: string;
@@ -1578,8 +1509,8 @@ interface SwiperClassNames {
   active: string;
   disabled: string;
 }
-type SwiperClassNameConfig = Partial<SwiperClassNames>;
-interface SwiperDataItem extends Record<string, unknown> {
+export type SwiperClassNameConfig = Partial<SwiperClassNames>;
+export interface SwiperDataItem extends Record<string, unknown> {
   image?: string | null;
   url?: string | null;
   title?: string | null;
@@ -1592,14 +1523,14 @@ interface NormalizedSwiperDataItem extends SwiperDataItem {
   index: number;
   key: string;
 }
-interface SwiperSlideContext {
+export interface SwiperSlideContext {
   swiper: Swiper;
   item: NormalizedSwiperDataItem;
   index: number;
 }
-type SwiperDataLoader = (swiper: Swiper) => SwiperDataItem[] | Promise<SwiperDataItem[]>;
-type SwiperDataSource = SwiperDataItem[] | SwiperDataLoader;
-interface SwiperProps extends Record<string, unknown> {
+export type SwiperDataLoader = (swiper: Swiper) => SwiperDataItem[] | Promise<SwiperDataItem[]>;
+export type SwiperDataSource = SwiperDataItem[] | SwiperDataLoader;
+export interface SwiperProps extends Record<string, unknown> {
   id?: string | null;
   data?: SwiperDataSource;
   loop?: boolean;
@@ -1653,17 +1584,15 @@ interface SwiperActions {
   restartAutoplay(): void;
 }
 type SwiperBase = FunctionalComponent<ResolvedSwiperProps, SwiperState, HTMLElement, SwiperActions>;
-type Swiper = SwiperBase & {
+export type Swiper = SwiperBase & {
   readonly realCount: number;
   readonly realIndex: number;
 };
-declare function createSwiper(input?: SwiperProps): Swiper;
-//#endregion
-//#region src/components/tabs.d.ts
-type TabsDirection = 'top' | 'bottom' | 'left' | 'right';
-type TabsValue = number | string;
-type TabsDisabled = TabsValue | TabsValue[];
-interface TabsClassNames {
+export declare function createSwiper(input?: SwiperProps): Swiper;
+export type TabsDirection = 'top' | 'bottom' | 'left' | 'right';
+export type TabsValue = number | string;
+export type TabsDisabled = TabsValue | TabsValue[];
+export interface TabsClassNames {
   root: string;
   wrap: string;
   list: string;
@@ -1672,22 +1601,22 @@ interface TabsClassNames {
   panel: string;
   dragging: string;
 }
-type TabsClassNameConfig = Partial<TabsClassNames>;
-interface TabsPanelContext {
+export type TabsClassNameConfig = Partial<TabsClassNames>;
+export interface TabsPanelContext {
   tabs: Tabs;
   item: TabItem;
   index: number;
   name: string | number;
 }
-type TabContent = RenderableContent<TabsPanelContext> | ((context: TabsPanelContext) => RenderableContent<TabsPanelContext>) | ((context: TabsPanelContext) => Promise<RenderableContent<TabsPanelContext>>);
-interface TabItem extends Record<string, unknown> {
+export type TabContent = RenderableContent<TabsPanelContext> | ((context: TabsPanelContext) => RenderableContent<TabsPanelContext>) | ((context: TabsPanelContext) => Promise<RenderableContent<TabsPanelContext>>);
+export interface TabItem extends Record<string, unknown> {
   name?: string;
   title: RenderableContent<TabsPanelContext>;
   content: TabContent;
   cache?: boolean;
   ttl?: number;
 }
-interface TabsProps extends Record<string, unknown> {
+export interface TabsProps extends Record<string, unknown> {
   id?: string | null;
   direction?: TabsDirection;
   active?: TabsValue;
@@ -1721,22 +1650,20 @@ interface TabsActions {
   activate(value: TabsValue): Promise<void>;
 }
 type TabsBase = FunctionalComponent<ResolvedTabsProps, TabsState, HTMLElement, TabsActions>;
-type Tabs = TabsBase & {
+export type Tabs = TabsBase & {
   readonly current: TabsCurrent;
 };
-declare function createTabs(input?: TabsProps): Tabs;
-//#endregion
-//#region src/components/offcanvas.d.ts
-type OffcanvasDirection = 'top' | 'right' | 'bottom' | 'left';
-type OffcanvasAnimate = string;
-interface OffcanvasClassNames {
+export declare function createTabs(input?: TabsProps): Tabs;
+export type OffcanvasDirection = 'top' | 'right' | 'bottom' | 'left';
+export type OffcanvasAnimate = string;
+export interface OffcanvasClassNames {
   root: string;
   overlay: string;
   content: string;
 }
-type OffcanvasClassNameConfig = Partial<OffcanvasClassNames>;
-type OffcanvasContent = RenderableContent<Offcanvas> | ((offcanvas: Offcanvas) => Promise<RenderableContent<Offcanvas>>);
-interface OffcanvasProps extends Record<string, unknown> {
+export type OffcanvasClassNameConfig = Partial<OffcanvasClassNames>;
+export type OffcanvasContent = RenderableContent<Offcanvas> | ((offcanvas: Offcanvas) => Promise<RenderableContent<Offcanvas>>);
+export interface OffcanvasProps extends Record<string, unknown> {
   content?: OffcanvasContent;
   overlay?: boolean;
   filter?: boolean;
@@ -1781,19 +1708,17 @@ interface OffcanvasActions {
   show(): Promise<void>;
   hide(): Promise<void>;
 }
-type Offcanvas = FunctionalComponent<ResolvedOffcanvasProps, OffcanvasState, HTMLElement, OffcanvasActions>;
-declare function createOffcanvas(input?: OffcanvasProps): Offcanvas;
-//#endregion
-//#region src/components/pagination.d.ts
-interface PaginationPage {
+export type Offcanvas = FunctionalComponent<ResolvedOffcanvasProps, OffcanvasState, HTMLElement, OffcanvasActions>;
+export declare function createOffcanvas(input?: OffcanvasProps): Offcanvas;
+export interface PaginationPage {
   size: number;
   current: number;
 }
-interface PaginationCount {
+export interface PaginationCount {
   sibling: number;
   boundary: number;
 }
-interface PaginationClassNames {
+export interface PaginationClassNames {
   root: string;
   list: string;
   item: string;
@@ -1802,8 +1727,8 @@ interface PaginationClassNames {
   currentBtn: string;
   loading: string;
 }
-type PaginationClassNameConfig = Partial<PaginationClassNames>;
-interface PaginationProps extends Record<string, unknown> {
+export type PaginationClassNameConfig = Partial<PaginationClassNames>;
+export interface PaginationProps extends Record<string, unknown> {
   total?: number;
   page?: Partial<PaginationPage>;
   count?: Partial<PaginationCount>;
@@ -1828,16 +1753,14 @@ interface PaginationState extends Record<string, unknown> {
 interface PaginationActions {
   go(page: number): Pagination;
 }
-type Pagination = FunctionalComponent<ResolvedPaginationProps, PaginationState, HTMLElement, PaginationActions> & {
+export type Pagination = FunctionalComponent<ResolvedPaginationProps, PaginationState, HTMLElement, PaginationActions> & {
   readonly pageCount: number;
 };
-declare function createPagination(input?: PaginationProps): Pagination;
-//#endregion
-//#region src/components/menu.d.ts
-type MenuType = string | undefined;
-type MenuItemId = string | number;
-type MenuItemRenderType = 0 | 1 | 2;
-interface MenuClassNames {
+export declare function createPagination(input?: PaginationProps): Pagination;
+export type MenuType = string | undefined;
+export type MenuItemId = string | number;
+export type MenuItemRenderType = 0 | 1 | 2;
+export interface MenuClassNames {
   root: string;
   list: string;
   item: string;
@@ -1849,8 +1772,8 @@ interface MenuClassNames {
   backIcon: string;
   text: string;
 }
-type MenuClassNameConfig = Partial<MenuClassNames>;
-interface MenuItem extends Record<string, unknown> {
+export type MenuClassNameConfig = Partial<MenuClassNames>;
+export interface MenuItem extends Record<string, unknown> {
   id?: MenuItemId;
   title: string | number;
   type?: MenuItemRenderType;
@@ -1859,7 +1782,7 @@ interface MenuItem extends Record<string, unknown> {
   classes?: string | string[];
   children?: MenuItem[];
 }
-interface MenuProps extends Record<string, unknown> {
+export interface MenuProps extends Record<string, unknown> {
   type?: MenuType;
   id?: string | null;
   user?: MaybeAccessor<number>;
@@ -1880,7 +1803,6 @@ interface MenuState extends Record<string, unknown> {
   data: MenuItem[];
   activeKeys: string[];
 }
-type Menu = FunctionalComponent<ResolvedMenuProps, MenuState, HTMLElement>;
-declare function createMenu(input?: MenuProps): Menu;
-//#endregion
-export { ClassNameToken, CleanupFunction, CollapseMotionController, CollapseTransitionDefinition, ComponentCleanup, ComponentContext, ComponentController, ComponentDefinition, ComponentLifecycleEvent, ComponentListener, ComponentPlugin, ComponentPluginOptions, ComponentProps, ComponentRuntime, ComponentState, CompressOptions, ConfigNormalizeContext, ConfigRule, ConfigRuleInput, ConfigSchema, ContainerExpect, DOMReference, DropInstance, ElementRef, FieldOption, Flow, FlowAction, FlowBusyHook, FlowBusyStrategy, FlowChangeHook, FlowClassNameConfig, FlowClassNames, FlowCleanup, FlowContext, FlowData, FlowDirection, FlowErrorHook, FlowFinishHook, FlowGoToOptions, FlowGuardHook, FlowLifecycleHook, FlowMoveHook, FlowPayload, FlowProps, FlowRenderContext, FlowSlot, FlowSlotName, FlowSnapshot, FlowState, FlowStep, FlowStepResult, FlowSubscriber, FlowTarget, FlowText, Form, FormButtons, FormClassNameConfig, FormClassNames, FormDataRecord, FormDataValue, FormField, FormItem, FormItemNext, FormItemType, FormOption, FormProps, FormText, FormTextConfig, FormValidatorConfig, FunctionalComponent, IEventManager, IconAttributeValue, IconName, IconPathMap, IconProps, ImgCompressInstance, KeyedElementRefs, LazyRenderCallback, LazyRenderOptions, LazyRenderTarget, Menu, MenuClassNameConfig, MenuClassNames, MenuItem, MenuItemId, MenuItemRenderType, MenuProps, MenuType, MergeContext, MergeStrategy, Modal, ModalClassNameConfig, ModalClassNames, ModalProps, ModalText, MotionController, Offcanvas, OffcanvasAnimate, OffcanvasClassNameConfig, OffcanvasClassNames, OffcanvasContent, OffcanvasDirection, OffcanvasProps, OwnedView, OwnedViewOptions, Pagination, PaginationClassNameConfig, PaginationClassNames, PaginationCount, PaginationPage, PaginationProps, ParabolaInstance, ParamRule, ParamRuleInput, ParamShapeSchema, PopupProps, PresenceController, PresenceOptions, PresencePhase, PublicFlowStep, QueryContext, RenderableContent, RequireContainerResult, ResolveContainerResult, ResolvedConfig, StateSyncOptions, SupportES2022, Swiper, SwiperClassNameConfig, SwiperClassNames, SwiperDataItem, SwiperDataLoader, SwiperDataSource, SwiperProps, SwiperSlideContext, TabContent, TabItem, Tabs, TabsClassNameConfig, TabsClassNames, TabsDirection, TabsDisabled, TabsPanelContext, TabsProps, TabsValue, ThemeClassNameConfig, ThemeClassNames, ThemeConfigKey, ThemeInstance, ThemeOptions, ThemePanelGroup, ThemeResolvedOptions, Toast, ToastClassNameConfig, ToastClassNameOptions, ToastClassNames, ToastConfirmProps, ToastOptions, ToastTheme, ToastThemeOptions, TocCurrent, TocIndicator, TocItem, TooltipInstance, TransitionDefinition, TransitionTarget, ValidateCondition, ValidatorClassNameConfig, ValidatorClassNames, ValidatorInstance, addIcons, all, asRenderable, checkModernBrowser, cloneConfigValue, copy, createAccordion, createCollapseTransition, createDrop, createElementRef, createEventManager, createFlow, createForm, createImgCompress, createKeyedElementRefs, createLoading, createMenu, createModal, createMotionGroup, createOffcanvas, createOwnedView, createPagination, createParabola, createPopup, createPresence, createScheduledTask, createStateSync, createSticky, createSwiper, createTabs, createTheme, createToc, createTooltip, createTransition, createValidator, defineComponent, flexPosition, getImgCompressInstance, getRegistedIconPath, getStoreVersion, getType, hashQueryParams, icon, iconHtml, iconMarkup, isDomElementValue, isDomNodeValue, isElement, isHtmlElementValue, isMobile, isModernBrowser, isNilValue, isNode, isPlainObject, isRenderableContent, isRenderablePrimitive, isRenderableValue, joinClasses, lazyRender, listen, mergeConfigValue, mergeDeepConfig, mergeShallowConfig, postJson, q, randomId, removeComponentPlugin, removeSpaces, requireContainer, resetImgCompressInstance, resolveConfig, resolveContainer, resolveElement, resolveNode, resolveNodeList, restUrl, stateSnapshot, timer, trackStoreVersion, useComponentPlugin, uuid, validateParam, waitForMotion };
+export type Menu = FunctionalComponent<ResolvedMenuProps, MenuState, HTMLElement>;
+export declare function createMenu(input?: MenuProps): Menu;
+export { createImgCompress, getImgCompressInstance, resetImgCompressInstance };
