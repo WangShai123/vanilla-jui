@@ -1,10 +1,9 @@
 @layer components {
-  .j-button {
+  .j-btn {
     --btn-font-size: var(--font-size-md);
     --btn-height: var(--el-height-md);
     --btn-fg: inherit;
-    --btn-bg: transparent;
-    --btn-padding: 0 var(--s3);
+    --btn-padding: 0 var(--s3d5);
     --btn-border-color: transparent;
     --btn-radius: var(--radius-md);
     --btn-box-shadow: var(--shadow-xs);
@@ -24,145 +23,125 @@
     outline: none;
     backdrop-filter: blur(4px);
 
+    position: relative;
     display: flex;
     justify-content: center;
     align-items: center;
     flex-wrap: nowrap;
-    position: relative;
     white-space: nowrap;
     appearance: button;
     user-select: none;
     touch-action: manipulation;
+    transition-property: box-shadow, opacity, transform;
+    transition-duration: var(--time-f);
+    transition-timing-function: var(--bezier);
   }
 
-  .j-button .button-content {
-    display: contents;
-    position: relative;
-  }
-
-  .j-button svg {
+  .j-btn svg {
     width: var(--btn-font-size);
     fill: currentColor;
   }
 
-  .j-button a,
-  .j-button a:hover {
+  .j-btn a,
+  .j-btn a:hover {
     color: inherit;
   }
 
-  .j-button.is-xs {
+  .j-btn.is-xs {
     --btn-font-size: var(--font-size-sm);
     --btn-height: var(--el-height-xs);
     --btn-padding: var(--space) var(--s2);
   }
 
-  .j-button.is-sm {
+  .j-btn.is-sm {
     --btn-font-size: var(--font-size-sm);
     --btn-height: var(--el-height-sm);
     --btn-padding: var(--space) var(--s2);
   }
 
-  .j-button.is-lg {
+  .j-btn.is-lg {
     --btn-font-size: var(--font-size-lg);
     --btn-height: var(--el-height-lg);
     --btn-padding: 0 var(--s3);
   }
 
-  .j-button.is-xl {
+  .j-btn.is-xl {
     --btn-font-size: var(--font-size-xl);
     --btn-height: var(--el-height-xl);
-    --btn-padding: 0 var(--s4);
+    --btn-padding: 0 var(--s3d5);
   }
 
-  .j-button.is-default {
+  .j-btn.is-default {
     --btn-fg: var(--ui-fg);
     --btn-bg: var(--ui-bg);
     --btn-border-color: var(--ui-border);
   }
 
-  .j-button.is-reverse {
+  .j-btn.is-reverse {
     --btn-fg: var(--ui-bg);
     --btn-bg: var(--ui-fg);
     --btn-border-color: var(--ui-fg);
   }
 
-  .j-button.is-solid {
+  .j-btn.is-solid {
     --btn-fg: var(--tone-fg);
     --btn-bg: var(--tone-solid);
     --btn-border-color: var(--tone-solid);
   }
 
-  .j-button.is-soft {
+  .j-btn.is-soft {
     --btn-fg: var(--tone-text);
     --btn-bg: var(--tone-soft);
-    --btn-border-color: transparent;
+    --btn-border-color: var(--tone-soft);
   }
 
-  .j-button.is-wash {
+  .j-btn.is-wash {
     --btn-fg: var(--tone-text);
     --btn-bg: var(--tone-wash);
     --btn-border-color: var(--tone-wash);
   }
 
-  .j-button.is-outline {
-    --btn-bg: var(--tone-card);
+  .j-btn.is-outline {
+    --btn-bg: var(--ui-bg);
     --btn-border-color: var(--tone-solid);
     --btn-fg: var(--tone-solid);
   }
 
-  .j-button.is-ghost {
-    --btn-box-shadow: none;
-    transition-property: none;
-  }
-
-  .j-button.is-text {
-    --btn-border-color: transparent;
+  .j-btn.is-ghost {
     --btn-box-shadow: none;
   }
 
-  .j-button.is-icon {
+  .j-btn.is-text {
+    --btn-box-shadow: none;
+    --btn-padding: 0 var(--space);
+  }
+
+  .j-btn.is-icon {
     aspect-ratio: 1/1;
-    --btn-padding: var(--icon-padding, 0);
+    --btn-padding: 0;
   }
 
-  .j-button.is-info {
-    --btn-bg: var(--state-info-soft);
+  .j-btn.is-info {
     --btn-fg: var(--state-info-text);
+    --btn-bg: var(--state-info-soft);
   }
 
-  .j-button.is-success {
-    --btn-bg: var(--state-success-soft);
+  .j-btn.is-success {
     --btn-fg: var(--state-success-text);
+    --btn-bg: var(--state-success-soft);
   }
 
-  .j-button.is-error {
-    --btn-bg: var(--state-error-soft);
+  .j-btn.is-error {
     --btn-fg: var(--state-error-text);
+    --btn-bg: var(--state-error-soft);
   }
 
-  .j-button.is-warning {
-    --btn-bg: var(--state-warning-soft);
+  .j-btn.is-warning {
     --btn-fg: var(--state-warning-text);
+    --btn-bg: var(--state-warning-soft);
   }
 
-  .j-button[class*='ui-surface-'] {
-    --btn-border-color: var(--ui-border);
-    --btn-fg: var(--ui-fg);
-  }
-
-  .j-button.is-surface-sm {
-    --btn-bg: var(--ui-surface-subtle);
-  }
-
-  .j-button.is-surface-md {
-    --btn-bg: var(--ui-surface-muted);
-  }
-
-  .j-button.is-surface-lg {
-    --btn-bg: var(--ui-surface-active);
-  }
-
-  .j-button-group {
+  .j-btns {
     --btn-padding: 0 var(--s2);
     --btn-radius: var(--radius-md);
 
@@ -171,184 +150,157 @@
     border-radius: var(--btn-radius);
 
     display: flex;
+    flex-direction: var(--flex-direction);
   }
 
   /* status */
-  .j-button:disabled {
+  .j-btn:disabled {
     opacity: var(--opacity-disabled);
   }
 
-  .j-button:not(:disabled) {
+  .j-btn:not(:disabled) {
     cursor: pointer;
   }
 
-  .j-button:not(:disabled):hover {
+  .j-btn:not(:disabled):hover {
     opacity: var(--opacity-hover);
   }
 
-  .j-button:not(:disabled):active {
-    opacity: var(--opacity-active);
+  .j-btn:not(:disabled):active {
+    /* opacity: var(--opacity-active); */
+    /* transform: scale(0.95); */
+    transform: translateY(1px);
   }
 
-  .j-button:not(:disabled).is-active {
+  .j-btn:not(:disabled).is-active {
     --btn-border-color: var(--tone-solid);
   }
 
-  .j-button:not(:disabled):focus,
-  .j-button:not(:disabled):focus-within,
-  .j-button:not(:disabled):focus-visible {
+  /* .j-btn:not(:disabled):focus-within, */
+  .j-btn:not(:disabled):focus-visible {
     --btn-border-color: var(--tone-solid);
     --btn-box-shadow: 0 0 0 3px var(--tone-ring);
   }
 
-  .j-button.is-default:not(:disabled):focus,
-  .j-button.is-default:not(:disabled):focus-within,
-  .j-button.is-default:not(:disabled):focus-visible {
-    --btn-border-color: var(--ui-fg-muted);
-    --btn-box-shadow: 0 0 0 3px var(--tone-card-active);
-  }
-
-  .j-button.is-reverse:not(:disabled).is-active,
-  .j-button.is-reverse:not(:disabled):focus,
-  .j-button.is-reverse:not(:disabled):focus-within,
-  .j-button.is-reverse:not(:disabled):focus-visible {
+  .j-btn.is-reverse:not(:disabled).is-active,
+  /* .j-btn.is-reverse:not(:disabled):focus-within, */
+  .j-btn.is-reverse:not(:disabled):focus-visible {
     --btn-border-color: transparent;
     --btn-box-shadow: 0 0 0 3px var(--tone-card-active);
   }
 
-  .j-button.is-solid:not(:disabled).is-active,
-  .j-button.is-solid:not(:disabled):focus,
-  .j-button.is-solid:not(:disabled):focus-within,
-  .j-button.is-solid:not(:disabled):focus-visible {
+  /* .j-btn.is-ghost:not(:disabled):focus-within {
     --btn-border-color: transparent;
+    --btn-box-shadow: none;
+  } */
+
+  .j-btn.is-info:not(:disabled).is-active {
+    --btn-border-color: var(--state-info-muted);
   }
 
-  .j-button.is-info:not(:disabled).is-active,
-  .j-button.is-info:not(:disabled):focus,
-  .j-button.is-info:not(:disabled):focus-within,
-  .j-button.is-info:not(:disabled):focus-visible {
+  /* .j-btn.is-info:not(:disabled):focus-within, */
+  .j-btn.is-info:not(:disabled):focus-visible {
     --btn-border-color: var(--state-info);
     --btn-box-shadow: 0 0 0 3px var(--state-info-ring);
   }
 
-  .j-button.is-success:not(:disabled).is-active,
-  .j-button.is-success:not(:disabled):focus,
-  .j-button.is-success:not(:disabled):focus-within,
-  .j-button.is-success:not(:disabled):focus-visible {
+  .j-btn.is-success:not(:disabled).is-active {
+    --btn-border-color: var(--state-success-muted);
+  }
+
+  /* .j-btn.is-success:not(:disabled):focus-within, */
+  .j-btn.is-success:not(:disabled):focus-visible {
     --btn-border-color: var(--state-success);
     --btn-box-shadow: 0 0 0 3px var(--state-success-ring);
   }
 
-  .j-button.is-warning:not(:disabled).is-active,
-  .j-button.is-warning:not(:disabled):focus,
-  .j-button.is-warning:not(:disabled):focus-within,
-  .j-button.is-warning:not(:disabled):focus-visible {
+  .j-btn.is-warning:not(:disabled).is-active {
+    --btn-border-color: var(--state-warning-muted);
+  }
+
+  /* .j-btn.is-warning:not(:disabled):focus-within, */
+  .j-btn.is-warning:not(:disabled):focus-visible {
     --btn-border-color: var(--state-warning);
     --btn-box-shadow: 0 0 0 3px var(--state-warning-ring);
   }
 
-  .j-button.is-error:not(:disabled).is-active,
-  .j-button.is-error:not(:disabled):focus,
-  .j-button.is-error:not(:disabled):focus-within,
-  .j-button.is-error:not(:disabled):focus-visible {
+  .j-btn.is-error:not(:disabled).is-active {
+    --btn-border-color: var(--state-error-muted);
+  }
+
+  /* .j-btn.is-error:not(:disabled):focus-within, */
+  .j-btn.is-error:not(:disabled):focus-visible {
     --btn-border-color: var(--state-error);
-    --btn-box-shadow: 0 0 0 3px var(--state-error-muted);
+    --btn-box-shadow: 0 0 0 3px var(--state-error-ring);
   }
 
-  .j-button.is-default:hover:not(:disabled) {
-    --btn-bg: var(--ui-surface-hover);
+  .j-btn.is-default:hover:not(:disabled),
+  .j-btn.is-outline:hover:not(:disabled),
+  .j-btn.is-ghost:hover:not(:disabled) {
+    --btn-bg: var(--ui-bg-subtle);
   }
 
-  .j-button.is-outline:hover:not(:disabled),
-  .j-button.is-ghost:hover:not(:disabled) {
-    --btn-bg: var(--tone-subtle);
-  }
-
-  .j-button.is-text:not(:disabled).is-active,
-  .j-button.is-text:not(:disabled):active,
-  .j-button.is-text:not(:disabled):focus,
-  .j-button.is-text:not(:disabled):focus-within,
-  .j-button.is-text:not(:disabled):focus-visible {
+  .j-btn.is-text:not(:disabled).is-active,
+  .j-btn.is-text:not(:disabled):active,
+  /* .j-btn.is-text:not(:disabled):focus-within, */
+  .j-btn.is-text:not(:disabled):focus-visible {
+    /* --btn-border-color: transparent; */
     --btn-fg: var(--tone-solid);
-    text-decoration: underline;
-    text-underline-offset: var(--space);
+    /* --btn-box-shadow: none; */
+    /* text-decoration: underline; */
+    /* text-underline-offset: var(--s1d5); */
   }
 
-  .j-button.is-success:not(:disabled):active,
-  .j-button.is-success:not(:disabled):focus-visible {
-    --btn-ring: var(--state-success);
-  }
-
-  .j-button.is-warning:not(:disabled):active,
-  .j-button.is-warning:not(:disabled):focus-visible {
-    --btn-ring: var(--state-warning);
-  }
-
-  .j-button.is-error:not(:disabled):active,
-  .j-button.is-error:not(:disabled):focus-visible {
-    --btn-ring: var(--state-error);
-  }
-
-  .j-button-group .j-button {
+  .j-btns .j-btn {
     --btn-box-shadow: none;
   }
 
-  .j-button-group .j-button:active,
-  .j-button-group .j-button:focus,
-  .j-button-group .j-button:focus-visible,
-  .j-button-group .j-button:focus-within {
-    /* opacity: var(--opacity-active); */
+  .j-btns .j-btn:active,
+  .j-btns .j-btn:focus-within,
+  .j-btns .j-btn:focus-visible {
     z-index: 1;
   }
 
-  .j-button-group .j-button:not(:first-child) {
+  .j-btns .j-btn:not(:first-child) {
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;
   }
 
-  .j-button-group .j-button:not(:last-child) {
+  .j-btns .j-btn:not(:last-child) {
     border-top-right-radius: 0;
     border-bottom-right-radius: 0;
   }
 
-  .j-button-group .j-button:not(:first-child):not(:last-child) {
+  .j-btns .j-btn:not(:first-child):not(:last-child) {
     border-top-width: 1px;
     border-bottom-width: 1px;
     border-left-width: 0;
     border-right-width: 0;
   }
 
-  .j-button-group.is-vertical {
-    flex-direction: column;
-  }
-
-  .j-button-group.is-vertical .j-button:not(:last-child) {
+  .j-btns.is-vertical .j-btn:not(:last-child) {
     border-bottom-left-radius: 0;
     border-bottom-right-radius: 0;
   }
 
-  .j-button-group.is-vertical .j-button:not(:first-child) {
+  .j-btns.is-vertical .j-btn:not(:first-child) {
     margin-left: 0;
     border-top-left-radius: 0;
     border-top-right-radius: 0;
   }
 
-  .j-button-group.is-vertical .j-button:not(:last-child):not(:first-child) {
+  .j-btns.is-vertical .j-btn:not(:last-child):not(:first-child) {
     border-left-width: 1px;
     border-right-width: 1px;
     border-top-width: 0;
     border-bottom-width: 0;
   }
 
-  .j-button-group.is-vertical .j-button:first-child {
+  .j-btns.is-vertical .j-btn:first-child {
     border-top-right-radius: var(--btn-radius);
   }
 
-  .j-button-group.is-vertical .j-button:last-child {
+  .j-btns.is-vertical .j-btn:last-child {
     border-bottom-left-radius: var(--btn-radius);
-  }
-
-  .j-button-group.is-vertical .j-button:focus-within {
-    z-index: auto;
   }
 }

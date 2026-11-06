@@ -327,7 +327,7 @@ const DEFAULT_CLASS_NAMES: FlowClassNames = {
   stepTitle: 'flow-step-title',
   body: 'flow-body',
   footer: 'flow-footer',
-  button: 'j-button',
+  button: 'j-btn',
   reset: 'is-ghost flow-reset',
   back: 'is-ghost flow-back',
   next: 'is-solid flow-next',

@@ -73,17 +73,17 @@ type ThemeStoredConfig = Partial<Record<ThemeConfigKey, string>> & {
 };
 
 const DEFAULT_CLASS_NAMES: ThemeClassNames = {
-  panel: 'j-theme-palette',
-  title: 'theme-palette-title',
-  container: 'palette-container',
-  item: 'palette-item',
+  panel: 'j-themes',
+  title: 'theme-title',
+  container: 'theme-container',
+  item: 'theme-item',
   itemTitle: 'item-title',
   items: 'items',
-  button: 'j-button is-default',
+  button: 'j-btn is-default',
   active: 'is-active',
   prefix: 'el-prefix',
   swatch: 'item-hex',
-  buttonText: 'button-text',
+  buttonText: 'el-text',
 };
 
 const DEFAULT_OPTIONS: ThemeResolvedOptions = {
@@ -281,14 +281,11 @@ export function createTheme(options: ThemeOptions = {}): ThemeInstance {
     const groups = panelConfig || defaultPanelConfig(translate);
     const panel = jsx('div', {
       className: containerClass || className.panel,
-      'data-theme-palette': 'root',
+      'data-themes': 'root',
       children: [
         jsx('h3', {
           className: className.title,
           'data-theme-title': '',
-          style: {
-            margin: '0 0 1rem',
-          },
           children: translate('t'),
         }),
         jsx('div', {

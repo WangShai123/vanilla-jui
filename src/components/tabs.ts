@@ -13,6 +13,7 @@ import {
   type FunctionalComponent,
   defineComponent,
 } from '../core/component.ts';
+import { createTransition, type TransitionDefinition } from '../core/motion.ts';
 import { createLoading } from '../primitives/loading.ts';
 import {
   asRenderable,
@@ -35,6 +36,7 @@ export interface TabsClassNames {
   wrap: string;
   list: string;
   tab: string;
+  indicator: string;
   panelWrap: string;
   panel: string;
   dragging: string;
@@ -132,6 +134,7 @@ const DEFAULT_CLASS_NAMES: TabsClassNames = {
   wrap: 'tab-wrap',
   list: 'tab-list',
   tab: 'tab-item',
+  indicator: 'tab-indicator',
   panelWrap: 'panel-list',
   panel: 'panel-item',
   dragging: 'dragging',
@@ -240,6 +243,7 @@ export function createTabs(input: TabsProps = {}): Tabs {
   const events = createEventManager();
   const wrapRef = createElementRef<HTMLElement>();
   const listRef = createElementRef<HTMLElement>();
+  const indicatorRef = createElementRef<HTMLElement>();
   const tabs = createKeyedElementRefs<string, HTMLElement>();
   const panels = createKeyedElementRefs<string, HTMLElement>();
   const cache = new Map<string, TabsPanelCacheEntry>();
@@ -250,6 +254,21 @@ export function createTabs(input: TabsProps = {}): Tabs {
   let inertiaFrame = 0;
   let resizeFrame = 0;
   let velocity = 0;
+  let indicatorName: string | null = null;
+  let resizeObserver: ResizeObserver | null = null;
+  const observed = new Set<Element>();
+  const indicatorTransition: TransitionDefinition = {
+    keyframes: [],
+    options: {
+      duration: 240,
+      easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+      fill: 'none',
+    },
+  };
+  const indicatorMotion = createTransition(
+    () => indicatorRef.current,
+    indicatorTransition
+  );
 
   const getIndex = (value: TabsValue): number =>
     typeof value === 'number'
@@ -299,7 +318,72 @@ export function createTabs(input: TabsProps = {}): Tabs {
       });
     }
   };
-  const refreshTask = createScheduledTask(refreshDrag);
+  const refreshIndicator = (): void => {
+    const indicator = indicatorRef.current;
+    const list = listRef.current;
+    const name = current().name;
+    const tab = name ? tabs.get(name) : null;
+    if (!indicator || !list) return;
+    if (!tab || !list.isConnected) {
+      indicatorMotion.cancel();
+      indicator.style.display = 'none';
+      indicatorName = null;
+      return;
+    }
+    const target = tab.getBoundingClientRect();
+    const origin = list.getBoundingClientRect();
+    if (!target.width || !target.height) return;
+    // Read the visible position before cancelling an interrupted animation.
+    const previous = indicator.getBoundingClientRect();
+    const animate =
+      indicatorName !== null &&
+      indicatorName !== name &&
+      previous.width > 0 &&
+      previous.height > 0;
+    const x = target.left - origin.left + list.scrollLeft - list.clientLeft;
+    const y = target.top - origin.top + list.scrollTop - list.clientTop;
+    const transform = `translate3d(${x}px, ${y}px, 0)`;
+    indicatorMotion.cancel();
+    Object.assign(indicator.style, {
+      display: 'block',
+      width: `${target.width}px`,
+      height: `${target.height}px`,
+      transform,
+    });
+    indicatorName = name;
+    if (animate) {
+      indicatorTransition.keyframes = [
+        {
+          transform: `translate3d(${previous.left - origin.left + list.scrollLeft - list.clientLeft}px, ${previous.top - origin.top + list.scrollTop - list.clientTop}px, 0) scale(${previous.width / target.width}, ${previous.height / target.height})`,
+        },
+        { transform },
+      ];
+      void indicatorMotion.enter();
+    }
+  };
+  const refreshTask = createScheduledTask(() => {
+    refreshDrag();
+    refreshIndicator();
+    if (!resizeObserver) return;
+    const targets = new Set<Element>([
+      ...(listRef.current ? [listRef.current] : []),
+      ...(wrapRef.current ? [wrapRef.current] : []),
+      ...state.data.flatMap((item) => {
+        const tab = tabs.get(item.name as string);
+        return tab ? [tab] : [];
+      }),
+    ]);
+    for (const target of observed) {
+      if (!targets.has(target)) {
+        resizeObserver.unobserve(target);
+        observed.delete(target);
+      }
+    }
+    for (const target of targets) {
+      if (!observed.has(target)) resizeObserver.observe(target);
+      observed.add(target);
+    }
+  });
 
   const startInertia = (): void => {
     const wrap = wrapRef.current;
@@ -526,6 +610,9 @@ export function createTabs(input: TabsProps = {}): Tabs {
       };
       return typeof value === 'function' ? value(context) : value;
     };
+    const text = jsx('span', {
+      children: () => asRenderable(title()),
+    });
     return jsx('div', {
       className: props.className.tab,
       'data-tabs-tab': name,
@@ -533,7 +620,7 @@ export function createTabs(input: TabsProps = {}): Tabs {
       'aria-selected': () => (isActive(name) ? 'true' : 'false'),
       'aria-disabled': () => (isDisabled(name) ? 'true' : 'false'),
       ref: tabs.bind(name),
-      children: () => asRenderable(title()),
+      children: text,
     }) as HTMLElement;
   };
 
@@ -578,10 +665,31 @@ export function createTabs(input: TabsProps = {}): Tabs {
       }
     },
     view: () => {
+      const indicator = jsx('div', {
+        className: props.className.indicator,
+        'data-tabs-indicator': '',
+        'aria-hidden': 'true',
+        ref: indicatorRef.set,
+        style: {
+          position: 'absolute',
+          top: '0',
+          left: '0',
+          pointerEvents: 'none',
+          transformOrigin: '0 0',
+          display: 'none',
+        },
+      });
+      const tabList = For({
+        each: renderableData,
+        key: (item: TabItem) => item.name,
+        children: (item: () => TabItem, index: () => number) =>
+          tabView(item, index),
+      });
       createEffect(() => {
-        const dataLength = state.data.length;
+        const names = state.data.map((item) => item.name);
+        const active = state.active;
         refreshTask.schedule();
-        return dataLength;
+        return { names, active };
       });
       return jsx('div', {
         className: props.className.root,
@@ -601,12 +709,8 @@ export function createTabs(input: TabsProps = {}): Tabs {
                 ),
               'data-tabs-list': '',
               ref: listRef.set,
-              children: For({
-                each: renderableData,
-                key: (item: TabItem) => item.name,
-                children: (item: () => TabItem, index: () => number) =>
-                  tabView(item, index),
-              }),
+              style: { position: 'relative' },
+              children: () => [indicator, tabList],
             }),
           }),
           jsx('div', {
@@ -633,8 +737,16 @@ export function createTabs(input: TabsProps = {}): Tabs {
       });
       events.on('resize', window, 'resize', () => {
         cancelAnimationFrame(resizeFrame);
-        resizeFrame = requestAnimationFrame(refreshDrag);
+        resizeFrame = requestAnimationFrame(() => refreshTask.schedule());
       });
+      if (typeof ResizeObserver !== 'undefined') {
+        resizeObserver = new ResizeObserver(() => refreshTask.schedule());
+        context.own(() => {
+          resizeObserver?.disconnect();
+          resizeObserver = null;
+          observed.clear();
+        });
+      }
       bindDrag();
       context.own(() => events.clear());
       refreshTask.schedule();
@@ -643,8 +755,13 @@ export function createTabs(input: TabsProps = {}): Tabs {
     onMount() {
       refreshTask.schedule();
     },
+    onUnmount() {
+      indicatorMotion.cancel();
+      indicatorName = null;
+    },
     onDestroy() {
       loadId += 1;
+      indicatorMotion.cancel();
       refreshTask.dispose();
       cancelAnimationFrame(inertiaFrame);
       cancelAnimationFrame(resizeFrame);

@@ -1,7 +1,8 @@
 @layer components {
   .j-tip {
-    --tip-border-color: var(--ui-border);
-    --tip-bg: var(--ui-bg);
+    --tip-border-color: var(--ui-border-subtle);
+    --tip-icon-shadow: var(--ui-bg-soft);
+    --tip-icon-bg: var(--ui-bg-soft);
 
     row-gap: var(--s2);
     width: 100%;
@@ -20,7 +21,7 @@
   }
 
   .j-tip:has(.tip-icon) {
-    column-gap: var(--s3);
+    column-gap: var(--s4);
     grid-template-columns: var(--s4) 1fr;
   }
 
@@ -29,8 +30,10 @@
   }
 
   .j-tip .tip-icon {
-    transform: translateY(calc(var(--space, 0.25rem) * 0.5));
-    margin: 0;
+    transform: translateY(2px);
+    border-radius: 99px;
+    box-shadow: 0 0 0 3px var(--tip-icon-shadow);
+    background-color: var(--tip-icon-bg);
   }
 
   .j-tip .tip-icon,
@@ -75,25 +78,33 @@
 
   .j-tip.is-info {
     --tip-border-color: var(--state-info-border);
-    --tip-bg: var(--state-info-soft);
+    --tip-bg: var(--state-info-subtle);
     --tip-fg: var(--state-info-text);
+    --tip-icon-shadow: var(--state-info-soft);
+    --tip-icon-bg: var(--state-info-soft);
   }
 
   .j-tip.is-success {
     --tip-border-color: var(--state-success-border);
-    --tip-bg: var(--state-success-soft);
+    --tip-bg: var(--state-success-subtle);
     --tip-fg: var(--state-success-text);
+    --tip-icon-shadow: var(--state-success-soft);
+    --tip-icon-bg: var(--state-success-soft);
   }
 
   .j-tip.is-warning {
     --tip-border-color: var(--state-warning-border);
-    --tip-bg: var(--state-warning-soft);
+    --tip-bg: var(--state-warning-subtle);
     --tip-fg: var(--state-warning-text);
+    --tip-icon-shadow: var(--state-warning-soft);
+    --tip-icon-bg: var(--state-warning-soft);
   }
 
   .j-tip.is-error {
     --tip-border-color: var(--state-error-border);
-    --tip-bg: var(--state-error-soft);
+    --tip-bg: var(--state-error-subtle);
     --tip-fg: var(--state-error-text);
+    --tip-icon-shadow: var(--state-error-soft);
+    --tip-icon-bg: var(--state-error-soft);
   }
 }

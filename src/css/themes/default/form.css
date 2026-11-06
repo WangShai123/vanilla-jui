@@ -120,17 +120,16 @@
     background-clip: padding-box;
     overflow: hidden;
     cursor: pointer;
-    background-color: var(--ui-surface-subtle);
+    background-color: var(--ui-bg-subtle);
   }
 
   .j-input[type='file']::file-selector-button {
     color: var(--ui-fg-muted);
     appearance: none;
     border-width: 0;
-    /* border-inline-end-width: 1px; */
     border-right-width: 1px;
     border-radius: 0;
-    border-color: var(--ui-border);
+    border-color: hsla(210, 12%, 96%, 30%);
     background-color: transparent;
     margin: calc(var(--s2) * -1);
     font-size: var(--input-font-size);
@@ -138,13 +137,11 @@
 
   .j-input[type='file']::file-selector-button,
   .j-font-sm .j-input[type='file']::file-selector-button {
-    /* margin-inline-end: var(--s2); */
     margin-right: var(--s2);
     padding: var(--s2);
   }
 
   .j-font-md .j-input[type='file']::file-selector-button {
-    /* margin-inline-end: calc(var(--space) * 2.75); */
     margin-right: calc(var(--space) * 2.75);
     padding: calc(var(--space) * 2.75);
   }
@@ -152,24 +149,16 @@
   /* type radio */
   .j-radio {
     display: flex;
+    flex-direction: var(--flex-direction);
     flex-wrap: wrap;
-  }
-
-  .j-radio.is-vertical {
-    flex-direction: column;
-  }
-
-  .j-radio,
-  .j-radio.is-horizontal {
-    flex-direction: row;
   }
 
   .j-radio label {
     display: flex;
     align-items: center;
-    gap: calc(var(--space)*1.5);
+    gap: var(--s1d5);
     font-size: var(--font-size-md);
-    padding: calc(var(--space)*2);
+    padding: var(--s2);
     border-radius: var(--radius-md);
   }
 
@@ -209,7 +198,7 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%) scale(0);
-    transition: transform 0.1s cubic-bezier(0.165, 0.84, 0.44, 1);
+    transition: transform 0.1s var(--bezier);
   }
 
   .j-radio label input[type='radio']:checked::before {
@@ -304,17 +293,9 @@
   /* type checkbox */
   .j-checkbox {
     display: flex;
+    flex-direction: var(--flex-direction);
     flex-wrap: wrap;
     margin: 0;
-  }
-
-  .j-checkbox.is-vertical {
-    flex-direction: column;
-  }
-
-  .j-checkbox,
-  .j-checkbox.is-horizontal {
-    flex-direction: row;
   }
 
   .j-checkbox label {
@@ -342,7 +323,7 @@
     height: 1rem;
     aspect-ratio: 1/1;
     border: 1px solid var(--ui-border);
-    border-radius: var(--radius-md);
+    border-radius: var(--checkbox-radius, var(--radius-md));
     cursor: pointer;
     position: relative;
     margin: 0;
@@ -350,17 +331,9 @@
 
   .j-checkbox input[type='checkbox']:checked {
     border-color: transparent;
-    border-radius: var(--radius-md);
     background-color: var(--tone-solid);
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' width='16' height='16'%3e%3cpath fill='none' stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M4 8.5l2.5 2.5l5.5 -5.5'/%3e%3c/svg%3e");
-    background-repeat: no-repeat;
+    background-image: var(--svg-check);
     background-position: center;
-    background-size: contain;
-    print-color-adjust: exact;
-  }
-
-  .dark .j-checkbox input[type='checkbox']:checked {
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' width='16' height='16'%3e%3cpath fill='none' stroke='%23000000' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M4 8.5l2.5 2.5l5.5 -5.5'/%3e%3c/svg%3e");
   }
 
   /* switch checkbox */
@@ -523,7 +496,7 @@
     min-width: 0;
   }
 
-  .input-group .j-button {
+  .input-group .j-btn {
     --btn-border-color: var(--ui-border);
     --btn-fg: var(--ui-fg-muted);
     --btn-bg: var(--ui-bg-muted);
@@ -592,7 +565,7 @@
     letter-spacing: 0.4px;
   }
 
-  .input-inner-group .j-button {
+  .input-inner-group .j-btn {
     --btn-box-shadow: none;
   }
 
@@ -615,16 +588,16 @@
     justify-content: center;
   }
 
-  .input-inner-group .el-addon .j-button:not(.is-icon) {
+  .input-inner-group .el-addon .j-btn:not(.is-icon) {
     --btn-height: var(--el-height-sm);
   }
 
-  .input-inner-group .el-addon .j-button.is-xs:not(.is-icon),
-  .input-inner-group .el-addon .j-button.is-sm:not(.is-icon) {
+  .input-inner-group .el-addon .j-btn.is-xs:not(.is-icon),
+  .input-inner-group .el-addon .j-btn.is-sm:not(.is-icon) {
     height: inherit;
   }
 
-  .input-group .j-button:active,
+  .input-group .j-btn:active,
   .input-inner-group:has(input:focus),
   .input-inner-group:has(select:focus) {
     border-color: var(--tone-solid);
@@ -687,7 +660,7 @@
   }
 
   /* status active */
-  .input-group .j-button:not(:disabled):active,
+  .input-group .j-btn:not(:disabled):active,
   .inner-group .j-input:focus,
   .input-group .j-input:focus-within,
   .inner-group .j-input:focus-visible,
@@ -702,12 +675,13 @@
   .j-textarea:focus,
   .j-textarea:focus-within,
   .j-textarea:focus-visible,
+  .j-checkbox input[type='checkbox']:focus-visible,
   select.j-select:focus,
   select.j-select:focus-within,
   select.j-select:focus-visible,
   .j-input[data-valid='false']:focus-within,
   .j-select[data-valid='false']:focus-within,
-  .input-group .j-button:not(:disabled):active {
+  .input-group .j-btn:not(:disabled):active {
     outline: 0;
     border-color: var(--tone-solid);
     box-shadow: 0 0 0 3px var(--tone-ring);
@@ -715,11 +689,6 @@
 
   .j-radio label input[type='radio']:focus-within {
     border-color: transparent;
-    outline-offset: 1px;
-  }
-
-  .j-checkbox input[type='checkbox']:focus-within {
-    border-color: var(--tone-solid);
     outline-offset: 1px;
   }
 

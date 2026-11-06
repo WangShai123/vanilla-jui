@@ -9,6 +9,7 @@
  * - hidden
  */
 @layer status {
+
   /* sad mode */
   .is-sad {
     filter: grayscale(100%);
@@ -55,5 +56,19 @@
 
   [hidden] {
     display: none;
+  }
+
+  /* flex direction */
+  .is-horizontal {
+    --flex-direction: row;
+  }
+
+  .is-vertical {
+    --flex-direction: column;
+  }
+
+  /* element */
+  .el-text {
+    position: relative;
   }
 }

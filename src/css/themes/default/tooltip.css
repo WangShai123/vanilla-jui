@@ -2,7 +2,7 @@
   .j-tooltip {
     --tooltip-fg: var(--ui-bg);
     --tooltip-bg: var(--ui-fg);
-    --tooltip-border-color: var(--ui-border-strong);
+    --tooltip-border-color: var(--ui-border);
 
     background: var(--tooltip-bg);
     color: var(--tooltip-fg);
@@ -52,7 +52,6 @@
     line-height: var(--line-height);
 
     word-wrap: break-word;
-    position: relative;
   }
 
   .drop-container:has(.j-tooltip) {

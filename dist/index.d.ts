@@ -696,6 +696,7 @@ export interface ToastClassNames {
   toast: string;
   icon: string;
   message: string;
+  description: string;
   lite: string;
   confirm: string;
   buttons: string;
@@ -715,6 +716,7 @@ export interface ToastThemeOptions extends ToastClassNameOptions {
   theme?: ToastTheme;
 }
 export interface ToastOptions extends ToastThemeOptions {
+  description?: string;
   duration?: number;
   once?: boolean;
   loading?: MaybeAccessor<boolean>;
@@ -726,6 +728,7 @@ export interface ToastOptions extends ToastThemeOptions {
 }
 export interface ToastConfirmProps extends ToastClassNameOptions {
   once?: boolean;
+  description?: string;
   text?: {
     close?: string;
     confirm?: string;
@@ -1597,6 +1600,7 @@ export interface TabsClassNames {
   wrap: string;
   list: string;
   tab: string;
+  indicator: string;
   panelWrap: string;
   panel: string;
   dragging: string;

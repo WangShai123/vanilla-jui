@@ -198,7 +198,7 @@ const DEFAULT_CLASS_NAMES: FormClassNames = {
   control: 'field-control',
   helpInvalid: 'is-invalid',
   buttons: 'form-buttons',
-  button: 'j-button',
+  button: 'j-btn',
   submitBtn: 'is-solid',
   resetBtn: 'is-ghost',
   input: 'j-input',

@@ -1,7 +1,7 @@
 @layer components {
   .j-toast-container {
-    top: var(--s2);
-    right: var(--s2);
+    top: var(--s4);
+    right: var(--s4);
     gap: var(--s2);
 
     position: fixed;
@@ -14,73 +14,92 @@
     pointer-events: none;
   }
 
+  body:has(#wpadminbar) .j-toast-container {
+    top: var(--s8);
+  }
+
   .j-toast {
     --toast-fg: var(--ui-fg);
     --toast-bg: var(--ui-bg);
-    --toast-border-color: var(--ui-border-subtle);
 
-    gap: var(--s2);
     padding: var(--s3) var(--s4);
     box-shadow: var(--shadow-md);
-    font-size: var(--font-size-md);
-    font-weight: var(--font-medium);
-    color: var(--toast-fg);
     background: var(--toast-bg);
-    border: 1px solid var(--toast-border-color);
+    border: 1px solid var(--ui-border-soft);
     border-radius: var(--radius-md);
-    min-width: 200px;
+    min-width: 240px;
     max-width: 310px;
     backdrop-filter: blur(4px);
 
-    display: flex;
-    align-items: center;
+    position: relative;
+    display: grid;
+    grid-template-columns: 0 1fr;
+    align-items: flex-start;
+    row-gap: var(--space);
+
     word-break: break-all;
     cursor: pointer;
     pointer-events: auto;
   }
 
-  .j-toast .el-icon {
-    width: var(--font-size-lg);
-
-    position: relative;
-    color: inherit;
+  .j-toast:has(.el-icon) {
+    column-gap: var(--s3);
+    grid-template-columns: var(--s4) 1fr;
   }
 
-  .j-toast .el-text {
-    flex: 1;
+  .j-toast .el-icon {
+    width: var(--font-size-lg);
+    border-radius: 99px;
+    box-shadow: 0 0 0 3px var(--toast-icon-shadow);
+    background-color: var(--toast-icon-bg);
+    color: var(--toast-icon-fg);
+
+    margin-top: 2px;
+    position: relative;
+  }
+
+  .j-toast .toast-title {
+    color: var(--toast-fg);
+    font-size: var(--font-size-md);
+    font-weight: var(--font-medium);
+
     word-break: normal;
+    grid-column-start: 2;
+    margin: 0;
+  }
+
+  .j-toast .toast-description {
+    grid-column-start: 2;
+    color: var(--tone-caption);
+    font-size: var(--font-size-sm);
   }
 
   .j-toast.is-info {
-    /* --toast-fg: var(--state-info-text); */
-    /* --toast-bg: var(--state-info-soft); */
-    /* --toast-border-color: var(--state-info-ring); */
-
-    --toast-fg: var(--state-info);
+    --toast-fg: var(--state-info-text);
+    --toast-icon-shadow: var(--state-info-soft);
+    --toast-icon-fg: var(--state-info-text);
+    --toast-icon-bg: var(--state-info-soft);
   }
 
   .j-toast.is-success {
-    /* --toast-fg: var(--state-success-text); */
-    /* --toast-bg: var(--state-success-soft); */
-    /* --toast-border-color: var(--state-success-ring); */
-
-    --toast-fg: var(--state-success);
+    --toast-fg: var(--state-success-text);
+    --toast-icon-shadow: var(--state-success-soft);
+    --toast-icon-fg: var(--state-success-text);
+    --toast-icon-bg: var(--state-success-soft);
   }
 
   .j-toast.is-warning {
-    /* --toast-fg: var(--state-warning-text); */
-    /* --toast-bg: var(--state-warning-soft); */
-    /* --toast-border-color: var(--state-warning-ring); */
-
-    --toast-fg: var(--state-warning);
+    --toast-fg: var(--state-warning-text);
+    --toast-icon-shadow: var(--state-warning-soft);
+    --toast-icon-fg: var(--state-warning-text);
+    --toast-icon-bg: var(--state-warning-soft);
   }
 
   .j-toast.is-error {
-    /* --toast-fg: var(--state-error-text); */
-    /* --toast-bg: var(--state-error-soft); */
-    /* --toast-border-color: var(--state-error-ring); */
-
-    --toast-fg: var(--state-error);
+    --toast-fg: var(--state-error-text);
+    --toast-icon-shadow: var(--state-error-soft);
+    --toast-icon-fg: var(--state-error-text);
+    --toast-icon-bg: var(--state-error-soft);
   }
 
   .j-toast-lite {
@@ -89,25 +108,26 @@
     background: var(--ui-fg);
     border-radius: var(--radius-md);
     padding: var(--s2) var(--s3);
-    max-width: calc(var(--screen-sm) / 2);
+    max-width: 288px;
+    z-index: var(--z-toast);
 
     position: fixed;
-    top: 45%;
+    top: 40%;
     left: 50%;
-    z-index: var(--z-toast);
+    transform: translate(-50%, -50%);
     width: fit-content;
     text-align: center;
+
     user-select: none;
     pointer-events: none;
-    transform: translate(-50%, -50%);
   }
 
   .j-toast.is-confirm {
-    /* --toast-bg: color-mix(in srgb, var(--ui-bg) 50%, transparent); */
-
-    gap: var(--s4);
+    gap: var(--s2);
     min-width: 280px;
+    padding: 1rem;
 
+    display: flex;
     flex-direction: column;
     align-items: flex-start;
     cursor: default;

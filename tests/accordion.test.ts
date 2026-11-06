@@ -99,7 +99,8 @@ describe('Accordion', () => {
     expect(app().children).toHaveLength(0);
     expect(accordion.element?.classList.contains('j-accordion')).toBe(true);
     expect(accordion.element?.getAttribute('data-accordion')).toBe('root');
-    expect(accordion.element?.dataset.direction).toBe('vertical');
+    expect(accordion.element?.hasAttribute('data-direction')).toBe(false);
+    expect(accordion.element?.classList.contains('is-horizontal')).toBe(false);
     expect(
       accordion.element?.querySelectorAll('[data-accordion-header]')
     ).toHaveLength(2);
@@ -121,11 +122,13 @@ describe('Accordion', () => {
       createAccordion({
         active: 'basic',
         direction: 'horizontal',
+        className: { root: 'qa-accordion' },
         data: data(),
       })
     );
 
-    expect(accordion.element?.dataset.direction).toBe('horizontal');
+    expect(accordion.element?.hasAttribute('data-direction')).toBe(false);
+    expect(accordion.element?.className).toBe('qa-accordion is-horizontal');
     expect(panels(accordion)[0]?.style.width).toBe('');
     expect(panels(accordion)[0]?.style.height).toBe('');
     expect(panels(accordion)[1]?.style.width).toBe('0px');

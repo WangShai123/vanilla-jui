@@ -132,7 +132,7 @@ export function checkModernBrowser(): SupportES2022 {
         window.open('https://www.google.cn/chrome/fallback/', '_blank');
       },
       className: {
-        confirmBtn: 'j-button is-sm is-danger',
+        confirmBtn: 'j-btn is-sm is-danger',
       },
     });
     return false;

@@ -1,5 +1,6 @@
 import {
   type MaybeAccessor,
+  Show,
   access,
   createEffect,
   createRoot,
@@ -23,6 +24,7 @@ export interface ToastClassNames {
   toast: string;
   icon: string;
   message: string;
+  description: string;
   lite: string;
   confirm: string;
   buttons: string;
@@ -46,6 +48,7 @@ export interface ToastThemeOptions extends ToastClassNameOptions {
 }
 
 export interface ToastOptions extends ToastThemeOptions {
+  description?: string;
   duration?: number;
   once?: boolean;
   loading?: MaybeAccessor<boolean>;
@@ -58,6 +61,7 @@ export interface ToastOptions extends ToastThemeOptions {
 
 export interface ToastConfirmProps extends ToastClassNameOptions {
   once?: boolean;
+  description?: string;
   text?: {
     close?: string;
     confirm?: string;
@@ -70,11 +74,12 @@ const DEFAULT_CLASS_NAMES: ToastClassNames = {
   container: 'j-toast-container',
   toast: 'j-toast',
   icon: 'el-icon',
-  message: 'el-text',
+  message: 'toast-title',
+  description: 'toast-description',
   lite: 'j-toast-lite',
   confirm: 'j-toast is-confirm',
   buttons: 'toast-buttons',
-  button: 'j-button is-sm',
+  button: 'j-btn is-sm',
   closeBtn: 'is-ghost',
   confirmBtn: 'is-reverse',
   info: 'is-info',
@@ -140,8 +145,8 @@ function toastIconStyle(options: ToastOptions): Record<string, string> {
         display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
-        width: 'var(--toast-icon-size, 1em)',
-        height: 'var(--toast-icon-size, 1em)',
+        width: '1.25rem',
+        height: '1.25rem',
         flex: '0 0 auto',
       }
     : {};
@@ -176,6 +181,7 @@ function bindToastStatus(
   iconElement: HTMLElement,
   messageElement: HTMLElement,
   message: string,
+  description: string,
   theme: ToastTheme,
   options: ToastOptions,
   duration = 0
@@ -377,25 +383,32 @@ function show(message = '', options: ToastOptions = {}): HTMLElement {
   const id = randomId();
   const iconElement = jsx('span', {
     className: names.icon,
-    'data-toast-icon': id,
     style: () => toastIconStyle(options),
   }) as HTMLElement;
   const messageElement = jsx('span', {
     className: names.message,
-    'data-toast-message': id,
   }) as HTMLElement;
+  const description = options.description ?? '';
+  const descriptionElement = Show({
+    when: description,
+    children: jsx('span', {
+      className: names.description,
+      children: description,
+    }),
+  });
   const toast = jsx('div', {
     className: joinClasses(names.toast, theme ? names[theme] : ''),
     'data-toast': id,
     role: 'alert',
     'aria-atomic': 'true',
-    children: messageElement,
+    children: [messageElement, descriptionElement],
   }) as HTMLElement;
   bindToastStatus(
     toast,
     iconElement,
     messageElement,
     message,
+    description,
     theme,
     options,
     duration
@@ -453,6 +466,7 @@ function confirm(message = '', props: ToastConfirmProps = {}): HTMLElement {
   const closeText = props.text?.close || translate('Close');
   const confirmText = props.text?.confirm || translate('Confirm');
   validateParam('once', once, 'boolean', 'Toast.confirm');
+  const description = props.description ?? '';
   const names = mergeShallowConfig(
     classNames,
     props.className ?? {}
@@ -465,8 +479,14 @@ function confirm(message = '', props: ToastConfirmProps = {}): HTMLElement {
     children: [
       jsx('div', {
         className: names.message,
-        'data-toast-message': id,
         children: message,
+      }),
+      Show({
+        when: description,
+        children: jsx('div', {
+          className: names.description,
+          children: description,
+        }),
       }),
       jsx('div', {
         className: names.buttons,

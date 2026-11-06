@@ -309,7 +309,7 @@
     justify-content: space-between;
     gap: 1px;
     border-top: 1px solid var(--ui-border-subtle);
-    position: relative;
+    padding: 4px;
   }
 
   .j-menu[data-menu-type='bottom'] .menu .menu-item {
@@ -322,18 +322,18 @@
 
   .j-menu[data-menu-type='bottom'] .menu .menu-item a {
     width: 100%;
-    height: var(--el-height-2xl);
+    height: var(--el-height-xl);
     color: var(--ui-fg);
   }
 
   .j-menu[data-menu-type='bottom']>.menu>.menu-item.menu-item-has-children>a::after {
     content: '☰';
     font-size: var(--font-size-sm);
-    margin-left: unset;
-    border: unset;
-    width: unset;
-    height: unset;
-    transition: unset;
+    border: none;
+    /* margin-left: unset; */
+    /* width: unset; */
+    /* height: unset; */
+    /* transition: unset; */
   }
 
   .j-menu[data-menu-type='bottom']>.menu .menu-item.menu-item-has-children:hover>a::after {

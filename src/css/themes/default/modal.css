@@ -49,7 +49,7 @@
     overflow-y: auto;
     overflow-wrap: break-word;
     scrollbar-width: thin;
-    scrollbar-color: var(--ui-border) transparent;
+    scrollbar-color: var(--ui-border-subtle) transparent;
   }
 
   .j-modal .modal-body p {

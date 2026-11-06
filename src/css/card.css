@@ -140,11 +140,11 @@
     padding: var(--s4);
   }
 
-  .j-card .card-content + .card-footer {
+  .j-card .card-content+.card-footer {
     padding-top: 0;
   }
 
-  .j-card .card-footer:has(.j-button-group) {
+  .j-card .card-footer:has(.j-btns) {
     padding-top: 4px;
   }
 }

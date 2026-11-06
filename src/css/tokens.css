@@ -71,9 +71,16 @@
     --screen-xl: 1200px;
 
     /* --- Opacity --- */
-    --opacity-hover: 0.85;
+    --opacity-hover: 0.68;
     --opacity-active: 0.95;
-    --opacity-disabled: 0.75;
+    --opacity-disabled: 0.5;
+
+    /* --- Animation --- */
+    --time-f: 0.15s;
+    --time: 0.2s;
+    --time-s: 0.5s;
+
+    --bezier: cubic-bezier(.4, 0, .2, 1);
   }
 
   /* ============================================
@@ -82,10 +89,23 @@
 
   :root,
   .light {
+    --svg-check: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' width='16' height='16'%3e%3cpath fill='none' stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M4 8.5l2.5 2.5l5.5 -5.5'/%3e%3c/svg%3e");
+
     /* UI Structure */
-    --ui-bg: #ffffff;
-    --ui-bg-subtle: #f9fafb;
-    --ui-bg-muted: #f3f4f6;
+    /* --ui-bg: #ffffff; */
+    /* --ui-bg-subtle: #f9fafb; */
+    /* --ui-bg-muted: #f3f4f6; */
+
+    --ui-bg: hsl(210, 12%, 99%);
+    --ui-bg-subtle: hsl(210, 12%, 98%);
+    --ui-bg-soft: hsl(210, 12%, 96%);
+    --ui-bg-muted: hsl(210, 12%, 94%);
+
+    --ui-border: hsla(210, 12%, 84%);
+    --ui-border-subtle: hsla(210, 12%, 88%);
+    --ui-border-soft: hsla(210, 12%, 92%);
+    --ui-border-muted: hsla(210, 12%, 96%);
+
     --ui-surface: #ffffff;
     --ui-surface-subtle: #f9fafb;
     --ui-surface-muted: #f3f4f6;
@@ -93,20 +113,21 @@
     --ui-surface-active: rgba(0, 0, 0, 0.04);
     --ui-surface-raised: #ffffff;
     --ui-surface-overlay: rgba(255, 255, 255, 0.85);
+
     --ui-fg: #111827;
     --ui-fg-muted: #6b7280;
     --ui-fg-soft: #9ca3af;
     --ui-fg-subtle: #d1d5db;
     --ui-reverse: #000;
-    --ui-border-subtle: rgba(0, 0, 0, 0.06);
-    --ui-border: rgba(0, 0, 0, 0.1);
+
+    /* --ui-border-subtle: rgba(0, 0, 0, 0.06); */
+    /* --ui-border: rgba(0, 0, 0, 0.1); */
     --ui-border-strong: rgba(0, 0, 0, 0.2);
     --ui-outline: rgba(0, 0, 0, 0.15);
     --ui-placeholder: #9ca3af;
     --ui-disabled-bg: rgba(0, 0, 0, 0.04);
     --ui-disabled-fg: #9ca3af;
     --ui-overlay: rgba(0, 0, 0, 0.25);
-    --ui-overlay-muted: rgba(0, 0, 0, 0.0625);
     --ui-popup-bg: rgba(0, 0, 0, 0.0625);
     --ui-input-color: #111827;
     --ui-input-border: rgba(0, 0, 0, 0.15);
@@ -169,6 +190,7 @@
     --tone-muted: rgba(99, 102, 241, 0.12);
     --tone-weak: #ececf7;
     --tone-wash: rgba(99, 102, 241, 0.03);
+    --tone-bg: rgba(99, 102, 241, 0.01);
     --tone-border: rgba(99, 102, 241, 0.2);
     --tone-border-strong: rgba(99, 102, 241, 0.35);
     --tone-solid: #6366f1;
@@ -180,6 +202,7 @@
     --tone-text-hover: #4338ca;
     --tone-fg: #ffffff;
     --tone-ring: rgba(99, 102, 241, 0.4);
+
     --tone-highlight: #fef08a;
     --tone-highlight-fg: #854d0e;
 
@@ -273,10 +296,23 @@
   ============================================ */
 
   .dark {
+    --svg-check: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' width='16' height='16'%3e%3cpath fill='none' stroke='%23000000' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M4 8.5l2.5 2.5l5.5 -5.5'/%3e%3c/svg%3e");
+
     /* UI Structure */
     --ui-bg: #0b0f14;
-    --ui-bg-subtle: #11161d;
-    --ui-bg-muted: #181e27;
+    /* --ui-bg-subtle: #11161d; */
+    /* --ui-bg-muted: #181e27; */
+
+    --ui-bg: hsl(210, 4%, 8%);
+    --ui-bg-subtle: hsl(210, 4%, 10%);
+    --ui-bg-soft: hsl(210, 4%, 12%);
+    --ui-bg-muted: hsl(210, 4%, 14%);
+
+    --ui-border: hsl(210, 8%, 24%);
+    --ui-border-subtle: hsl(210, 8%, 16%);
+    --ui-border-soft: hsl(210, 8%, 12%);
+    --ui-border-muted: hsl(210, 8%, 10%);
+
     --ui-surface: #0b0f14;
     --ui-surface-subtle: #11161d;
     --ui-surface-muted: #181e27;
@@ -284,21 +320,21 @@
     --ui-surface-active: rgba(255, 255, 255, 0.07);
     --ui-surface-raised: #151b24;
     --ui-surface-overlay: rgba(7, 10, 15, 0.9);
+
     --ui-fg: #f9fafb;
     --ui-fg-muted: #cbd5e1;
     --ui-fg-soft: #94a3b8;
     --ui-fg-subtle: #64748b;
     --ui-reverse: #fff;
-    --ui-border-subtle: rgba(148, 163, 184, 0.12);
-    --ui-border: rgba(148, 163, 184, 0.18);
+    /* --ui-border-subtle: rgba(148, 163, 184, 0.12); */
+    /* --ui-border: rgba(148, 163, 184, 0.18); */
     --ui-border-strong: rgba(148, 163, 184, 0.28);
     --ui-outline: rgba(148, 163, 184, 0.2);
     --ui-placeholder: #64748b;
     --ui-disabled-bg: rgba(255, 255, 255, 0.04);
     --ui-disabled-fg: #64748b;
     --ui-overlay: rgba(2, 6, 23, 0.7);
-    --ui-overlay-muted: rgba(2, 6, 23, 0.45);
-    --ui-popup-bg: rgba(17, 24, 39, 0.45);
+    --ui-popup-bg: rgba(0, 0, 0, 0.0375);
     --ui-input-color: #f9fafb;
     --ui-input-border: rgba(148, 163, 184, 0.2);
     --ui-input-focus-border: #a78bfa;
@@ -360,6 +396,7 @@
     --tone-muted: rgba(129, 140, 248, 0.2);
     --tone-weak: #151b23;
     --tone-wash: rgba(129, 140, 248, 0.05);
+    --tone-bg: rgba(129, 140, 248, 0.01);
     --tone-border: rgba(129, 140, 248, 0.2);
     --tone-border-strong: rgba(129, 140, 248, 0.35);
     --tone-solid: #818cf8;
@@ -468,7 +505,8 @@
     --tone-subtle: rgba(0, 0, 0, 0.04);
     --tone-soft: rgba(0, 0, 0, 0.06);
     --tone-muted: rgba(0, 0, 0, 0.1);
-    --tone-wash: rgba(0, 0, 0, 0.02);
+    --tone-wash: rgba(0, 0, 0, 0.03);
+    --tone-bg: rgba(0, 0, 0, 0.01);
     --tone-border: rgba(0, 0, 0, 0.2);
     --tone-border-strong: rgba(0, 0, 0, 0.35);
     --tone-solid: var(--ui-gray);
@@ -491,6 +529,7 @@
     --tone-soft: rgba(113, 119, 98, 0.1);
     --tone-muted: rgba(113, 119, 98, 0.15);
     --tone-wash: rgba(113, 119, 98, 0.03);
+    --tone-bg: rgba(113, 119, 98, 0.01);
     --tone-border: rgba(113, 119, 98, 0.2);
     --tone-border-strong: rgba(113, 119, 98, 0.35);
     --tone-solid: var(--ui-olive);
@@ -513,6 +552,7 @@
     --tone-soft: rgba(239, 68, 68, 0.1);
     --tone-muted: rgba(239, 68, 68, 0.15);
     --tone-wash: rgba(239, 68, 68, 0.03);
+    --tone-bg: rgba(239, 68, 68, 0.01);
     --tone-border: rgba(239, 68, 68, 0.2);
     --tone-border-strong: rgba(239, 68, 68, 0.35);
     --tone-solid: var(--ui-tomato);
@@ -535,6 +575,7 @@
     --tone-soft: rgba(244, 63, 94, 0.1);
     --tone-muted: rgba(244, 63, 94, 0.15);
     --tone-wash: rgba(244, 63, 94, 0.03);
+    --tone-bg: rgba(244, 63, 94, 0.01);
     --tone-border: rgba(244, 63, 94, 0.2);
     --tone-border-strong: rgba(244, 63, 94, 0.35);
     --tone-solid: var(--ui-ruby);
@@ -557,6 +598,7 @@
     --tone-soft: rgba(236, 72, 153, 0.1);
     --tone-muted: rgba(236, 72, 153, 0.15);
     --tone-wash: rgba(236, 72, 153, 0.03);
+    --tone-bg: rgba(236, 72, 153, 0.01);
     --tone-border: rgba(236, 72, 153, 0.2);
     --tone-border-strong: rgba(236, 72, 153, 0.35);
     --tone-solid: var(--ui-pink);
@@ -579,6 +621,7 @@
     --tone-soft: rgba(139, 92, 246, 0.1);
     --tone-muted: rgba(139, 92, 246, 0.15);
     --tone-wash: rgba(139, 92, 246, 0.03);
+    --tone-bg: rgba(139, 92, 246, 0.01);
     --tone-border: rgba(139, 92, 246, 0.2);
     --tone-border-strong: rgba(139, 92, 246, 0.35);
     --tone-solid: var(--ui-violet);
@@ -601,6 +644,7 @@
     --tone-soft: rgba(99, 102, 241, 0.1);
     --tone-muted: rgba(99, 102, 241, 0.15);
     --tone-wash: rgba(99, 102, 241, 0.03);
+    --tone-bg: rgba(99, 102, 241, 0.01);
     --tone-border: rgba(99, 102, 241, 0.2);
     --tone-border-strong: rgba(99, 102, 241, 0.35);
     --tone-solid: var(--ui-indigo);
@@ -623,6 +667,7 @@
     --tone-soft: rgba(59, 130, 246, 0.1);
     --tone-muted: rgba(59, 130, 246, 0.15);
     --tone-wash: rgba(59, 130, 246, 0.03);
+    --tone-bg: rgba(59, 130, 246, 0.01);
     --tone-border: rgba(59, 130, 246, 0.2);
     --tone-border-strong: rgba(59, 130, 246, 0.35);
     --tone-solid: var(--ui-blue);
@@ -645,6 +690,7 @@
     --tone-soft: rgba(20, 184, 166, 0.1);
     --tone-muted: rgba(20, 184, 166, 0.15);
     --tone-wash: rgba(20, 184, 166, 0.03);
+    --tone-bg: rgba(20, 184, 166, 0.01);
     --tone-border: rgba(20, 184, 166, 0.2);
     --tone-border-strong: rgba(20, 184, 166, 0.35);
     --tone-solid: var(--ui-teal);
@@ -667,6 +713,7 @@
     --tone-soft: rgba(34, 197, 94, 0.1);
     --tone-muted: rgba(34, 197, 94, 0.15);
     --tone-wash: rgba(34, 197, 94, 0.03);
+    --tone-bg: rgba(34, 197, 94, 0.01);
     --tone-border: rgba(34, 197, 94, 0.2);
     --tone-border-strong: rgba(34, 197, 94, 0.35);
     --tone-solid: var(--ui-grass);
@@ -689,6 +736,7 @@
     --tone-soft: rgba(6, 182, 212, 0.1);
     --tone-muted: rgba(6, 182, 212, 0.15);
     --tone-wash: rgba(6, 182, 212, 0.03);
+    --tone-bg: rgba(6, 182, 212, 0.01);
     --tone-border: rgba(6, 182, 212, 0.2);
     --tone-border-strong: rgba(6, 182, 212, 0.35);
     --tone-solid: var(--ui-mint);
@@ -711,6 +759,7 @@
     --tone-soft: rgba(132, 204, 22, 0.1);
     --tone-muted: rgba(132, 204, 22, 0.15);
     --tone-wash: rgba(132, 204, 22, 0.03);
+    --tone-bg: rgba(132, 204, 22, 0.01);
     --tone-border: rgba(132, 204, 22, 0.2);
     --tone-border-strong: rgba(132, 204, 22, 0.35);
     --tone-solid: var(--ui-lime);
@@ -733,6 +782,7 @@
     --tone-soft: rgba(234, 179, 8, 0.1);
     --tone-muted: rgba(234, 179, 8, 0.15);
     --tone-wash: rgba(234, 179, 8, 0.03);
+    --tone-bg: rgba(234, 179, 8, 0.01);
     --tone-border: rgba(234, 179, 8, 0.2);
     --tone-border-strong: rgba(234, 179, 8, 0.35);
     --tone-solid: var(--ui-yellow);
@@ -755,6 +805,7 @@
     --tone-soft: rgba(249, 115, 22, 0.1);
     --tone-muted: rgba(249, 115, 22, 0.15);
     --tone-wash: rgba(249, 115, 22, 0.03);
+    --tone-bg: rgba(249, 115, 22, 0.01);
     --tone-border: rgba(249, 115, 22, 0.2);
     --tone-border-strong: rgba(249, 115, 22, 0.35);
     --tone-solid: var(--ui-orange);
@@ -777,6 +828,7 @@
     --tone-soft: rgba(180, 83, 9, 0.1);
     --tone-muted: rgba(180, 83, 9, 0.15);
     --tone-wash: rgba(180, 83, 9, 0.03);
+    --tone-bg: rgba(180, 83, 9, 0.01);
     --tone-border: rgba(180, 83, 9, 0.2);
     --tone-border-strong: rgba(180, 83, 9, 0.35);
     --tone-solid: var(--ui-gold);
@@ -802,6 +854,7 @@
     --tone-soft: rgba(255, 255, 255, 0.1);
     --tone-muted: rgba(255, 255, 255, 0.15);
     --tone-wash: rgba(255, 255, 255, 0.03);
+    --tone-bg: rgba(255, 255, 255, 0.01);
     --tone-border: rgba(255, 255, 255, 0.2);
     --tone-border-strong: rgba(255, 255, 255, 0.35);
     /* --tone-solid: #e5e7eb; */
@@ -821,6 +874,7 @@
     --tone-soft: rgba(180, 188, 162, 0.15);
     --tone-muted: rgba(180, 188, 162, 0.2);
     --tone-wash: rgba(180, 188, 162, 0.05);
+    --tone-bg: rgba(180, 188, 162, 0.01);
     --tone-border: rgba(180, 188, 162, 0.2);
     --tone-border-strong: rgba(180, 188, 162, 0.35);
     /* --tone-solid: #b4bc9e; */
@@ -840,6 +894,7 @@
     --tone-soft: rgba(248, 113, 113, 0.15);
     --tone-muted: rgba(248, 113, 113, 0.2);
     --tone-wash: rgba(248, 113, 113, 0.05);
+    --tone-bg: rgba(248, 113, 113, 0.01);
     --tone-border: rgba(248, 113, 113, 0.2);
     --tone-border-strong: rgba(248, 113, 113, 0.35);
     /* --tone-solid: #f87171; */
@@ -859,6 +914,7 @@
     --tone-soft: rgba(251, 113, 133, 0.15);
     --tone-muted: rgba(251, 113, 133, 0.2);
     --tone-wash: rgba(251, 113, 133, 0.05);
+    --tone-bg: rgba(251, 113, 133, 0.01);
     --tone-border: rgba(251, 113, 133, 0.2);
     --tone-border-strong: rgba(251, 113, 133, 0.35);
     /* --tone-solid: #fb7185; */
@@ -878,6 +934,7 @@
     --tone-soft: rgba(244, 114, 182, 0.15);
     --tone-muted: rgba(244, 114, 182, 0.2);
     --tone-wash: rgba(244, 114, 182, 0.05);
+    --tone-bg: rgba(244, 114, 182, 0.01);
     --tone-border: rgba(244, 114, 182, 0.2);
     --tone-border-strong: rgba(244, 114, 182, 0.35);
     /* --tone-solid: #f472b6; */
@@ -897,6 +954,7 @@
     --tone-soft: rgba(167, 139, 250, 0.15);
     --tone-muted: rgba(167, 139, 250, 0.2);
     --tone-wash: rgba(167, 139, 250, 0.05);
+    --tone-bg: rgba(167, 139, 250, 0.01);
     --tone-border: rgba(167, 139, 250, 0.2);
     --tone-border-strong: rgba(167, 139, 250, 0.35);
     /* --tone-solid: #a78bfa; */
@@ -916,6 +974,7 @@
     --tone-soft: rgba(129, 140, 248, 0.15);
     --tone-muted: rgba(129, 140, 248, 0.2);
     --tone-wash: rgba(129, 140, 248, 0.05);
+    --tone-bg: rgba(129, 140, 248, 0.01);
     --tone-border: rgba(129, 140, 248, 0.2);
     --tone-border-strong: rgba(129, 140, 248, 0.35);
     /* --tone-solid: #818cf8; */
@@ -935,6 +994,7 @@
     --tone-soft: rgba(96, 165, 250, 0.15);
     --tone-muted: rgba(96, 165, 250, 0.2);
     --tone-wash: rgba(96, 165, 250, 0.05);
+    --tone-bg: rgba(96, 165, 250, 0.01);
     --tone-border: rgba(96, 165, 250, 0.2);
     --tone-border-strong: rgba(96, 165, 250, 0.35);
     /* --tone-solid: #60a5fa; */
@@ -954,6 +1014,7 @@
     --tone-soft: rgba(45, 212, 191, 0.15);
     --tone-muted: rgba(45, 212, 191, 0.2);
     --tone-wash: rgba(45, 212, 191, 0.05);
+    --tone-bg: rgba(45, 212, 191, 0.01);
     --tone-border: rgba(45, 212, 191, 0.2);
     --tone-border-strong: rgba(45, 212, 191, 0.35);
     /* --tone-solid: #2dd4bf; */
@@ -973,6 +1034,7 @@
     --tone-soft: rgba(74, 222, 128, 0.15);
     --tone-muted: rgba(74, 222, 128, 0.2);
     --tone-wash: rgba(74, 222, 128, 0.05);
+    --tone-bg: rgba(74, 222, 128, 0.01);
     --tone-border: rgba(74, 222, 128, 0.2);
     --tone-border-strong: rgba(74, 222, 128, 0.35);
     /* --tone-solid: #4ade80; */
@@ -992,6 +1054,7 @@
     --tone-soft: rgba(34, 211, 238, 0.15);
     --tone-muted: rgba(34, 211, 238, 0.2);
     --tone-wash: rgba(34, 211, 238, 0.05);
+    --tone-bg: rgba(34, 211, 238, 0.01);
     --tone-border: rgba(34, 211, 238, 0.2);
     --tone-border-strong: rgba(34, 211, 238, 0.35);
     /* --tone-solid: #22d3ee; */
@@ -1011,6 +1074,7 @@
     --tone-soft: rgba(163, 230, 53, 0.15);
     --tone-muted: rgba(163, 230, 53, 0.2);
     --tone-wash: rgba(163, 230, 53, 0.05);
+    --tone-bg: rgba(163, 230, 53, 0.01);
     --tone-border: rgba(163, 230, 53, 0.2);
     --tone-border-strong: rgba(163, 230, 53, 0.35);
     /* --tone-solid: #a3e635; */
@@ -1030,6 +1094,7 @@
     --tone-soft: rgba(250, 204, 21, 0.15);
     --tone-muted: rgba(250, 204, 21, 0.2);
     --tone-wash: rgba(250, 204, 21, 0.05);
+    --tone-bg: rgba(250, 204, 21, 0.01);
     --tone-border: rgba(250, 204, 21, 0.2);
     --tone-border-strong: rgba(250, 204, 21, 0.35);
     /* --tone-solid: #facc15; */
@@ -1049,6 +1114,7 @@
     --tone-soft: rgba(251, 146, 60, 0.15);
     --tone-muted: rgba(251, 146, 60, 0.2);
     --tone-wash: rgba(251, 146, 60, 0.05);
+    --tone-bg: rgba(251, 146, 60, 0.01);
     --tone-border: rgba(251, 146, 60, 0.2);
     --tone-border-strong: rgba(251, 146, 60, 0.35);
     /* --tone-solid: #fb923c; */
@@ -1068,6 +1134,7 @@
     --tone-soft: rgba(217, 119, 6, 0.15);
     --tone-muted: rgba(217, 119, 6, 0.2);
     --tone-wash: rgba(217, 119, 6, 0.05);
+    --tone-bg: rgba(217, 119, 6, 0.01);
     --tone-border: rgba(217, 119, 6, 0.2);
     --tone-border-strong: rgba(217, 119, 6, 0.35);
     /* --tone-solid: #d97706; */

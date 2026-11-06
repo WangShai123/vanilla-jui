@@ -1,45 +1,49 @@
 @layer components {
-  .j-theme-palette {
+  .j-themes {
     padding: 1rem 1rem 2rem;
   }
 
-  .j-theme-palette .palette-container,
-  .j-theme-palette .palette-item {
+  .j-themes .theme-title {
+    margin: 0 0 1rem;
+  }
+
+  .j-themes .theme-container,
+  .j-themes .theme-item {
     display: flex;
     flex-direction: column;
   }
 
-  .j-theme-palette .palette-container {
+  .j-themes .theme-container {
     gap: var(--s4);
   }
 
-  .j-theme-palette .palette-item {
+  .j-themes .theme-item {
     gap: var(--s2);
   }
 
-  .j-theme-palette .item-title {
+  .j-themes .item-title {
     font-size: var(--font-size-md);
     font-weight: var(--font-bold);
   }
 
-  .j-theme-palette .items {
+  .j-themes .items {
     gap: var(--space);
 
     display: grid;
     grid-template-columns: repeat(3, 1fr);
   }
 
-  .j-theme-palette .j-button {
+  .j-themes .j-btn {
     min-width: 0;
     overflow: hidden;
   }
 
-  .j-theme-palette [data-theme-group='theme'] .j-button {
+  .j-themes [data-theme-group='theme'] .j-btn {
     justify-content: flex-start;
     --btn-padding: 0 var(--s2);
   }
 
-  .j-theme-palette .j-button .item-hex {
+  .j-themes .j-btn .item-hex {
     width: var(--font-size-sm);
     height: var(--font-size-sm);
 
@@ -48,15 +52,15 @@
     flex-shrink: 0;
   }
 
-  .mobile .j-theme-palette {
+  .mobile .j-themes {
     padding: 1rem 1rem 4rem;
   }
 
-  .mobile .j-theme-palette [data-theme-group='theme'] .j-button {
+  .mobile .j-themes [data-theme-group='theme'] .j-btn {
     --btn-padding: 0 6px;
   }
 
-  .j-theme-palette .j-button .button-text {
+  .j-themes .j-btn .el-text {
     overflow: hidden;
     text-overflow: ellipsis;
   }

@@ -100,9 +100,9 @@ const DEFAULT_CLASS_NAMES: PaginationClassNames = {
   root: 'j-pagination',
   list: 'pagination',
   item: 'item',
-  button: 'j-button is-ghost is-icon',
-  currentBtn: 'j-button is-outline is-icon is-active',
-  moreBtn: 'j-button is-ghost is-icon',
+  button: 'j-btn is-ghost is-icon',
+  currentBtn: 'j-btn is-default is-icon is-active',
+  moreBtn: 'j-btn is-ghost is-icon',
   loading: 'animate-spin',
 };
 
@@ -371,10 +371,10 @@ export function createPagination(input: PaginationProps = {}): Pagination {
         className: props.className.item,
         'data-pagination-more': () =>
           itemAccessor().type === 'more' ? itemAccessor().key : null,
-        children: jsx('span', {
+        children: jsx('button', {
           className: props.className.moreBtn,
           'aria-disabled': true,
-          disabled: '',
+          disabled: true,
           children: icon('more'),
         }),
       }) as HTMLElement;

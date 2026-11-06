@@ -1,6 +1,6 @@
 @layer components {
   .j-offcanvas-overlay {
-    background: var(--ui-overlay-muted);
+    background: var(--ui-popup-bg);
 
     position: fixed;
     top: 0;

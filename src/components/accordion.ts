@@ -1,5 +1,6 @@
 import {
   For,
+  Show,
   createDeepStore,
   createEffect,
   createSignal,
@@ -14,7 +15,11 @@ import {
 } from '../core/component.ts';
 import { createLoading } from '../primitives/loading.ts';
 import { icon } from '../primitives/icons.ts';
-import { asRenderable, type RenderableContent } from '../utilities/dom.ts';
+import {
+  asRenderable,
+  joinClasses,
+  type RenderableContent,
+} from '../utilities/dom.ts';
 import { randomId } from '../utilities/id.ts';
 import {
   type CollapseMotionController,
@@ -124,7 +129,7 @@ const DEFAULT_CLASS_NAMES: AccordionClassNames = {
   root: 'j-accordion',
   header: 'accordion-header',
   title: 'header-title',
-  arrow: 'header-arrow j-button is-ghost is-sm is-icon',
+  arrow: 'header-arrow j-btn is-ghost is-sm is-icon',
   panel: 'accordion-panel',
   content: 'panel-content',
 };
@@ -622,10 +627,17 @@ export function createAccordion(props: AccordionProps): AccordionInstance {
               return asRenderable(titleView(item.title, item, indexAccessor()));
             },
           }),
-          jsx('span', {
-            className: resolvedProps.className.arrow,
-            'data-accordion-arrow': name,
-            children: icon('arrow-down'),
+          Show({
+            when: () => resolvedProps.direction !== 'horizontal',
+            children: jsx('span', {
+              className: resolvedProps.className.arrow,
+              'data-accordion-arrow': name,
+              children: Show({
+                when: () => isActive(name),
+                children: icon('minus'),
+                fallback: icon('add'),
+              }),
+            }),
           }),
         ],
       }),
@@ -673,10 +685,12 @@ export function createAccordion(props: AccordionProps): AccordionInstance {
     },
     view: () => {
       const root = jsx('div', {
-        className: resolvedProps.className.root,
+        className: joinClasses(
+          resolvedProps.className.root,
+          resolvedProps.direction === 'horizontal' && 'is-horizontal'
+        ),
         id: resolvedProps.id,
         'data-accordion': 'root',
-        'data-direction': resolvedProps.direction,
         children: For({
           each: () => state.data,
           key: (item: AccordionItem) => itemName(item),

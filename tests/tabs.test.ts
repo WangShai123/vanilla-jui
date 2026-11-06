@@ -62,10 +62,172 @@ afterEach(() => {
   vi.useRealTimers();
   tabs?.destroy();
   tabs = null;
+  vi.restoreAllMocks();
+  vi.unstubAllGlobals();
   document.body.innerHTML = '';
 });
 
 describe('Tabs', () => {
+  it('remeasures resized tabs, hides a removed selection, and disposes observation', async () => {
+    let notify = () => {};
+    const disconnect = vi.fn();
+    const unobserve = vi.fn();
+    const observe = vi.fn();
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        constructor(callback: () => void) {
+          notify = callback;
+        }
+        observe = observe;
+        unobserve = unobserve;
+        disconnect = disconnect;
+      }
+    );
+    let width = 100;
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(
+      function (this: HTMLElement) {
+        return new DOMRect(
+          this.dataset.tabsTab === 'usage' ? 120 : 0,
+          0,
+          width,
+          32
+        );
+      }
+    );
+    tabs = createTabs({ active: 'usage', data: tabItems() });
+    tabs.mount(app());
+    await tick();
+    const indicator = tabs.element?.querySelector<HTMLElement>(
+      '[data-tabs-indicator]'
+    );
+    expect(indicator?.style.width).toBe('100px');
+    expect(observe).toHaveBeenCalledTimes(5);
+    width = 160;
+    notify();
+    await tick();
+    expect(indicator?.style.width).toBe('160px');
+    tabs.state.data.splice(1, 1);
+    await tick();
+    expect(indicator?.style.display).toBe('none');
+    expect(unobserve).toHaveBeenCalledTimes(1);
+    tabs.destroy();
+    expect(disconnect).toHaveBeenCalledTimes(1);
+    notify();
+    await tick();
+    expect(observe).toHaveBeenCalledTimes(5);
+  });
+
+  it.each(['top', 'bottom', 'left', 'right'] as const)(
+    'slides one stable indicator for %s tabs and cancels interrupted motion',
+    async (direction) => {
+      const vertical = direction === 'left' || direction === 'right';
+      const rect = (x: number, y: number, width = 100, height = 32) =>
+        new DOMRect(x, y, width, height);
+      let visible = rect(100, 50);
+      vi.spyOn(
+        HTMLElement.prototype,
+        'getBoundingClientRect'
+      ).mockImplementation(function (this: HTMLElement) {
+        if (this.hasAttribute('data-tabs-indicator')) return visible;
+        const name = this.dataset.tabsTab;
+        const index = ['intro', 'usage', 'api'].indexOf(name || '');
+        return index < 0
+          ? rect(100, 50)
+          : rect(
+              100 + (vertical ? 0 : index * 120),
+              50 + (vertical ? index * 40 : 0)
+            );
+      });
+      const cancellations: ReturnType<typeof vi.fn>[] = [];
+      const animate = vi.fn(
+        (_keyframes: Keyframe[], _options: KeyframeAnimationOptions) => {
+          const cancel = vi.fn();
+          cancellations.push(cancel);
+          return {
+            finished: new Promise<void>(() => {}),
+            cancel,
+          } as unknown as Animation;
+        }
+      );
+      vi.stubGlobal('ResizeObserver', undefined);
+      vi.stubGlobal(
+        'matchMedia',
+        vi.fn(() => ({ matches: direction === 'top' }))
+      );
+      const rootDescriptor = Object.getOwnPropertyDescriptor(
+        HTMLElement.prototype,
+        'animate'
+      );
+      Object.defineProperty(HTMLElement.prototype, 'animate', {
+        configurable: true,
+        value: animate,
+      });
+      try {
+        tabs = createTabs({
+          direction,
+          active: 'intro',
+          disabled: 'api',
+          data: tabItems(),
+          className: { root: 'custom-tabs', indicator: 'custom-indicator' },
+        });
+        tabs.mount(app());
+        await tick();
+        const root = tabs.element;
+        const parent = root?.parentElement;
+        const intro = tabElements(tabs)[0];
+        const indicator = root?.querySelector<HTMLElement>(
+          '[data-tabs-indicator]'
+        );
+        expect(indicator?.className).toBe('custom-indicator');
+        expect(indicator?.style.transform).toBe('translate3d(0px, 0px, 0)');
+        expect(animate).not.toHaveBeenCalled();
+
+        await tabs.activate('api');
+        expect(animate).not.toHaveBeenCalled();
+        await tabs.activate('usage');
+        await tick();
+        const destination = vertical
+          ? 'translate3d(0px, 40px, 0)'
+          : 'translate3d(120px, 0px, 0)';
+        expect(indicator?.style.transform).toBe(destination);
+        expect(animate.mock.calls[0]?.[0]).toEqual([
+          { transform: 'translate3d(0px, 0px, 0) scale(1, 1)' },
+          { transform: destination },
+        ]);
+        expect(animate.mock.calls[0]?.[1]?.duration).toBe(
+          direction === 'top' ? 0 : 240
+        );
+
+        visible = vertical ? rect(100, 70) : rect(160, 50);
+        tabs.state.disabled = [];
+        await tabs.activate('api');
+        await tick();
+        expect(cancellations[0]).toHaveBeenCalled();
+        expect(animate.mock.calls[1]?.[0]?.[0]).toEqual({
+          transform: vertical
+            ? 'translate3d(0px, 20px, 0) scale(1, 1)'
+            : 'translate3d(60px, 0px, 0) scale(1, 1)',
+        });
+        expect(tabs.element).toBe(root);
+        expect(root?.parentElement).toBe(parent);
+        expect(root?.querySelectorAll('[data-tabs-indicator]')).toHaveLength(1);
+        expect(root?.querySelector('[data-tabs-indicator]')).toBe(indicator);
+        expect(tabElements(tabs)[0]).toBe(intro);
+        tabs.destroy();
+        expect(cancellations[1]).toHaveBeenCalled();
+      } finally {
+        if (rootDescriptor)
+          Object.defineProperty(
+            HTMLElement.prototype,
+            'animate',
+            rootDescriptor
+          );
+        else Reflect.deleteProperty(HTMLElement.prototype, 'animate');
+      }
+    }
+  );
+
   it('builds default classes and stable data markers', () => {
     tabs = createTabs({
       id: 'default-tabs',

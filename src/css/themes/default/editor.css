@@ -90,34 +90,47 @@
   }
 
   .j-editor h1 {
-    font-size: 2em;
+    /* font-size: 2em; */
+    /* font-size: 2.5em; */
+    font-size: 2.25em;
     letter-spacing: -0.02em;
     line-height: 1.25;
     margin: 0;
   }
 
   .j-editor h2 {
-    font-size: 1.5em;
+    /* font-size: 1.5em; */
+    /* font-size: 2em; */
+    font-size: 1.75em;
     letter-spacing: -0.02em;
-    margin-top: 2.25rem;
+    margin-top: 2.5rem;
   }
 
   .j-editor h3 {
+    /* font-size: 1.25em; */
+    font-size: 1.5em;
+    letter-spacing: -0.01em;
+    margin-top: 2.25rem;
+  }
+
+  .j-editor h4 {
+    /* font-size: 1.125em; */
     font-size: 1.25em;
     letter-spacing: -0.01em;
     margin-top: 2rem;
   }
 
-  .j-editor h4 {
+  .j-editor h5 {
     font-size: 1.125em;
-    letter-spacing: -0.01em;
-    margin-top: 1.75rem;
+  }
+
+  .j-editor h6 {
+    font-size: 1em;
   }
 
   .j-editor h5,
   .j-editor h6 {
-    font-size: 1em;
-    margin-top: 1.5rem;
+    margin-top: 1.75rem;
     line-height: 1.4;
   }
 
@@ -240,7 +253,7 @@
 
   .j-editor ul li,
   .j-editor ol li {
-    margin-bottom: 10px;
+    margin-bottom: 8px;
     padding-left: 2px;
   }
 
@@ -342,7 +355,7 @@
 
   .j-editor input[type='checkbox'] {
     border: 1px solid var(--ui-border);
-    border-radius: var(--radius-sm);
+    border-radius: var(--checkbox-radius, var(--radius-md));
     background: var(--ui-bg);
     clear: none;
     cursor: pointer;
@@ -354,22 +367,11 @@
     transition: all 0.05s ease-in-out;
   }
 
-  .j-editor input[type='checkbox']:checked {
-    background: var(--tone-solid);
-    border-color: var(--tone-solid);
-  }
-
-  .dark .j-editor input[type='checkbox']:checked {
-    background: var(--tone-shade);
-    border-color: var(--tone-shade);
-  }
-
-  .j-editor input[type='checkbox']:checked:before {
-    content: url('data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2020%2020%27%3E%3Cpath%20d%3D%27M14.83%204.89l1.34.94-5.81%208.38H9.02L5.78%209.67l1.34-1.25%202.57%202.4z%27%20fill%3D%27%23ffffff%27%2F%3E%3C%2Fsvg%3E');
-    display: inline-block;
-    margin: -0.1875rem 0 0 -0.25rem;
-    width: 1.3125rem;
-    height: 1.3125rem;
+  .j-editor:not(:has(.j-checkbox)) input[type='checkbox']:checked {
+    border-color: transparent;
+    background-color: var(--tone-solid);
+    background-image: var(--svg-check);
+    background-position: center;
   }
 
   .j-editor ul[data-type='taskList'] li:has(input[type='checkbox']:checked) p {
