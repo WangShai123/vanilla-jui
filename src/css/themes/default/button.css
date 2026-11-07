@@ -162,8 +162,6 @@
   }
 
   .j-btn:not(:disabled):active {
-    /* opacity: var(--opacity-active); */
-    /* transform: scale(0.95); */
     transform: translateY(1px);
   }
 
@@ -171,29 +169,21 @@
     --btn-border-color: var(--tone-solid);
   }
 
-  /* .j-btn:not(:disabled):focus-within, */
   .j-btn:not(:disabled):focus-visible {
     --btn-border-color: var(--tone-solid);
     --btn-box-shadow: 0 0 0 3px var(--tone-ring);
   }
 
   .j-btn.is-reverse:not(:disabled).is-active,
-  /* .j-btn.is-reverse:not(:disabled):focus-within, */
   .j-btn.is-reverse:not(:disabled):focus-visible {
     --btn-border-color: transparent;
     --btn-box-shadow: 0 0 0 3px var(--tone-card-active);
   }
 
-  /* .j-btn.is-ghost:not(:disabled):focus-within {
-    --btn-border-color: transparent;
-    --btn-box-shadow: none;
-  } */
-
   .j-btn.is-info:not(:disabled).is-active {
     --btn-border-color: var(--state-info-muted);
   }
 
-  /* .j-btn.is-info:not(:disabled):focus-within, */
   .j-btn.is-info:not(:disabled):focus-visible {
     --btn-border-color: var(--state-info);
     --btn-box-shadow: 0 0 0 3px var(--state-info-ring);
@@ -203,7 +193,6 @@
     --btn-border-color: var(--state-success-muted);
   }
 
-  /* .j-btn.is-success:not(:disabled):focus-within, */
   .j-btn.is-success:not(:disabled):focus-visible {
     --btn-border-color: var(--state-success);
     --btn-box-shadow: 0 0 0 3px var(--state-success-ring);
@@ -213,7 +202,6 @@
     --btn-border-color: var(--state-warning-muted);
   }
 
-  /* .j-btn.is-warning:not(:disabled):focus-within, */
   .j-btn.is-warning:not(:disabled):focus-visible {
     --btn-border-color: var(--state-warning);
     --btn-box-shadow: 0 0 0 3px var(--state-warning-ring);
@@ -223,16 +211,9 @@
     --btn-border-color: var(--state-error-muted);
   }
 
-  /* .j-btn.is-error:not(:disabled):focus-within, */
   .j-btn.is-error:not(:disabled):focus-visible {
     --btn-border-color: var(--state-error);
     --btn-box-shadow: 0 0 0 3px var(--state-error-ring);
-  }
-
-  .j-btn.is-default:hover:not(:disabled),
-  .j-btn.is-outline:hover:not(:disabled),
-  .j-btn.is-ghost:hover:not(:disabled) {
-    --btn-bg: var(--ui-bg-subtle);
   }
 
   .j-btn.is-text:not(:disabled).is-active,

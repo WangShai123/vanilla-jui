@@ -523,7 +523,7 @@ function confirm(message = '', props: ConfirmToastOptions = {}): HTMLElement {
   const closeText = props.text?.close || translate('Close');
   const confirmText = props.text?.confirm || translate('Confirm');
   validateParam('once', once, 'boolean', 'Toast.confirm');
-  const duration = props.duration ?? 3000;
+  const duration = props.duration ?? 0;
   const theme = props.theme ?? '';
   validateParam('duration', duration, TOAST_DURATION_RULE, 'Toast.confirm');
   validateParam('theme', theme, TOAST_THEME_RULE, 'Toast.confirm');
