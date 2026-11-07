@@ -1,6 +1,7 @@
 @layer components {
   .j-tip {
     --tip-border-color: var(--ui-border-subtle);
+    --tip-bg: var(--ui-bg);
     --tip-icon-shadow: var(--ui-bg-soft);
     --tip-icon-bg: var(--ui-bg-soft);
 
@@ -61,7 +62,7 @@
 
   .j-tip .tip-content {
     grid-column-start: 2;
-    color: var(--ui-gray);
+    color: var(--tone-body);
   }
 
   .j-tip .tip-content p {
