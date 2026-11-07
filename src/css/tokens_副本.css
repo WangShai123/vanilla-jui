@@ -103,8 +103,8 @@
     --ui-border-strong: rgba(0, 0, 0, 0.2);
     --ui-outline: rgba(0, 0, 0, 0.15);
     --ui-placeholder: #9ca3af;
-    --ui-disabled-bg: rgba(0, 0, 0, 0.04);
-    --ui-disabled-fg: #9ca3af;
+    --ui-bg-disabled: rgba(0, 0, 0, 0.04);
+    --ui-fg-disabled: #9ca3af;
     --ui-overlay: rgba(0, 0, 0, 0.25);
     --ui-overlay-muted: rgba(0, 0, 0, 0.0625);
     --ui-popup-bg: rgba(0, 0, 0, 0.0625);
@@ -294,8 +294,8 @@
     --ui-border-strong: rgba(148, 163, 184, 0.28);
     --ui-outline: rgba(148, 163, 184, 0.2);
     --ui-placeholder: #64748b;
-    --ui-disabled-bg: rgba(255, 255, 255, 0.04);
-    --ui-disabled-fg: #64748b;
+    --ui-bg-disabled: rgba(255, 255, 255, 0.04);
+    --ui-fg-disabled: #64748b;
     --ui-overlay: rgba(2, 6, 23, 0.7);
     --ui-overlay-muted: rgba(2, 6, 23, 0.45);
     --ui-popup-bg: rgba(17, 24, 39, 0.45);

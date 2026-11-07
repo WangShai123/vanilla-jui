@@ -59,7 +59,7 @@
     --offcanvas-block-width: 316px;
   }
 
-  .j-offcanvas .offcanvas-content {
+  .j-offcanvas .offcanvas-panel {
     position: relative;
     height: 100%;
     overflow-y: auto;

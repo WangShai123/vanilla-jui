@@ -99,7 +99,7 @@ interface OffcanvasRuntimeExtras {
 const DEFAULT_CLASS_NAMES: OffcanvasClassNames = {
   root: 'j-offcanvas',
   overlay: 'j-offcanvas-overlay',
-  content: 'offcanvas-content',
+  content: 'offcanvas-panel',
 };
 
 const OFFCANVAS_HIDDEN_TRANSFORM: Record<OffcanvasDirection, string> = {
@@ -450,7 +450,7 @@ export function createOffcanvas(input: OffcanvasProps = {}): Offcanvas {
         },
         children: jsx('div', {
           className: props.className.content,
-          'data-offcanvas-content': props.id,
+          'data-offcanvas-panel': props.id,
           children: () =>
             asRenderable(
               state.loading ? createLoading() : renderResolvedContent()

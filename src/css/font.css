@@ -12,13 +12,10 @@
   }
 
   .font-mono {
-    font-family:
-      Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+    font-family: Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
   }
 
   .font-math {
-    font-family:
-      Cambria Math,
-      Latin Modern Math;
+    font-family: Cambria Math, Latin Modern Math;
   }
 }

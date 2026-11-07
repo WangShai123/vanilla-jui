@@ -1,7 +1,7 @@
 @layer components {
   .j-badge {
     gap: var(--badge-gap, 4px);
-    padding: var(--badge-padding, 0 var(--s1d5));
+    padding: var(--badge-padding, 0 6px);
     min-width: var(--badge-min-width, 1.25rem);
     height: var(--badge-height, 1.25rem);
     font-size: var(--badge-font-size, var(--font-size-sm));
@@ -27,7 +27,7 @@
   }
 
   .j-badge.is-sm {
-    --badge-padding: 0 var(--space);
+    --badge-padding: 0 4px;
     --badge-min-width: 1rem;
     --badge-height: 1rem;
     --badge-font-size: var(--font-size-xs);

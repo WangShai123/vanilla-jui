@@ -1,7 +1,7 @@
 @layer components {
   .j-toast-container {
-    top: var(--s4);
-    right: var(--s4);
+    top: 16px;
+    right: 16px;
     gap: var(--s2);
 
     position: fixed;
@@ -15,14 +15,14 @@
   }
 
   body:has(#wpadminbar) .j-toast-container {
-    top: var(--s8);
+    top: 32px;
   }
 
   .j-toast {
     --toast-fg: var(--ui-fg);
     --toast-bg: var(--ui-bg);
 
-    padding: var(--s3) var(--s4);
+    padding: 12px 16px;
     box-shadow: var(--shadow-md);
     background: var(--toast-bg);
     border: 1px solid var(--ui-border-soft);
@@ -35,7 +35,7 @@
     display: grid;
     grid-template-columns: 0 1fr;
     align-items: flex-start;
-    row-gap: var(--space);
+    row-gap: 4px;
 
     word-break: break-all;
     cursor: pointer;
@@ -43,8 +43,8 @@
   }
 
   .j-toast:has(.el-icon) {
-    column-gap: var(--s3);
-    grid-template-columns: var(--s4) 1fr;
+    column-gap: 12px;
+    grid-template-columns: 16px 1fr;
   }
 
   .j-toast .el-icon {
@@ -107,7 +107,7 @@
     color: var(--ui-bg);
     background: var(--ui-fg);
     border-radius: var(--radius-md);
-    padding: var(--s2) var(--s3);
+    padding: var(--s2) 12px;
     max-width: 288px;
     z-index: var(--z-toast);
 
@@ -133,9 +133,9 @@
     cursor: default;
   }
 
-  .j-toast.is-confirm .toast-buttons {
+  .j-toast .toast-btns {
     width: 100%;
-    gap: var(--space);
+    gap: 4px;
 
     display: flex;
     justify-content: flex-end;

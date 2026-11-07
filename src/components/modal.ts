@@ -137,7 +137,7 @@ const DEFAULT_CLASS_NAMES: ModalClassNames = {
   footer: 'modal-footer',
   title: 'modal-title',
   button: 'j-btn',
-  closeBtn: 'is-icon is-sm is-ghost is-circle',
+  closeBtn: 'is-icon is-sm is-ghost',
   cancelBtn: 'is-ghost',
   confirmBtn: 'is-solid',
 };

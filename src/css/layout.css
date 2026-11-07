@@ -546,7 +546,7 @@
   /* Grid 容器：自动 gap + 响应式列 */
   .grid-container {
     display: grid;
-    gap: var(--grid-container-gap, var(--s2));
+    gap: var(--grid-container-gap, 8px);
     width: 100%;
     /* 默认：单列（移动端友好） */
     grid-template-columns: 1fr;
@@ -965,7 +965,7 @@
   .j-popup-layout {
     background: var(--ui-popup-bg);
     backdrop-filter: blur(4px);
-    padding: var(--s4);
+    padding: 16px;
 
     display: flex;
     position: fixed;

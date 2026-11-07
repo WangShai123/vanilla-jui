@@ -1,16 +1,15 @@
 @layer components {
   .j-btn {
     --btn-font-size: var(--font-size-md);
-    --btn-height: var(--el-height-md);
     --btn-fg: inherit;
-    --btn-padding: 0 var(--s3d5);
+    --btn-padding: 0 12px;
     --btn-border-color: transparent;
     --btn-radius: var(--radius-md);
     --btn-box-shadow: var(--shadow-xs);
 
-    gap: var(--space);
+    gap: 4px;
     font-size: var(--btn-font-size);
-    height: var(--btn-height);
+    height: var(--btn-height, var(--el-height));
     line-height: 1;
     color: var(--btn-fg);
     background-color: var(--btn-bg);
@@ -33,7 +32,7 @@
     user-select: none;
     touch-action: manipulation;
     transition-property: box-shadow, opacity, transform;
-    transition-duration: var(--time-f);
+    transition-duration: 0.15s;
     transition-timing-function: var(--bezier);
   }
 
@@ -49,26 +48,22 @@
 
   .j-btn.is-xs {
     --btn-font-size: var(--font-size-sm);
-    --btn-height: var(--el-height-xs);
-    --btn-padding: var(--space) var(--s2);
+    --btn-padding: 0 8px;
   }
 
   .j-btn.is-sm {
     --btn-font-size: var(--font-size-sm);
-    --btn-height: var(--el-height-sm);
-    --btn-padding: var(--space) var(--s2);
+    --btn-padding: 0 8px;
   }
 
   .j-btn.is-lg {
     --btn-font-size: var(--font-size-lg);
-    --btn-height: var(--el-height-lg);
-    --btn-padding: 0 var(--s3);
+    --btn-padding: 0 12px;
   }
 
   .j-btn.is-xl {
     --btn-font-size: var(--font-size-xl);
-    --btn-height: var(--el-height-xl);
-    --btn-padding: 0 var(--s3d5);
+    --btn-padding: 0 14px;
   }
 
   .j-btn.is-default {
@@ -113,7 +108,7 @@
 
   .j-btn.is-text {
     --btn-box-shadow: none;
-    --btn-padding: 0 var(--space);
+    --btn-padding: 0 4px;
   }
 
   .j-btn.is-icon {
@@ -142,7 +137,7 @@
   }
 
   .j-btns {
-    --btn-padding: 0 var(--s2);
+    --btn-padding: 0 8px;
     --btn-radius: var(--radius-md);
 
     margin: 0;
@@ -242,13 +237,8 @@
 
   .j-btn.is-text:not(:disabled).is-active,
   .j-btn.is-text:not(:disabled):active,
-  /* .j-btn.is-text:not(:disabled):focus-within, */
   .j-btn.is-text:not(:disabled):focus-visible {
-    /* --btn-border-color: transparent; */
     --btn-fg: var(--tone-solid);
-    /* --btn-box-shadow: none; */
-    /* text-decoration: underline; */
-    /* text-underline-offset: var(--s1d5); */
   }
 
   .j-btns .j-btn {

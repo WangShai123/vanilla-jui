@@ -16,10 +16,10 @@
   }
 
   /* readonly */
-  [readonly] {
+  /* [readonly] {
     opacity: var(--opacity-readonly);
     cursor: default;
-  }
+  } */
 
   /* data-action */
   [data-action] {
@@ -70,5 +70,26 @@
   /* element */
   .el-text {
     position: relative;
+  }
+
+  /* height size */
+  .is-xs {
+    --el-height: var(--el-height-xs);
+  }
+
+  .is-sm {
+    --el-height: var(--el-height-sm);
+  }
+
+  .is-md {
+    --el-height: var(--el-height-md);
+  }
+
+  .is-lg {
+    --el-height: var(--el-height-lg);
+  }
+
+  .is-xl {
+    --el-height: var(--el-height-xl);
   }
 }

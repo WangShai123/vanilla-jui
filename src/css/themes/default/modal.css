@@ -1,8 +1,8 @@
 @layer components {
   .j-modal {
-    --modal-header-padding: var(--s3) var(--s4) 0;
-    --modal-body-padding: var(--s4);
-    --modal-footer-padding: 0 var(--s4) var(--s4);
+    --modal-header-padding: 12px 16px 0;
+    --modal-body-padding: 16px;
+    --modal-footer-padding: 0 16px 16px;
 
     color: var(--ui-fg);
     background: var(--ui-bg);
@@ -21,7 +21,7 @@
   }
 
   .j-modal .modal-header {
-    gap: var(--space);
+    gap: 4px;
     padding: var(--modal-header-padding);
     border-bottom: transparent;
 
@@ -58,7 +58,7 @@
   }
 
   .j-modal .modal-footer {
-    gap: var(--s2);
+    gap: 8px;
     padding: var(--modal-footer-padding);
     border-top: 1px solid transparent;
 
@@ -74,7 +74,7 @@
   }
 
   .j-modal.is-fullscreen .modal-header {
-    --modal-header-padding: var(--s4);
+    --modal-header-padding: 16px;
   }
 
   .j-modal.is-fullscreen .modal-body {
@@ -82,7 +82,7 @@
   }
 
   .j-modal.is-fullscreen .modal-footer {
-    --modal-footer-padding: var(--s4);
+    --modal-footer-padding: 16px;
   }
 
   .j-popup-layout:has(.is-fullscreen) {

@@ -1,9 +1,9 @@
 import {
   type MaybeAccessor,
-  Show,
   access,
   createEffect,
   createRoot,
+  createSignal,
   insert,
   jsx,
 } from 'vanilla-signal';
@@ -51,23 +51,40 @@ export interface ToastOptions extends ToastThemeOptions {
   description?: string;
   duration?: number;
   once?: boolean;
+  onClose?: () => void | Promise<void>;
+}
+
+export interface LoadingToastOptions extends ToastOptions {
   loading?: MaybeAccessor<boolean>;
   text?: {
     loading?: string;
   };
-  onClose?: () => void | Promise<void>;
   onCancel?: () => void | Promise<void>;
 }
 
-export interface ToastConfirmProps extends ToastClassNameOptions {
-  once?: boolean;
-  description?: string;
+export interface ConfirmToastOptions extends ToastOptions {
   text?: {
     close?: string;
     confirm?: string;
   };
   onConfirm?: () => void | Promise<void>;
+}
+
+export type ToastConfirmProps = ConfirmToastOptions;
+
+export interface PromiseToastOptions extends ToastClassNameOptions {
+  duration?: number;
+  text?: { loading?: string; success?: string; error?: string };
+  onCancel?: () => void | Promise<void>;
   onClose?: () => void | Promise<void>;
+  onSuccess?: () => void | Promise<void>;
+  onError?: () => void | Promise<void>;
+}
+
+interface ToastStatus {
+  message: string;
+  theme: ToastTheme;
+  loading: boolean;
 }
 
 const DEFAULT_CLASS_NAMES: ToastClassNames = {
@@ -78,7 +95,7 @@ const DEFAULT_CLASS_NAMES: ToastClassNames = {
   description: 'toast-description',
   lite: 'j-toast-lite',
   confirm: 'j-toast is-confirm',
-  buttons: 'toast-buttons',
+  buttons: 'toast-btns',
   button: 'j-btn is-sm',
   closeBtn: 'is-ghost',
   confirmBtn: 'is-reverse',
@@ -99,7 +116,8 @@ const timers = new Set<string>();
 const disposers = new Map<HTMLElement, () => void>();
 const animations = new Map<HTMLElement, Animation>();
 const operations = new Map<HTMLElement, number>();
-const singletonToasts = new Map<'show' | 'confirm', HTMLElement>();
+type ToastKind = 'show' | 'confirm' | 'loading';
+const singletonToasts = new Map<ToastKind, HTMLElement>();
 let classNames = DEFAULT_CLASS_NAMES;
 
 function addToastDisposer(element: HTMLElement, dispose: () => void): void {
@@ -110,7 +128,7 @@ function addToastDisposer(element: HTMLElement, dispose: () => void): void {
   });
 }
 
-function getSingletonToast(kind: 'show' | 'confirm'): HTMLElement | null {
+function getSingletonToast(kind: ToastKind): HTMLElement | null {
   const toast = singletonToasts.get(kind);
   if (!toast) return null;
   if (!toast.isConnected || toast.getAttribute('data-mount') === 'false') {
@@ -121,7 +139,7 @@ function getSingletonToast(kind: 'show' | 'confirm'): HTMLElement | null {
 }
 
 function setSingletonToast(
-  kind: 'show' | 'confirm',
+  kind: ToastKind,
   toast: HTMLElement,
   once: boolean
 ): void {
@@ -134,12 +152,8 @@ function clearSingletonToast(toast: HTMLElement): void {
   }
 }
 
-function isToastLoading(options: ToastOptions): boolean {
-  return !!access(options.loading ?? false);
-}
-
-function toastIconStyle(options: ToastOptions): Record<string, string> {
-  return isToastLoading(options)
+function toastIconStyle(loading: boolean): Record<string, string> {
+  return loading
     ? {
         position: 'relative',
         display: 'inline-flex',
@@ -150,60 +164,6 @@ function toastIconStyle(options: ToastOptions): Record<string, string> {
         flex: '0 0 auto',
       }
     : {};
-}
-
-function toastIconContent(
-  theme: ToastTheme,
-  options: ToastOptions
-): HTMLElement | SVGElement | null {
-  if (isToastLoading(options)) return createLoading();
-  return theme ? icon(theme) : null;
-}
-
-function toastMessage(message: string, options: ToastOptions): string {
-  return isToastLoading(options)
-    ? options.text?.loading || translate('Loading...')
-    : message;
-}
-
-async function closeByUser(
-  toast: HTMLElement,
-  options: ToastOptions
-): Promise<void> {
-  const shouldCancel = isToastLoading(options);
-  hide(toast);
-  if (shouldCancel) await options.onCancel?.();
-  await options.onClose?.();
-}
-
-function bindToastStatus(
-  element: HTMLElement,
-  iconElement: HTMLElement,
-  messageElement: HTMLElement,
-  message: string,
-  description: string,
-  theme: ToastTheme,
-  options: ToastOptions,
-  duration = 0
-): void {
-  const id = element.dataset.toast || randomId();
-  const dispose = createRoot((dispose) => {
-    insert(
-      element,
-      () => (theme || isToastLoading(options) ? iconElement : null),
-      messageElement
-    );
-    insert(iconElement, () => toastIconContent(theme, options));
-    insert(messageElement, () => toastMessage(message, options));
-    createEffect(() => {
-      cancelToastTimers(id);
-      if (duration > 0 && !isToastLoading(options)) {
-        setToastTimer(id, 'hide', () => hide(element), duration);
-      }
-    });
-    return dispose;
-  });
-  addToastDisposer(element, dispose);
 }
 
 function getOrCreateContainer(names: ToastClassNames): HTMLElement {
@@ -363,10 +323,16 @@ function hide(toast: HTMLElement | null | undefined): void {
   });
 }
 
-function show(message = '', options: ToastOptions = {}): HTMLElement {
+function createToast(
+  message: string,
+  options: ToastOptions,
+  status: () => ToastStatus,
+  kind: ToastKind = 'show',
+  onCancel?: () => void | Promise<void>
+): HTMLElement {
   const once = options.once ?? false;
   if (once) {
-    const toast = getSingletonToast('show');
+    const toast = getSingletonToast(kind);
     if (toast) return toast;
   }
   validateParam('message', message, 'string', 'Toast.show');
@@ -380,49 +346,140 @@ function show(message = '', options: ToastOptions = {}): HTMLElement {
     classNames,
     options.className ?? {}
   ) as ToastClassNames;
-  const id = randomId();
-  const iconElement = jsx('span', {
-    className: names.icon,
-    style: () => toastIconStyle(options),
-  }) as HTMLElement;
-  const messageElement = jsx('span', {
-    className: names.message,
-  }) as HTMLElement;
-  const description = options.description ?? '';
-  const descriptionElement = Show({
-    when: description,
-    children: jsx('span', {
-      className: names.description,
-      children: description,
-    }),
+  return createRoot((dispose) => {
+    const id = randomId();
+    const iconElement = jsx('span', {
+      className: names.icon,
+      'data-toast-icon': id,
+      style: () => toastIconStyle(status().loading),
+      children: () =>
+        status().loading
+          ? createLoading()
+          : status().theme
+            ? icon(status().theme)
+            : null,
+    }) as HTMLElement;
+    const messageElement = jsx('span', {
+      className: names.message,
+      'data-toast-message': id,
+      children: () => status().message,
+    }) as HTMLElement;
+    const description = options.description ?? '';
+    const descriptionElement = description
+      ? jsx('span', {
+          className: names.description,
+          'data-toast-description': id,
+          children: description,
+        })
+      : null;
+    const toast = jsx('div', {
+      className: () =>
+        joinClasses(
+          names.toast,
+          status().theme ? names[status().theme as Exclude<ToastTheme, ''>] : ''
+        ),
+      'data-toast': id,
+      role: 'alert',
+      'aria-atomic': 'true',
+      'aria-live': () => (status().theme === 'error' ? 'assertive' : 'polite'),
+      children: [messageElement, descriptionElement],
+    }) as HTMLElement;
+    insert(
+      toast,
+      () => (status().theme || status().loading ? iconElement : null),
+      messageElement
+    );
+    createEffect(() => {
+      cancelToastTimers(id);
+      if (duration > 0 && !status().loading)
+        setToastTimer(id, 'hide', () => hide(toast), duration);
+    });
+    addToastDisposer(toast, dispose);
+    mountToast(
+      toast,
+      () => insert(getOrCreateContainer(names), toast),
+      status().theme === 'error' ? 'assertive' : 'polite'
+    );
+    setSingletonToast(kind, toast, once);
+    addToastDisposer(
+      toast,
+      listen(toast, 'click', () => {
+        const pending = status().loading;
+        hide(toast);
+        void (async () => {
+          if (pending) await onCancel?.();
+          await options.onClose?.();
+        })();
+      })
+    );
+    return toast;
   });
-  const toast = jsx('div', {
-    className: joinClasses(names.toast, theme ? names[theme] : ''),
-    'data-toast': id,
-    role: 'alert',
-    'aria-atomic': 'true',
-    children: [messageElement, descriptionElement],
-  }) as HTMLElement;
-  bindToastStatus(
-    toast,
-    iconElement,
-    messageElement,
+}
+
+function show(message = '', options: ToastOptions = {}): HTMLElement {
+  return createToast(message, options, () => ({
     message,
-    description,
-    theme,
+    theme: options.theme ?? '',
+    loading: false,
+  }));
+}
+
+const LOADING_MESSAGE = translate('Loading') + '...';
+
+function loading(message = '', options: LoadingToastOptions = {}): HTMLElement {
+  return createToast(
+    message,
     options,
-    duration
+    () => {
+      const pending = !!access(options.loading ?? false);
+      return {
+        message: pending ? (options.text?.loading ?? LOADING_MESSAGE) : message,
+        theme: pending ? '' : 'success',
+        loading: pending,
+      };
+    },
+    'loading',
+    options.onCancel
   );
-  mountToast(
-    toast,
-    () => insert(getOrCreateContainer(names), toast),
-    theme === 'error' ? 'assertive' : 'polite'
-  );
-  setSingletonToast('show', toast, once);
-  addToastDisposer(
-    toast,
-    listen(toast, 'click', () => void closeByUser(toast, options))
-  );
+}
+
+function promise<T>(
+  task: Promise<T>,
+  options: PromiseToastOptions = {}
+): HTMLElement {
+  const [status, setStatus] = createSignal<ToastStatus>({
+    message: options.text?.loading ?? LOADING_MESSAGE,
+    theme: '',
+    loading: true,
+  });
+  const toast = createToast('', options, status, 'show', options.onCancel);
+  let disposed = false;
+  addToastDisposer(toast, () => {
+    disposed = true;
+  });
+  // Observe both outcomes even after dismissal so a late rejection is consumed.
+  void task
+    .then(
+      async () => {
+        if (disposed) return;
+        setStatus({
+          message: options.text?.success ?? translate('Success'),
+          theme: 'success',
+          loading: false,
+        });
+        await options.onSuccess?.();
+      },
+      async () => {
+        if (disposed) return;
+        setStatus({
+          message: options.text?.error ?? translate('Error'),
+          theme: 'error',
+          loading: false,
+        });
+        await options.onError?.();
+      }
+    )
+    .catch(console.error);
   return toast;
 }
 
@@ -456,7 +513,7 @@ function lite(
   return element;
 }
 
-function confirm(message = '', props: ToastConfirmProps = {}): HTMLElement {
+function confirm(message = '', props: ConfirmToastOptions = {}): HTMLElement {
   const once = props.once ?? true;
   if (once) {
     const toast = getSingletonToast('confirm');
@@ -466,6 +523,10 @@ function confirm(message = '', props: ToastConfirmProps = {}): HTMLElement {
   const closeText = props.text?.close || translate('Close');
   const confirmText = props.text?.confirm || translate('Confirm');
   validateParam('once', once, 'boolean', 'Toast.confirm');
+  const duration = props.duration ?? 3000;
+  const theme = props.theme ?? '';
+  validateParam('duration', duration, TOAST_DURATION_RULE, 'Toast.confirm');
+  validateParam('theme', theme, TOAST_THEME_RULE, 'Toast.confirm');
   const description = props.description ?? '';
   const names = mergeShallowConfig(
     classNames,
@@ -473,21 +534,21 @@ function confirm(message = '', props: ToastConfirmProps = {}): HTMLElement {
   ) as ToastClassNames;
   const id = randomId();
   const element = jsx('div', {
-    className: names.confirm,
+    className: joinClasses(names.confirm, theme ? names[theme] : ''),
     'data-toast': id,
     'data-toast-confirm': '',
     children: [
       jsx('div', {
         className: names.message,
+        'data-toast-message': id,
         children: message,
       }),
-      Show({
-        when: description,
-        children: jsx('div', {
-          className: names.description,
-          children: description,
-        }),
-      }),
+      description
+        ? jsx('div', {
+            className: names.description,
+            children: description,
+          })
+        : null,
       jsx('div', {
         className: names.buttons,
         'data-toast-buttons': id,
@@ -525,6 +586,7 @@ function confirm(message = '', props: ToastConfirmProps = {}): HTMLElement {
     }
   );
   setSingletonToast('confirm', element, once);
+  if (duration > 0) setToastTimer(id, 'hide', () => hide(element), duration);
   return element;
 }
 
@@ -552,6 +614,8 @@ export const Toast = {
     return { className: classNames };
   },
   show,
+  loading,
+  promise,
   info: (message = '', options: ToastOptions = {}) =>
     show(message, { ...options, theme: 'info' }),
   success: (message = '', options: ToastOptions = {}) =>

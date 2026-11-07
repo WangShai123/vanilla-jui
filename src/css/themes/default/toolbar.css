@@ -20,7 +20,7 @@
     --toolbar-justify: center;
 
     gap: 0;
-    padding: var(--s2);
+    padding: 8px;
     box-shadow: var(--shadow-sm);
 
     position: relative;

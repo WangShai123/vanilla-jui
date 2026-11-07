@@ -21,7 +21,8 @@
   .j-editor {
     --editor-font-size: var(--font-size-lg);
     --editor-line-height: 1.75;
-    --editor-block-space: 1.25rem;
+    --editor-p-space: 1.25rem;
+    --editor-block-space: 1.75rem;
 
     --editor-heading-fg: var(--tone-heading);
     --editor-caption-fg: var(--tone-caption);
@@ -80,7 +81,7 @@
     position: relative;
     font-weight: 600;
     color: var(--editor-heading-fg);
-    margin-bottom: var(--editor-block-space);
+    margin-bottom: var(--editor-p-space);
   }
 
   .j-editor h2,
@@ -103,14 +104,16 @@
     /* font-size: 2em; */
     font-size: 1.75em;
     letter-spacing: -0.02em;
-    margin-top: 2.5rem;
+    /* margin-top: 2.5rem; */
+    margin-top: 3rem;
   }
 
   .j-editor h3 {
     /* font-size: 1.25em; */
     font-size: 1.5em;
     letter-spacing: -0.01em;
-    margin-top: 2.25rem;
+    /* margin-top: 2.25rem; */
+    margin-top: 2.5rem;
   }
 
   .j-editor h4 {
@@ -136,7 +139,7 @@
 
   .j-editor p {
     line-height: var(--editor-line-height);
-    margin: var(--editor-block-space) 0;
+    margin: var(--editor-p-space) 0;
   }
 
   .j-editor>div {
@@ -300,7 +303,6 @@
 
   /* Definition List */
   .j-editor dl {
-    /* margin-block: var(--editor-block-space); */
     margin: var(--editor-block-space) 0;
   }
 
@@ -355,7 +357,7 @@
 
   .j-editor input[type='checkbox'] {
     border: 1px solid var(--ui-border);
-    border-radius: var(--checkbox-radius, var(--radius-md));
+    border-radius: var(--checkbox-radius, var(--radius-sm));
     background: var(--ui-bg);
     clear: none;
     cursor: pointer;
@@ -393,19 +395,16 @@
   }
 
   .j-editor blockquote>* {
-    /* margin-block: 0; */
     margin: 0;
   }
 
   .j-editor blockquote>*+* {
-    margin-top: 0.25rem;
+    margin-top: 4px;
   }
 
   .j-editor cite {
     display: block;
-    /* margin-block: 0.25rem; */
-    margin: 0.25rem 0;
-    font-style: normal;
+    margin: 4px 0;
     font-size: 0.875em;
     color: var(--editor-caption-fg);
   }
@@ -802,7 +801,6 @@
 
   .j-editor table,
   .j-editor .block {
-    /* margin-block: var(--editor-block-space); */
     margin: var(--editor-block-space) 0;
   }
 

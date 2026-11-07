@@ -719,33 +719,49 @@ export interface ToastOptions extends ToastThemeOptions {
   description?: string;
   duration?: number;
   once?: boolean;
+  onClose?: () => void | Promise<void>;
+}
+export interface LoadingToastOptions extends ToastOptions {
   loading?: MaybeAccessor<boolean>;
   text?: {
     loading?: string;
   };
-  onClose?: () => void | Promise<void>;
   onCancel?: () => void | Promise<void>;
 }
-export interface ToastConfirmProps extends ToastClassNameOptions {
-  once?: boolean;
-  description?: string;
+export interface ConfirmToastOptions extends ToastOptions {
   text?: {
     close?: string;
     confirm?: string;
   };
   onConfirm?: () => void | Promise<void>;
+}
+export type ToastConfirmProps = ConfirmToastOptions;
+export interface PromiseToastOptions extends ToastClassNameOptions {
+  duration?: number;
+  text?: {
+    loading?: string;
+    success?: string;
+    error?: string;
+  };
+  onCancel?: () => void | Promise<void>;
   onClose?: () => void | Promise<void>;
+  onSuccess?: () => void | Promise<void>;
+  onError?: () => void | Promise<void>;
 }
 declare function hide(toast: HTMLElement | null | undefined): void;
 declare function show(message?: string, options?: ToastOptions): HTMLElement;
+declare function loading(message?: string, options?: LoadingToastOptions): HTMLElement;
+declare function promise<T>(task: Promise<T>, options?: PromiseToastOptions): HTMLElement;
 declare function lite(message?: string, duration?: number, className?: ToastClassNameConfig): HTMLElement;
-declare function confirm(message?: string, props?: ToastConfirmProps): HTMLElement;
+declare function confirm(message?: string, props?: ConfirmToastOptions): HTMLElement;
 declare function clearAll(): void;
 export declare const Toast: {
   timers: Set<string>;
   disposers: Map<HTMLElement, () => void>;
   configure(options?: ToastClassNameOptions): ToastClassNameOptions;
   show: typeof show;
+  loading: typeof loading;
+  promise: typeof promise;
   info: (message?: string, options?: ToastOptions) => HTMLElement;
   success: (message?: string, options?: ToastOptions) => HTMLElement;
   warning: (message?: string, options?: ToastOptions) => HTMLElement;

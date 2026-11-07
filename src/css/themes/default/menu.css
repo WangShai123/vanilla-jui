@@ -71,7 +71,7 @@
   }
 
   .j-menu .menu .menu-item a {
-    gap: var(--s2);
+    gap: 8px;
     color: currentColor;
     padding: 0.5rem 0.75rem;
     height: var(--menu-item-height);
@@ -200,7 +200,7 @@
   }
 
   .j-menu .menu-item.list-menu>.sub-menu>.menu-item>a {
-    padding: calc(var(--space) * 1.25) var(--s2d5);
+    padding: 5px 10px;
     line-height: 1.75;
   }
 
@@ -232,7 +232,7 @@
   }
 
   .j-menu[data-menu-type='mobile'] .menu .menu-item:not(:has(a)) {
-    padding: 0.5rem 1rem;
+    padding: 8px 16px;
   }
 
   .j-menu[data-menu-type='mobile'] .menu .menu-item a {
@@ -241,8 +241,8 @@
     white-space: normal;
     position: relative;
 
-    padding: 0.5rem 1rem;
-    gap: var(--s2);
+    padding: 8px 16px;
+    gap: 8px;
     min-height: var(--el-height-2xl);
     line-height: var(--line-height-paragraph);
   }
@@ -357,7 +357,7 @@
     max-width: 18rem;
     left: 50%;
     transform: translateX(-50%) translateY(100%);
-    bottom: calc(100% + var(--space));
+    bottom: calc(100% + 4px);
     transition:
       transform 0.3s ease-in-out,
       visibility 0.3s ease-in-out,
@@ -391,7 +391,7 @@
   .drop-menu .drop-container {
     min-width: 100px;
     max-width: 200px;
-    padding: var(--space);
+    padding: 4px;
     font-size: var(--font-size-md);
     background-color: var(--ui-surface-subtle);
     border-radius: var(--radius-sm);
@@ -409,9 +409,9 @@
   .drop-menu .menu-item a {
     display: flex;
     align-items: center;
-    gap: var(--s2);
+    gap: 8px;
     width: 100%;
-    padding: var(--space) var(--s2);
+    padding: 4px 8px;
     text-decoration: none;
     color: var(--ui-fg-muted);
     user-select: none;
@@ -435,7 +435,7 @@
   }
 
   .drop-menu .menu-item.menu-heading {
-    padding: 2px var(--s2);
+    padding: 2px 8px;
     color: var(--ui-fg-soft);
     font-size: var(--font-size-sm);
   }

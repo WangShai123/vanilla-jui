@@ -96,7 +96,107 @@ afterEach(() => {
 });
 
 describe('Toast', () => {
-  it.each([undefined, ''] as const)(
+  it('uses no theme by default and preserves optional descriptions', () => {
+    const toast = Toast.show('Saved', { duration: 0, description: 'Details' });
+    expect(toast.className).toBe('j-toast');
+    expect(toast.querySelector('[data-toast-icon]')).toBeNull();
+    expect(toast.querySelector('[data-toast-description]')?.textContent).toBe(
+      'Details'
+    );
+    const loading = Toast.loading('Done', { duration: 0 });
+    expect(loading.classList.contains('is-success')).toBe(true);
+  });
+
+  it.each(['success', 'error'] as const)(
+    'settles a promise as %s in the same toast',
+    async (outcome) => {
+      let resolve!: () => void;
+      let reject!: (error: Error) => void;
+      const task = new Promise<void>((done, fail) => {
+        resolve = done;
+        reject = fail;
+      });
+      const onSuccess = vi.fn();
+      const onError = vi.fn();
+      const toast = Toast.promise(task, { duration: 1000, onSuccess, onError });
+      const parent = toast.parentElement;
+      const message = toast.querySelector('[data-toast-message]');
+      const icon = toast.querySelector('[data-toast-icon]');
+      expect(message?.textContent).toBe('Loading...');
+      expect(toast.className).toBe('j-toast');
+      expect(toast.querySelector('[data-toast-icon] svg')).toBeTruthy();
+      expect(Toast.timers.size).toBe(0);
+      vi.advanceTimersByTime(4000);
+      expect(toast.dataset.mount).not.toBe('false');
+      if (outcome === 'success') resolve();
+      else reject(new Error('Failed'));
+      await flushAnimation();
+      expect(toast.classList.contains(`is-${outcome}`)).toBe(true);
+      expect(message?.textContent).toBe(outcome);
+      expect(toast.getAttribute('aria-live')).toBe(
+        outcome === 'error' ? 'assertive' : 'polite'
+      );
+      expect(onSuccess).toHaveBeenCalledTimes(outcome === 'success' ? 1 : 0);
+      expect(onError).toHaveBeenCalledTimes(outcome === 'error' ? 1 : 0);
+      expect(toast.querySelector('[data-toast-message]')).toBe(message);
+      expect(toast.querySelector('[data-toast-icon]')).toBe(icon);
+      expect(toast.parentElement).toBe(parent);
+      expect(Toast.timers.size).toBe(1);
+      vi.advanceTimersByTime(1000);
+      await flushAnimation();
+      expect(toast.isConnected).toBe(false);
+    }
+  );
+
+  it.each(['click', 'hide', 'clearAll'] as const)(
+    'ignores a late rejection after %s',
+    async (action) => {
+      let reject!: (error: Error) => void;
+      const task = new Promise<void>((_, fail) => {
+        reject = fail;
+      });
+      const onCancel = vi.fn(() => {
+        expect(toast.dataset.mount).toBe('false');
+      });
+      const onClose = vi.fn();
+      const onError = vi.fn();
+      const toast = Toast.promise(task, { onCancel, onClose, onError });
+      const message = toast.querySelector('[data-toast-message]');
+      if (action === 'click') toast.click();
+      else if (action === 'hide') Toast.hide(toast);
+      else Toast.clearAll();
+      reject(new Error('Late failure'));
+      await flushAnimation();
+      expect(onCancel).toHaveBeenCalledTimes(action === 'click' ? 1 : 0);
+      expect(onClose).toHaveBeenCalledTimes(action === 'click' ? 1 : 0);
+      expect(onError).not.toHaveBeenCalled();
+      expect(message?.textContent).toBe('Loading...');
+      expect(Toast.timers.size).toBe(0);
+      expect(Toast.disposers.size).toBe(0);
+    }
+  );
+
+  it('applies inherited confirm options and allows multiple confirms', async () => {
+    const first = Toast.confirm('One', {
+      once: false,
+      duration: 100,
+      theme: 'warning',
+    });
+    const second = Toast.confirm('Two', {
+      once: false,
+      duration: 0,
+      theme: '',
+    });
+    expect(first).not.toBe(second);
+    expect(first.classList.contains('is-warning')).toBe(true);
+    expect(second.className).toBe('j-toast is-confirm');
+    vi.advanceTimersByTime(100);
+    await flushAnimation();
+    expect(first.isConnected).toBe(false);
+    expect(second.isConnected).toBe(true);
+  });
+
+  it.each([''] as const)(
     'omits the icon and theme class when theme is %s',
     (theme) => {
       const toast = Toast.show('Saved', { duration: 0, theme });
@@ -109,13 +209,13 @@ describe('Toast', () => {
     }
   );
 
-  it('preserves the loading icon for an unthemed toast across loading changes', async () => {
+  it('preserves the root and icon across loading changes', async () => {
     const [loading, setLoading] = createSignal(false);
-    const toast = Toast.show('Saved', { duration: 1000, loading });
+    const toast = Toast.loading('Saved', { duration: 1000, loading });
     const parent = toast.parentElement;
     const message = toast.querySelector('[data-toast-message]');
 
-    expect(toast.querySelector('[data-toast-icon]')).toBeNull();
+    expect(toast.classList.contains('is-success')).toBe(true);
 
     setLoading(true);
     await Promise.resolve();
@@ -126,7 +226,7 @@ describe('Toast', () => {
 
     setLoading(false);
     await Promise.resolve();
-    expect(toast.querySelector('[data-toast-icon]')).toBeNull();
+    expect(toast.classList.contains('is-success')).toBe(true);
     expect(message?.textContent).toBe('Saved');
     expect(Toast.timers.size).toBe(1);
 
@@ -310,7 +410,7 @@ describe('Toast', () => {
 
   it('shows loading content and waits to auto close until loading is false', async () => {
     const [loading, setLoading] = createSignal(true);
-    const toast = Toast.info('Saved', {
+    const toast = Toast.loading('Saved', {
       duration: 1000,
       loading,
       text: { loading: 'Submitting...' },
@@ -352,7 +452,7 @@ describe('Toast', () => {
       )?.textContent;
     });
     const onClose = vi.fn<() => Promise<void>>(async () => {});
-    const toast = Toast.info('Queued', {
+    const toast = Toast.loading('Queued', {
       duration: 1000,
       loading,
       text: { loading: 'Cancelling...' },
@@ -374,7 +474,7 @@ describe('Toast', () => {
   it('does not call onCancel when a non-loading toast is clicked', async () => {
     const onCancel = vi.fn<() => Promise<void>>(async () => {});
     const onClose = vi.fn<() => Promise<void>>(async () => {});
-    const toast = Toast.info('Done', {
+    const toast = Toast.loading('Done', {
       duration: 1000,
       onCancel,
       onClose,

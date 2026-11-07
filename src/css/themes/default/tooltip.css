@@ -47,7 +47,7 @@
   }
 
   .j-tooltip .el-text {
-    padding: 2px var(--s2);
+    padding: 2px 8px;
     font-size: var(--font-size-md);
     line-height: var(--line-height);
 

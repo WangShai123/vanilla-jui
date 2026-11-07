@@ -14,11 +14,11 @@
   }
 
   .j-themes .theme-container {
-    gap: var(--s4);
+    gap: 16px;
   }
 
   .j-themes .theme-item {
-    gap: var(--s2);
+    gap: 8px;
   }
 
   .j-themes .item-title {
@@ -27,7 +27,7 @@
   }
 
   .j-themes .items {
-    gap: var(--space);
+    gap: 4px;
 
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -40,7 +40,7 @@
 
   .j-themes [data-theme-group='theme'] .j-btn {
     justify-content: flex-start;
-    --btn-padding: 0 var(--s2);
+    --btn-padding: 0 8px;
   }
 
   .j-themes .j-btn .item-hex {

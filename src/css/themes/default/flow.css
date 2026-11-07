@@ -1,6 +1,6 @@
 @layer components {
   .j-flow {
-    --flow-gap: var(--s2);
+    --flow-gap: 8px;
     --flow-step-size: 28px;
   }
 
@@ -25,7 +25,7 @@
   .j-flow .flow-step-button {
     display: inline-flex;
     align-items: center;
-    gap: var(--space);
+    gap: 4px;
     border: 0;
     background: transparent;
     color: var(--ui-fg-muted);
@@ -65,7 +65,7 @@
   .j-flow .flow-footer {
     border-top: 1px solid var(--ui-border-subtle);
     display: flex;
-    gap: var(--space);
+    gap: 4px;
     justify-content: flex-end;
     padding-top: var(--flow-gap);
     position: relative;

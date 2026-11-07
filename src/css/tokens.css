@@ -18,22 +18,6 @@
 
     /* --- Spacing --- */
     --space: 0.25rem;
-    --s1d5: 0.375rem;
-    --s2: 0.5rem;
-    --s2d5: 0.625rem;
-    --s3: 0.75rem;
-    --s3d5: 0.875rem;
-    --s4: 1rem;
-    --s5: 1.25rem;
-    --s6: 1.5rem;
-    --s7: 1.75rem;
-    --s8: 2rem;
-
-    /* --- Transitions --- */
-    --speed-sm: 0.15s;
-    --speed-md: 0.25s;
-    --speed-lg: 0.5s;
-    --speed-xl: 0.75s;
 
     /* --- Typography Scale --- */
     --text-xs: 0.75rem;
@@ -57,6 +41,10 @@
     --font-extraBold: 800;
     --font-black: 900;
 
+    /* --- height size --- */
+    --el-height: var(--el-height-md);
+    --el-font-size: var(--font-size-md);
+
     /* --- Line Height --- */
     --line-height: 1.5;
     --line-height-paragraph: 1.5;
@@ -76,9 +64,7 @@
     --opacity-disabled: 0.5;
 
     /* --- Animation --- */
-    --time-f: 0.15s;
     --time: 0.2s;
-    --time-s: 0.5s;
 
     --bezier: cubic-bezier(.4, 0, .2, 1);
   }
@@ -92,14 +78,18 @@
     --svg-check: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' width='16' height='16'%3e%3cpath fill='none' stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M4 8.5l2.5 2.5l5.5 -5.5'/%3e%3c/svg%3e");
 
     /* UI Structure */
-    /* --ui-bg: #ffffff; */
-    /* --ui-bg-subtle: #f9fafb; */
-    /* --ui-bg-muted: #f3f4f6; */
+    --ui-fg: #111827;
+    --ui-fg-muted: #6b7280;
+    --ui-fg-soft: #9ca3af;
+    --ui-fg-subtle: #d1d5db;
 
     --ui-bg: hsl(210, 12%, 99%);
     --ui-bg-subtle: hsl(210, 12%, 98%);
     --ui-bg-soft: hsl(210, 12%, 96%);
     --ui-bg-muted: hsl(210, 12%, 94%);
+
+    --ui-fg-disabled: #9ca3af;
+    --ui-bg-disabled: rgba(0, 0, 0, 0.04);
 
     --ui-border: hsla(210, 12%, 84%);
     --ui-border-subtle: hsla(210, 12%, 88%);
@@ -114,27 +104,11 @@
     --ui-surface-raised: #ffffff;
     --ui-surface-overlay: rgba(255, 255, 255, 0.85);
 
-    --ui-fg: #111827;
-    --ui-fg-muted: #6b7280;
-    --ui-fg-soft: #9ca3af;
-    --ui-fg-subtle: #d1d5db;
     --ui-reverse: #000;
-
-    /* --ui-border-subtle: rgba(0, 0, 0, 0.06); */
-    /* --ui-border: rgba(0, 0, 0, 0.1); */
-    --ui-border-strong: rgba(0, 0, 0, 0.2);
     --ui-outline: rgba(0, 0, 0, 0.15);
     --ui-placeholder: #9ca3af;
-    --ui-disabled-bg: rgba(0, 0, 0, 0.04);
-    --ui-disabled-fg: #9ca3af;
     --ui-overlay: rgba(0, 0, 0, 0.25);
     --ui-popup-bg: rgba(0, 0, 0, 0.0625);
-    --ui-input-color: #111827;
-    --ui-input-border: rgba(0, 0, 0, 0.15);
-    --ui-input-focus-border: var(--ui-blue);
-    --ui-input-placeholder: #9ca3af;
-    --ui-input-focus-ring: rgba(59, 130, 246, 0.25);
-    --ui-tooltip-bg: #1f2937;
     --ui-tooltip-fg: #f9fafb;
 
     /* --- Fixed Theme Colors (15 themes) --- */
@@ -299,14 +273,18 @@
     --svg-check: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' width='16' height='16'%3e%3cpath fill='none' stroke='%23000000' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M4 8.5l2.5 2.5l5.5 -5.5'/%3e%3c/svg%3e");
 
     /* UI Structure */
-    --ui-bg: #0b0f14;
-    /* --ui-bg-subtle: #11161d; */
-    /* --ui-bg-muted: #181e27; */
+    --ui-fg: #f9fafb;
+    --ui-fg-muted: #cbd5e1;
+    --ui-fg-soft: #94a3b8;
+    --ui-fg-subtle: #64748b;
 
     --ui-bg: hsl(210, 4%, 8%);
     --ui-bg-subtle: hsl(210, 4%, 10%);
     --ui-bg-soft: hsl(210, 4%, 12%);
     --ui-bg-muted: hsl(210, 4%, 14%);
+
+    --ui-fg-disabled: #64748b;
+    --ui-bg-disabled: rgba(255, 255, 255, 0.04);
 
     --ui-border: hsl(210, 8%, 24%);
     --ui-border-subtle: hsl(210, 8%, 16%);
@@ -321,26 +299,11 @@
     --ui-surface-raised: #151b24;
     --ui-surface-overlay: rgba(7, 10, 15, 0.9);
 
-    --ui-fg: #f9fafb;
-    --ui-fg-muted: #cbd5e1;
-    --ui-fg-soft: #94a3b8;
-    --ui-fg-subtle: #64748b;
     --ui-reverse: #fff;
-    /* --ui-border-subtle: rgba(148, 163, 184, 0.12); */
-    /* --ui-border: rgba(148, 163, 184, 0.18); */
-    --ui-border-strong: rgba(148, 163, 184, 0.28);
     --ui-outline: rgba(148, 163, 184, 0.2);
     --ui-placeholder: #64748b;
-    --ui-disabled-bg: rgba(255, 255, 255, 0.04);
-    --ui-disabled-fg: #64748b;
     --ui-overlay: rgba(2, 6, 23, 0.7);
     --ui-popup-bg: rgba(0, 0, 0, 0.0375);
-    --ui-input-color: #f9fafb;
-    --ui-input-border: rgba(148, 163, 184, 0.2);
-    --ui-input-focus-border: #a78bfa;
-    --ui-input-placeholder: #64748b;
-    --ui-input-focus-ring: rgba(167, 139, 250, 0.28);
-    --ui-tooltip-bg: #11161d;
     --ui-tooltip-fg: #f8fafc;
 
     /* --- Fixed Theme Colors (15 themes) --- */

@@ -22,7 +22,7 @@
     border-color: var(--loader-fg);
     border-right-color: transparent;
     border-radius: 50%;
-    animation: var(--speed-xl) linear infinite animate-spin;
+    animation: 0.75s linear infinite animate-spin;
   }
 
   .j-loader .polygon-loader {
@@ -53,14 +53,11 @@
   .j-loader .flow-loader {
     --loader-width: 2px;
     --loader-bg:
-      radial-gradient(farthest-side, var(--tone-solid) 94%, #0000)
-        top/var(--loader-width) var(--loader-width) no-repeat,
+      radial-gradient(farthest-side, var(--tone-solid) 94%, #0000) top/var(--loader-width) var(--loader-width) no-repeat,
       conic-gradient(#0000 30%, var(--tone-solid));
-    --loader-mask: radial-gradient(
-      farthest-side,
-      #0000 calc(100% - var(--loader-width)),
-      #000 0
-    );
+    --loader-mask: radial-gradient(farthest-side,
+        #0000 calc(100% - var(--loader-width)),
+        #000 0);
 
     width: var(--loader-size);
     height: var(--loader-size);
@@ -78,75 +75,63 @@
     }
 
     12.5% {
-      clip-path: polygon(
-        50% 50%,
-        0 0,
-        50% 0%,
-        100% 0%,
-        100% 0%,
-        100% 0%,
-        100% 0%
-      );
+      clip-path: polygon(50% 50%,
+          0 0,
+          50% 0%,
+          100% 0%,
+          100% 0%,
+          100% 0%,
+          100% 0%);
     }
 
     25% {
-      clip-path: polygon(
-        50% 50%,
-        0 0,
-        50% 0%,
-        100% 0%,
-        100% 100%,
-        100% 100%,
-        100% 100%
-      );
+      clip-path: polygon(50% 50%,
+          0 0,
+          50% 0%,
+          100% 0%,
+          100% 100%,
+          100% 100%,
+          100% 100%);
     }
 
     50% {
-      clip-path: polygon(
-        50% 50%,
-        0 0,
-        50% 0%,
-        100% 0%,
-        100% 100%,
-        50% 100%,
-        0% 100%
-      );
+      clip-path: polygon(50% 50%,
+          0 0,
+          50% 0%,
+          100% 0%,
+          100% 100%,
+          50% 100%,
+          0% 100%);
     }
 
     62.5% {
-      clip-path: polygon(
-        50% 50%,
-        100% 0,
-        100% 0%,
-        100% 0%,
-        100% 100%,
-        50% 100%,
-        0% 100%
-      );
+      clip-path: polygon(50% 50%,
+          100% 0,
+          100% 0%,
+          100% 0%,
+          100% 100%,
+          50% 100%,
+          0% 100%);
     }
 
     75% {
-      clip-path: polygon(
-        50% 50%,
-        100% 100%,
-        100% 100%,
-        100% 100%,
-        100% 100%,
-        50% 100%,
-        0% 100%
-      );
+      clip-path: polygon(50% 50%,
+          100% 100%,
+          100% 100%,
+          100% 100%,
+          100% 100%,
+          50% 100%,
+          0% 100%);
     }
 
     100% {
-      clip-path: polygon(
-        50% 50%,
-        50% 100%,
-        50% 100%,
-        50% 100%,
-        50% 100%,
-        50% 100%,
-        0% 100%
-      );
+      clip-path: polygon(50% 50%,
+          50% 100%,
+          50% 100%,
+          50% 100%,
+          50% 100%,
+          50% 100%,
+          0% 100%);
     }
   }
 

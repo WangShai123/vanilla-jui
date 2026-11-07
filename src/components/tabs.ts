@@ -132,10 +132,10 @@ type PointerDragEvent = MouseEvent | TouchEvent;
 const DEFAULT_CLASS_NAMES: TabsClassNames = {
   root: 'j-tabs',
   wrap: 'tab-wrap',
-  list: 'tab-list',
+  list: 'tab-nav',
   tab: 'tab-item',
   indicator: 'tab-indicator',
-  panelWrap: 'panel-list',
+  panelWrap: 'tab-panel',
   panel: 'panel-item',
   dragging: 'dragging',
 };
@@ -695,7 +695,7 @@ export function createTabs(input: TabsProps = {}): Tabs {
         className: props.className.root,
         id: props.id,
         'data-tabs': 'root',
-        'data-tabs-direction': props.direction,
+        'data-direction': props.direction,
         children: [
           jsx('div', {
             className: props.className.wrap,
@@ -707,15 +707,14 @@ export function createTabs(input: TabsProps = {}): Tabs {
                   props.className.list,
                   state.dragging && props.className.dragging
                 ),
-              'data-tabs-list': '',
+              'data-tabs-nav': '',
               ref: listRef.set,
-              style: { position: 'relative' },
               children: () => [indicator, tabList],
             }),
           }),
           jsx('div', {
             className: props.className.panelWrap,
-            'data-tabs-panel-wrap': '',
+            'data-tabs-panels': '',
             children: For({
               each: renderableData,
               key: (item: TabItem) => item.name,
