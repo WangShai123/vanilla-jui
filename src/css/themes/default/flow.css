@@ -1,18 +1,13 @@
 @layer components {
-  .j-flow {
-    --flow-gap: 8px;
-    --flow-step-size: 28px;
-  }
-
   .j-flow,
   .j-flow .flow-header {
     display: grid;
-    gap: var(--flow-gap);
+    gap: 8px;
   }
 
   .j-flow .flow-steps {
     display: flex;
-    gap: var(--flow-gap);
+    gap: 8px;
     list-style: none;
     margin: 0;
     padding: 0;
@@ -44,8 +39,8 @@
     border-radius: 999px;
     display: inline-flex;
     justify-content: center;
-    height: var(--flow-step-size);
-    min-width: var(--flow-step-size);
+    height: 28px;
+    min-width: 28px;
   }
 
   .j-flow .flow-step.is-active .flow-step-button {
@@ -67,7 +62,7 @@
     display: flex;
     gap: 4px;
     justify-content: flex-end;
-    padding-top: var(--flow-gap);
+    padding-top: 8px;
     position: relative;
   }
 }

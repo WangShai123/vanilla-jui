@@ -1,12 +1,8 @@
 @layer components {
   .j-modal {
-    --modal-header-padding: 12px 16px 0;
-    --modal-body-padding: 16px;
-    --modal-footer-padding: 0 16px 16px;
-
     color: var(--ui-fg);
     background: var(--ui-bg);
-    border: 1px solid var(--ui-border);
+    border: var(--border);
     border-radius: var(--radius-md);
     box-shadow: var(--shadow-md);
     min-width: 300px;
@@ -22,7 +18,7 @@
 
   .j-modal .modal-header {
     gap: 4px;
-    padding: var(--modal-header-padding);
+    padding: var(--modal-header-padding, 12px 16px 0);
     border-bottom: transparent;
 
     display: flex;
@@ -33,7 +29,7 @@
   .j-modal .modal-header .modal-title {
     margin: 0;
     font-size: var(--font-size-md);
-    font-weight: var(--font-medium);
+    font-weight: 500;
   }
 
   .j-modal .modal-header .is-icon svg {
@@ -41,7 +37,7 @@
   }
 
   .j-modal .modal-body {
-    padding: var(--modal-body-padding);
+    padding: var(--modal-body-padding, 16px);
     min-height: 32px;
 
     flex: 1;
@@ -59,7 +55,7 @@
 
   .j-modal .modal-footer {
     gap: 8px;
-    padding: var(--modal-footer-padding);
+    padding: var(--modal-footer-padding, 0 16px 16px);
     border-top: 1px solid transparent;
 
     display: flex;

@@ -1,7 +1,7 @@
 @layer components {
   .j-toolbar-container {
     background: var(--ui-bg);
-    border-bottom: 1px solid var(--ui-border);
+    border-bottom: var(--border);
 
     position: sticky;
     top: 0;
@@ -17,15 +17,13 @@
   }
 
   .j-toolbar {
-    --toolbar-justify: center;
-
     gap: 0;
     padding: 8px;
     box-shadow: var(--shadow-sm);
 
     position: relative;
     display: flex;
-    justify-content: var(--toolbar-justify);
+    justify-content: var(--toolbar-justify, center);
     align-items: center;
   }
 
@@ -56,7 +54,7 @@
     width: 32px;
     height: 32px;
     border-radius: var(--radius-sm);
-    border: 1px solid var(--ui-border);
+    border: var(--border);
   }
 
   .editor-drop-color .color-panel .color-btn:last-of-type {

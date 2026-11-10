@@ -1,18 +1,17 @@
 @layer components {
   .j-breadcrumb {
-    --breadcrumb-font-size: var(--font-size-md);
     --breadcrumb-icon-size: var(--font-size-md);
     --breadcrumb-link-fg: var(--tone-text);
 
-    font-size: var(--breadcrumb-font-size);
+    font-size: var(--breadcrumb-font-size, var(--font-size-md));
     color: var(--ui-fg-muted);
 
     white-space: nowrap;
     user-select: none;
   }
 
-  .j-breadcrumb>ol,
-  .j-breadcrumb>ul {
+  .j-breadcrumb > ol,
+  .j-breadcrumb > ul {
     display: flex;
     flex-wrap: wrap;
     justify-content: flex-start;
@@ -21,26 +20,26 @@
     padding: 0;
   }
 
-  .j-breadcrumb>ol li,
-  .j-breadcrumb>ul li {
+  .j-breadcrumb > ol li,
+  .j-breadcrumb > ul li {
     display: flex;
     align-items: center;
     justify-content: center;
   }
 
-  .j-breadcrumb li+li::before {
+  .j-breadcrumb li + li::before {
     content: '/';
   }
 
-  .j-breadcrumb.is-dot li+li::before {
+  .j-breadcrumb.is-dot li + li::before {
     content: '•';
   }
 
-  .j-breadcrumb.is-arrow li+li::before {
+  .j-breadcrumb.is-arrow li + li::before {
     content: '>';
   }
 
-  .j-breadcrumb.is-dash li+li::before {
+  .j-breadcrumb.is-dash li + li::before {
     content: '–';
   }
 
@@ -80,7 +79,7 @@
     justify-content: center;
   }
 
-  .j-breadcrumb li+li::before {
+  .j-breadcrumb li + li::before {
     color: var(--ui-fg-soft);
   }
 

@@ -1,24 +1,16 @@
 @layer components {
   .j-btn {
     --btn-font-size: var(--font-size-md);
-    --btn-fg: inherit;
-    --btn-padding: 0 12px;
-    --btn-border-color: transparent;
-    --btn-radius: var(--radius-md);
-    --btn-box-shadow: var(--shadow-xs);
-
     gap: 4px;
     font-size: var(--btn-font-size);
     height: var(--btn-height, var(--el-height));
     line-height: 1;
-    color: var(--btn-fg);
+    color: var(--btn-fg, inherit);
     background-color: var(--btn-bg);
-    padding: var(--btn-padding);
-    border-width: 1px;
-    border-style: solid;
-    border-color: var(--btn-border-color);
-    border-radius: var(--btn-radius);
-    box-shadow: var(--btn-box-shadow);
+    padding: var(--btn-padding, 0 12px);
+    border: 1px solid var(--btn-border-color, transparent);
+    border-radius: var(--btn-radius, var(--radius-md));
+    box-shadow: var(--btn-box-shadow, var(--shadow-xs));
     outline: none;
     backdrop-filter: blur(4px);
 

@@ -1,17 +1,15 @@
 @layer components {
   .j-tip {
-    --tip-border-color: var(--ui-border-subtle);
-    --tip-bg: var(--ui-bg);
     --tip-icon-shadow: var(--ui-bg-soft);
     --tip-icon-bg: var(--ui-bg-soft);
 
     row-gap: 8px;
     width: 100%;
-    border: 1px solid var(--tip-border-color);
+    border: 1px solid var(--tip-border-color, var(--ui-border-subtle));
     border-radius: var(--radius-md);
     padding: 12px 16px;
     font-size: var(--font-size-md);
-    background: var(--tip-bg);
+    background: var(--tip-bg, var(--ui-bg));
     box-shadow: var(--shadow-xs);
     backdrop-filter: blur(2px);
 
@@ -49,7 +47,7 @@
   }
 
   .j-tip .tip-title {
-    font-weight: var(--font-medium);
+    font-weight: 500;
 
     grid-column-start: 2;
     overflow: hidden;
@@ -69,11 +67,11 @@
     margin: 6px 0;
   }
 
-  .j-tip .tip-content>*:first-child {
+  .j-tip .tip-content > *:first-child {
     margin-top: 0;
   }
 
-  .j-tip .tip-content>*:last-child {
+  .j-tip .tip-content > *:last-child {
     margin-bottom: 0;
   }
 

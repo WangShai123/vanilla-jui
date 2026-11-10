@@ -20,26 +20,8 @@
     --space: 0.25rem;
 
     /* --- Typography Scale --- */
-    --text-xs: 0.75rem;
-    --text-sm: 0.875rem;
-    --text-md: 1rem;
-    --text-lg: 1.125rem;
-    --text-xl: 1.25rem;
-    --text-2xl: 1.5rem;
-    --text-3xl: 1.875rem;
-    --text-4xl: 2.25rem;
-    --text-5xl: 3rem;
 
     /* --- Font Weight --- */
-    --font-thin: 100;
-    --font-extraLight: 200;
-    --font-light: 300;
-    --font-normal: 400;
-    --font-medium: 500;
-    --font-semiBold: 600;
-    --font-bold: 700;
-    --font-extraBold: 800;
-    --font-black: 900;
 
     /* --- height size --- */
     --el-height: var(--el-height-md);
@@ -60,13 +42,15 @@
 
     /* --- Opacity --- */
     --opacity-hover: 0.68;
-    --opacity-active: 0.95;
     --opacity-disabled: 0.5;
 
     /* --- Animation --- */
-    --time: 0.2s;
+    --speed: 0.2s;
 
-    --bezier: cubic-bezier(.4, 0, .2, 1);
+    --bezier: cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* border */
+    --border: 1px solid var(--ui-border);
   }
 
   /* ============================================
@@ -105,11 +89,9 @@
     --ui-surface-overlay: rgba(255, 255, 255, 0.85);
 
     --ui-reverse: #000;
-    --ui-outline: rgba(0, 0, 0, 0.15);
-    --ui-placeholder: #9ca3af;
-    --ui-overlay: rgba(0, 0, 0, 0.25);
     --ui-popup-bg: rgba(0, 0, 0, 0.0625);
-    --ui-tooltip-fg: #f9fafb;
+    --ui-code-bg: #f3f4f6;
+    --ui-code-fg: #374151;
 
     /* --- Fixed Theme Colors (15 themes) --- */
     --ui-gray: #374151;
@@ -186,7 +168,6 @@
     --tone-body: #4b5563;
     --tone-caption: #6b7280;
     --tone-muted: #9ca3af;
-    --tone-disabled: #d1d5db;
 
     /* Links */
     --tone-link: #4f46e5;
@@ -201,10 +182,6 @@
     --tone-card-active: rgba(0, 0, 0, 0.2);
     --tone-card-border: rgba(0, 0, 0, 0.08);
     --tone-card-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-
-    /* Code */
-    --tone-code-bg: #f3f4f6;
-    --tone-code-fg: #374151;
 
     /* States */
     --state-error: #ef4444;
@@ -253,16 +230,6 @@
     --state-info-muted: rgba(59, 130, 246, 0.16);
     --state-info-border: rgba(59, 130, 246, 0.25);
     --state-info-ring: rgba(59, 130, 246, 0.3);
-
-    /* Component Aliases */
-    --state-error-solid: var(--state-error);
-    --state-error-surface: var(--state-error-subtle);
-    --state-success-solid: var(--state-success);
-    --state-success-surface: var(--state-success-subtle);
-    --state-warning-solid: var(--state-warning);
-    --state-warning-surface: var(--state-warning-subtle);
-    --state-info-solid: var(--state-info);
-    --state-info-surface: var(--state-info-subtle);
   }
 
   /* ============================================
@@ -300,11 +267,9 @@
     --ui-surface-overlay: rgba(7, 10, 15, 0.9);
 
     --ui-reverse: #fff;
-    --ui-outline: rgba(148, 163, 184, 0.2);
-    --ui-placeholder: #64748b;
-    --ui-overlay: rgba(2, 6, 23, 0.7);
     --ui-popup-bg: rgba(0, 0, 0, 0.0375);
-    --ui-tooltip-fg: #f8fafc;
+    --ui-code-bg: #11161d;
+    --ui-code-fg: #e5e7eb;
 
     /* --- Fixed Theme Colors (15 themes) --- */
     --ui-gray: #d1d5db;
@@ -396,10 +361,6 @@
     --tone-card-border: rgba(148, 163, 184, 0.12);
     --tone-card-shadow: 0 1px 3px rgba(0, 0, 0, 0.28);
 
-    /* Code */
-    --tone-code-bg: #11161d;
-    --tone-code-fg: #e5e7eb;
-
     /* States */
     --state-error: #f87171;
     --state-error-hover: #fca5a5;
@@ -460,8 +421,8 @@
   }
 
   /* ============================================
-     5. Theme Variants (15 themes)
-     ============================================ */
+    5. Theme Variants (15 themes)
+  ============================================ */
 
   /* --- Gray --- */
   .j-theme-gray {
@@ -809,8 +770,8 @@
   }
 
   /* ============================================
-     6. Dark Theme Variants
-     ============================================ */
+    6. Dark Theme Variants
+  ============================================ */
 
   .dark.j-theme-gray {
     --tone-subtle: rgba(255, 255, 255, 0.06);
@@ -1113,7 +1074,7 @@
   }
 
   /* ============================================
-     7. Radius Themes
+    7. Radius Themes
   ============================================ */
   :root,
   .j-radius-md {
@@ -1184,8 +1145,8 @@
   }
 
   /* ============================================
-     8. Shadow Themes
-     ============================================ */
+    8. Shadow Themes
+  ============================================ */
 
   :root,
   .j-shadow-md {
@@ -1245,7 +1206,7 @@
   }
 
   /* ============================================
-     9. Font Themes
+    9. Font Themes
   ============================================ */
 
   :root,

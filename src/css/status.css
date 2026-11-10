@@ -1,25 +1,22 @@
 /* 
  * status.css
  * - sad mode
- * - disabled
  * - readonly
  * - data-action
  * - shape status
  * - drag status
- * - hidden
+ * - disabled
+ * - flex direction
+ * - element
+ * - height size
  */
 @layer status {
-
   /* sad mode */
   .is-sad {
     filter: grayscale(100%);
   }
 
   /* readonly */
-  /* [readonly] {
-    opacity: var(--opacity-readonly);
-    cursor: default;
-  } */
 
   /* data-action */
   [data-action] {

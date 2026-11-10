@@ -12,9 +12,8 @@
   }
 
   .j-offcanvas {
-    --offcanvas-border: 1px solid var(--ui-border-subtle);
-    --offcanvas-block-width: 300px;
-    --offcanvas-inline-height: 200px;
+    --offcanvas-width: 300px;
+    --offcanvas-height: 200px;
 
     background: var(--ui-bg);
     box-shadow: var(--shadow-md);
@@ -26,37 +25,37 @@
   .j-offcanvas[data-direction='left'] {
     top: 0;
     left: 0;
-    width: var(--offcanvas-block-width);
+    width: var(--offcanvas-width);
     height: 100vh;
-    border-right: var(--offcanvas-border);
+    border-right: var(--border);
   }
 
   .j-offcanvas[data-direction='right'] {
     top: 0;
     right: 0;
-    width: var(--offcanvas-block-width);
+    width: var(--offcanvas-width);
     height: 100vh;
-    border-left: var(--offcanvas-border);
+    border-left: var(--border);
   }
 
   .j-offcanvas[data-direction='top'] {
     top: 0;
     left: 0;
     width: 100%;
-    height: var(--offcanvas-inline-height);
-    border-bottom: var(--offcanvas-border);
+    height: var(--offcanvas-height);
+    border-bottom: var(--border);
   }
 
   .j-offcanvas[data-direction='bottom'] {
     bottom: 0;
     left: 0;
     width: 100%;
-    height: var(--offcanvas-inline-height);
-    border-top: var(--offcanvas-border);
+    height: var(--offcanvas-height);
+    border-top: var(--border);
   }
 
   .j-font-md .j-offcanvas {
-    --offcanvas-block-width: 316px;
+    --offcanvas-width: 316px;
   }
 
   .j-offcanvas .offcanvas-panel {

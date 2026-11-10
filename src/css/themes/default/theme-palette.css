@@ -23,7 +23,7 @@
 
   .j-themes .item-title {
     font-size: var(--font-size-md);
-    font-weight: var(--font-bold);
+    font-weight: 700;
   }
 
   .j-themes .items {

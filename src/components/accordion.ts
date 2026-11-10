@@ -129,7 +129,7 @@ const DEFAULT_CLASS_NAMES: AccordionClassNames = {
   root: 'j-accordion',
   header: 'accordion-header',
   title: 'header-title',
-  arrow: 'header-arrow j-btn is-ghost is-sm is-icon',
+  arrow: 'header-arrow j-btn is-ghost is-icon',
   panel: 'accordion-panel',
   content: 'panel-content',
 };

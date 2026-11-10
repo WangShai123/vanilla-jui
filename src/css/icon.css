@@ -32,8 +32,4 @@
   .icon-close::after {
     transform: translate(-50%, -50%) rotate(-45deg);
   }
-
-  /* .icon-close:focus-within {
-    background-color: var(--tone-subtle);
-  } */
 }

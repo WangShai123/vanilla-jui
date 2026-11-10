@@ -2,11 +2,10 @@
   .j-avatar {
     --avatar-size: var(--el-height-md);
     --avatar-border-radius: var(--radius-sm);
-    --avatar-box-shadow: var(--shadow-sm);
 
     width: var(--avatar-size);
     height: var(--avatar-size);
-    box-shadow: var(--avatar-box-shadow);
+    box-shadow: var(--avatar-box-shadow, var(--shadow-sm));
     border: var(--avatar-border);
     border-radius: var(--avatar-border-radius);
     background: var(--avatar-bg);
@@ -61,7 +60,7 @@
   .j-avatar.is-text {
     --avatar-bg: var(--tone-subtle);
     --avatar-fg: var(--tone-solid);
-    --avatar-font-weight: var(--font-medium);
+    --avatar-font-weight: 500;
   }
 
   .j-avatar.is-text,

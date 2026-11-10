@@ -5,7 +5,7 @@
     min-width: var(--badge-min-width, 1.25rem);
     height: var(--badge-height, 1.25rem);
     font-size: var(--badge-font-size, var(--font-size-sm));
-    font-weight: var(--font-medium);
+    font-weight: 500;
     border-radius: 48px;
     border: 1px solid var(--badge-border-color, var(--ui-border));
     color: var(--badge-fg, var(--ui-fg));

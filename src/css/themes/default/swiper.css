@@ -1,9 +1,8 @@
 @layer components {
   .j-swiper {
-    --swiper-min-height: 120px;
-    --swiper-title-inset: 12px;
-    --swiper-title-font-size: var(--font-size-lg);
-    --swiper-navigation-size: 32px;
+    --swiper-inset: 12px;
+    --swiper-font-size: var(--font-size-lg);
+    --swiper-icon-size: 32px;
 
     position: relative;
     display: block;
@@ -11,7 +10,7 @@
     touch-action: pan-y;
     user-select: none;
     width: 100%;
-    min-height: var(--swiper-min-height);
+    min-height: var(--swiper-min-height, 120px);
     border-radius: var(--radius-md);
   }
 
@@ -42,9 +41,11 @@
     color: var(--ui-fg-soft);
     font-size: var(--font-size-md);
     background-color: var(--tone-wash);
-    background-image: radial-gradient(circle,
-        var(--ui-border) 1px,
-        transparent 1px);
+    background-image: radial-gradient(
+      circle,
+      var(--ui-border) 1px,
+      transparent 1px
+    );
     background-size: 20px 20px;
 
     position: absolute;
@@ -74,13 +75,13 @@
   }
 
   .j-swiper .swiper-slide-title {
-    right: var(--swiper-title-inset);
-    bottom: var(--swiper-title-inset);
-    left: var(--swiper-title-inset);
+    right: var(--swiper-inset);
+    bottom: var(--swiper-inset);
+    left: var(--swiper-inset);
     padding: 6px 8px;
     color: #fff;
-    font-size: var(--swiper-title-font-size);
-    font-weight: var(--font-bold);
+    font-size: var(--swiper-font-size);
+    font-weight: 700;
     background: rgba(0, 0, 0, 0.35);
     border-radius: var(--radius-sm);
     line-height: var(--line-height-heading);
@@ -135,8 +136,8 @@
   }
 
   .j-swiper .swiper-navigation {
-    width: var(--swiper-navigation-size);
-    height: var(--swiper-navigation-size);
+    width: var(--swiper-icon-size);
+    height: var(--swiper-icon-size);
     padding: 0;
     color: #fff;
     background: rgba(0, 0, 0, 0.35);
@@ -188,8 +189,8 @@
 
   @media (max-width: 640px) {
     .j-swiper {
-      --swiper-title-font-size: var(--font-size-md);
-      --swiper-title-inset: 8px;
+      --swiper-font-size: var(--font-size-md);
+      --swiper-inset: 8px;
     }
   }
 }

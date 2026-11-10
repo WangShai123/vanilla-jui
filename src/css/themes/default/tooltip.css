@@ -1,12 +1,8 @@
 @layer comopnents {
   .j-tooltip {
-    --tooltip-fg: var(--ui-bg);
-    --tooltip-bg: var(--ui-fg);
-    --tooltip-border-color: var(--ui-border);
-
-    background: var(--tooltip-bg);
-    color: var(--tooltip-fg);
-    border: 1px solid var(--tooltip-border-color);
+    background: var(--tooltip-bg, var(--ui-fg));
+    color: var(--tooltip-fg, var(--ui-bg));
+    border: 1px solid var(--tooltip-border-color, var(--ui-border));
     border-radius: var(--radius-md);
     max-width: 260px;
     padding: 2px 4px;

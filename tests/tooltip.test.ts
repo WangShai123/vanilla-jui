@@ -88,19 +88,19 @@ describe('Tooltip', () => {
     });
 
     expect(
-      find('[data-tooltip]', tooltip.element)?.classList.contains('is-primary')
+      find('[data-tooltip]', tooltip.element)?.classList.contains('is-info')
     ).toBe(false);
 
     tooltip.destroy();
 
-    const themedButton = target('primary-theme');
+    const themedButton = target('info-theme');
     tooltip = createTooltip(themedButton, {
-      message: 'Primary theme',
-      theme: 'primary',
+      message: 'info theme',
+      theme: 'info',
     });
 
     expect(
-      find('[data-tooltip]', tooltip.element)?.classList.contains('is-primary')
+      find('[data-tooltip]', tooltip.element)?.classList.contains('is-info')
     ).toBe(true);
   });
 

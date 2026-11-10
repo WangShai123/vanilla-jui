@@ -51,7 +51,7 @@
   }
 
   .j-input:not([type='checkbox']) {
-    border: 1px solid var(--ui-border);
+    border: var(--border);
     border-radius: var(--radius-md);
     padding: var(--input-padding, 0 8px);
     height: var(--input-height, var(--el-height));
@@ -148,7 +148,7 @@
     width: 1rem;
     height: 1rem;
     border-radius: 50%;
-    border: 1px solid var(--ui-border);
+    border: var(--border);
     background-color: var(--ui-bg);
     margin: 0;
     cursor: pointer;
@@ -201,14 +201,16 @@
     align-items: center;
     text-align: center;
     user-select: none;
-    transition: all 0.2s ease-in-out;
+    transition-property: box-shadow, color, background-color;
+    transition-duration: 0.2s;
+    transition-timing-function: ease-in-out;
   }
 
   .j-radio.is-group label:not(:first-child) span.radio-text {
     margin-left: 1px;
   }
 
-  .j-radio.is-group input[type='radio']:checked+span.radio-text {
+  .j-radio.is-group input[type='radio']:checked + span.radio-text {
     box-shadow: 0 0 0 1px var(--tone-solid);
     color: var(--tone-solid);
     background-color: var(--tone-soft);
@@ -275,7 +277,7 @@
     width: 1rem;
     height: 1rem;
     aspect-ratio: 1/1;
-    border: 1px solid var(--ui-border);
+    border: var(--border);
     border-radius: var(--checkbox-radius, var(--radius-sm));
     cursor: pointer;
     position: relative;
@@ -354,27 +356,33 @@
     height: 1.5rem;
   }
 
-  .j-switch input[type='checkbox']:checked+.switch-slider {
+  .j-switch input[type='checkbox']:checked + .switch-slider {
     background-color: var(--tone-solid);
   }
 
-  .j-switch.is-sm input[type='checkbox']:checked+.switch-slider:after {
+  .j-switch.is-sm input[type='checkbox']:checked + .switch-slider:after {
     transform: translateX(0.75rem);
   }
 
-  .j-switch.is-md input[type='checkbox']:checked+.switch-slider:after {
+  .j-switch.is-md input[type='checkbox']:checked + .switch-slider:after {
     transform: translateX(1.125rem);
   }
 
-  .j-switch.is-lg input[type='checkbox']:checked+.switch-slider:after {
+  .j-switch.is-lg input[type='checkbox']:checked + .switch-slider:after {
     transform: translateX(1.5rem);
   }
 
-  .j-theme-gray .j-switch input[type='checkbox']:checked+.switch-slider:after {
+  .j-theme-gray
+    .j-switch
+    input[type='checkbox']:checked
+    + .switch-slider:after {
     background-color: var(--ui-bg);
   }
 
-  .j-theme-olive .j-switch input[type='checkbox']:checked+.switch-slider:after {
+  .j-theme-olive
+    .j-switch
+    input[type='checkbox']:checked
+    + .switch-slider:after {
     background-color: var(--ui-bg);
   }
 
@@ -385,7 +393,7 @@
   /* select */
   select.j-select {
     padding: var(--input-padding, 0 6px);
-    border: 1px solid var(--ui-border);
+    border: var(--border);
     border-radius: var(--radius-md);
     height: var(--el-height);
     line-height: var(--line-height);
@@ -402,7 +410,7 @@
   /* textarea */
   textarea.j-textarea {
     min-height: 72px;
-    border: 1px solid var(--ui-border);
+    border: var(--border);
     border-radius: var(--radius-md);
     color: var(--tone-body);
     background-color: var(--ui-bg);
@@ -446,9 +454,9 @@
     --btn-box-shadow: none;
   }
 
-  .input-group .el-addon>.el-text {
+  .input-group .el-addon > .el-text {
     background-color: var(--ui-bg-muted);
-    border: 1px solid var(--ui-border);
+    border: var(--border);
     border-radius: var(--radius-md);
   }
 
@@ -457,28 +465,31 @@
     width: var(--input-height);
   }
 
-  .input-group>*:not(:first-child) {
+  .input-group > *:not(:first-child) {
     margin-left: -1px;
   }
 
-  .input-group>input.j-input:not(:first-child),
-  .input-group>select.j-select:not(:first-child),
-  .input-group> :not(select.j-select)+.el-addon:not(:first-child)>.el-text {
+  .input-group > input.j-input:not(:first-child),
+  .input-group > select.j-select:not(:first-child),
+  .input-group
+    > :not(select.j-select)
+    + .el-addon:not(:first-child)
+    > .el-text {
     border-left-color: transparent;
   }
 
-  .input-group>input.j-input:not(:first-child),
-  .input-group>select.j-select:not(:first-child),
-  .input-group>*:not(:first-child)>*,
-  .input-group>*:not(:first-child)>.el-text {
+  .input-group > input.j-input:not(:first-child),
+  .input-group > select.j-select:not(:first-child),
+  .input-group > *:not(:first-child) > *,
+  .input-group > *:not(:first-child) > .el-text {
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;
   }
 
-  .input-group>input.j-input:not(:last-child),
-  .input-group>select.j-select:not(:last-child),
-  .input-group>*:not(:last-child)>*,
-  .input-group>*:not(:last-child)>.el-text {
+  .input-group > input.j-input:not(:last-child),
+  .input-group > select.j-select:not(:last-child),
+  .input-group > *:not(:last-child) > *,
+  .input-group > *:not(:last-child) > .el-text {
     border-top-right-radius: 0;
     border-bottom-right-radius: 0;
   }
@@ -493,7 +504,7 @@
   }
 
   .input-inner-group {
-    border: 1px solid var(--ui-border);
+    border: var(--border);
     border-radius: var(--radius-md);
   }
 
@@ -507,13 +518,13 @@
     --btn-box-shadow: none;
   }
 
-  .input-inner-group .el-addon+.j-input {
+  .input-inner-group .el-addon + .j-input {
     padding-left: 0;
     padding-right: 4px;
   }
 
-  .input-inner-group .el-addon+.j-select {
-    padding-left: 2px;
+  .input-inner-group .el-addon + .j-select {
+    padding: 0;
   }
 
   .input-inner-group .el-addon {
@@ -522,15 +533,6 @@
     display: flex;
     align-items: center;
     justify-content: center;
-  }
-
-  .input-inner-group .el-addon .j-btn:not(.is-icon) {
-    --btn-height: var(--el-height-sm);
-  }
-
-  .input-inner-group .el-addon .j-btn.is-xs:not(.is-icon),
-  .input-inner-group .el-addon .j-btn.is-sm:not(.is-icon) {
-    height: inherit;
   }
 
   /* .input-group .j-btn:active, */
@@ -545,8 +547,8 @@
     height: var(--font-size-xl);
   }
 
-  .input-group .el-addon>.el-text,
-  .input-inner-group .el-addon>.el-text {
+  .input-group .el-addon > .el-text,
+  .input-inner-group .el-addon > .el-text {
     display: flex;
     align-items: center;
     user-select: none;
@@ -649,7 +651,7 @@
     background-color: var(--ui-bg-disabled);
   }
 
-  .j-radio.is-group label input[type='radio']:disabled+.radio-text {
+  .j-radio.is-group label input[type='radio']:disabled + .radio-text {
     cursor: not-allowed;
     background-color: var(--ui-bg-disabled);
     color: var(--ui-fg-disabled);
