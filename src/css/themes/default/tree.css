@@ -1,9 +1,8 @@
 @layer components {
   .j-tree {
     padding: 14px;
-    border: 1px solid var(--ui-border-subtle);
+    border: var(--border-subtle);
     border-radius: var(--radius-md);
-    background: var(--ui-surface);
     color: var(--tone-heading);
     font-size: var(--font-size-sm);
     line-height: 1.45;
