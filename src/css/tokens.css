@@ -45,12 +45,12 @@
     --opacity-disabled: 0.5;
 
     /* --- Animation --- */
-    --speed: 0.2s;
-
     --bezier: cubic-bezier(0.4, 0, 0.2, 1);
 
     /* border */
     --border: 1px solid var(--ui-border);
+    --border-subtle: 1px solid var(--ui-border-subtle);
+    --border-soft: 1px solid var(--ui-border-soft);
   }
 
   /* ============================================

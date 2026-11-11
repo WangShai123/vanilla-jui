@@ -212,7 +212,7 @@
     opacity: 0;
     transform: translateY(12px);
 
-    animation: reveal 0.62s ease forwards;
+    animation: reveal 0.6s ease forwards;
   }
 
   [data-reveal='2'] {

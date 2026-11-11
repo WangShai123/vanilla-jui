@@ -313,7 +313,7 @@ describe('Toc', () => {
     expect(indicator?.style.backgroundColor).toBe('var(--tone-solid)');
     expect(indicator?.style.position).toBe('absolute');
     expect(indicator?.style.pointerEvents).toBe('none');
-    expect(indicator?.style.transition).toBe('top 0ms ease-in-out');
+    expect(indicator?.style.transition).toBe('top 0ms ease');
   });
 
   it('applies configured indicator styles and height ratio', async () => {
@@ -417,7 +417,7 @@ describe('Toc', () => {
     expect(
       container.querySelector<HTMLElement>('[data-toc-indicator]')?.style
         .transition
-    ).toBe('top 960ms ease-in-out');
+    ).toBe('top 960ms ease');
   });
 
   it('keeps the clicked lower target current during pending smooth scroll', async () => {

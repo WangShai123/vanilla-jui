@@ -58,20 +58,20 @@
     margin: 0;
   }
 
-  .j-tip .tip-content {
+  .j-tip .tip-body {
     grid-column-start: 2;
     color: var(--tone-body);
   }
 
-  .j-tip .tip-content p {
+  .j-tip .tip-body p {
     margin: 6px 0;
   }
 
-  .j-tip .tip-content > *:first-child {
+  .j-tip .tip-body > *:first-child {
     margin-top: 0;
   }
 
-  .j-tip .tip-content > *:last-child {
+  .j-tip .tip-body > *:last-child {
     margin-bottom: 0;
   }
 

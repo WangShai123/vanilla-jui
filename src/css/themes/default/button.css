@@ -25,7 +25,7 @@
     touch-action: manipulation;
     transition-property: box-shadow, opacity, transform;
     transition-duration: 0.15s;
-    transition-timing-function: var(--bezier);
+    transition-timing-function: ease;
   }
 
   .j-btn svg {

@@ -23,7 +23,7 @@
   line-height: 18px;
   text-align: start;
   cursor: pointer;
-  transition: all 0.15s ease-in-out;
+  transition: all 0.2s ease;
 }
 
 .j-cap-field .cap-control[data-state='idle']:hover {

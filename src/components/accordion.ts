@@ -131,7 +131,7 @@ const DEFAULT_CLASS_NAMES: AccordionClassNames = {
   title: 'header-title',
   arrow: 'header-arrow j-btn is-ghost is-icon',
   panel: 'accordion-panel',
-  content: 'panel-content',
+  content: 'panel-body',
 };
 
 const ACCORDION_ITEM_RULE = {

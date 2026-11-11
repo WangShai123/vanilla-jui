@@ -5,7 +5,7 @@
     border: var(--border);
     border-radius: var(--radius-md);
     box-shadow: var(--shadow-md);
-    min-width: 300px;
+    min-width: 304px;
     max-width: 500px;
     max-height: 90lvh;
     max-height: 90dvh;

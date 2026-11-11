@@ -366,7 +366,7 @@
     height: 1rem;
     margin: 0;
     appearance: none;
-    transition: all 0.05s ease-in-out;
+    transition: all 0.2s ease;
   }
 
   .j-editor:not(:has(.j-checkbox)) input[type='checkbox']:checked {

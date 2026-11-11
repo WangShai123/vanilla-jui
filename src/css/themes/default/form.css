@@ -164,7 +164,7 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%) scale(0);
-    transition: transform 0.15s ease-in-out;
+    transition: transform 0.2s ease;
   }
 
   .j-radio label input[type='radio']:checked::before {
@@ -203,7 +203,7 @@
     user-select: none;
     transition-property: box-shadow, color, background-color;
     transition-duration: 0.2s;
-    transition-timing-function: ease-in-out;
+    transition-timing-function: ease;
   }
 
   .j-radio.is-group label:not(:first-child) span.radio-text {
@@ -324,7 +324,7 @@
     inset: 0;
     border-radius: 50px;
     background-color: var(--ui-border);
-    transition: all 0.2s var(--bezier);
+    transition: all 0.2s ease;
   }
 
   .j-switch .switch-slider:after {
@@ -332,7 +332,7 @@
     position: absolute;
     border-radius: 50%;
     background-color: #fff;
-    transition: all 0.2s var(--bezier);
+    transition: all 0.2s ease;
   }
 
   .j-switch.is-sm .switch-slider:after {
@@ -685,11 +685,6 @@
   /*************************
    * .mobile
    *************************/
-  .mobile input.j-input[type='file'] {
-    --input-padding: 8px;
-  }
-
-  .mobile .j-input[type='file'],
   .mobile .j-textarea {
     width: 100%;
   }

@@ -77,7 +77,7 @@
     border-right: 0;
   }
 
-  .j-accordion .accordion-panel .panel-content {
+  .j-accordion .accordion-panel .panel-body {
     margin: 0;
     padding: 0 12px 8px;
 
@@ -85,9 +85,7 @@
     min-height: inherit;
   }
 
-  .j-accordion.is-horizontal
-    .accordion-panel[aria-hidden='false']
-    .panel-content {
+  .j-accordion.is-horizontal .accordion-panel[aria-hidden='false'] .panel-body {
     display: flex;
     flex-direction: column;
     justify-content: center;
