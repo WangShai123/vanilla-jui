@@ -447,7 +447,7 @@
     max-width: 200px;
     padding: 4px;
     font-size: var(--font-size-md);
-    background-color: var(--ui-surface-subtle);
+    background-color: var(--ui-bg-subtle);
     border-radius: var(--radius-sm);
   }
 
