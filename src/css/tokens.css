@@ -80,13 +80,8 @@
     --ui-border-soft: hsla(210, 12%, 92%);
     --ui-border-muted: hsla(210, 12%, 96%);
 
-    --ui-surface: #ffffff;
-    --ui-surface-subtle: #f9fafb;
-    --ui-surface-muted: #f3f4f6;
-    --ui-surface-hover: rgba(0, 0, 0, 0.02);
-    --ui-surface-active: rgba(0, 0, 0, 0.04);
-    --ui-surface-raised: #ffffff;
-    --ui-surface-overlay: rgba(255, 255, 255, 0.85);
+    --ui-bk: rgba(0, 0, 0, 0.02);
+    --ui-raised: #ffffff;
 
     --ui-reverse: #000;
     --ui-popup-bg: rgba(0, 0, 0, 0.0625);
@@ -258,17 +253,12 @@
     --ui-border-soft: hsl(210, 8%, 12%);
     --ui-border-muted: hsl(210, 8%, 10%);
 
-    --ui-surface: #0b0f14;
-    --ui-surface-subtle: #11161d;
-    --ui-surface-muted: #181e27;
-    --ui-surface-hover: rgba(255, 255, 255, 0.04);
-    --ui-surface-active: rgba(255, 255, 255, 0.07);
-    --ui-surface-raised: #151b24;
-    --ui-surface-overlay: rgba(7, 10, 15, 0.9);
+    --ui-bk: rgba(255, 255, 255, 0.04);
+    --ui-raised: #151b24;
 
     --ui-reverse: #fff;
     --ui-popup-bg: rgba(0, 0, 0, 0.0375);
-    --ui-code-bg: #64748b;
+    --ui-code-bg: #181a1b;
     --ui-code-fg: #e5e7eb;
 
     /* --- Fixed Theme Colors (15 themes) --- */

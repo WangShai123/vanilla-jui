@@ -100,8 +100,8 @@
     bottom: 0;
     left: 0;
     background-image:
-      linear-gradient(to right, var(--ui-surface-subtle) 1px, transparent 1px),
-      linear-gradient(to bottom, var(--ui-surface-subtle) 1px, transparent 1px);
+      linear-gradient(to right, var(--ui-bg-subtle) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--ui-bg-subtle) 1px, transparent 1px);
     background-size: 40px 56px;
     mask-image: radial-gradient(
       ellipse 25% 10% at 50% 0%,
@@ -114,8 +114,8 @@
 
   .dark .j-background-grid {
     background-image:
-      linear-gradient(to right, var(--ui-surface-hover) 1px, transparent 1px),
-      linear-gradient(to bottom, var(--ui-surface-hover) 1px, transparent 1px);
+      linear-gradient(to right, var(--ui-bk) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--ui-bk) 1px, transparent 1px);
   }
 
   /* 占位图容器 */
@@ -125,7 +125,7 @@
     background: linear-gradient(
       135deg,
       var(--ui-bg-muted) 0%,
-      var(--ui-surface-subtle) 100%
+      var(--ui-bg-subtle) 100%
     );
     color: var(--ui-fg-subtle);
     font-size: var(--font-size-sm);
@@ -896,7 +896,7 @@
     width: 100%;
     min-height: var(--el-height-2xs);
     border-radius: var(--radius-sm);
-    background: var(--ui-surface-muted);
+    background: var(--ui-bg-muted);
     color: transparent;
     pointer-events: none;
     user-select: none;
