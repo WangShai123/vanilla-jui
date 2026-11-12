@@ -171,13 +171,6 @@
     --tone-link-active: #dc2626;
     --tone-link-disabled: #9ca3af;
 
-    /* Card */
-    --tone-card: rgba(255, 255, 255, 0.8);
-    --tone-card-hover: rgba(255, 255, 255, 0.9);
-    --tone-card-active: rgba(0, 0, 0, 0.2);
-    --tone-card-border: rgba(0, 0, 0, 0.08);
-    --tone-card-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-
     /* States */
     --state-error: #ef4444;
     --state-error-hover: #dc2626;
@@ -343,13 +336,6 @@
     --tone-link-visited: #a78bfa;
     --tone-link-active: #f87171;
     --tone-link-disabled: #4b5563;
-
-    /* Card */
-    --tone-card: rgba(17, 24, 39, 0.82);
-    --tone-card-hover: rgba(17, 24, 39, 0.92);
-    --tone-card-active: rgba(255, 255, 255, 0.15);
-    --tone-card-border: rgba(148, 163, 184, 0.12);
-    --tone-card-shadow: 0 1px 3px rgba(0, 0, 0, 0.28);
 
     /* States */
     --state-error: #f87171;

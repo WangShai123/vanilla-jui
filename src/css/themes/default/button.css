@@ -169,7 +169,7 @@
   .j-btn.is-reverse:not(:disabled).is-active,
   .j-btn.is-reverse:not(:disabled):focus-visible {
     --btn-border-color: transparent;
-    --btn-box-shadow: 0 0 0 3px var(--tone-card-active);
+    --btn-box-shadow: 0 0 0 3px var(--tone-border);
   }
 
   .j-btn.is-info:not(:disabled).is-active {
