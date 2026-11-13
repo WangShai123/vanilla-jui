@@ -892,11 +892,11 @@
     Skeleton
   ============================================ */
   .j-skeleton {
-    display: block;
-    width: 100%;
-    min-height: var(--el-height-2xs);
-    border-radius: var(--radius-sm);
-    background: var(--ui-bg-muted);
+    display: var(--skeleton-display, block);
+    width: var(--skeleton-width, 100%);
+    height: var(--skeleton-height, var(--el-height-2xs));
+    border-radius: var(--skeleton-radius, var(--radius-sm));
+    background: var(--skeleton-bg, var(--ui-bg-muted));
     color: transparent;
     pointer-events: none;
     user-select: none;
@@ -909,41 +909,39 @@
   }
 
   .j-skeleton.skeleton-inline {
-    display: inline-block;
-    width: 8rem;
+    --skeleton-display: inline-block;
+    --skeleton-width: 8rem;
+    --skeleton-height: var(--el-height-xs);
     vertical-align: middle;
   }
 
   .j-skeleton.skeleton-text {
-    height: var(--el-height-sm);
-    min-height: var(--el-height-sm);
+    --skeleton-height: var(--el-height-sm);
   }
 
   .j-skeleton.skeleton-title {
-    width: 60%;
-    height: var(--el-height-md);
-    min-height: var(--el-height-md);
+    --skeleton-width: 60%;
+    --skeleton-height: var(--el-height);
   }
 
   .j-skeleton.skeleton-block {
-    height: calc(var(--el-height-md) * 4);
-    min-height: calc(var(--el-height-md) * 4);
+    --skeleton-height: calc(var(--el-height) * 2);
   }
 
   .j-skeleton.skeleton-avatar,
   .j-skeleton.skeleton-circle {
+    --skeleton-radius: 999px;
     aspect-ratio: 1;
-    border-radius: 999px;
   }
 
   .j-skeleton.skeleton-avatar {
-    width: var(--el-height-md);
-    min-height: var(--el-height-md);
+    --skeleton-width: var(--el-height);
+    --skeleton-height: var(--el-height);
   }
 
   .j-skeleton.skeleton-button {
-    width: 5rem;
-    min-height: var(--el-height-md);
+    --skeleton-width: 4rem;
+    --skeleton-height: var(--el-height);
   }
 
   .j-skeleton.skeleton-image {

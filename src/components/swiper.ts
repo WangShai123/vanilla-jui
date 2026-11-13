@@ -31,7 +31,7 @@ const AUTOPLAY_DELAY_FLOOR = 16;
 
 export interface SwiperClassNames {
   root: string;
-  wrapper: string;
+  wrap: string;
   slide: string;
   image: string;
   title: string;
@@ -174,7 +174,7 @@ export type Swiper = SwiperBase & {
 
 const DEFAULT_CLASS_NAMES: SwiperClassNames = {
   root: 'j-swiper',
-  wrapper: 'swiper-wrapper',
+  wrap: 'swiper-wrap',
   slide: 'swiper-slide',
   image: 'swiper-image',
   title: 'swiper-slide-title',
@@ -908,8 +908,8 @@ export function createSwiper(input: SwiperProps = {}): Swiper {
         return view;
       };
       wrapper = jsx('div', {
-        className: props.className.wrapper,
-        'data-swiper-wrapper': '',
+        className: props.className.wrap,
+        'data-swiper-wrap': '',
         'aria-live': 'polite',
         children: () =>
           state.loading
@@ -974,7 +974,7 @@ export function createSwiper(input: SwiperProps = {}): Swiper {
                   ),
                 'data-action': 'prev',
                 'data-swiper-navigation': 'prev',
-                'aria-label': 'Previous slide',
+                'aria-label': 'Previous Slide',
                 disabled: () => !props.loop && state.index <= 0,
                 children: icon('arrow-left'),
               })
@@ -992,7 +992,7 @@ export function createSwiper(input: SwiperProps = {}): Swiper {
                   ),
                 'data-action': 'next',
                 'data-swiper-navigation': 'next',
-                'aria-label': 'Next slide',
+                'aria-label': 'Next Slide',
                 disabled: () => !props.loop && state.index >= realCount() - 1,
                 children: icon('arrow-right'),
               })

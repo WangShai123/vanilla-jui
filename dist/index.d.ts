@@ -1512,7 +1512,7 @@ export type Modal = FunctionalComponent<ResolvedModalProps, ModalState, HTMLElem
 export declare function createModal(input?: ModalProps): Modal;
 export interface SwiperClassNames {
   root: string;
-  wrapper: string;
+  wrap: string;
   slide: string;
   image: string;
   title: string;

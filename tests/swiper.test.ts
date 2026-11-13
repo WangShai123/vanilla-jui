@@ -215,7 +215,7 @@ describe('Swiper', () => {
         autoplay: false,
         className: {
           root: 'qa-swiper',
-          wrapper: 'qa-swiper-wrapper',
+          wrap: 'qa-swiper-wrapper',
           slide: 'qa-swiper-slide',
           pagination: 'qa-swiper-pagination',
           indicator: 'qa-swiper-indicator',
