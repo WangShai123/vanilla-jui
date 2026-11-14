@@ -133,7 +133,6 @@
     font-size: var(--font-size-md);
     padding: 8px;
     border-radius: var(--radius-md);
-    user-select: none;
   }
 
   .j-radio label:not(:has(input[type='radio']:disabled)):hover,
@@ -200,7 +199,6 @@
     justify-content: center;
     align-items: center;
     text-align: center;
-    user-select: none;
     transition-property: box-shadow, color, background-color;
     transition-duration: 0.2s;
     transition-timing-function: ease;
@@ -460,11 +458,6 @@
     border-radius: var(--radius-md);
   }
 
-  .input-group .el-addon .icon-close,
-  .input-inner-group .el-addon .icon-close {
-    width: var(--input-height);
-  }
-
   .input-group > *:not(:first-child) {
     margin-left: -1px;
   }
@@ -551,7 +544,6 @@
   .input-inner-group .el-addon > .el-text {
     display: flex;
     align-items: center;
-    user-select: none;
     padding: 0 8px;
     font-size: var(--font-size-md);
     color: var(--ui-fg-muted);

@@ -8,7 +8,6 @@
     display: block;
     overflow: hidden;
     touch-action: pan-y;
-    user-select: none;
     width: 100%;
     min-height: var(--swiper-min-height, 120px);
     border-radius: var(--radius-md);
@@ -30,7 +29,6 @@
     overflow: hidden;
     color: inherit;
     text-decoration: none;
-    user-select: none;
     width: var(--swiper-slide-width, 100%);
     min-width: 100%;
     aspect-ratio: inherit;

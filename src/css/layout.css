@@ -109,7 +109,6 @@
       transparent 300%
     );
     pointer-events: none;
-    user-select: none;
   }
 
   .dark .j-background-grid {
@@ -899,7 +898,6 @@
     background: var(--skeleton-bg, var(--ui-bg-muted));
     color: transparent;
     pointer-events: none;
-    user-select: none;
     animation: animate-pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
 
@@ -964,7 +962,7 @@
     Popup
   ============================================ */
   .j-popup-layout {
-    background: var(--ui-popup-bg);
+    background: var(--ui-popup);
     backdrop-filter: blur(4px);
     padding: 16px;
 

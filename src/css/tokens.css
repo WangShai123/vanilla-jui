@@ -84,9 +84,11 @@
     --ui-raised: #ffffff;
 
     --ui-reverse: #000;
-    --ui-popup-bg: rgba(0, 0, 0, 0.0625);
-    --ui-code-bg: #f3f4f6;
+    --ui-popup: rgba(0, 0, 0, 0.0625);
+    --ui-code: #f3f4f6;
     --ui-code-fg: #374151;
+    --ui-highlight: #fef08a;
+    --ui-highlight-fg: #854d0e;
 
     /* --- Fixed Theme Colors (15 themes) --- */
     --ui-gray: #374151;
@@ -153,9 +155,6 @@
     --tone-text-hover: #4338ca;
     --tone-fg: #ffffff;
     --tone-ring: rgba(99, 102, 241, 0.4);
-
-    --tone-highlight: #fef08a;
-    --tone-highlight-fg: #854d0e;
 
     /* Typography */
     --tone-heading: #111827;
@@ -250,9 +249,11 @@
     --ui-raised: #151b24;
 
     --ui-reverse: #fff;
-    --ui-popup-bg: rgba(0, 0, 0, 0.0375);
-    --ui-code-bg: #181a1b;
+    --ui-popup: rgba(0, 0, 0, 0.0375);
+    --ui-code: #181a1b;
     --ui-code-fg: #e5e7eb;
+    --ui-highlight: #fbbf24;
+    --ui-highlight-fg: #78350f;
 
     /* --- Fixed Theme Colors (15 themes) --- */
     --ui-gray: #d1d5db;
@@ -319,8 +320,6 @@
     --tone-text-hover: #c7d2fe;
     --tone-fg: #1e1b4b;
     --tone-ring: rgba(129, 140, 248, 0.4);
-    --tone-highlight: #fbbf24;
-    --tone-highlight-fg: #78350f;
 
     /* Typography */
     --tone-heading: #f9fafb;

@@ -18,7 +18,6 @@ export * from './utilities/config.ts';
 export * from './utilities/state.ts';
 export * from './utilities/refs.ts';
 export * from './utilities/validator.ts';
-export * from './utilities/compress.ts';
 export * from './core/scheduler.ts';
 export * from './core/view.ts';
 export * from './core/motion.ts';

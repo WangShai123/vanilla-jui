@@ -406,63 +406,6 @@ export interface ValidatorInstance {
   destroy(): void;
 }
 export declare function createValidator(element: DOMReference, props?: ValidatorProps, bindEvents?: boolean): ValidatorInstance;
-export interface CompressOptions {
-  /** 压缩质量，范围 0-1，默认 0.7 */
-  quality?: number;
-  /** 目标宽度（像素），不指定则按原图比例缩放 */
-  width?: number;
-  /** 目标高度（像素），不指定则按原图比例缩放 */
-  height?: number;
-}
-export interface ImgCompressInstance {
-  /**
-   * 将图片路径转换为压缩后的 base64 数据
-   * @param path - 图片文件路径或 base64 字符串
-   * @param callback - 压缩完成后的回调函数，接收 base64 字符串作为参数
-   */
-  canvasDataURL: (path: string, callback: (base64: string) => void) => void;
-  /**
-   * 压缩文件对象
-   * @param file - 文件对象（Blob 或 File）
-   * @param callback - 压缩完成后的回调函数，接收 base64 字符串作为参数
-   */
-  photoCompress: (file: Blob, callback: (base64: string) => void) => void;
-  /**
-   * 将 base64 字符串转换为 Blob 对象
-   * @param urlData - base64 数据（包含 data:image 前缀）
-   * @returns Blob 对象，如果解析失败则返回 undefined
-   */
-  convertBase64UrlToBlob: (urlData: string) => Blob | undefined;
-}
-/**
- * 创建图片压缩实例
- * @param options - 压缩配置选项
- * @param singleton - 是否返回单例，默认 true
- * @returns 图片压缩实例
- * @example
- * ```ts
- * // 获取单例实例（默认）
- * const imgzip = createImgCompress({ quality: 0.8, width: 800 });
- *
- * // 创建新实例
- * const imgzip2 = createImgCompress({ quality: 0.9 }, false);
- * ```
- */
-declare function createImgCompress(options?: CompressOptions, singleton?: boolean): ImgCompressInstance;
-/**
- * 获取单例实例（如果不存在则创建）
- * @param options - 压缩配置选项（仅在首次创建时生效）
- * @returns 单例实例
- * @example
- * ```ts
- * const imgzip = getImgCompressInstance({ quality: 0.8 });
- * ```
- */
-declare function getImgCompressInstance(options?: CompressOptions): ImgCompressInstance;
-/**
- * 重置单例实例（用于测试或重新配置）
- */
-declare function resetImgCompressInstance(): void;
 interface ScheduledTask {
   schedule: () => void;
   flush: () => void;
@@ -1825,4 +1768,4 @@ interface MenuState extends Record<string, unknown> {
 }
 export type Menu = FunctionalComponent<ResolvedMenuProps, MenuState, HTMLElement>;
 export declare function createMenu(input?: MenuProps): Menu;
-export { createImgCompress, getImgCompressInstance, resetImgCompressInstance };
+export {};

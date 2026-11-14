@@ -9,7 +9,6 @@
 
     position: relative;
     width: fit-content;
-    user-select: none;
   }
 
   .j-tooltip.is-reverse {

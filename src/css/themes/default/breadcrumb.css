@@ -7,7 +7,6 @@
     color: var(--ui-fg-muted);
 
     white-space: nowrap;
-    user-select: none;
   }
 
   .j-breadcrumb > ol,

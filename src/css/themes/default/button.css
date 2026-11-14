@@ -21,7 +21,6 @@
     flex-wrap: nowrap;
     white-space: nowrap;
     appearance: button;
-    user-select: none;
     touch-action: manipulation;
     transition-property: box-shadow, opacity, transform;
     transition-duration: 0.15s;

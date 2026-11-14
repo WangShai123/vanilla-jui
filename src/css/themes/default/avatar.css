@@ -16,7 +16,6 @@
     display: inline-block;
     vertical-align: middle;
     overflow: hidden;
-    user-select: none;
     object-fit: cover;
   }
 

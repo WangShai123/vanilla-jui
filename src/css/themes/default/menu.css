@@ -13,7 +13,6 @@
     scroll-behavior: smooth;
     -ms-overflow-style: none;
     scrollbar-width: none;
-    user-select: none;
   }
 
   .j-menu::-webkit-scrollbar {
@@ -468,7 +467,6 @@
     padding: 4px 8px;
     text-decoration: none;
     color: var(--ui-fg-muted);
-    user-select: none;
     border-radius: var(--radius-sm);
     transition: none;
   }
