@@ -49,6 +49,7 @@
 
   .j-toast .el-icon {
     width: var(--font-size-lg);
+    height: var(--font-size-lg);
     border-radius: 99px;
     box-shadow: 0 0 0 3px var(--toast-icon-shadow);
     background-color: var(--toast-icon-bg);
